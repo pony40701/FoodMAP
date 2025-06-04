@@ -12,7 +12,7 @@
     <!-- 導覽列 -->
     <nav class="navbar">
         <div class="navbar-left">
-            <div class="logo-text">食力派ChowCrew</div>
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
         </div>
         
         <div class="navbar-right">
@@ -352,6 +352,35 @@
             // 如果當前在草稿箱頁面，載入草稿
             if (document.getElementById('drafts-section').classList.contains('active')) {
                 loadDrafts();
+            }
+            // 初始化登入按鈕
+            const loginBtn = document.querySelector('.btn-login');
+            if (loginBtn) {
+                // 檢查登入狀態並更新按鈕文字
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                if (isLoggedIn) {
+                    loginBtn.textContent = '會員中心';
+                    loginBtn.onclick = function() {
+                        window.location.href = 'userCenter.html';
+                    };
+                } else {
+                    loginBtn.textContent = '登入';
+                    loginBtn.onclick = function() {
+                        // 顯示登入模態框
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'block';
+                            // 設置登入成功後的回調函數
+                            window.onLoginSuccess = function() {
+                                // 更新按鈕文字和行為
+                                loginBtn.textContent = '會員中心';
+                                loginBtn.onclick = function() {
+                                    window.location.href = 'userCenter.html';
+                                };
+                            };
+                        }
+                    };
+                }
             }
         });
     </script>
