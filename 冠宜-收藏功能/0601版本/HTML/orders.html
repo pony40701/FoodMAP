@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂單 - 美食外送平台</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <link rel="stylesheet" href="../CSS/orders.css">
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <div class="orders-container">
+        <h2>我的訂單</h2>
+        <div class="order-tabs">
+            <button class="tab-btn active" data-status="all">全部訂單</button>
+            <button class="tab-btn" data-status="pending">待處理</button>
+            <button class="tab-btn" data-status="processing">處理中</button>
+            <button class="tab-btn" data-status="completed">已完成</button>
+            <button class="tab-btn" data-status="cancelled">已取消</button>
+        </div>
+        <div class="orders-list">
+            <!-- 訂單列表將由 JavaScript 動態載入 -->
+        </div>
+    </div>
+
+    <!-- 訂單詳情彈窗 -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>訂單詳情</h3>
+            <div id="orderDetails">
+                <!-- 訂單詳情將由 JavaScript 動態載入 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function(){
+            $("#nav-placeholder").load("nav.html");
+        });
+    </script>
+    <script src="../JS/orders.js"></script>
+</body>
+</html> 

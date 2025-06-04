@@ -1,0 +1,12 @@
+使用方式：
+在 HTML 中引入必要的檔案：
+<link rel="stylesheet" href="package/favoritesStyle.css">
+<script src="package/favoritesModule.js" type="module"></script>
+在頁面中使用收藏功能模板：
+<div id="favorites-container"></div>
+初始化收藏功能：
+import FavoritesModule from './package/favoritesModule.js';
+
+const favoritesModule = new FavoritesModule();
+// 載入收藏內容
+favoritesModule.loadFavorites();

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家註冊 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="/CSS/merchantRegister.css">
+</head>
+<body>
+    <div class="register-container">
+        <h1>商家註冊</h1>
+        <form id="merchantRegisterForm" class="register-form">
+            <div class="form-group">
+                <label for="storeName">店家名稱</label>
+                <input type="text" id="storeName" name="storeName" required>
+            </div>
+            <div class="form-group">
+                <label for="storeAddress">店家地址</label>
+                <input type="text" id="storeAddress" name="storeAddress" required>
+            </div>
+            <div class="form-group">
+                <label for="storePhone">聯絡電話</label>
+                <input type="tel" id="storePhone" name="storePhone" required>
+            </div>
+            <div class="form-group">
+                <label for="storeType">餐廳類型</label>
+                <select id="storeType" name="storeType" required>
+                    <option value="">請選擇餐廳類型</option>
+                    <option value="chinese">中式</option>
+                    <option value="bbq">燒烤</option>
+                    <option value="hotpot">火鍋</option>
+                    <option value="japanese">日式</option>
+                    <option value="american">美式</option>
+                    <option value="italian">義式</option>
+                    <option value="steak">牛排</option>
+                    <option value="vegetarian">素食</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">電子郵件</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">確認密碼</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="businessLicense">營業執照上傳</label>
+                <input type="file" id="businessLicense" name="businessLicense" accept="image/*,.pdf" required>
+            </div>
+            <button type="submit" class="submit-btn">註冊</button>
+        </form>
+        <p class="login-link">已有帳號？<a href="/HTML/merchantLogin.html">立即登入</a></p>
+    </div>
+    <script src="/JS/merchantRegister.js"></script>
+</body>
+</html> 

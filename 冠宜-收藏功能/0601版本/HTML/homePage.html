@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>食力派ChowCrew</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../CSS/homePage.css" />
+    <!-- 添加 Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places&callback=initMap" async defer></script>
+  </head>
+  <body>
+    <!-- 導覽列 -->
+    <nav class="navbar">
+      <div class="navbar-left">
+        <div class="logo-text">食力派ChowCrew</div>
+      </div>
+
+      <div class="search-section">
+        <div class="search-bar">
+          <div class="input-container">
+            <span class="input-icon">🍽️</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="搜尋美食..."
+              id="searchInput"
+            />
+          </div>
+          <div class="search-divider"></div>
+          <div class="input-container">
+            <span class="input-icon">📍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="地點..."
+              id="location-search"
+            />
+          </div>
+          <button class="search-btn" onclick="searchRestaurants()">
+            <img
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDMTUuOTcgMiAyMCA2LjAzIDIwIDExQzIwIDEzLjEyIDE5LjMzIDE1LjA3IDE4LjE5IDE2LjU5TDIyIDIwLjQxTDIwLjQxIDIyTDE2LjU5IDE4LjE5QzE1LjA3IDE5LjMzIDEzLjEyIDIwIDExIDIwQzYuMDMgMjAgMiAxNS45NyAyIDExQzIgNi4wMyA2LjAzIDIgMTEgMlpNMTEgNEM3LjEzIDQgNCA3LjEzIDQgMTFDNCAxNC44NyA3LjEzIDE4IDExIDE4QzE0Ljg3IDE4IDE4IDE0Ljg3IDE4IDExQzE4IDcuMTMgMTQuODcgNCAxMSA0WiIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo="
+              alt="搜尋"
+            />
+          </button>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <!-- 商家專用下拉選單 -->
+        <div class="dropdown-nav">
+          <a href="#" class="nav-link dropdown-trigger">商家專用 ▼</a>
+          <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">商家註冊</a>
+            <a href="#" class="dropdown-item">商家登入</a>
+            <a href="#" class="dropdown-item">商家管理</a>
+          </div>
+        </div>
+        <a href="/HTML/ranking.html" class="nav-link">排行榜</a>
+        <a href="foodReviewEdit.html" class="nav-link">寫評論</a>
+        <button type="button" class="btn-login">登入</button>
+      </div>
+    </nav>
+
+    <!-- 輪播圖容器 -->
+    <div class="carousel-container">
+      <div class="carousel">
+        <img src="/IMAGE/carousel1.jpg" alt="美食1" />
+        <img src="/IMAGE/carousel2.jpg" alt="美食2" />
+        <img src="/IMAGE/carousel3.jpg" alt="美食3" />
+      </div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="content-section">
+      <!-- 熱門美食類型 -->
+      <section class="food-types-section">
+        <h2>熱門美食類型</h2>
+        <div class="food-types">
+          <div class="food-type-item" onclick="searchByType('restaurant', '中式')">
+            <div class="emoji-circle">🥢</div>
+            <span>中式</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '燒烤')">
+            <div class="emoji-circle">🍖</div>
+            <span>燒烤</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '火鍋')">
+            <div class="emoji-circle">🍲</div>
+            <span>火鍋</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '日式')">
+            <div class="emoji-circle">🍣</div>
+            <span>日式</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '美式')">
+            <div class="emoji-circle">🍔</div>
+            <span>美式</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '義式')">
+            <div class="emoji-circle">🍝</div>
+            <span>義式</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '牛排')">
+            <div class="emoji-circle">🥩</div>
+            <span>牛排</span>
+          </div>
+          <div class="food-type-item" onclick="searchByType('restaurant', '素食')">
+            <div class="emoji-circle">🥗</div>
+            <span>素食</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 附近餐廳卡片區域 -->
+      <section class="restaurants-section">
+        <h3 id="results-title">推薦餐廳</h3>
+        <div class="restaurants-grid" id="restaurants-container">
+          <!-- 餐廳卡片將由JavaScript動態生成 -->
+        </div>
+      </section>
+
+      <!-- 地圖容器 -->
+      <div id="map" style="height: 400px; margin-top: 20px; border-radius: 12px; overflow: hidden;"></div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <h4>關於我們</h4>
+          <p>
+            食力派ChowCrew致力於提供最優質的美食推薦與評論平台，讓您輕鬆發現身邊的美味。
+          </p>
+          <div class="footer-links">
+            <a href="#">服務條款</a>
+            <a href="#">隱私政策</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>快速連結</h4>
+          <div class="footer-links">
+            <a href="#">商家註冊</a>
+            <a href="#">排行榜</a>
+            <a href="#">寫評論</a>
+            <a href="#">幫助中心</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>聯絡我們</h4>
+          <p>📧 support@chowcrew.com</p>
+          <p>📞 02-1234-5678</p>
+          <div class="social-icons">
+            <a href="#" aria-label="Facebook"
+              ><i class="fab fa-facebook-f"></i
+            ></a>
+            <a href="#" aria-label="Instagram"
+              ><i class="fab fa-instagram"></i
+            ></a>
+            <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+      </div>
+    </footer>
+
+    <div id="restaurantDetailModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-restaurant-name">餐廳名稱</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p><strong>地址:</strong> <span id="modal-restaurant-address"></span></p>
+          <p><strong>營業時間:</strong> <span id="modal-opening-hours"></span></p>
+          <p><strong>星等:</strong> <span id="modal-rating"></span></p>
+          <div id="modal-reviews-section">
+            <h4>評論</h4>
+            <ul id="modal-reviews-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 共用登入彈窗載入區塊 -->
+    <div id="login-modal-placeholder"></div>
+    <script src="/JS/loginModal.js"></script>
+    <script>
+      fetch('/HTML/loginModal.html').then(r=>r.text()).then(html=>{
+        document.getElementById('login-modal-placeholder').innerHTML = html;
+        window.initLoginModal && window.initLoginModal();
+      });
+    </script>
+    <!-- 先載入主要 JS -->
+    <script src="../JS/homePage.js"></script>
+    <!-- 最後載入 Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places&callback=initMap" async defer></script>
+  </body>
+</html>

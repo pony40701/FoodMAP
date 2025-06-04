@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>排行榜 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/CSS/ranking.css" />
+  </head>
+  <body>
+   <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="/HTML/homePage.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        
+        <div class="navbar-right">
+            <div class="dropdown-nav">
+                <a href="#" class="nav-link dropdown-trigger">商家專用 ▼</a>
+                <div class="dropdown-menu">
+                    <a href="/HTML/merchantRegister.html" class="dropdown-item">商家註冊</a>
+                    <a href="/HTML/merchantLogin.html" class="dropdown-item">商家登入</a>
+                    <a href="/HTML/merchantDashboard.html" class="dropdown-item">商家管理</a>
+                </div>
+            </div>
+            <a href="/HTML/ranking.html" class="nav-link active">排行榜</a>
+            <a href="#" class="nav-link">寫評論</a>
+            <button class="btn-login">登入</button>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <main class="main-content">
+        <h1>美食排行榜</h1>
+        
+        <!-- 排行榜分類 -->
+        <div class="ranking-categories">
+            <button class="category-btn active" data-category="overall">總體排行</button>
+            <button class="category-btn" data-category="chinese">中式料理</button>
+            <button class="category-btn" data-category="bbq">燒烤</button>
+            <button class="category-btn" data-category="hotpot">火鍋</button>
+            <button class="category-btn" data-category="japanese">日式料理</button>
+            <button class="category-btn" data-category="american">美式料理</button>
+            <button class="category-btn" data-category="italian">義式料理</button>
+            <button class="category-btn" data-category="steak">牛排</button>
+            <button class="category-btn" data-category="vegetarian">素食</button>
+        </div>
+
+        <!-- 排行榜列表 -->
+        <div class="ranking-list">
+            <!-- 排行榜項目將由JavaScript動態生成 -->
+        </div>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <p>食力派ChowCrew致力於提供最優質的美食推薦與評論平台，讓您輕鬆發現身邊的美味。</p>
+                <div class="footer-links">
+                    <a href="#">服務條款</a>
+                    <a href="#">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/HTML/merchantRegister.html">商家註冊</a>
+                    <a href="/HTML/ranking.html">排行榜</a>
+                    <a href="#">寫評論</a>
+                    <a href="#">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p>📧 support@chowcrew.com</p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <script src="/JS/ranking.js"></script>
+  </body>
+</html>
