@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>會員中心 - 食力派ChowCrew</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/userCenter.css">
+  <!-- 添加 Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places" async defer></script>
+</head>
+<body>
+  <!-- 導覽列 -->
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="index.html" class="logo-text">食力派ChowCrew</a>
+    </div>
+    <div class="navbar-right">
+      <a href="index.html" class="nav-link">回首頁</a>
+      <button class="btn-logout" onclick="logout()">登出</button>
+    </div>
+  </nav>
+
+  <!-- 會員中心主容器 -->
+  <div class="user-center-container">
+    <!-- 側邊選單 -->
+    <div class="sidebar">
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="user-name">載入中...</div>
+        <div class="user-email">載入中...</div>
+      </div>
+      <div class="menu">
+        <a href="#profile" class="menu-item active" data-section="profile">
+          <i class="fas fa-user"></i> 個人資料
+        </a>
+        <a href="#analytics" class="menu-item" data-section="analytics">
+          <i class="fas fa-chart-line"></i> 數據分析
+        </a>
+        <a href="#orders" class="menu-item" data-section="orders">
+          <i class="fas fa-shopping-bag"></i> 訂單歷史
+        </a>
+        <a href="#reviews" class="menu-item" data-section="reviews">
+          <i class="fas fa-star"></i> 我的評論
+        </a>
+        <a href="#notifications" class="menu-item" data-section="notifications">
+          <i class="fas fa-bell"></i> 通知中心
+        </a>
+        <a href="#favorites" class="menu-item" data-section="favorites">
+          <i class="fas fa-heart"></i> 我的收藏
+        </a>
+        <a href="#settings" class="menu-item" data-section="settings">
+          <i class="fas fa-cog"></i> 帳號設定
+        </a>
+      </div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+      <!-- 個人資料區塊 -->
+      <section id="profile" class="content-section active">
+        <h2>個人資料</h2>
+        <form id="profileForm" class="form">
+          <div class="form-group">
+            <label for="name">姓名</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">電子郵件</label>
+            <input type="email" id="email" name="email" readonly>
+          </div>
+          <div class="form-group">
+            <label for="phone">電話</label>
+            <input type="tel" id="phone" name="phone">
+          </div>
+          <div class="form-group">
+            <label for="address">地址</label>
+            <input type="text" id="address" name="address">
+          </div>
+          <button type="submit" class="btn-primary">更新資料</button>
+        </form>
+      </section>
+
+      <!-- 數據分析區塊 -->
+      <section id="analytics" class="content-section">
+        <h2>數據分析</h2>
+        <div class="analytics-grid">
+          <!-- 訂單統計 -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h3>訂單統計</h3>
+              <select class="time-range-select">
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+                <option value="year">今年</option>
+              </select>
+            </div>
+            <div class="card-content">
+              <div class="stat-item">
+                <div class="stat-value">12</div>
+                <div class="stat-label">總訂單數</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">$3,500</div>
+                <div class="stat-label">總消費金額</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">$292</div>
+                <div class="stat-label">平均訂單金額</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <!-- 這裡將放置訂單趨勢圖表 -->
+            </div>
+          </div>
+
+          <!-- 消費分析 -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h3>消費分析</h3>
+              <select class="time-range-select">
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+                <option value="year">今年</option>
+              </select>
+            </div>
+            <div class="card-content">
+              <div class="stat-item">
+                <div class="stat-value">5</div>
+                <div class="stat-label">最常消費類別</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">$1,200</div>
+                <div class="stat-label">最高單筆消費</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">3</div>
+                <div class="stat-label">最常消費店家</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <!-- 這裡將放置消費分析圖表 -->
+            </div>
+          </div>
+
+          <!-- 評論統計 -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h3>評論統計</h3>
+              <select class="time-range-select">
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+                <option value="year">今年</option>
+              </select>
+            </div>
+            <div class="card-content">
+              <div class="stat-item">
+                <div class="stat-value">8</div>
+                <div class="stat-label">總評論數</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">4.5</div>
+                <div class="stat-label">平均評分</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">3</div>
+                <div class="stat-label">獲得讚數</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <!-- 這裡將放置評論統計圖表 -->
+            </div>
+          </div>
+
+          <!-- 收藏統計 -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h3>收藏統計</h3>
+              <select class="time-range-select">
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+                <option value="year">今年</option>
+              </select>
+            </div>
+            <div class="card-content">
+              <div class="stat-item">
+                <div class="stat-value">15</div>
+                <div class="stat-label">收藏店家數</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">8</div>
+                <div class="stat-label">收藏評論數</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">5</div>
+                <div class="stat-label">本月新增</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <!-- 這裡將放置收藏統計圖表 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 訂單歷史區塊 -->
+      <section id="orders" class="content-section">
+        <h2>訂單歷史</h2>
+        <div class="filter-bar">
+          <select id="orderStatus">
+            <option value="all">全部訂單</option>
+            <option value="pending">待處理</option>
+            <option value="completed">已完成</option>
+            <option value="cancelled">已取消</option>
+          </select>
+        </div>
+        <div id="ordersList" class="orders-list">
+          <!-- 訂單將由 JavaScript 動態載入 -->
+        </div>
+      </section>
+
+      <!-- 評論區塊 -->
+      <section id="reviews" class="content-section">
+        <h2>我的評論</h2>
+        <div class="filter-bar">
+          <select id="reviewRating">
+            <option value="all">全部評分</option>
+            <option value="5">5星</option>
+            <option value="4">4星</option>
+            <option value="3">3星</option>
+            <option value="2">2星</option>
+            <option value="1">1星</option>
+          </select>
+        </div>
+        <div id="reviewsList" class="reviews-list">
+          <!-- 評論將由 JavaScript 動態載入 -->
+        </div>
+      </section>
+
+      
+
+      <!-- 通知中心區塊 -->
+      <section id="notifications" class="content-section">
+        <h2>通知中心</h2>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-type="all">全部</button>
+          <button class="filter-btn" data-type="order">訂單</button>
+          <button class="filter-btn" data-type="system">系統</button>
+          <button class="filter-btn" data-type="promotion">優惠</button>
+        </div>
+        <div id="notificationsList" class="notifications-list">
+          <!-- 通知將由 JavaScript 動態載入 -->
+        </div>
+      </section>
+
+      <!-- 收藏區塊 -->
+      <section id="favorites" class="content-section">
+        <h2>我的收藏</h2>
+        
+        <div class="favorites-tabs">
+          <button class="tab-btn active" data-tab="stores">收藏店家</button>
+          <button class="tab-btn" data-tab="reviews">收藏心得</button>
+        </div>
+
+        <div class="favorites-content">
+          <!-- 添加收藏店家列表容器 -->
+          <div class="favorites-stores" style="display: grid;">
+            <!-- 收藏店家將由 JavaScript 動態載入 -->
+          </div>
+
+          <!-- 添加收藏心得列表容器 -->
+          <div class="favorites-reviews" style="display: none;">
+            <!-- 收藏心得將由 JavaScript 動態載入 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 設定區塊 -->
+      <section id="settings" class="content-section">
+        <h2>帳號設定</h2>
+        <form id="settingsForm" class="form">
+          <div class="form-group">
+            <label>通知設定</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" id="orderNotifications" checked>
+                訂單通知
+              </label>
+              <label>
+                <input type="checkbox" id="promotionNotifications" checked>
+                優惠通知
+              </label>
+              <label>
+                <input type="checkbox" id="systemNotifications" checked>
+                系統通知
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>隱私設定</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" id="showProfile" checked>
+                公開個人資料
+              </label>
+              <label>
+                <input type="checkbox" id="showReviews" checked>
+                公開評論
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="currentPassword">目前密碼</label>
+            <input type="password" id="currentPassword" name="currentPassword">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">新密碼</label>
+            <input type="password" id="newPassword" name="newPassword">
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">確認新密碼</label>
+            <input type="password" id="confirmPassword" name="confirmPassword">
+          </div>
+          <button type="submit" class="btn-primary">更新設定</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script src="js/userCenter.js"></script>
+</body>
+</html> 
