@@ -53,8 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 更新登入狀態
                 updateLoginStatus();
                 
-                // 跳轉到會員中心
-                window.location.href = 'userCenter.html';
+                // 檢查是否有登入成功後的回調函數
+                if (window.onLoginSuccess) {
+                    window.onLoginSuccess();
+                    // 清除回調函數，避免影響其他登入操作
+                    window.onLoginSuccess = null;
+                } else {
+                    // 如果沒有回調函數，則跳轉到會員中心
+                    window.location.href = 'userCenter.html';
+                }
             } else {
                 alert('帳號或密碼錯誤！');
             }
