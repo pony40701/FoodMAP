@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>莫林美食網</title>
+    <title>美食地圖FoodMAP</title>
+    <!-- 防止 favicon.ico 404 錯誤 -->
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="css/food-categories.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/favoritesStyle.css">
     <link rel="stylesheet" href="ranking/ranking.css">
+    <link rel="stylesheet" href="css/food-types.css">
+    <!-- 添加 Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places&callback=initMap" async defer></script>
     <style>
     .modal {
         display: none;
@@ -269,268 +274,119 @@
         </div>
     </div>
     <!-- 美食類型區塊 -->
-    <div class="food-section">
-        <h2 class="section-title">美食類型</h2>
-        <div class="food-categories">
-            <div class="category-container">
-                <a href="#" class="category-item" data-category="chinese">
-                    <div class="category-circle">
-                        <img src="images/rice1.png" alt="中式料理">
-                    </div>
-                    <span class="category-name">中式</span>
-                </a>
-                <a href="#" class="category-item" data-category="japanese">
-                    <div class="category-circle">
-                        <img src="images/sushi1.png" alt="日式料理">
-                    </div>
-                    <span class="category-name">日式</span>
-                </a>
-                <a href="#" class="category-item" data-category="bbq">
-                    <div class="category-circle">
-                        <img src="images/bbq1.png" alt="燒肉">
-                    </div>
-                    <span class="category-name">燒肉</span>
-                </a>
-                <a href="#" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/hotpot.png" alt="火鍋">
-                    </div>
-                    <span class="category-name">火鍋</span>
-                </a>
-                <a href="#" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/hamburger.png" alt="漢堡">
-                    </div>
-                    <span class="category-name">漢堡</span>
-                </a>
-                <a href="#" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/steak.png" alt="牛排">
-                    </div>
-                    <span class="category-name">牛排</span>
-                </a>
-                <a href="#" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/cake.png" alt="甜點">
-                    </div>
-                    <span class="category-name">甜點</span>
-                </a>
-                <a href="#" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/vegan1.png" alt="素食">
-                    </div>
-                    <span class="category-name">素食</span>
-                </a>
-                <a href="/HTML/categories.html" class="category-item no-trigger">
-                    <div class="category-circle">
-                        <img src="images/more.png" alt="更多">
-                    </div>
-                    <span class="category-name">更多...</span>
-                </a>
-            </div>
+    <section class="food-types-section">
+      <h2>熱門美食類型</h2>
+      <div class="food-types">
+        <div class="food-type-item" onclick="searchByType('restaurant', '中式')">
+          <div class="emoji-circle">
+            <img src="images/rice1.png" alt="中式料理" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>中式</span>
         </div>
-    </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '燒烤')">
+          <div class="emoji-circle">
+            <img src="images/bbq1.png" alt="燒烤" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>燒烤</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '火鍋')">
+          <div class="emoji-circle">
+            <img src="images/hotpot.png" alt="火鍋" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>火鍋</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '日式')">
+          <div class="emoji-circle">
+            <img src="images/sushi1.png" alt="日式料理" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>日式</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '美式')">
+          <div class="emoji-circle">
+            <img src="images/hamburger.png" alt="美式" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>美式</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '義式')">
+          <div class="emoji-circle">
+            <img src="images/pasta.png" alt="義式" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>義式</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '牛排')">
+          <div class="emoji-circle">
+            <img src="images/steak.png" alt="牛排" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>牛排</span>
+        </div>
+        <div class="food-type-item" onclick="searchByType('restaurant', '素食')">
+          <div class="emoji-circle">
+            <img src="images/vegan1.png" alt="素食" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>素食</span>
+        </div>
+        <div class="food-type-item" onclick="showMoreCategories()">
+          <div class="emoji-circle">
+            <img src="images/more.png" alt="更多" style="width: 50px; height: 50px; object-fit: contain;" />
+          </div>
+          <span>更多...</span>
+        </div>
+      </div>
+    </section>
 
     <!-- 餐廳資訊區塊 -->
-    <div class="restaurant-sections">
-        <!-- 中式餐廳 -->
-        <div class="restaurant-section" data-category="chinese">
-            <div class="restaurant-container">
-                <div class="restaurant-header">
-                    <h3 class="restaurant-type-title">中式</h3>
-                </div>
-                <div class="restaurant-grid">
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant1.jpg" alt="餐廳照片">
-                            <span class="rating">4.8</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">金悅軒</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">港式飲茶</span>
-                                <span class="tag">家庭聚餐</span>
-                            </p>
-                            <p class="restaurant-address">台北市中山區南京東路二段10號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">💳 可刷卡</span>
-                                <span class="feature">🅿️ 提供停車</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant2.jpg" alt="餐廳照片">
-                            <span class="rating">4.6</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">老上海點心坊</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">上海菜</span>
-                                <span class="tag">小籠包</span>
-                            </p>
-                            <p class="restaurant-address">台北市大安區忠孝東路四段112號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🥡 外帶服務</span>
-                                <span class="feature">📱 線上訂位</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant3.jpg" alt="餐廳照片">
-                            <span class="rating">4.7</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">粵香園</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">粵式料理</span>
-                                <span class="tag">海鮮</span>
-                            </p>
-                            <p class="restaurant-address">台北市信義區松仁路88號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🦞 活海鮮</span>
-                                <span class="feature">👥 包廂</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <section class="restaurants-section">
+        <h3 id="results-title">推薦餐廳</h3>
+        <div class="restaurants-grid" id="restaurants-container">
+            <!-- 餐廳卡片將由JavaScript動態生成 -->
         </div>
+    </section>
 
-        <!-- 日式餐廳 -->
-        <div class="restaurant-section" data-category="japanese">
-            <div class="restaurant-container">
-                <div class="restaurant-header">
-                    <h3 class="restaurant-type-title">日式</h3>
-                </div>
-                <div class="restaurant-grid">
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant4.jpg" alt="餐廳照片">
-                            <span class="rating">4.9</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">築地日本料理</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">生魚片</span>
-                                <span class="tag">壽司</span>
-                            </p>
-                            <p class="restaurant-address">台北市信義區松壽路28號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🍶 清酒專賣</span>
-                                <span class="feature">🪑 吧台座位</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant5.jpg" alt="餐廳照片">
-                            <span class="rating">4.7</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">武藏居酒屋</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">居酒屋</span>
-                                <span class="tag">串燒</span>
-                            </p>
-                            <p class="restaurant-address">台北市大安區安和路一段12號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🍺 生啤酒</span>
-                                <span class="feature">🍖 和牛料理</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant6.jpg" alt="餐廳照片">
-                            <span class="rating">4.8</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">京都抹茶屋</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">抹茶</span>
-                                <span class="tag">甜點</span>
-                            </p>
-                            <p class="restaurant-address">台北市中山區林森北路107號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🍵 日本直送</span>
-                                <span class="feature">🍡 和菓子</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 燒肉餐廳 -->
-        <div class="restaurant-section" data-category="bbq">
-            <div class="restaurant-container">
-                <div class="restaurant-header">
-                    <h3 class="restaurant-type-title">燒肉</h3>
-                </div>
-                <div class="restaurant-grid">
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant7.jpg" alt="餐廳照片">
-                            <span class="rating">4.7</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">炭火職人</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">和牛</span>
-                                <span class="tag">單點</span>
-                            </p>
-                            <p class="restaurant-address">台北市大安區敦化南路一段233號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🥩 A5和牛</span>
-                                <span class="feature">🍺 啤酒暢飲</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant8.jpg" alt="餐廳照片">
-                            <span class="rating">4.6</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">板前燒肉</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">日式燒肉</span>
-                                <span class="tag">套餐</span>
-                            </p>
-                            <p class="restaurant-address">台北市中山區林森北路45號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🍖 專人代烤</span>
-                                <span class="feature">🍶 日本清酒</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="restaurant-card">
-                        <div class="restaurant-image">
-                            <img src="images/restaurant9.jpg" alt="餐廳照片">
-                            <span class="rating">4.5</span>
-                        </div>
-                        <div class="restaurant-info">
-                            <h4 class="restaurant-name">韓式烤肉館</h4>
-                            <p class="restaurant-tags">
-                                <span class="tag">韓式燒肉</span>
-                                <span class="tag">吃到飽</span>
-                            </p>
-                            <p class="restaurant-address">台北市信義區松壽路20號</p>
-                            <div class="restaurant-features">
-                                <span class="feature">🥬 無限小菜</span>
-                                <span class="feature">🥘 部隊鍋</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 地圖容器 -->
+    <div id="map" style="height: 400px; margin: 20px auto; max-width: 1200px; border-radius: 12px; overflow: hidden;"></div>
 
     <script src="js/main.js"></script>
     <script src="ranking/ranking.js"></script>
+    <script>
+        // 處理寫食記按鈕點擊
+        function handleWriteReview() {
+            // 檢查是否已登入（這裡需要根據您的登入狀態管理方式來實現）
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                // 顯示登入彈跳視窗
+                document.getElementById('loginModal').style.display = 'block';
+                // 登入成功後的回調函數
+                window.onLoginSuccess = function() {
+                    window.location.href = 'blogPost.html';
+                };
+            } else {
+                // 已登入，直接跳轉到寫食記頁面
+                window.location.href = 'blogPost.html';
+            }
+        }
+
+        // 初始化登入模態框
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginModal = document.getElementById('loginModal');
+            if (loginModal) {
+                // 關閉按鈕事件
+                const closeBtn = loginModal.querySelector('.close');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        loginModal.style.display = 'none';
+                    };
+                }
+
+                // 點擊模態框外部關閉
+                window.onclick = function(event) {
+                    if (event.target === loginModal) {
+                        loginModal.style.display = 'none';
+                    }
+                };
+            }
+        });
+    </script>
     <script type="module">
     import FavoritesModule from './js/favoritesModule.js';
     const favoritesModule = new FavoritesModule();
