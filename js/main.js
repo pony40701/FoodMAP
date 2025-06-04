@@ -60,23 +60,64 @@ searchBtn.addEventListener('click', () => {
     }
 });
 
-// 登入狀態檢查
-function checkLoginStatus() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+// 登入彈窗功能
+function initLoginModal() {
     const loginBtn = document.querySelector('.btn-login');
-    
-    if (isLoggedIn) {
-        loginBtn.textContent = '會員中心';
-        loginBtn.onclick = () => {
-            window.location.href = 'userLogin.html';
-        };
-    } else {
-        loginBtn.textContent = '登入';
-        loginBtn.onclick = () => {
-            window.location.href = 'userLogin.html';
-        };
+    const modal = document.getElementById('loginModal');
+    const closeBtn = document.querySelector('.close');
+    const loginForm = document.getElementById('loginForm');
+
+    // 檢查登入狀態並更新按鈕
+    updateLoginStatus();
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                window.location.href = 'userCenter.html';
+            } else {
+                if (modal) modal.style.display = 'block';
+            }
+        });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            // 模擬登入成功
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userEmail', email);
+            modal.style.display = 'none';
+            updateLoginStatus();
+            window.location.href = 'userCenter.html';
+        });
     }
 }
-
-// 頁面載入時檢查登入狀態
-document.addEventListener('DOMContentLoaded', checkLoginStatus); 
+function updateLoginStatus() {
+    const loginBtn = document.querySelector('.btn-login');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (loginBtn) {
+        if (isLoggedIn) {
+            loginBtn.textContent = '會員中心';
+        } else {
+            loginBtn.textContent = '登入';
+        }
+    }
+}
+function socialLogin(platform) {
+    alert('社群登入（' + platform + '）功能尚未開放');
+}
+document.addEventListener('DOMContentLoaded', function() {
+    initLoginModal();
+}); 

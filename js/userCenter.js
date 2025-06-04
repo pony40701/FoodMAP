@@ -423,7 +423,7 @@ function checkLoginStatus() {
 function logout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
-    window.location.href = 'homePage.html';
+    window.location.href = 'index.html';
 }
 
 // 初始化選單

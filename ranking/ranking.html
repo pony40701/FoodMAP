@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美食排行榜系統</title>
+    <link rel="stylesheet" href="ranking.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>美食排行榜</h1>
+            <p>探索城市中最受歡迎的美食餐廳</p>
+        </header>
+
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">綜合排行</button>
+                <button class="filter-btn" data-filter="weekly">本周熱門</button>
+                <button class="filter-btn" data-filter="monthly">本月精選</button>
+                <button class="filter-btn" data-filter="new">新店推薦</button>
+            </div>
+        </div>
+
+        <div class="restaurant-list">
+            <!-- 餐廳列表將通過 JavaScript 動態載入 -->
+        </div>
+
+        <button class="load-more">載入更多</button>
+    </div>
+
+    <div class="modal" id="restaurantModal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="restaurant-detail">
+                <!-- 詳細內容將通過 JavaScript 動態載入 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="ranking.js"></script>
+</body>
+</html> 
