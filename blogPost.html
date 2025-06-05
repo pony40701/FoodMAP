@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>撰寫美食心得 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/blogPost.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        
+        <div class="navbar-right">
+            <a href="index.html" class="nav-link">餐廳列表</a>
+            <a href="ranking/ranking.html" class="nav-link">排行榜</a>
+            <a href="#" class="nav-link active">寫評論</a>
+            <button class="btn-login">登入</button>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <div class="content-container">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="profile-image">
+                    <img src="image/default-avatar.png" alt="用戶頭像" id="userAvatar">
+                </div>
+                <h3 id="userName">用戶名稱</h3>
+                <p id="userBio">美食探索家</p>
+            </div>
+            <nav class="blog-nav">
+                <a href="#" class="blog-nav-item active" onclick="showSection('write')">
+                    <i class="fas fa-pen"></i> 撰寫新文章
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('drafts')">
+                    <i class="fas fa-file"></i> 草稿箱
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('published')">
+                    <i class="fas fa-book"></i> 已發布文章
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('stats')">
+                    <i class="fas fa-chart-bar"></i> 文章數據
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主要編輯區域 -->
+        <main class="main-content">
+            <!-- 撰寫新文章區域 -->
+            <section id="write-section" class="content-section active">
+                <h2>撰寫美食心得</h2>
+                <form id="blogPostForm">
+                    <div class="form-group">
+                        <input type="text" id="postTitle" placeholder="文章標題" required>
+                    </div>
+                    <div class="form-group restaurant-info">
+                        <input type="text" id="restaurantName" placeholder="餐廳名稱" required>
+                        <input type="text" id="restaurantLocation" placeholder="餐廳地址" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="rating-section">
+                            <h3>餐廳評分</h3>
+                            <div class="rating-items">
+                                <div class="rating-item">
+                                    <span class="rating-label">用餐環境</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="environment">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">服務品質</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="service">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">餐點美味</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="taste">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">價格合理</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="price">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overall-rating">
+                                <span class="overall-rating-label">總評分</span>
+                                <div class="overall-rating-value">
+                                    <div class="stars">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="rating-value">0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="editor-toolbar">
+                            <!-- 字型樣式 -->
+                            <div class="toolbar-group">
+                                <div class="font-size-control">
+                                    <select id="fontSize" onchange="setFontSize(this.value)">
+                                        <option value="12">12</option>
+                                        <option value="14">14</option>
+                                        <option value="16" selected>16</option>
+                                        <option value="18">18</option>
+                                        <option value="20">20</option>
+                                        <option value="24">24</option>
+                                        <option value="28">28</option>
+                                        <option value="32">32</option>
+                                        <option value="36">36</option>
+                                        <option value="48">48</option>
+                                        <option value="72">72</option>
+                                    </select>
+                                </div>
+                                <div class="color-picker">
+                                    <button type="button" class="current-color" onclick="toggleColorPalette()" title="文字顏色">
+                                        <span class="color-preview" style="background-color: #000000"></span>
+                                    </button>
+                                    <div class="color-palette" style="display: none;">
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#000000" style="background-color: #000000"></button>
+                                            <button type="button" class="color-option" data-color="#434343" style="background-color: #434343"></button>
+                                            <button type="button" class="color-option" data-color="#666666" style="background-color: #666666"></button>
+                                            <button type="button" class="color-option" data-color="#999999" style="background-color: #999999"></button>
+                                            <button type="button" class="color-option" data-color="#b7b7b7" style="background-color: #b7b7b7"></button>
+                                            <button type="button" class="color-option" data-color="#cccccc" style="background-color: #cccccc"></button>
+                                            <button type="button" class="color-option" data-color="#d9d9d9" style="background-color: #d9d9d9"></button>
+                                            <button type="button" class="color-option" data-color="#ffffff" style="background-color: #ffffff"></button>
+                                        </div>
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#980000" style="background-color: #980000"></button>
+                                            <button type="button" class="color-option" data-color="#ff0000" style="background-color: #ff0000"></button>
+                                            <button type="button" class="color-option" data-color="#ff9900" style="background-color: #ff9900"></button>
+                                            <button type="button" class="color-option" data-color="#ffff00" style="background-color: #ffff00"></button>
+                                            <button type="button" class="color-option" data-color="#00ff00" style="background-color: #00ff00"></button>
+                                            <button type="button" class="color-option" data-color="#00ffff" style="background-color: #00ffff"></button>
+                                            <button type="button" class="color-option" data-color="#4a86e8" style="background-color: #4a86e8"></button>
+                                            <button type="button" class="color-option" data-color="#0000ff" style="background-color: #0000ff"></button>
+                                        </div>
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#9900ff" style="background-color: #9900ff"></button>
+                                            <button type="button" class="color-option" data-color="#ff00ff" style="background-color: #ff00ff"></button>
+                                            <button type="button" class="color-option" data-color="#ff99cc" style="background-color: #ff99cc"></button>
+                                            <button type="button" class="color-option" data-color="#99cc00" style="background-color: #99cc00"></button>
+                                            <button type="button" class="color-option" data-color="#009900" style="background-color: #009900"></button>
+                                            <button type="button" class="color-option" data-color="#006600" style="background-color: #006600"></button>
+                                            <button type="button" class="color-option" data-color="#00008b" style="background-color: #00008b"></button>
+                                            <button type="button" class="color-option" data-color="#000033" style="background-color: #000033"></button>
+                                        </div>
+                                        <div class="custom-color">
+                                            <label for="customColor">自訂顏色：</label>
+                                            <input type="color" id="customColor" value="#000000">
+                                            <button class="confirm-color-btn">確認</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 文字樣式 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="formatText('bold')" title="粗體 (Ctrl+B)">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" onclick="formatText('italic')" title="斜體 (Ctrl+I)">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" onclick="formatText('underline')" title="底線 (Ctrl+U)">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                            </div>
+                            <!-- 對齊方式 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="formatText('justifyLeft')" title="靠左對齊">
+                                    <i class="fas fa-align-left"></i>
+                                </button>
+                                <button type="button" onclick="formatText('justifyCenter')" title="置中對齊">
+                                    <i class="fas fa-align-center"></i>
+                                </button>
+                                <button type="button" onclick="formatText('justifyRight')" title="靠右對齊">
+                                    <i class="fas fa-align-right"></i>
+                                </button>
+                            </div>
+                            <!-- 圖片插入 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="insertImage()" title="插入圖片">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="editor" class="rich-editor" contenteditable="true" placeholder="分享您的美食體驗..."></div>
+                        <input type="file" id="imageUpload" accept="image/*" multiple style="display: none">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="tags" placeholder="新增標籤（用逗號分隔）">
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn-save-draft">儲存草稿</button>
+                        <button type="submit" class="btn-publish">發布文章</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- 草稿箱區域 -->
+            <section id="drafts-section" class="content-section">
+                <h2>草稿箱</h2>
+                <div class="posts-list" id="draftsList"></div>
+            </section>
+
+            <!-- 已發布文章區域 -->
+            <section id="published-section" class="content-section">
+                <h2>已發布文章</h2>
+                <div class="posts-list" id="publishedList"></div>
+            </section>
+
+            <!-- 文章數據區域 -->
+            <section id="stats-section" class="content-section">
+                <h2>文章數據</h2>
+                <div class="stats-container">
+                    <div class="stats-card">
+                        <h3>總觀看次數</h3>
+                        <p id="totalViews">0</p>
+                    </div>
+                    <div class="stats-card">
+                        <h3>總讚數</h3>
+                        <p id="totalLikes">0</p>
+                    </div>
+                </div>
+
+                <!-- 排行榜區域 -->
+                <div class="rankings-container">
+                    <div class="rankings-header">
+                        <h3>熱門文章排行</h3>
+                        <div class="rankings-tabs">
+                            <button class="ranking-tab active" data-type="views">最多觀看</button>
+                            <button class="ranking-tab" data-type="likes">最多讚數</button>
+                        </div>
+                    </div>
+                    
+                    <div id="viewsRanking" class="ranking-list active"></div>
+                    <div id="likesRanking" class="ranking-list"></div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <p>食力派ChowCrew致力於提供最優質的美食推薦與評論平台，讓您輕鬆發現身邊的美味。</p>
+                <div class="footer-links">
+                    <a href="termsOfService.html">服務條款</a>
+                    <a href="privacyPolicy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="#">商家註冊</a>
+                    <a href="ranking/ranking.html">排行榜</a>
+                    <a href="blogPost.html">寫評論</a>
+                    <a href="#">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p>📧 support@chowcrew.com</p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <!-- 添加必要的 JavaScript 函式庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="js/blogPost.js"></script>
+    <script>
+        // 確保頁面載入完成後初始化所有功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化編輯器功能
+            initEditor();
+            // 初始化星級評分
+            initRating();
+            // 載入用戶數據
+            loadUserData();
+            // 載入文章列表
+            loadPosts();
+            // 初始化統計圖表
+            initStatsChart();
+            // 初始化字型大小控制
+            initFontSize();
+            // 初始化顏色選擇器
+            initColorPicker();
+            // 初始化導覽列
+            initializeNavbar();
+            // 初始化評分系統
+            initRatingSystem();
+            // 如果當前在草稿箱頁面，載入草稿
+            if (document.getElementById('drafts-section').classList.contains('active')) {
+                loadDrafts();
+            }
+            // 初始化登入按鈕
+            const loginBtn = document.querySelector('.btn-login');
+            if (loginBtn) {
+                // 檢查登入狀態並更新按鈕文字
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                if (isLoggedIn) {
+                    loginBtn.textContent = '會員中心';
+                    loginBtn.onclick = function() {
+                        window.location.href = 'userCenter.html';
+                    };
+                } else {
+                    loginBtn.textContent = '登入';
+                    loginBtn.onclick = function() {
+                        // 顯示登入模態框
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'block';
+                            // 設置登入成功後的回調函數
+                            window.onLoginSuccess = function() {
+                                // 更新按鈕文字和行為
+                                loginBtn.textContent = '會員中心';
+                                loginBtn.onclick = function() {
+                                    window.location.href = 'userCenter.html';
+                                };
+                            };
+                        }
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
