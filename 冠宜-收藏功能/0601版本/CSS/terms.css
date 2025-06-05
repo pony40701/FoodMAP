@@ -1,0 +1,162 @@
+/* 全局樣式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #F97316;
+    --primary-light: #FDBA74;
+    --primary-dark: #EA580C;
+    --background: #FFF7ED;
+    --text: #1F2937;
+    --text-light: #6B7280;
+    --border: #E5E7EB;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+    background: var(--background);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    flex: 1;
+    width: 100%;
+}
+
+/* 條款框樣式 */
+.terms-box {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    padding: 2.5rem;
+    margin: 2rem auto;
+    border: 1px solid var(--border);
+}
+
+.terms-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.terms-header h1 {
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.terms-header p {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* 內容樣式 */
+.terms-content {
+    margin-bottom: 2rem;
+}
+
+.terms-content section {
+    margin-bottom: 2rem;
+}
+
+.terms-content h2 {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.terms-content p {
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.terms-content ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.terms-content li {
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+/* 返回按鈕 */
+.terms-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.btn-back {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .terms-box {
+        padding: 1.5rem;
+        margin: 1rem auto;
+    }
+
+    .terms-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .terms-content h2 {
+        font-size: 1.125rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .terms-box {
+        padding: 1.25rem;
+        margin: 0.5rem auto;
+    }
+
+    .terms-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .terms-content h2 {
+        font-size: 1rem;
+    }
+
+    .btn-back {
+        width: 100%;
+        text-align: center;
+    }
+} 

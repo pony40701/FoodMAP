@@ -1,0 +1,79 @@
+.food-types-section {
+    padding: 2rem 0;
+    background-color: #fff;
+}
+
+.food-types-section h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.food-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.food-type-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: #f8f8f8;
+}
+
+.food-type-item:hover {
+    transform: translateY(-5px);
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.emoji-circle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.food-type-item span {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .food-types {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .emoji-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .food-type-item span {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .food-types {
+        grid-template-columns: repeat(3, 1fr);
+    }
+} 
