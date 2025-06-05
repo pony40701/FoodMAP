@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>庫存管理 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/restaurant-stock.css" />
+</head>
+
+<body>
+    
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="navbar-right">
+            <div class="user-avatar">
+                <img src="images/TEST.jpg" alt="商家頭像" class="avatar-img">
+                <div class="avatar-dropdown">
+                    <a href="restaurant.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家資料</span>
+                    </a>
+                    <a href="restaurant-stock.html" class="dropdown-item">
+                        <i class="fas fa-boxes"></i>
+                        <span>庫存管理</span>
+                    </a>
+                    <a href="restaurant-revenue.html" class="dropdown-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>營收管理</span>
+                    </a>
+                    <a href="restaurant-comment.html" class="dropdown-item">
+                        <i class="fas fa-comments"></i>
+                        <span>店家評論</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="index.html" class="dropdown-item logout-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>登出</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <div class="content-section">
+        <div class="dashboard-container">
+            <!-- 左側選單 -->
+            <div class="sidebar">
+                <a href="restaurant.html" class="menu-item">
+                    <i class="fas fa-store"></i>
+                    <span>商家資料</span>
+                </a>
+                <a href="restaurant-stock.html" class="menu-item active">
+                    <i class="fas fa-boxes"></i>
+                    <span>庫存管理</span>
+                </a>
+                <a href="restaurant-revenue.html" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>營收管理</span>
+                </a>
+                <a href="restaurant-comment.html" class="menu-item">
+                    <i class="fas fa-comments"></i>
+                    <span>店家評論</span>
+                </a>
+            </div>
+
+            <!-- 主要內容區 -->
+            <div class="main-content">
+                <div class="content-header">
+                    <h1>庫存管理</h1>
+                    <button class="add-stock-btn" onclick="showAddStockModal()">
+                        <i class="fas fa-plus"></i>
+                        新增庫存
+                    </button>
+                </div>
+
+                <!-- 庫存列表 -->
+                <div class="stock-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>品名</th>
+                                <th>數量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <!-- 庫存項目將由 JavaScript 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增庫存彈窗 -->
+    <div class="modal" id="addStockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增庫存</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addStockForm">
+                    <div class="form-group">
+                        <label for="itemName">品名</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemQuantity">數量</label>
+                        <input type="text" id="itemQuantity" placeholder="例如：10箱、5公斤" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn">取消</button>
+                <button class="submit-btn">確認</button>
+            </div>
+        </div>
+    </div>
+
+   
+    <script src="js/restaurant-stock.js"></script>
+</body>
+
+</html> 

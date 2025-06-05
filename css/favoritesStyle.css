@@ -41,83 +41,145 @@
     margin-top: 20px;
 }
 
-.store-card {
-    position: relative;
-    background: white;
-    border-radius: 12px;
+.restaurant-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
+    margin: 16px 0;
+    transition: box-shadow 0.2s;
+    position: relative;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
 }
 
-.store-card:hover {
-    transform: translateY(-5px);
+.restaurant-card:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
-.store-image {
+.card-img-container {
+    position: relative;
     width: 100%;
-    height: 200px;
+    height: 180px;
+    overflow: hidden;
+}
+
+.card-img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
 }
 
 .favorite-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
+    top: 12px;
+    right: 12px;
+    background: #fff;
     border: none;
-    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s;
+    color: #ff6b1a;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 2;
 }
 
-.favorite-btn:hover {
-    background: #ff6b6b;
-    color: white;
+.card-content {
+    padding: 18px 18px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.favorite-btn.active {
-    background: #ff6b6b;
-    color: white;
+.card-title-row {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
 }
 
-.store-info {
-    padding: 15px;
+.card-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: #ff9800;
 }
 
-.store-name {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-    color: #333;
+.card-stars {
+    font-size: 16px;
 }
 
-.store-rating {
-    color: #ffd700;
-    margin-bottom: 8px;
+.card-rating {
+    font-weight: 600;
+    color: #ff9800;
 }
 
-.store-address {
+.card-reviews {
+    color: #888;
+    font-size: 13px;
+}
+
+.card-address-row {
+    display: flex;
+    align-items: center;
     color: #666;
     font-size: 14px;
-    margin-bottom: 8px;
+    gap: 4px;
 }
 
-.store-status {
-    font-size: 14px;
-    color: #28a745;
-}
-
-.store-actions {
-    padding: 15px;
-    border-top: 1px solid #eee;
+.card-tags-row {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.card-tag {
+    background: #ffe0b2;
+    color: #ff9800;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.card-status {
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.card-status.closed {
+    background: #ffeaea;
+    color: #e53935;
+}
+
+.card-status.open {
+    background: #e0f7e9;
+    color: #43a047;
+}
+
+.card-hours-row {
+    color: #888;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* 讓卡片區塊橫向排列並自動換行 */
+.restaurants-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: flex-start;
 }
 
 /* 心得卡片樣式 */

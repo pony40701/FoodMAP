@@ -1,0 +1,464 @@
+/* ========== 基礎重置樣式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    padding-top: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: #f5f5f5;
+}
+
+
+/* ========== 內容區域 ========== */
+.content-section {
+    margin-top: 90px;
+    position: relative;
+    z-index: 1;
+    padding: 30px 20px;
+    min-height: calc(100vh - 90px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 248, 240, 0.95) 100%);
+}
+
+/* ========== 註冊表單容器 ========== */
+.signup-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 8px 32px rgba(255, 107, 26, 0.1);
+    border: 1px solid rgba(255, 107, 26, 0.2);
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.signup-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.signup-header h1 {
+    color: #ff6b1a;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.signup-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+/* ========== 表單區塊樣式 ========== */
+.form-section {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 107, 26, 0.1);
+}
+
+.form-section h2 {
+    color: #ff6b1a;
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 15px;
+    color: #ff6b1a;
+    font-size: 18px;
+}
+
+.input-with-icon input,
+.input-with-icon select {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    border: 2px solid rgba(255, 107, 26, 0.2);
+    border-radius: 12px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.input-with-icon input:focus,
+.input-with-icon select:focus {
+    border-color: #ff6b1a;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.1);
+}
+
+/* ========== 同意條款樣式 ========== */
+.terms-group {
+    margin: 24px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #ff6b1a;
+}
+
+.checkbox-label a {
+    color: #ff6b1a;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label a:hover {
+    color: #ff8c42;
+    text-decoration: underline;
+}
+
+/* ========== 註冊按鈕樣式 ========== */
+.signup-button {
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
+    width: 100%;
+}
+
+.signup-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 26, 0.4);
+}
+
+.signup-button:active {
+    transform: translateY(0);
+}
+
+/* ========== 登入連結樣式 ========== */
+.login-link {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.login-link a {
+    color: #ff6b1a;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.login-link a:hover {
+    color: #ff8c42;
+    text-decoration: underline;
+}
+
+/* ========== 錯誤訊息樣式 ========== */
+.error-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 5px;
+    padding-left: 5px;
+    border-left: 3px solid #ff6b6b;
+}
+
+/* ========== 成功訊息樣式 ========== */
+.success-message {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* ========== 響應式設計 ========== */
+@media (max-width: 768px) {
+    .content-section {
+        margin-top: 120px;
+        padding: 20px;
+    }
+
+    .signup-container {
+        padding: 30px 20px;
+    }
+
+    .signup-header h1 {
+        font-size: 28px;
+    }
+
+    .form-section {
+        padding: 20px;
+    }
+
+    .input-with-icon input,
+    .input-with-icon select {
+        padding: 10px 15px 10px 40px;
+    }
+
+    .signup-button {
+        padding: 12px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-section {
+        margin-top: 100px;
+        padding: 15px;
+    }
+
+    .signup-container {
+        padding: 25px 15px;
+    }
+
+    .signup-header h1 {
+        font-size: 24px;
+    }
+
+    .form-section {
+        padding: 16px;
+    }
+
+    .form-section h2 {
+        font-size: 18px;
+    }
+
+    .input-with-icon input,
+    .input-with-icon select {
+        padding: 8px 15px 8px 35px;
+        font-size: 14px;
+    }
+
+    .signup-button {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .checkbox-label {
+        font-size: 13px;
+    }
+}
+
+/* ========== 頭像上傳樣式 ========== */
+.avatar-upload {
+    margin-bottom: 24px;
+}
+
+.avatar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    border: 3px dashed #ff6b1a;
+    background: rgba(255, 107, 26, 0.05);
+    transition: all 0.3s ease;
+}
+
+.avatar-preview:hover {
+    transform: scale(1.05);
+    border-color: #ff8c42;
+    background: rgba(255, 107, 26, 0.1);
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ff6b1a;
+    transition: all 0.3s ease;
+}
+
+.avatar-placeholder i {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.avatar-placeholder span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.avatar-input {
+    display: none;
+}
+
+.avatar-hint {
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+/* 當有上傳圖片時的樣式 */
+.avatar-preview.has-image {
+    border-style: solid;
+}
+
+.avatar-preview.has-image .avatar-placeholder {
+    display: none;
+}
+
+.avatar-preview.has-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 照片上傳區域樣式 */
+.photo-upload-area {
+    margin-top: 10px;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.add-photo {
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f8f8;
+}
+
+.add-photo:hover {
+    border-color: #ff6b1a;
+    background: #fff;
+}
+
+.add-photo-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #666;
+}
+
+.add-photo-content i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #ff6b1a;
+}
+
+.add-photo-content span {
+    font-size: 14px;
+}
+
+.photo-input {
+    display: none;
+}
+
+.photo-hint {
+    font-size: 14px;
+    color: #666;
+    margin-top: 8px;
+}
+
+/* 照片預覽樣式 */
+.photo-preview {
+    position: relative;
+}
+
+.photo-preview .delete-photo {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.photo-preview:hover .delete-photo {
+    opacity: 1;
+}
+
+.delete-photo i {
+    font-size: 12px;
+} 

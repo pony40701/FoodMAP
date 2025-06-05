@@ -7,6 +7,267 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/blogPost.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 登入和用戶區塊樣式 */
+        .login-section,
+        .user-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 會員頭像樣式 */
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: visible;
+            cursor: pointer;
+            border: 2px solid #ff6b1a;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1001;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 107, 26, 0.4);
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        /* 頭像下拉選單樣式 */
+        .avatar-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 107, 26, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1002;
+        }
+        
+        .user-avatar:hover .avatar-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .avatar-dropdown .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #ff6b1a;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 107, 26, 0.1);
+            white-space: nowrap;
+        }
+        
+        .avatar-dropdown .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .avatar-dropdown .dropdown-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .avatar-dropdown .dropdown-item:hover {
+            background: rgba(255, 107, 26, 0.1);
+            color: #ff8c42;
+        }
+        
+        /* 下拉選單分隔線 */
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 107, 26, 0.1);
+            margin: 8px 0;
+        }
+        
+        /* 登出選項樣式 */
+        .logout-item {
+            color: #ff4757 !important;
+        }
+        
+        .logout-item:hover {
+            background: rgba(255, 71, 87, 0.1) !important;
+            color: #ff6b81 !important;
+        }
+        
+        .logout-item i {
+            color: inherit;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .avatar-dropdown {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 12px 12px 0 0;
+                transform: translateY(100%);
+            }
+            
+            .user-avatar:hover .avatar-dropdown {
+                transform: translateY(0);
+            }
+            
+            .avatar-dropdown .dropdown-item {
+                padding: 16px;
+                font-size: 18px;
+            }
+            
+            .avatar-dropdown .dropdown-item i {
+                font-size: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .avatar-dropdown .dropdown-item {
+                padding: 14px;
+                font-size: 16px;
+            }
+            
+            .avatar-dropdown .dropdown-item i {
+                font-size: 18px;
+            }
+        }
+        
+        /* 登入模態框樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            border-radius: 16px;
+            padding: 32px 32px 24px 32px;
+            border: 1px solid #ff6b1a;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .modal-header h2 {
+            font-size: 28px;
+            color: #ff6b1a;
+            margin: 0;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close:hover {
+            color: #ff6b1a;
+        }
+        .modal-body {
+            padding: 0;
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-group label {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+        .form-group input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .form-group input:focus {
+            border: 1.5px solid #ff6b1a;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 0;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.3s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #e55a15 0%, #d4500f 100%);
+        }
+        .form-footer {
+            margin-top: 12px;
+            text-align: center;
+        }
+        .form-footer a {
+            color: #ff6b1a;
+            text-decoration: none;
+            margin: 0 4px;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .form-footer a:hover {
+            color: #e55a15;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .modal-content { padding: 18px 6px 12px 6px; }
+            .modal-header h2 { font-size: 22px; }
+        }
+    </style>
 </head>
 <body>
     <!-- 導覽列 -->
@@ -19,7 +280,49 @@
             <a href="index.html" class="nav-link">餐廳列表</a>
             <a href="ranking/ranking.html" class="nav-link">排行榜</a>
             <a href="#" class="nav-link active">寫評論</a>
-            <button class="btn-login">登入</button>
+            
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#profile" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>個人資料</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <a href="usercenter.html#settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>帳號設定</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -325,8 +628,35 @@
         </div>
     </footer>
 
+    <!-- 登入彈跳視窗 -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>登入</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm" class="login-form">
+            <div class="form-group">
+              <label for="email">電子郵件</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="password">密碼</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 添加必要的 JavaScript 函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="js/login.js"></script>
     <script src="js/blogPost.js"></script>
     <script>
         // 確保頁面載入完成後初始化所有功能
@@ -353,35 +683,8 @@
             if (document.getElementById('drafts-section').classList.contains('active')) {
                 loadDrafts();
             }
-            // 初始化登入按鈕
-            const loginBtn = document.querySelector('.btn-login');
-            if (loginBtn) {
-                // 檢查登入狀態並更新按鈕文字
-                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-                if (isLoggedIn) {
-                    loginBtn.textContent = '會員中心';
-                    loginBtn.onclick = function() {
-                        window.location.href = 'userCenter.html';
-                    };
-                } else {
-                    loginBtn.textContent = '登入';
-                    loginBtn.onclick = function() {
-                        // 顯示登入模態框
-                        const loginModal = document.getElementById('loginModal');
-                        if (loginModal) {
-                            loginModal.style.display = 'block';
-                            // 設置登入成功後的回調函數
-                            window.onLoginSuccess = function() {
-                                // 更新按鈕文字和行為
-                                loginBtn.textContent = '會員中心';
-                                loginBtn.onclick = function() {
-                                    window.location.href = 'userCenter.html';
-                                };
-                            };
-                        }
-                    };
-                }
-            }
+            // 登入狀態管理已移至 login.js
+            // 這裡不需要額外的登入按鈕初始化
         });
     </script>
 </body>

@@ -419,12 +419,7 @@ function checkLoginStatus() {
     }
 }
 
-// 登出功能
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
-    window.location.href = 'index.html';
-}
+// 登出功能已移至 login.js 統一管理
 
 // 初始化選單
 function initMenu() {
@@ -736,8 +731,26 @@ function initializePage() {
     loadNotifications(); // 載入通知
     initializeCharts(); // 初始化圖表
 
-    // 確保頁面載入時顯示個人資料區塊並高亮對應選單項
-    switchSection('profile');
+    // 處理 URL 錨點，如果沒有則顯示個人資料區塊
+    handleURLHash();
+}
+
+// 處理 URL 錨點
+function handleURLHash() {
+    const hash = window.location.hash;
+    let targetSection = 'profile'; // 默認顯示個人資料
+    
+    if (hash) {
+        // 移除 # 符號
+        const sectionId = hash.substring(1);
+        // 檢查是否為有效的區塊 ID
+        const validSections = ['profile', 'analytics', 'orders', 'reviews', 'notifications', 'favorites', 'settings'];
+        if (validSections.includes(sectionId)) {
+            targetSection = sectionId;
+        }
+    }
+    
+    switchSection(targetSection);
 }
 
 // 初始化圖表 (保留原有的假圖表)
@@ -749,12 +762,17 @@ function initializeCharts() {
 
 // 設置事件監聽器
 function setupEventListeners() {
+    // 監聽 hashchange 事件，處理瀏覽器後退/前進
+    window.addEventListener('hashchange', handleURLHash);
+    
     // 選單切換
     document.querySelectorAll('.sidebar .menu-item').forEach(item => { // 確保選擇器正確
         item.addEventListener('click', function(e) {
             e.preventDefault();
             const section = this.getAttribute('data-section');
-            switchSection(section); // <-- 確保呼叫正確
+            // 更新 URL hash
+            window.location.hash = section;
+            // switchSection 會由 hashchange 事件觸發
         });
     });
 
@@ -1005,3 +1023,6 @@ function updateProfile() {
 
     alert('個人資料已更新');
 }
+
+// 當 DOM 載入完成時初始化頁面
+document.addEventListener('DOMContentLoaded', initializePage);

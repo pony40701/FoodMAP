@@ -1210,9 +1210,25 @@ function displayRestaurants(places) {
         return;
     }
     
+    // 排序：將被收藏的餐廳放在最前面
+    const sortedPlaces = places.sort((a, b) => {
+        const aIsFavorite = isFavorite(a.id);
+        const bIsFavorite = isFavorite(b.id);
+        
+        // 被收藏的排在前面
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
+        
+        // 如果都被收藏或都未被收藏，按評分排序（高分在前）
+        const aRating = parseFloat(a.rating) || 0;
+        const bRating = parseFloat(b.rating) || 0;
+        return bRating - aRating;
+    });
+    
+    console.log('餐廳已按收藏狀態和評分排序');
     console.log('開始創建餐廳卡片...');
     
-    places.forEach((place, index) => {
+    sortedPlaces.forEach((place, index) => {
         try {
             console.log(`創建餐廳卡片 ${index + 1}:`, place.name);
             
@@ -1244,17 +1260,24 @@ function displayRestaurants(places) {
             
             const card = document.createElement('div');
             card.className = 'restaurant-card';
+            
+            // 為被收藏的餐廳添加特殊樣式
+            if (isCurrentlyFavorite) {
+                card.classList.add('favorited');
+            }
+            
             card.innerHTML = `
                 <div class="restaurant-image">
                     <img src="${imageUrl}" alt="${name}" onerror="this.src='https://via.placeholder.com/400x300?text=餐廳圖片'">
-                    <div class="card-actions">
+                    ${isCurrentlyFavorite ? '<div class="favorite-badge">❤️ 已收藏</div>' : ''}
+                </div>
+                <div class="card-info">
+                    <div class="restaurant-name-container">
+                        <h4 class="restaurant-name">${name}</h4>
                         <button class="favorite-btn" data-place-id="${place.id}">
                             <i class="${isCurrentlyFavorite ? 'fas' : 'far'} fa-star"></i>
                         </button>
                     </div>
-                </div>
-                <div class="card-info">
-                    <h4 class="restaurant-name">${name}</h4>
                     <div class="restaurant-rating">
                         <div class="rating-stars">
                             <span class="stars">${starsDisplay}</span>
@@ -1288,6 +1311,15 @@ function displayRestaurants(places) {
                     toggleFavoriteStore(place);
                 });
             }
+            
+            // 添加卡片點擊事件，顯示詳細資訊彈窗
+            card.addEventListener('click', (event) => {
+                // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
+                if (event.target.closest('.favorite-btn')) {
+                    return;
+                }
+                showRestaurantModal(place);
+            });
             
             container.appendChild(card);
             console.log(`✅ 餐廳卡片 ${index + 1} 創建並添加完成`);
@@ -2366,6 +2398,47 @@ function isFavorite(placeId) {
     return favoritePlaceIds.includes(placeId);
 }
 
+// 重新排序當前顯示的餐廳列表
+function refreshCurrentRestaurantList() {
+    const container = document.getElementById('restaurants-container');
+    if (!container) return;
+    
+    const restaurantCards = Array.from(container.querySelectorAll('.restaurant-card'));
+    if (restaurantCards.length === 0) return;
+    
+    // 提取餐廳資料並重新排序
+    const restaurantData = restaurantCards.map(card => {
+        const nameElement = card.querySelector('.restaurant-name');
+        const placeIdElement = card.querySelector('[data-place-id]');
+        const ratingElement = card.querySelector('.rating-value');
+        
+        return {
+            element: card,
+            placeId: placeIdElement ? placeIdElement.dataset.placeId : '',
+            name: nameElement ? nameElement.textContent : '',
+            rating: ratingElement ? parseFloat(ratingElement.textContent) || 0 : 0
+        };
+    });
+    
+    // 排序：收藏的在前面，然後按評分排序
+    restaurantData.sort((a, b) => {
+        const aIsFavorite = isFavorite(a.placeId);
+        const bIsFavorite = isFavorite(b.placeId);
+        
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
+        
+        return b.rating - a.rating;
+    });
+    
+    // 重新排列DOM元素
+    restaurantData.forEach(data => {
+        container.appendChild(data.element);
+    });
+    
+    console.log('餐廳列表已重新排序');
+}
+
 // 收藏功能
 function toggleFavoriteStore(restaurant) {
     // 檢查登入狀態
@@ -2398,5 +2471,208 @@ function toggleFavoriteStore(restaurant) {
         if (icon) {
             icon.className = isFavorite(placeId) ? 'fas fa-star' : 'far fa-star';
         }
+        
+        // 更新卡片的收藏樣式
+        const restaurantCard = favoriteBtn.closest('.restaurant-card');
+        if (restaurantCard) {
+            const restaurantImage = restaurantCard.querySelector('.restaurant-image');
+            const existingBadge = restaurantCard.querySelector('.favorite-badge');
+            
+            if (isFavorite(placeId)) {
+                // 添加收藏樣式
+                restaurantCard.classList.add('favorited');
+                // 添加收藏標記
+                if (!existingBadge && restaurantImage) {
+                    const badge = document.createElement('div');
+                    badge.className = 'favorite-badge';
+                    badge.innerHTML = '❤️ 已收藏';
+                    restaurantImage.appendChild(badge);
+                }
+            } else {
+                // 移除收藏樣式
+                restaurantCard.classList.remove('favorited');
+                // 移除收藏標記
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+            }
+        }
+    }
+    
+         // 重新獲取當前顯示的餐廳列表，並重新排序顯示
+     setTimeout(() => {
+         refreshCurrentRestaurantList();
+     }, 300);
+}
+
+// 顯示餐廳詳細資訊彈窗
+function showRestaurantModal(restaurant) {
+    const modal = document.getElementById('restaurantModal');
+    if (!modal) return;
+    
+    // 填充餐廳資訊
+    document.getElementById('modal-restaurant-name').textContent = restaurant.name || '無名稱';
+    document.getElementById('modal-restaurant-img').src = restaurant.image || 'https://via.placeholder.com/400x300?text=餐廳圖片';
+    document.getElementById('modal-address').textContent = restaurant.address || '地址未提供';
+    
+    // 評分資訊
+    const rating = restaurant.rating ? restaurant.rating.toFixed(1) : '0.0';
+    const ratingCount = restaurant.user_ratings_total || 0;
+    const fullStars = Math.floor(parseFloat(rating));
+    const hasHalfStar = (parseFloat(rating) % 1) >= 0.5;
+    const emptyStars = 5 - Math.ceil(parseFloat(rating));
+    const starsDisplay = '★'.repeat(fullStars) + (hasHalfStar ? '½' : '') + '☆'.repeat(emptyStars);
+    
+    document.getElementById('modal-stars').textContent = starsDisplay;
+    document.getElementById('modal-rating').textContent = rating;
+    document.getElementById('modal-rating-count').textContent = `(${ratingCount}則評論)`;
+    
+    // 類型資訊
+    const rawType = restaurant.type || 'restaurant';
+    const formattedType = formatRestaurantType(rawType);
+    const typeIcon = getRestaurantTypeIcon(rawType);
+    document.getElementById('modal-type-icon').textContent = typeIcon;
+    document.getElementById('modal-type-text').textContent = formattedType;
+    
+    // 營業狀態
+    const isOpen = restaurant.isOpen;
+    const statusElement = document.getElementById('modal-status');
+    const statusClass = isOpen ? 'status-open' : 'status-closed';
+    const statusText = isOpen ? '營業中' : '已打烊';
+    statusElement.className = `modal-status ${statusClass}`;
+    statusElement.querySelector('.modal-status-text').textContent = statusText;
+    
+    const todayHours = getTodayOpeningHours(restaurant);
+    document.getElementById('modal-today-hours').textContent = todayHours;
+    
+    // 收藏按鈕
+    const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
+    const isCurrentlyFavorite = isFavorite(restaurant.id);
+    
+    modalFavoriteBtn.className = `modal-favorite-btn ${isCurrentlyFavorite ? 'favorited' : ''}`;
+    modalFavoriteBtn.innerHTML = `<i class="${isCurrentlyFavorite ? 'fas' : 'far'} fa-star"></i> ${isCurrentlyFavorite ? '已收藏' : '收藏'}`;
+    
+    // 移除舊的事件監聽器並添加新的
+    const newFavoriteBtn = modalFavoriteBtn.cloneNode(true);
+    modalFavoriteBtn.parentNode.replaceChild(newFavoriteBtn, modalFavoriteBtn);
+    
+    newFavoriteBtn.addEventListener('click', () => {
+        toggleFavoriteStore(restaurant);
+        // 更新彈窗中的收藏狀態
+        setTimeout(() => {
+            const updatedIsFavorite = isFavorite(restaurant.id);
+            newFavoriteBtn.className = `modal-favorite-btn ${updatedIsFavorite ? 'favorited' : ''}`;
+            newFavoriteBtn.innerHTML = `<i class="${updatedIsFavorite ? 'fas' : 'far'} fa-star"></i> ${updatedIsFavorite ? '已收藏' : '收藏'}`;
+        }, 100);
+    });
+    
+    // 儲存餐廳資訊以供導航使用
+    window.currentModalRestaurant = restaurant;
+    
+    // 顯示彈窗
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 防止背景滾動
+    
+    // 初始化彈窗中的地圖
+    setTimeout(() => {
+        initModalMap(restaurant);
+    }, 300);
+}
+
+// 關閉餐廳詳細資訊彈窗
+function closeRestaurantModal() {
+    const modal = document.getElementById('restaurantModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // 恢復背景滾動
+    }
+}
+
+// 初始化彈窗中的地圖
+function initModalMap(restaurant) {
+    const modalMapElement = document.getElementById('modal-map');
+    if (!modalMapElement) return;
+    
+    // 檢查是否有座標資訊
+    let location;
+    if (restaurant.geometry && restaurant.geometry.location) {
+        if (typeof restaurant.geometry.location.lat === 'function') {
+            location = {
+                lat: restaurant.geometry.location.lat(),
+                lng: restaurant.geometry.location.lng()
+            };
+        } else {
+            location = restaurant.geometry.location;
+        }
+    } else if (restaurant.lat && restaurant.lng) {
+        location = {
+            lat: restaurant.lat,
+            lng: restaurant.lng
+        };
+    } else {
+        // 如果沒有座標，使用台北市中心
+        location = { lat: 25.0330, lng: 121.5654 };
+    }
+    
+    // 創建地圖
+    const modalMap = new google.maps.Map(modalMapElement, {
+        zoom: 16,
+        center: location,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+    });
+    
+    // 添加標記
+    const marker = new google.maps.Marker({
+        position: location,
+        map: modalMap,
+        title: restaurant.name,
+        icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="12" fill="#ff6b1a" stroke="#fff" stroke-width="3"/>
+                    <text x="16" y="20" text-anchor="middle" fill="white" font-size="16">🍽️</text>
+                </svg>
+            `),
+            scaledSize: new google.maps.Size(32, 32)
+        }
+    });
+    
+    // 儲存地圖實例以供其他功能使用
+    window.modalMap = modalMap;
+    window.modalMarker = marker;
+}
+
+// 開啟Google Maps導航
+function openGoogleMaps() {
+    const restaurant = window.currentModalRestaurant;
+    if (!restaurant) return;
+    
+    let location;
+    if (restaurant.geometry && restaurant.geometry.location) {
+        if (typeof restaurant.geometry.location.lat === 'function') {
+            location = {
+                lat: restaurant.geometry.location.lat(),
+                lng: restaurant.geometry.location.lng()
+            };
+        } else {
+            location = restaurant.geometry.location;
+        }
+    } else if (restaurant.lat && restaurant.lng) {
+        location = {
+            lat: restaurant.lat,
+            lng: restaurant.lng
+        };
+    }
+    
+    if (location) {
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}&destination_place_id=${restaurant.place_id || ''}`;
+        window.open(googleMapsUrl, '_blank');
+    } else {
+        // 如果沒有座標，使用名稱和地址搜索
+        const query = encodeURIComponent(`${restaurant.name} ${restaurant.address || ''}`);
+        const googleMapsUrl = `https://www.google.com/maps/search/${query}`;
+        window.open(googleMapsUrl, '_blank');
     }
 }
