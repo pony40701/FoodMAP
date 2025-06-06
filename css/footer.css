@@ -1,0 +1,241 @@
+.footer {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(255, 107, 26, 0.1) 100%);
+    color: #fff;
+    padding: 50px 20px 20px 20px;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    margin-top: 60px;
+    border-top: 3px solid #ff6b1a;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.footer a {
+    text-decoration: none;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+    gap: 40px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    text-align: left;
+}
+
+.footer-section h4 {
+    font-size: 22px;
+    color: #ff6b1a;
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b1a 0%, #ff8c42 100%);
+    border-radius: 1px;
+}
+
+.footer-section p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #ddd;
+    margin-bottom: 15px;
+}
+
+.footer-section p a {
+    color: #ccc;
+    transition: all 0.3s ease;
+}
+
+.footer-section p a:hover {
+    color: #ff6b1a;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-links a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    padding: 5px 0;
+    border-radius: 4px;
+}
+
+.footer-links a:hover {
+    color: #ff6b1a;
+    padding-left: 10px;
+    background: rgba(255, 107, 26, 0.1);
+}
+
+.social-icons {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.social-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-icons a:hover {
+    transform: translateY(-3px);
+    background: #ff6b1a;
+    box-shadow: 0 5px 15px rgba(255, 107, 26, 0.3);
+}
+
+.social-icons a[aria-label="Facebook"]:hover {
+    background: #1877f2;
+    box-shadow: 0 5px 15px rgba(24, 119, 242, 0.3);
+}
+
+.social-icons a[aria-label="Instagram"]:hover {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    box-shadow: 0 5px 15px rgba(225, 48, 108, 0.3);
+}
+
+.social-icons a[aria-label="Line"]:hover {
+    background: #00b900;
+    box-shadow: 0 5px 15px rgba(0, 185, 0, 0.3);
+}
+
+.social-icons a[aria-label="Twitter"]:hover {
+    background: #1da1f2;
+    box-shadow: 0 5px 15px rgba(29, 161, 242, 0.3);
+}
+
+.social-icons i {
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover i {
+    transform: scale(1.2);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 107, 26, 0.3);
+    padding-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+    background: rgba(0, 0, 0, 0.3);
+    margin: 0 -20px -20px -20px;
+    padding: 20px;
+}
+
+/* ========== 頁尾響應式設計 ========== */
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 16px 16px 16px;
+        margin-top: 40px;
+    }
+    
+    .footer-container {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+    }
+    
+    .footer-section {
+        min-width: auto;
+        text-align: center;
+    }
+    
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .footer-links {
+        align-items: center;
+    }
+    
+    .social-icons {
+        gap: 12px;
+    }
+    
+    .social-icons a {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .social-icons i {
+        font-size: 18px;
+    }
+    
+    .footer-bottom {
+        margin: 0 -16px -16px -16px;
+        padding: 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 30px 12px 12px 12px;
+    }
+    
+    .footer-container {
+        gap: 25px;
+    }
+    
+    .footer-section h4 {
+        font-size: 20px;
+    }
+    
+    .footer-section p {
+        font-size: 15px;
+    }
+    
+    .footer-links a {
+        font-size: 15px;
+    }
+    
+    .social-icons {
+        gap: 10px;
+    }
+    
+    .social-icons a {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .social-icons i {
+        font-size: 16px;
+    }
+    
+    .footer-bottom {
+        margin: 0 -12px -12px -12px;
+        padding: 12px;
+        font-size: 12px;
+    }
+}
