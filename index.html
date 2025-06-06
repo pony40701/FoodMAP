@@ -734,7 +734,13 @@
                                     <i class="fas fa-clock"></i>
                                     <span class="modal-status-text">營業中</span>
                                 </div>
-                                <div class="modal-today-hours" id="modal-today-hours">週一 09:00 - 22:00</div>
+                                <div class="modal-today-hours-container">
+                                    <div class="modal-today-hours" id="modal-today-hours">週一 09:00 - 22:00</div>
+                                    <div class="modal-hours-info-btn" id="modal-hours-info-btn" onclick="window.showWeeklyHoursModal()">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span>完整時間</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="modal-actions">
                                 <button class="modal-favorite-btn" id="modal-favorite-btn">
@@ -753,6 +759,19 @@
                     <h3>位置資訊</h3>
                     <div id="modal-map" style="height: 300px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 營業時間詳細彈窗 -->
+    <div id="weeklyHoursModal" class="weekly-hours-modal">
+        <div class="weekly-hours-modal-content">
+            <div class="weekly-hours-modal-header">
+                <h3>營業時間</h3>
+                <span class="weekly-hours-modal-close" onclick="closeWeeklyHoursModal()">&times;</span>
+            </div>
+            <div class="weekly-hours-modal-body" id="weekly-hours-modal-body">
+                <!-- 一週的營業時間將由JavaScript動態填充 -->
             </div>
         </div>
     </div>
@@ -858,6 +877,10 @@
                 const restaurantLoginModal = document.getElementById('restaurantLoginModal');
                 if (event.target === restaurantLoginModal) {
                     closeRestaurantLoginModal();
+                }
+                const weeklyHoursModal = document.getElementById('weeklyHoursModal');
+                if (event.target === weeklyHoursModal) {
+                    closeWeeklyHoursModal();
                 }
             };
         });
