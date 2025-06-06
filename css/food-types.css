@@ -11,12 +11,14 @@
 }
 
 .food-types {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .food-type-item {
@@ -50,15 +52,16 @@
 }
 
 .food-type-item span {
-    font-size: 1rem;
+    font-size: 1.2rem;
     color: #333;
-    font-weight: 500;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 0.5rem;
 }
 
 @media (max-width: 768px) {
     .food-types {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
+        justify-content: flex-start;
     }
 
     .emoji-circle {
@@ -68,12 +71,16 @@
     }
 
     .food-type-item span {
-        font-size: 0.9rem;
+        font-size: 1.1rem;
     }
 }
 
 @media (max-width: 480px) {
     .food-types {
-        grid-template-columns: repeat(3, 1fr);
+        justify-content: flex-start;
+    }
+
+    .food-type-item span {
+        font-size: 1rem;
     }
 } 
