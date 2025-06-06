@@ -270,6 +270,93 @@
         color: inherit;
     }
     
+    /* 商家專用下拉選單樣式 */
+    .restaurant-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .restaurant-dropdown .nav-link {
+        color: #ff6b1a;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    
+    .restaurant-dropdown .nav-link:hover {
+        background: rgba(255, 107, 26, 0.1);
+        border-color: rgba(255, 107, 26, 0.3);
+    }
+    
+    .restaurant-dropdown-content {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 107, 26, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        z-index: 1002;
+    }
+    
+    .restaurant-dropdown:hover .restaurant-dropdown-content {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .restaurant-dropdown-content .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        color: #ff6b1a;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 107, 26, 0.1);
+        white-space: nowrap;
+    }
+    
+    .restaurant-dropdown-content .dropdown-item:last-child {
+        border-bottom: none;
+    }
+    
+    .restaurant-dropdown-content .dropdown-item i {
+        font-size: 18px;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .restaurant-dropdown-content .dropdown-item:hover {
+        background: rgba(255, 107, 26, 0.1);
+        color: #ff8c42;
+    }
+    
+    /* 下箭頭動畫效果 */
+    .restaurant-dropdown .nav-link i {
+        margin-left: 6px;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+    
+    .restaurant-dropdown:hover .nav-link i {
+        transform: rotate(180deg);
+    }
+
     /* 響應式設計 */
     @media (max-width: 768px) {
         .avatar-dropdown {
@@ -295,6 +382,30 @@
         .avatar-dropdown .dropdown-item i {
             font-size: 20px;
         }
+        
+        .restaurant-dropdown-content {
+            position: fixed;
+            top: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            border-radius: 12px 12px 0 0;
+            transform: translateY(100%);
+        }
+        
+        .restaurant-dropdown:hover .restaurant-dropdown-content {
+            transform: translateY(0);
+        }
+        
+        .restaurant-dropdown-content .dropdown-item {
+            padding: 16px;
+            font-size: 18px;
+        }
+        
+        .restaurant-dropdown-content .dropdown-item i {
+            font-size: 20px;
+        }
     }
     
     @media (max-width: 480px) {
@@ -304,6 +415,15 @@
         }
         
         .avatar-dropdown .dropdown-item i {
+            font-size: 18px;
+        }
+        
+        .restaurant-dropdown-content .dropdown-item {
+            padding: 14px;
+            font-size: 16px;
+        }
+        
+        .restaurant-dropdown-content .dropdown-item i {
             font-size: 18px;
         }
     }
@@ -403,21 +523,46 @@
             </div>
         </div>
         <div class="navbar-right">
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle">商家專用</a>
-                <div class="dropdown-content">
-                    <a href="./restaurant-signup.html" class="dropdown-item">商家註冊</a>
-                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">商家登入</a>
-                </div>
-            </div>
-            <a href="ranking/ranking.html" class="nav-link">排行榜</a>
-            <div class="dropdown">
-                <a href="#" class="nav-link dropdown-toggle">食評</a>
-                <div class="dropdown-content">
-                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">寫食記</a>
-                </div>
-            </div>
             
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking/ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="./restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
             <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
                 <button class="btn-login">登入</button>
