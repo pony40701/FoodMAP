@@ -7,8 +7,10 @@
     height: 100px;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
 }
 
@@ -21,6 +23,14 @@
     filter: drop-shadow(0 0 8px rgba(255, 107, 26, 0.5));
     padding: 0 10px;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+}
+
+.navbar-left .logo-text:hover {
+    color: #ff8c42;
+    transform: translateY(-1px);
 }
 
 .navbar-right .restaurant-dropdown .nav-link.dropdown-toggle {
