@@ -117,29 +117,12 @@
 }
 
 /* 下拉選單樣式 */
-.restaurant-dropdown {
+.navbar .restaurant-dropdown {
     position: relative;
     display: inline-block;
 }
 
-.nav-link {
-    color: #ff6b1a;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
-
-.nav-link:hover {
-    background: rgba(255, 107, 26, 0.1);
-    border-color: rgba(255, 107, 26, 0.3);
-}
-
-.restaurant-dropdown-content {
+.navbar .restaurant-dropdown-content {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
@@ -157,10 +140,27 @@
     z-index: 1002;
 }
 
-.restaurant-dropdown:hover .restaurant-dropdown-content {
+.navbar .restaurant-dropdown:hover .restaurant-dropdown-content {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+}
+
+.nav-link {
+    color: #ff6b1a;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.nav-link:hover {
+    background: rgba(255, 107, 26, 0.1);
+    border-color: rgba(255, 107, 26, 0.3);
 }
 
 .dropdown-item {

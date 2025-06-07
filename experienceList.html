@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食力派ChowCrew - 美食心得分享</title>
+    <!-- Font Awesome -->
+     <link rel="stylesheet" href="/css/navforaboutus.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/experienceList.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body>
+      <!-- 導航欄 -->
+      <div class="navbar">
+        <div class="navbar-left">
+            <span class="logo-text">食力派ChowCrew</span>
+        </div>
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="input-container">
+                    <span class="input-icon">🍴</span>
+                    <input class="search-input" placeholder="找美食" />
+                </div>
+                <div class="search-divider"></div>
+                <div class="input-container">
+                    <span class="input-icon">📍</span>
+                    <input class="search-input" placeholder="選擇地點" />
+                </div>
+                <!-- 搜尋按鈕 -->
+                <button class="search-btn">
+                    <img src="/images/search.png" alt="search" width="26" height="26" />
+                </button>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking/ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="../restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="../images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="../usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="../usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="../usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="../usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="content-blocks">
+            <!-- 分類區塊 -->
+            <div class="category-block">
+                <div class="filter-search-container">
+                    <div class="category-row">
+                        <a href="#" class="category-item active" data-filter="latest">最新文章</a>
+                        <a href="#" class="category-item" data-filter="popular">本週熱門</a>
+                        <button class="category-item" id="foodTypeBtn">食物類型</button>
+                    </div>
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <input type="text" class="content-search-input" placeholder="搜尋文章關鍵字..." id="content-search">
+                            <button class="content-search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="food-grid">
+            <!-- 文章卡片 -->
+            <article class="food-card" data-date="2024-03-20" data-views="150">
+                <div class="food-image">
+                    <img src="/images/restaurant1.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=1" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">美食達人小明</span>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>台北信義區隱藏版日式拉麵</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>麵屋武藏</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">這家位於信義區巷弄內的拉麵店，湯頭濃郁，叉燒軟嫩多汁，值得一試！</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-20</span>
+                            <span class="category">日式</span>
+                        </div>
+                        <span class="views">150 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="food-card" data-date="2024-03-19" data-views="320">
+                <div class="food-image">
+                    <img src="/images/carousel2.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=2" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">早餐控大王</span>
+                            <div class="rating">★★★★☆</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>老字號台式早餐店推薦</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>阜杭豆漿</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">傳統台式早餐店，蛋餅外酥內軟，搭配特製醬料，每天都想吃！</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-19</span>
+                            <span class="category">台式</span>
+                        </div>
+                        <span class="views">320 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="food-card" data-date="2024-03-18" data-views="280">
+                <div class="food-image">
+                    <img src="/images/restaurant2.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=3" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">義食主義者</span>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>道地義大利手工披薩</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>Pizzeria Oggi</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">採用進口食材，薄脆餅皮配上新鮮配料，道地義式風味！</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-18</span>
+                            <span class="category">義式</span>
+                        </div>
+                        <span class="views">280 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 新增第四篇文章 -->
+            <article class="food-card" data-date="2024-03-17" data-views="245">
+                <div class="food-image">
+                    <img src="/images/restaurant3.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=4" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">泰式美食家</span>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>隱藏版泰式船麵</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>船麵小廚</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">巷弄中的泰式船麵，湯頭香辣夠味，配料新鮮豐富，絕對值得一試！</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-17</span>
+                            <span class="category">東南亞</span>
+                        </div>
+                        <span class="views">245 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 新增第五篇文章 -->
+            <article class="food-card" data-date="2024-03-16" data-views="198">
+                <div class="food-image">
+                    <img src="/images/carousel3.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=5" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">甜點控女孩</span>
+                            <div class="rating">★★★★☆</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>法式手工甜點工作室</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>Le Petit Pâtissier</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">純手工製作的法式馬卡龍，口感酥脆，內餡綿密，完美比例的甜度讓人難以忘懷。</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-16</span>
+                            <span class="category">甜點</span>
+                        </div>
+                        <span class="views">198 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 新增第六篇文章 -->
+            <article class="food-card" data-date="2024-03-15" data-views="267">
+                <div class="food-image">
+                    <img src="/images/carousel1.jpg" alt="美食照片">
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="https://i.pravatar.cc/40?img=6" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">韓食達人</span>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>正宗韓式部隊鍋</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>韓食堂</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">超濃郁起司配上道地韓式辣醬，各式配料豐富多樣，是一鍋值得分享的美味！</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">2024-03-15</span>
+                            <span class="category">韓式</span>
+                        </div>
+                        <span class="views">267 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- 回到頂部按鈕 -->
+    <button id="backToTop" class="back-to-top" title="回到頂部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫評論</a>
+                    <a href="/helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <!-- 食物類型選擇彈窗 -->
+    <div id="foodTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>選擇食物類型</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="food-type-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="taiwanese">
+                        <span class="checkmark"></span>
+                        台式
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="japanese">
+                        <span class="checkmark"></span>
+                        日式
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="korean">
+                        <span class="checkmark"></span>
+                        韓式
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="southeast-asian">
+                        <span class="checkmark"></span>
+                        東南亞
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="middle-eastern">
+                        <span class="checkmark"></span>
+                        中東
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="italian">
+                        <span class="checkmark"></span>
+                        義式
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="bbq">
+                        <span class="checkmark"></span>
+                        燒肉
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="hotpot">
+                        <span class="checkmark"></span>
+                        火鍋
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="burger">
+                        <span class="checkmark"></span>
+                        漢堡
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="steak">
+                        <span class="checkmark"></span>
+                        牛排
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="dessert">
+                        <span class="checkmark"></span>
+                        甜點
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="vegetarian">
+                        <span class="checkmark"></span>
+                        素食
+                    </label>
+                    <div class="other-food-type">
+                        <label class="checkbox-container">
+                            <input type="checkbox" value="other" id="otherFoodType">
+                            <span class="checkmark"></span>
+                            其他
+                        </label>
+                        <div class="other-input-container">
+                            <input type="text" id="otherFoodTypeInput" class="other-input" placeholder="請輸入其他類型">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-apply">套用</button>
+                <button class="btn-clear">清除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 回到頂部按鈕功能
+        const backToTopButton = document.getElementById('backToTop');
+        
+        // 當頁面滾動超過300px時顯示按鈕
+        window.onscroll = function() {
+            if (document.body.scrollTop > 80 || document.documentElement.scrollTop > 300) {
+                backToTopButton.style.display = "block";
+            } else {
+                backToTopButton.style.display = "none";
+            }
+        };
+        
+        // 點擊按鈕回到頂部
+        backToTopButton.onclick = function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        };
+    </script>
+    <script src="js/experienceList.js"></script>
+    <script src="js/navforaboutus.js"></script>
+</body>
+</html> 

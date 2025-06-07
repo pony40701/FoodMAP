@@ -88,9 +88,9 @@ document.addEventListener('DOMContentLoaded', function() {
         dropdowns.forEach(dropdown => {
             if (!event.target.closest('.restaurant-dropdown') && 
                 !event.target.closest('.user-avatar')) {
-                dropdown.style.opacity = '0';
-                dropdown.style.visibility = 'hidden';
-                dropdown.style.transform = 'translateY(-10px)';
+                dropdown.style.removeProperty('opacity');
+                dropdown.style.removeProperty('visibility');
+                dropdown.style.removeProperty('transform');
             }
         });
     });
