@@ -59,13 +59,13 @@ body {
 }
 
 .filter-btn:hover {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    border-color: #ff6b1a;
+    color: #ff6b1a;
 }
 
 .filter-btn.active {
-    background-color: #ff6b6b;
-    border-color: #ff6b6b;
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
     color: white;
 }
 
@@ -170,13 +170,13 @@ body {
 }
 
 .favorite-btn.active {
-    color: #ff4444;
+    color: #ff6b1a;
 }
 
 .details-btn {
     background: none;
-    border: 1px solid #ff6b6b;
-    color: #ff6b6b;
+    border: 1px solid #ff6b1a;
+    color: #ff6b1a;
     padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
@@ -186,7 +186,7 @@ body {
 }
 
 .details-btn:hover {
-    background-color: #ff6b6b;
+    background-color: #ff6b1a;
     color: white;
 }
 
@@ -195,7 +195,7 @@ body {
     width: 200px;
     margin: 30px auto;
     padding: 15px;
-    background-color: #ff6b6b;
+    background-color: #ff6b1a;
     color: white;
     border: none;
     border-radius: 5px;
@@ -205,7 +205,7 @@ body {
 }
 
 .load-more:hover {
-    background-color: #ff5252;
+    background-color: #ff8c42;
 }
 
 /* 模態框樣式 */

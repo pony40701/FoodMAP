@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>關於我們 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <style>
+        .about-hero {
+            background: linear-gradient(135deg, rgba(255, 107, 26, 0.95) 0%, rgba(255, 140, 66, 0.95) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 80px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .hero-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .about-section {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .about-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.8rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .about-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            color: #ff6b1a;
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .card-title i {
+            font-size: 1.4rem;
+        }
+
+        .card-text {
+            color: #444;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+        }
+
+        .future-section {
+            background: linear-gradient(135deg, rgba(255, 107, 26, 0.1) 0%, rgba(255, 140, 66, 0.05) 100%);
+            padding: 3rem 0;
+            margin: 2rem -2rem;
+            text-align: center;
+        }
+
+        .future-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .future-title {
+            color: #ff6b1a;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .contact-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 2rem auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .contact-title {
+            color: #ff6b1a;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .contact-text {
+            margin-bottom: 1rem;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #ff6b1a;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .contact-link:hover {
+            background: #ff8c42;
+        }
+
+        /* 回到頂部按鈕樣式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #ff6b1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background: #ff8c42;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
+        }
+
+        .back-to-top i {
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.5rem;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-title {
+                font-size: 1.4rem;
+            }
+
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- 導航欄 -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="input-container">
+                    <span class="input-icon">🍴</span>
+                    <input class="search-input" placeholder="找美食" />
+                </div>
+
+                <div class="search-divider"></div>
+                <div class="input-container">
+                    <span class="input-icon">📍</span>
+                    <input class="search-input" placeholder="選擇地點" />
+                </div>
+                <!-- 搜尋按鈕 -->
+                <button class="search-btn">
+                    <img src="/images/search.png" alt="search" width="26" height="26" />
+                </button>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking/ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="./restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 內文 -->
+    <section class="about-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">關於我們</h1>
+            <h2 class="hero-subtitle">嘿！歡迎來到食力派ChowCrew</h2>
+            <p class="hero-text">這裡是台灣美食的冒險基地！</p>
+        </div>
+    </section>
+
+    <!-- 主要內容 -->
+    <div class="about-section">
+        <div class="about-grid">
+            <div class="about-card">
+                <h2 class="card-title"><i class="fas fa-users"></i> 我們是誰？</h2>
+                <p class="card-text">我們是一群愛吃又愛分享的夥伴。</p>
+                <p class="card-text">
+                    大家來自不同背景，但共通點是——對美食的熱情！我們相信，每一家小店、每一道料理，背後都有屬於自己的故事。我們想把這些故事，用最真實的評論和最溫暖的照片，分享給每一個愛吃的人。</p>
+            </div>
+
+            <div class="about-card">
+                <h2 class="card-title"><i class="fas fa-heart"></i> 為什麼選ChowCrew？</h2>
+                <p class="card-text">這裡沒有業配，只有真心話！</p>
+                <p class="card-text">來到ChowCrew，你不會只看到冷冰冰的評分。我們鼓勵大家寫下最真實的感受，不管是驚艷、踩雷，還是感動，都值得被記錄。</p>
+                <p class="card-text">我們希望這裡不只是找餐廳的地方，更是美食愛好者的聚集地。你可以收藏喜歡的店家、追蹤美食嚮導，認識更多志同道合的朋友。</p>
+            </div>
+        </div>
+
+        <div class="future-section">
+            <div class="future-content">
+                <h2 class="future-title"><i class="fas fa-rocket"></i> 未來，我們想...</h2>
+                <p class="card-text">我們想讓ChowCrew成為台灣美食的入口。未來，我們會推出更多的活動、優惠，還有專屬個人的美食排行榜。&ensp; 如果你有好的想法，也歡迎隨時告訴我們！</p>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2 class="contact-title">聯絡我們</h2>
+            <p class="contact-text">想聊聊美食、分享心得，或有任何建議，隨時來信：</p>
+            <a href="mailto:service@chowcrew.com" class="contact-link">
+                <i class="fas fa-envelope"></i>
+                service@chowcrew.com
+            </a>
+        </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫評論</a>
+                    <a href="/helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <!-- 回到頂部按鈕 -->
+    <a href="#" class="back-to-top" id="backToTop" aria-label="回到頂部">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+    <script src="/js/navforaboutus.js"></script>
+    <script>
+        // 回到頂部按鈕功能
+        const backToTop = document.getElementById('backToTop');
+        
+        // 監聽滾動事件
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        // 點擊事件 - 平滑滾動到頂部
+        backToTop.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+
+</html> 
