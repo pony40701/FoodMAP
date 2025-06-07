@@ -1,20 +1,31 @@
 /* 導航欄樣式 */
 .navbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 15px 50px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 0;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(51, 51, 51, 0.85); /* 加深背景色 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
     z-index: 1000;
+    position: fixed;
+    top: 27px;
+    left: 22px;
+    right: 22px;
+    margin: 0;
 }
 
+/* ========== Logo區域 V1 ========== */
 .navbar-left .logo-text {
-    font-size: 1.5em;
+    font-size: 32px;
     font-weight: bold;
-    color: #ff4757;
+    color: #ff6b1a;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 8px rgba(255, 107, 26, 0.5));
+    padding: 0 10px;
+    transition: all 0.3s ease;
 }
 
 .search-section {
@@ -61,11 +72,28 @@
     margin: 0 15px;
 }
 
+/*搜尋按鈕*/
 .search-btn {
-    background: none;
+    background: #ff6b1a;
     border: none;
+    border-radius: 24px;
+    padding: 14px;
     cursor: pointer;
-    padding: 5px;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn:hover {
+    background: #e55a15;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(229, 90, 21, 0.3);
+}
+
+.search-btn img {
+    width: 20px;
+    height: 20px;
 }
 
 .navbar-right {
@@ -78,6 +106,10 @@
     text-decoration: none;
     color: #333;
     font-weight: 500;
+}
+
+.navbar-right .restaurant-dropdown .nav-link.dropdown-toggle {
+    font-size: 22px;
 }
 
 .dropdown {
@@ -110,8 +142,9 @@
 }
 
 .btn-login {
-    background: #ff4757;
+    background: #e55a15;
     color: white;
+    font-size: 22px;
     border: none;
     padding: 8px 20px;
     border-radius: 20px;
@@ -1389,5 +1422,310 @@
     
     .restaurant-modal-body {
         padding: 20px;
+    }
+}
+
+/* 營業時間信息按鈕樣式 */
+.modal-today-hours-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 20px;
+    gap: 12px;
+}
+
+.modal-hours-info-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 8px;
+    background: rgba(255, 107, 26, 0.08);
+    border: 1px solid rgba(255, 107, 26, 0.2);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    user-select: none;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.modal-hours-info-btn:hover {
+    background: rgba(255, 107, 26, 0.15);
+    border-color: rgba(255, 107, 26, 0.4);
+    transform: translateY(-1px);
+}
+
+.modal-hours-info-btn i {
+    color: #ff6b1a;
+    font-size: 10px;
+    transition: all 0.3s ease;
+}
+
+.modal-hours-info-btn:hover i {
+    transform: scale(1.1);
+}
+
+.modal-hours-info-btn span {
+    color: #ff6b1a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* 營業時間詳細彈窗樣式 */
+.weekly-hours-modal {
+    display: none;
+    position: fixed;
+    z-index: 2100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s ease;
+}
+
+.weekly-hours-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    border-radius: 16px;
+    padding: 0;
+    border: none;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: slideInScale 0.3s ease;
+    position: relative;
+}
+
+.weekly-hours-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+    border-radius: 16px 16px 0 0;
+    color: white;
+}
+
+.weekly-hours-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.weekly-hours-modal-close {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.weekly-hours-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.weekly-hours-modal-body {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* 彈窗內的營業時間表格樣式 */
+.weekly-hours-table {
+    width: 100%;
+}
+
+.weekly-hours-header {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 16px;
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.hours-day {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.hours-day:hover {
+    background: rgba(255, 107, 26, 0.05);
+}
+
+.hours-day:last-child {
+    border-bottom: none;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #333;
+    min-width: 60px;
+    font-size: 15px;
+}
+
+.day-name.today {
+    color: #ff6b1a;
+    position: relative;
+    font-weight: 700;
+}
+
+.day-name.today::after {
+    content: ' (今天)';
+    font-size: 12px;
+    color: #ff6b1a;
+    font-weight: normal;
+    background: rgba(255, 107, 26, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.day-hours {
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.day-hours.closed {
+    color: #F44336;
+    font-weight: 600;
+}
+
+.day-hours.open {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+/* 彈窗動畫 */
+@keyframes slideInScale {
+    from {
+        transform: scale(0.7) translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.weekly-hours-header {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.hours-day {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.hours-day:last-child {
+    border-bottom: none;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #333;
+    min-width: 60px;
+}
+
+.day-name.today {
+    color: #ff6b1a;
+    position: relative;
+}
+
+.day-name.today::after {
+    content: ' (今天)';
+    font-size: 12px;
+    color: #ff6b1a;
+    font-weight: normal;
+}
+
+.day-hours {
+    color: #666;
+    font-size: 14px;
+}
+
+.day-hours.closed {
+    color: #F44336;
+    font-weight: 600;
+}
+
+.day-hours.open {
+    color: #4CAF50;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .modal-today-hours-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .modal-hours-info-btn {
+        padding: 3px 6px;
+        align-self: flex-end;
+    }
+    
+    .modal-hours-info-btn span {
+        font-size: 11px;
+    }
+    
+    .modal-hours-info-btn i {
+        font-size: 9px;
+    }
+    
+    .weekly-hours-modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+    
+    .weekly-hours-modal-header {
+        padding: 16px 20px 12px 20px;
+    }
+    
+    .weekly-hours-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .weekly-hours-modal-body {
+        padding: 20px;
+    }
+    
+    .hours-day {
+        padding: 10px 12px;
+    }
+    
+    .day-name {
+        min-width: 50px;
+        font-size: 14px;
+    }
+    
+    .day-hours {
+        font-size: 13px;
+    }
+    
+    .day-name.today::after {
+        font-size: 10px;
+        padding: 1px 4px;
     }
 } 
