@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>關於我們 - 食力派ChowCrew</title>
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"  />
-  <link rel="stylesheet" href="/css/navforaboutus.css">
-  <link rel="stylesheet" href="/CSS/footer.css">
+    <title>幫助中心 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/navforaboutus.css">
+    <link rel="stylesheet" href="/CSS/footer.css">
     <style>
-        .about-hero {
+        body {
+            font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .help-hero {
             background: linear-gradient(135deg, rgba(255, 107, 26, 0.95) 0%, rgba(255, 140, 66, 0.95) 100%);
             color: white;
             padding: 40px 20px;
@@ -22,107 +28,80 @@
         .hero-content {
             position: relative;
             z-index: 1;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
         .hero-title {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 0.5rem;
             color: white;
-        }
-
-        .hero-subtitle {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 1rem 0;
-            color: rgba(255, 255, 255, 0.95);
         }
 
         .hero-text {
             font-size: 1.1rem;
             line-height: 1.6;
             margin-bottom: 0.5rem;
+            opacity: 0.9;
         }
 
-        .about-section {
-            max-width: 1200px;
-            margin: 40px auto;
+        .help-section {
+            max-width: 800px;
+            margin: 30px auto;
             padding: 0 20px;
         }
 
-        .about-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .about-card {
+        .help-card {
             background: white;
             border-radius: 12px;
-            padding: 1.8rem;
+            padding: 1.2rem 1.5rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.2rem;
             transition: transform 0.3s ease;
         }
 
-        .about-card:hover {
+        .help-card:hover {
             transform: translateY(-5px);
         }
 
         .card-title {
             color: #ff6b1a;
-            font-size: 1.6rem;
-            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.6rem;
+            border-bottom: 2px solid rgba(255, 107, 26, 0.1);
+            padding-bottom: 0.6rem;
         }
 
         .card-title i {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
         }
 
-        .card-text {
+        .help-content h3 {
             color: #444;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: 600;
         }
 
-        .future-section {
-            background: linear-gradient(135deg, rgba(255, 107, 26, 0.1) 0%, rgba(255, 140, 66, 0.05) 100%);
-            padding: 3rem 0;
-            margin: 2rem -2rem;
-            text-align: center;
-        }
-
-        .future-content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .future-title {
-            color: #ff6b1a;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.8rem;
+        .help-content p {
+            color: #666;
+            margin-bottom: 0.6rem;
+            padding-left: 0.8rem;
+            line-height: 1.5;
         }
 
         .contact-section {
             background: white;
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.8rem;
             text-align: center;
             max-width: 800px;
-            margin: 2rem auto;
+            margin: 1.5rem auto;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
 
@@ -154,74 +133,25 @@
             background: #ff8c42;
         }
 
-        /* 回到頂部按鈕樣式 */
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: #ff6b1a;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-        }
-
-        .back-to-top.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .back-to-top:hover {
-            background: #ff8c42;
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
-        }
-
-        .back-to-top i {
-            font-size: 24px;
-        }
-
         @media (max-width: 768px) {
             .hero-title {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
-
-            .hero-subtitle {
-                font-size: 1.5rem;
+            .help-section {
+                padding: 0 15px;
             }
-
-            .about-grid {
-                grid-template-columns: 1fr;
-            }
-
             .card-title {
-                font-size: 1.4rem;
+                font-size: 1.3rem;
             }
-
-            .back-to-top {
-                bottom: 20px;
-                right: 20px;
-                width: 45px;
-                height: 45px;
+            .help-content h3 {
+                font-size: 1rem;
             }
         }
     </style>
-    <link rel="stylesheet" href="navbar.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
-    <!-- 導航欄 -->
-    <div class="navbar">
+     <!-- 導航欄 -->
+     <div class="navbar">
         <div class="navbar-left">
             <span class="logo-text">食力派ChowCrew</span>
         </div>
@@ -320,38 +250,63 @@
         </div>
     </div>
 
-
-    <!-- 內文 -->
-    <section class="about-hero">
+    <!-- 幫助中心內容 -->
+    <section class="help-hero">
         <div class="hero-content">
-            <h1 class="hero-title">關於我們</h1>
-            <h2 class="hero-subtitle">嘿！歡迎來到食力派ChowCrew</h2>
-            <p class="hero-text">這裡是台灣美食的冒險基地！</p>
+            <h1 class="hero-title">幫助中心</h1>
+            <p class="hero-text">歡迎來到食力派ChowCrew的幫助中心！</p>
+            <p class="hero-text">我們致力於為您提供最完整的美食評論與搜尋服務。</p>
         </div>
     </section>
 
-    <!-- 主要內容 -->
-    <div class="about-section">
-        <div class="about-grid">
-            <div class="about-card">
-                <h2 class="card-title"><i class="fas fa-users"></i> 我們是誰？</h2>
-                <p class="card-text">我們是一群愛吃又愛分享的夥伴。</p>
-                <p class="card-text">
-                    大家來自不同背景，但共通點是——對美食的熱情！我們相信，每一家小店、每一道料理，背後都有屬於自己的故事。我們想把這些故事，用最真實的評論和最溫暖的照片，分享給每一個愛吃的人。</p>
-            </div>
-
-            <div class="about-card">
-                <h2 class="card-title"><i class="fas fa-heart"></i> 為什麼選ChowCrew？</h2>
-                <p class="card-text">這裡沒有業配，只有真心話！</p>
-                <p class="card-text">來到ChowCrew，你不會只看到冷冰冰的評分。我們鼓勵大家寫下最真實的感受，不管是驚艷、踩雷，還是感動，都值得被記錄。</p>
-                <p class="card-text">我們希望這裡不只是找餐廳的地方，更是美食愛好者的聚集地。你可以收藏喜歡的店家、追蹤美食嚮導，認識更多志同道合的朋友。</p>
+    <div class="help-section">
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-user-circle"></i>帳號與註冊</h2>
+            <div class="help-content">
+                <h3>如何註冊帳號？</h3>
+                <p>您可以點擊首頁右上角的「註冊」按鈕，填寫基本資料完成註冊。</p>
+                <h3>忘記密碼怎麼辦？</h3>
+                <p>請使用「忘記密碼」功能，輸入註冊的電子郵件，我們會寄送重設密碼的連結給您。</p>
             </div>
         </div>
 
-        <div class="future-section">
-            <div class="future-content">
-                <h2 class="future-title"><i class="fas fa-rocket"></i> 未來，我們想...</h2>
-                <p class="card-text">我們想讓ChowCrew成為台灣美食的入口。未來，我們會推出更多的活動、優惠，還有專屬個人的美食排行榜。&ensp; 如果你有好的想法，也歡迎隨時告訴我們！</p>
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-search"></i>搜尋與瀏覽</h2>
+            <div class="help-content">
+                <h3>如何搜尋餐廳或美食？</h3>
+                <p>在首頁搜尋欄輸入關鍵字，您可以依地區、類別篩選結果。</p>
+                <h3>如何查看餐廳詳細資訊？</h3>
+                <p>點擊搜尋結果中的餐廳名稱，即可查看評論、評分與詳細介紹。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-star"></i>評論與收藏</h2>
+            <div class="help-content">
+                <h3>如何撰寫評論？</h3>
+                <p>登入後，進入餐廳頁面，點擊「寫心得」即可分享您的用餐心得。</p>
+                <h3>如何收藏喜歡的餐廳或評論？</h3>
+                <p>在餐廳或評論旁點擊「收藏」圖示，即可加入您的收藏清單。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-store"></i>商家功能</h2>
+            <div class="help-content">
+                <h3>商家如何註冊與管理餐廳？</h3>
+                <p>商家可透過專屬入口註冊帳號，並管理自己的餐廳資訊與回覆評論。</p>
+                <h3>如何更改菜單？</h3>
+                <p>登入商家後台，進入菜單管理頁面，新增或編輯菜單資訊。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-shield-alt"></i>隱私與安全</h2>
+            <div class="help-content">
+                <h3>我的資料安全嗎？</h3>
+                <p>我們重視您的隱私，採用多重安全措施保護您的個人資料。</p>
+                <h3>如何修改個人資料？</h3>
+                <p>登入後，進入「個人設定」頁面即可修改。</p>
             </div>
         </div>
 
@@ -382,7 +337,7 @@
                     <a href="/restaurant-signup.html">商家註冊</a>
                     <a href="/ranking/ranking.html">排行榜</a>
                     <a href="/blogPost.html">寫評論</a>
-                    <a href="/helpcenter.html">幫助中心</a>
+                    <a href="helpcenter.html">幫助中心</a>
                 </div>
             </div>
             <div class="footer-section">
@@ -401,34 +356,5 @@
             <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
         </div>
     </footer>
-
-    <!-- 回到頂部按鈕 -->
-    <a href="#" class="back-to-top" id="backToTop" aria-label="回到頂部">
-        <i class="fas fa-chevron-up"></i>
-    </a>
-    <script src="/js/navforaboutus.js"></script>
-    <script>
-        // 回到頂部按鈕功能
-        const backToTop = document.getElementById('backToTop');
-        
-        // 監聽滾動事件
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 400) {
-                backToTop.classList.add('show');
-            } else {
-                backToTop.classList.remove('show');
-            }
-        });
-
-        // 點擊事件 - 平滑滾動到頂部
-        backToTop.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    </script>
 </body>
-
-</html> 
+</html>
