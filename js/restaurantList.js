@@ -1745,6 +1745,9 @@ function renderFilteredCards(pageData, totalCount) {
             </div>
           </div>
         </div>
+        <div class="favorite-btn" data-id="${restaurant.id}">
+          <i class="far fa-heart"></i> <!-- 預設空心愛心 -->
+        </div>
       </div>
     </div>
   `).join("");
@@ -1758,6 +1761,14 @@ function renderFilteredCards(pageData, totalCount) {
 
   // 更新分頁
   renderPagination(totalCount);
+
+  // 為每個愛心按鈕添加點擊事件監聽器
+  document.querySelectorAll('.favorite-btn').forEach(button => {
+    button.addEventListener('click', function(event) {
+      event.stopPropagation(); // 阻止事件冒泡到卡片點擊事件
+      this.classList.toggle('active');
+    });
+  });
 }
 
 // 新增導航到詳情頁的函數
