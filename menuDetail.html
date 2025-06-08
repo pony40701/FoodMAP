@@ -96,7 +96,7 @@
     <!-- 麵包屑導航 -->
     <div class="breadcrumb-container">
       <div class="breadcrumb">
-        <a href="#" id="restaurant-link" class="breadcrumb-link">[餐廳名稱]</a>
+        <a href="#" id="restaurant-link" class="breadcrumb-link">餐廳列表</a>
         <span class="breadcrumb-separator">></span>
         <span class="breadcrumb-current">完整菜單</span>
       </div>
@@ -106,7 +106,7 @@
     <main>
       <!-- 這裡將放置完整菜單內容 -->
       <div class="menu-page-container">
-        <h1 class="menu-restaurant-name">[餐廳名稱] 完整菜單</h1>
+        <h1 class="menu-restaurant-name" id="menuRestaurantName">完整菜單</h1>
         
         <div class="menu-items">
           <!-- 菜單項目將由商家上傳 -->
@@ -373,6 +373,33 @@
             closeRestaurantLoginModal();
           }
         };
+
+        // 從 URL 獲取餐廳資料
+        const urlParams = new URLSearchParams(window.location.search);
+        const restaurantData = urlParams.get('data');
+        
+        if (restaurantData) {
+          try {
+            const data = JSON.parse(decodeURIComponent(restaurantData));
+            
+            // 更新餐廳名稱
+            const menuRestaurantName = document.getElementById('menuRestaurantName');
+            const restaurantLink = document.getElementById('restaurant-link');
+            
+            if (menuRestaurantName && data.name) {
+              menuRestaurantName.textContent = `${data.name} 完整菜單`;
+            }
+            
+            if (restaurantLink && data.name) {
+              restaurantLink.textContent = data.name;
+              // 設置返回連結
+              const encodedData = encodeURIComponent(JSON.stringify(data));
+              restaurantLink.href = `restaurantListDetail.html?data=${encodedData}`;
+            }
+          } catch (error) {
+            console.error('解析餐廳資料失敗:', error);
+          }
+        }
       });
     </script>
   </body>
