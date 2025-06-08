@@ -173,13 +173,11 @@
           <!-- 新增操作按鈕區域 - 移到這裡 -->
           <div class="action-buttons">
             <div class="action-buttons-container">
-              <button class="action-btn share">
+              <button class="action-btn share" title="分享" aria-label="分享">
                 <i class="fas fa-share-alt"></i>
-                <span>分享</span>
               </button>
-              <button class="action-btn save">
-                <i class="far fa-bookmark"></i>
-                <span>收藏</span>
+              <button class="action-btn save" title="收藏" aria-label="收藏">
+                <i class="far fa-heart"></i>
               </button>
             </div>
           </div>
@@ -661,6 +659,343 @@
             closeRestaurantLoginModal();
           }
         };
+      });
+    </script>
+
+    <!-- Dish Modal -->
+    <div id="dishModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="dishModalTitle"></h2>
+          <button class="close-button" onclick="closeDishModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="dish-images">
+            <div class="image-carousel-container">
+              <button class="carousel-nav-btn prev-btn" aria-label="上一張">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="dishImageCarousel" class="image-carousel"></div>
+              <button class="carousel-nav-btn next-btn" aria-label="下一張">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          <div class="dish-reviews">
+            <h3>顧客評論</h3>
+            <div id="dishReviewsList" class="reviews-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal.show {
+        opacity: 1;
+      }
+
+      .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 24px;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+      }
+
+      .modal.show .modal-content {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-header h2 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #666;
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.2s;
+      }
+
+      .close-button:hover {
+        color: #333;
+      }
+
+      .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      /* Image Carousel Styles */
+      .image-carousel-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: 24px;
+      }
+
+      .image-carousel {
+        display: flex;
+        gap: 12px;
+        overflow-x: hidden;
+        padding: 0 40px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .image-carousel img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex: 0 0 100%;
+        transition: transform 0.3s ease;
+      }
+
+      .carousel-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+      }
+
+      .carousel-nav-btn:hover {
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .carousel-nav-btn i {
+        font-size: 18px;
+        color: #333;
+      }
+
+      .carousel-nav-btn.prev-btn {
+        left: 0;
+      }
+
+      .carousel-nav-btn.next-btn {
+        right: 0;
+      }
+
+      .carousel-nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Reviews Styles */
+      .dish-reviews h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+      }
+
+      .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .review-item {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .review-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .review-content {
+        flex: 1;
+      }
+
+      .review-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .review-text {
+        color: #666;
+        line-height: 1.5;
+      }
+    </style>
+
+    <script>
+      // 開啟 dish modal
+      function openDishModal(dishName, images, reviews) {
+        const modal = document.getElementById('dishModal');
+        const title = document.getElementById('dishModalTitle');
+        const carousel = document.getElementById('dishImageCarousel');
+        const reviewsList = document.getElementById('dishReviewsList');
+        const prevBtn = carousel.parentElement.querySelector('.prev-btn');
+        const nextBtn = carousel.parentElement.querySelector('.next-btn');
+
+        // 設置標題
+        title.textContent = dishName;
+
+        // 清空並添加圖片
+        carousel.innerHTML = '';
+        images.forEach(img => {
+          const imgEl = document.createElement('img');
+          imgEl.src = img;
+          imgEl.alt = `${dishName} 圖片`;
+          carousel.appendChild(imgEl);
+        });
+
+        // 設置輪播功能
+        let currentIndex = 0;
+        const totalImages = images.length;
+
+        function updateCarousel() {
+          const offset = -currentIndex * 100;
+          carousel.style.transform = `translateX(${offset}%)`;
+          
+          // 更新按鈕狀態
+          prevBtn.disabled = currentIndex === 0;
+          nextBtn.disabled = currentIndex === totalImages - 1;
+        }
+
+        // 綁定按鈕事件
+        prevBtn.onclick = () => {
+          if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+          }
+        };
+
+        nextBtn.onclick = () => {
+          if (currentIndex < totalImages - 1) {
+            currentIndex++;
+            updateCarousel();
+          }
+        };
+
+        // 初始化輪播狀態
+        updateCarousel();
+
+        // 清空並添加評論
+        reviewsList.innerHTML = '';
+        reviews.forEach(review => {
+          const reviewEl = document.createElement('div');
+          reviewEl.className = 'review-item';
+          reviewEl.innerHTML = `
+            <img src="${review.avatar}" alt="${review.name}" class="review-avatar">
+            <div class="review-content">
+              <div class="review-name">${review.name}</div>
+              <div class="review-text">${review.text}</div>
+            </div>
+          `;
+          reviewsList.appendChild(reviewEl);
+        });
+
+        // 顯示 modal
+        modal.style.display = 'block';
+        modal.offsetHeight;
+        modal.classList.add('show');
+      }
+
+      // 關閉 dish modal
+      function closeDishModal() {
+        const modal = document.getElementById('dishModal');
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 300);
+      }
+
+      // 點擊 modal 外部關閉
+      window.onclick = function(event) {
+        const modal = document.getElementById('dishModal');
+        if (event.target === modal) {
+          closeDishModal();
+        }
+      }
+
+      // 為所有菜色卡片添加點擊事件
+      document.addEventListener('DOMContentLoaded', function() {
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+          item.style.cursor = 'pointer';
+          item.addEventListener('click', function() {
+            const dishName = this.querySelector('h4').textContent;
+            // 使用穩定的圖片連結
+            const images = [
+              'https://images.pexels.com/photos/6940977/pexels-photo-6940977.jpeg',
+              'https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg',
+              'https://images.pexels.com/photos/6940991/pexels-photo-6940991.jpeg'
+            ];
+            // 假評論資料
+            const reviews = [
+              {
+                name: '美食家小明',
+                avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+                text: '這道菜色香味俱全，口感絕佳，是我吃過最好吃的版本之一！'
+              },
+              {
+                name: '饕客小華',
+                avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
+                text: '食材新鮮，烹調手法專業，每一口都能感受到廚師的用心。'
+              },
+              {
+                name: '美食部落客小紅',
+                avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
+                text: '擺盤精緻，味道層次豐富，絕對值得推薦！'
+              }
+            ];
+            openDishModal(dishName, images, reviews);
+          });
+        });
       });
     </script>
   </body>

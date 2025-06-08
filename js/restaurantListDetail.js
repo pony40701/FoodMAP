@@ -397,7 +397,6 @@ class RestaurantDetail {
     saveBtn.addEventListener('click', () => {
       const isSaved = saveBtn.classList.toggle('active');
       const icon = saveBtn.querySelector('i');
-      
       if (isSaved) {
         icon.classList.remove('far');
         icon.classList.add('fas');
