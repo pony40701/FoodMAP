@@ -15,7 +15,7 @@
     <!-- 導覽列（header） -->
     <nav class="navbar">
       <div class="navbar-left">
-        <div class="logo-text">食力派ChowCrew</div>
+        <a href="./index.html"><div class="logo-text">食力派ChowCrew</div></a>
       </div>
       <div class="search-section">
         <div class="search-bar">
@@ -164,24 +164,26 @@
       </div>
     </div>
 
+    <!-- 操作按鈕區域 -->
+    <div class="action-buttons-wrapper">
+      <button class="action-btn write-review" onclick="handleWriteReview()" title="寫評論" aria-label="寫評論">
+        <i class="fas fa-pen-alt"></i>
+        <span>寫評論</span>
+      </button>
+      <button class="action-btn share" title="分享" aria-label="分享">
+        <i class="fas fa-share-alt"></i>
+      </button>
+      <button class="action-btn save" title="收藏" aria-label="收藏">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+
     <!-- 內容區域包裝器 -->
     <div class="content-wrapper">
       <!-- 菜單區域 -->
       <section class="menu-section">
         <div class="menu-container">
           <h2 class="menu-title">菜單</h2>
-          <!-- 新增操作按鈕區域 - 移到這裡 -->
-          <div class="action-buttons">
-            <div class="action-buttons-container">
-              <button class="action-btn share" title="分享" aria-label="分享">
-                <i class="fas fa-share-alt"></i>
-              </button>
-              <button class="action-btn save" title="收藏" aria-label="收藏">
-                <i class="far fa-heart"></i>
-              </button>
-            </div>
-          </div>
-
           <!-- 熱門菜色 -->
           <div class="popular-dishes">
             <h3>熱門菜色</h3>
@@ -465,6 +467,7 @@
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6_6-dHTpnaLn6NKtn6OhmCFUqf1B4YN4&callback=initMap"></script>
     <script src="JS/restaurantList.js"></script>
     <script src="JS/restaurantListDetail.js"></script>
+    <script src="js/login.js"></script>
 
     <!-- 分享彈出視窗 -->
     <div class="share-modal-overlay">
@@ -584,7 +587,10 @@
           // 顯示請先登入的 alert 訊息
           alert('請先登入會員');
           // 顯示登入彈跳視窗
-          document.getElementById('loginModal').style.display = 'block';
+          const loginModal = document.getElementById('loginModal');
+          loginModal.style.display = 'block';
+          // 防止事件冒泡
+          event.stopPropagation();
           // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
           window.onLoginSuccess = function() {
             window.location.href = 'blogPost.html';
@@ -596,12 +602,18 @@
       }
 
       // 商家登入彈窗相關函數
-      function openRestaurantLoginModal() {
-        document.getElementById('restaurantLoginModal').style.display = 'block';
+      function openRestaurantLoginModal(event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        const modal = document.getElementById('restaurantLoginModal');
+        modal.style.display = 'block';
       }
 
       function closeRestaurantLoginModal() {
-        document.getElementById('restaurantLoginModal').style.display = 'none';
+        const modal = document.getElementById('restaurantLoginModal');
+        modal.style.display = 'none';
       }
 
       // 初始化登入模態框
@@ -612,27 +624,49 @@
           openRestaurantLoginModal();
         }
 
+        // 登入按鈕點擊事件
+        const loginBtn = document.querySelector('.btn-login');
+        if (loginBtn) {
+          loginBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const loginModal = document.getElementById('loginModal');
+            loginModal.style.display = 'block';
+          });
+        }
+
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
           // 關閉按鈕事件
           const closeBtn = loginModal.querySelector('.close');
           if (closeBtn) {
-            closeBtn.onclick = function() {
+            closeBtn.onclick = function(event) {
+              event.preventDefault();
+              event.stopPropagation();
               loginModal.style.display = 'none';
             };
           }
+
+          // 防止點擊模態框內容時關閉
+          loginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+            event.stopPropagation();
+          });
         }
 
         // 初始化商家登入模態框
         const restaurantLoginModal = document.getElementById('restaurantLoginModal');
         if (restaurantLoginModal) {
-          // 關閉按鈕事件已在 HTML 中設置 onclick
+          // 防止點擊模態框內容時關閉
+          restaurantLoginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+            event.stopPropagation();
+          });
           
           // 表單提交事件
           const restaurantLoginForm = document.getElementById('restaurantLoginForm');
           if (restaurantLoginForm) {
             restaurantLoginForm.addEventListener('submit', function(e) {
               e.preventDefault();
+              e.stopPropagation();
               
               const email = document.getElementById('restaurant-email').value;
               const password = document.getElementById('restaurant-password').value;
@@ -868,6 +902,103 @@
       .review-text {
         color: #666;
         line-height: 1.5;
+      }
+
+      /* 操作按鈕區域樣式 */
+      .action-buttons-wrapper {
+        display: flex;
+        gap: 8px;
+        padding: 16px 40px;
+        margin: 0 0 -40px 0;
+        width: 100%;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: transparent;
+      }
+
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid #d8d8d8;
+        border-radius: 4px;
+        background-color: #fff;
+        color: #333;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .action-btn:hover {
+        background-color: #f5f5f5;
+        border-color: #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .action-btn i {
+        font-size: 16px;
+      }
+
+      .action-btn.write-review {
+        background-color: #FF6B35;
+        color: #fff;
+        border-color: #FF6B35;
+      }
+
+      .action-btn.write-review:hover {
+        background-color: #e05d2d;
+      }
+
+      .action-btn.save, .action-btn.share {
+        background: none;
+        border: none;
+        box-shadow: none;
+        padding: 8px;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+      }
+
+      .action-btn.save i, .action-btn.share i {
+        font-size: 22px;
+        color: #ff6b1a;
+        transition: color 0.2s;
+      }
+
+      .action-btn.save.active i {
+        color: #ff6b1a;
+      }
+
+      .action-btn.save i.far {
+        font-weight: 400;
+        color: #ff6b1a;
+      }
+
+      .action-btn.save i.fas {
+        font-weight: 900;
+        color: #ff6b1a;
+      }
+
+      .action-btn.save:focus, .action-btn.share:focus {
+        outline: none;
+      }
+
+      .action-btn.save:hover, .action-btn.share:hover {
+        background: none;
+        box-shadow: none;
+      }
+
+      @media (max-width: 768px) {
+        .action-buttons-wrapper {
+          padding: 16px;
+        }
       }
     </style>
 
