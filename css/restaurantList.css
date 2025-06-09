@@ -1505,31 +1505,53 @@ body {
     right: 15px;
     cursor: pointer;
     z-index: 10;
-    transition: transform 0.2s ease; /* 保持懸停縮放效果 */
+    transition: all 0.3s ease;
     opacity: 1;
     visibility: visible;
-    /* 確保完全移除所有圓形背景和尺寸相關屬性 */
-    background: none; /* 移除背景色 */
-    border-radius: 0; /* 移除圓角 */
-    width: auto; /* 寬度自動 */
-    height: auto; /* 高度自動 */
-    display: inline-block; /* 讓其內容撐開 */
-    box-shadow: none; /* 移除陰影 */
-    padding: 0; /* 移除內邊距 */
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .favorite-btn:hover {
-    background: none; /* 移除懸停背景色 */
     transform: scale(1.1);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .favorite-btn i {
-    color: #ff6b1a; /* 空心愛心外框線條改為橘色 */
-    font-size: 18px;
-    transition: color 0.2s ease;
+    color: #ff6b1a;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn:hover i {
+    transform: scale(1.1);
+}
+
+.favorite-btn.active {
+    background: white;
 }
 
 .favorite-btn.active i {
-    color: #ff6b1a; /* 點擊後實心橘色愛心 */
-    font-weight: 900; /* 實心愛心通常是 font-weight: 900 (fas) */
+    color: #ff6b1a;
+    animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
