@@ -218,27 +218,27 @@ async function getFavoriteStoresDetails(placeIds) {
         }
 
         placeIds.forEach(placeId => {
-            // 對於真實的 place_id，調用 Google Places API
-            service.getDetails({
+            const request = {
                 placeId: placeId,
-                fields: ['name', 'vicinity', 'photos', 'rating', 'user_ratings_total', 'geometry', 'opening_hours', 'place_id', 'formatted_address']
-            }, (place, status) => {
+                fields: ['name', 'formatted_address', 'photos', 'rating', 'user_ratings_total', 'geometry', 'opening_hours']
+            };
+
+            service.getDetails(request, (place, status) => {
                 completedRequests++;
                 
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    let imageUrl = '';
+                    if (place.photos && place.photos[0] && place.photos[0].getUrl) {
+                        imageUrl = place.photos[0].getUrl({maxWidth: 400});
+                    }
+
                     const storeData = {
                         place_id: place.place_id,
                         name: place.name,
                         rating: place.rating,
-                        address: place.vicinity || place.formatted_address,
+                        address: place.formatted_address,
                         isOpen: place.opening_hours?.isOpen(),
-                        image: (place.photos && place.photos[0])
-                            ? (place.photos[0].getUrl ? place.photos[0].getUrl({maxWidth: 400}) : (
-                                place.photos[0].photo_reference
-                                    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0`
-                                    : './IMAGE/default-restaurant.jpg'
-                              ))
-                            : './IMAGE/default-restaurant.jpg',
+                        image: imageUrl || './IMAGE/default-restaurant.jpg',
                         user_ratings_total: place.user_ratings_total,
                         location: place.geometry?.location
                     };

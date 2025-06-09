@@ -124,54 +124,81 @@ function initMap() {
 }
 
 // 更新地圖標記
-function updateMapMarkers(restaurants) {
-  // 清除現有標記
-  markers.forEach(marker => marker.setMap(null));
-  markers = [];
+async function updateMapMarkers(restaurants) {
+    // 清除現有標記
+    markers.forEach(marker => marker.map = null);
+    markers = [];
 
-  // 創建一個全局的 InfoWindow 實例
-  const infoWindow = new google.maps.InfoWindow();
+    // 創建一個全局的 InfoWindow 實例
+    const infoWindow = new google.maps.InfoWindow();
 
-  // 添加新標記
-  restaurants.forEach(restaurant => {
-    const marker = new google.maps.Marker({
-      position: restaurant.coordinates,
-      map: map,
-      title: restaurant.name
-    });
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
-    // 添加點擊事件監聽器
-    marker.addListener("click", () => {
-      // 關閉所有已開啟的資訊視窗
-      infoWindow.close();
-      
-      // 設置新的資訊視窗內容，添加可點擊的樣式和事件
-      const infoContent = document.createElement('div');
-      infoContent.style.padding = '8px';
-      infoContent.style.cursor = 'pointer'; // 添加指針樣式
-      infoContent.innerHTML = `
-        <div style="padding: 8px;">
-          <h3 style="margin: 0 0 8px 0; color: #333;">${restaurant.name}</h3>
-          <p style="margin: 0; color: #666;">${restaurant.rating} ⭐ (${restaurant.ratingCount} 則評論)</p>
-          <p style="margin: 4px 0; color: #666;">${restaurant.price} · ${restaurant.tags.join(', ')}</p>
-          <div style="margin-top: 8px; color: #d32323; font-size: 13px;">
-            點擊查看詳細資訊 →
-          </div>
-        </div>
-      `;
+    // 添加新標記
+    for (const restaurant of restaurants) {
+        const markerContent = document.createElement('div');
+        markerContent.className = 'restaurant-pin';
+        markerContent.style.cssText = `
+            background-color: #FF6B1A;
+            width: 24px;
+            height: 24px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
 
-      // 添加點擊事件處理程序
-      infoContent.addEventListener('click', () => {
-        showRestaurantModal(restaurant);
-      });
-      
-      // 開啟資訊視窗
-      infoWindow.setContent(infoContent);
-      infoWindow.open(map, marker);
-    });
+        const icon = document.createElement('div');
+        icon.innerHTML = '🍽️';
+        icon.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            font-size: 12px;
+        `;
 
-    markers.push(marker);
-  });
+        markerContent.appendChild(icon);
+
+        const marker = new AdvancedMarkerElement({
+            map: map,
+            position: restaurant.coordinates,
+            title: restaurant.name,
+            content: markerContent
+        });
+
+        // 添加點擊事件監聽器
+        marker.addListener("click", () => {
+            // 關閉所有已開啟的資訊視窗
+            infoWindow.close();
+            
+            // 設置新的資訊視窗內容，添加可點擊的樣式和事件
+            const infoContent = document.createElement('div');
+            infoContent.style.padding = '8px';
+            infoContent.style.cursor = 'pointer'; // 添加指針樣式
+            infoContent.innerHTML = `
+                <div style="padding: 8px;">
+                    <h3 style="margin: 0 0 8px 0; color: #333;">${restaurant.name}</h3>
+                    <p style="margin: 0; color: #666;">${restaurant.rating} ⭐ (${restaurant.ratingCount} 則評論)</p>
+                    <p style="margin: 4px 0; color: #666;">${restaurant.price} · ${restaurant.tags.join(', ')}</p>
+                    <div style="margin-top: 8px; color: #d32323; font-size: 13px;">
+                        點擊查看詳細資訊 →
+                    </div>
+                </div>
+            `;
+
+            // 添加點擊事件處理程序
+            infoContent.addEventListener('click', () => {
+                showRestaurantModal(restaurant);
+            });
+            
+            // 開啟資訊視窗
+            infoWindow.setContent(infoContent);
+            infoWindow.open(map, marker);
+        });
+
+        markers.push(marker);
+    }
 }
 
 // 生成餐廳卡片 HTML (This function is deprecated and will be removed)

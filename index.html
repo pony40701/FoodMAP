@@ -14,9 +14,16 @@
     <link rel="stylesheet" href="css/food-types.css">
     <link rel="stylesheet" href="/css/footer.css">
     <!-- 添加 Google Maps API -->
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places&callback=initMap"
-        async defer></script>
+    <script>
+        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({
+            key: "AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0",
+            v: "beta",
+            solution: ["places", "routes"],
+            region: "TW",
+            mapId: "DEMO_MAP_ID"
+        });
+    </script>
     <style>
         .modal {
             display: none;
@@ -483,6 +490,216 @@
                 font-size: 18px;
             }
         }
+
+        /* 餐廳列表容器樣式 */
+        .restaurants-section {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        #results-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .restaurants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* 載入中提示樣式 */
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
+            grid-column: 1 / -1;
+        }
+
+        .loading-message i {
+            margin-right: 8px;
+            color: #ff6b1a;
+        }
+
+        /* 無結果提示樣式 */
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
+            grid-column: 1 / -1;
+        }
+
+        /* 餐廳卡片樣式 */
+        .restaurant-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .restaurant-image {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .restaurant-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .no-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-btn i {
+            color: #ff6b6b;
+            font-size: 18px;
+        }
+
+        .favorite-btn.active {
+            background: #ff6b6b;
+        }
+
+        .favorite-btn.active i {
+            color: white;
+        }
+
+        .restaurant-info {
+            padding: 15px;
+        }
+
+        .restaurant-info h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            display: flex;
+            margin-right: 8px;
+        }
+
+        .stars i {
+            color: #ddd;
+            margin-right: 2px;
+        }
+
+        .stars i.filled {
+            color: #ffd700;
+        }
+
+        .stars i.half-filled {
+            position: relative;
+            color: #ddd;
+        }
+
+        .stars i.half-filled::before {
+            content: '\f089';
+            position: absolute;
+            color: #ffd700;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        .rating-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .address {
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .opening-hours {
+            font-size: 14px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .opening-hours i {
+            margin-right: 5px;
+        }
+
+        .opening-hours.open {
+            color: #2ecc71;
+        }
+
+        .opening-hours.closed {
+            color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .restaurants-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                padding: 10px;
+            }
+        }
+
+        /* Toast 提示樣式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -696,55 +913,55 @@
     <section class="food-types-section">
         <h2>美食類型</h2>
         <div class="food-types">
-            <div class="food-type-item" onclick="searchByType('restaurant', '中式')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '中式')">
                 <div class="emoji-circle chinese">
                     🥢
                 </div>
                 <span>中式</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '燒烤')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '燒烤')">
                 <div class="emoji-circle bbq">
                     🔥
                 </div>
                 <span>燒烤</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '火鍋')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '火鍋')">
                 <div class="emoji-circle hotpot">
                     🍲
                 </div>
                 <span>火鍋</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '日式')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '日式')">
                 <div class="emoji-circle japanese">
                     🍣
                 </div>
                 <span>日式</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '美式')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '美式')">
                 <div class="emoji-circle american">
                     🍔
                 </div>
                 <span>美式</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '義式')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '義式')">
                 <div class="emoji-circle italian">
                     🍝
                 </div>
                 <span>義式</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '牛排')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '牛排')">
                 <div class="emoji-circle steak">
                     🥩
                 </div>
                 <span>牛排</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '素食')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '素食')">
                 <div class="emoji-circle vegetarian">
                     🥗
                 </div>
                 <span>素食</span>
             </div>
-            <div class="food-type-item" onclick="searchByType('restaurant', '甜點')">
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '甜點')">
                 <div class="emoji-circle dessert">
                     🧁
                 </div>
@@ -756,8 +973,12 @@
     <!-- 餐廳資訊區塊 -->
     <section class="restaurants-section">
         <h3 id="results-title">推薦餐廳</h3>
-        <div class="restaurants-grid" id="restaurants-container">
-            <!-- 餐廳卡片將由JavaScript動態生成 -->
+        <div id="restaurants-container" class="restaurants-grid">
+            <!-- 載入中提示 -->
+            <div class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i>
+                搜尋中...
+            </div>
         </div>
     </section>
 
@@ -878,11 +1099,20 @@
         </div>
     </footer>
 
-
-
+    <script src="js/mapInit.js"></script>
     <script src="js/main.js"></script>
     <script src="js/login.js"></script>
     <script src="ranking/ranking.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                window.mapInit = new MapInit();
+                await window.mapInit.init();
+            } catch (error) {
+                console.error('初始化地圖時發生錯誤:', error);
+            }
+        });
+    </script>
     <script>
         // 處理寫食記按鈕點擊
         function handleWriteReview() {

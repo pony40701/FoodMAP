@@ -66,7 +66,7 @@ class FavoritesModule {
     }
 
     // 初始化地圖
-    initializeMap(containerId, stores = []) {
+    async initializeMap(containerId, stores = []) {
         if (typeof google === 'undefined') {
             console.error('Google Maps API 未載入');
             return;
@@ -79,7 +79,7 @@ class FavoritesModule {
         }
 
         // 清除現有的標記
-        this.markers.forEach(marker => marker.setMap(null));
+        this.markers.forEach(marker => marker.map = null);
         this.markers = [];
 
         // 創建地圖
@@ -90,13 +90,43 @@ class FavoritesModule {
             zoom: 13
         });
 
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
         // 添加標記
-        stores.forEach(store => {
+        for (const store of stores) {
             if (store.geometry && store.geometry.location) {
-                const marker = new google.maps.Marker({
-                    position: { lat: store.geometry.location.lat(), lng: store.geometry.location.lng() },
+                const markerContent = document.createElement('div');
+                markerContent.className = 'restaurant-pin';
+                markerContent.style.cssText = `
+                    background-color: #FF6B1A;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    position: relative;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                `;
+
+                const icon = document.createElement('div');
+                icon.innerHTML = '🍽️';
+                icon.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(45deg);
+                    font-size: 12px;
+                `;
+
+                markerContent.appendChild(icon);
+
+                const marker = new AdvancedMarkerElement({
                     map: this.map,
-                    title: store.name
+                    position: { 
+                        lat: store.geometry.location.lat(), 
+                        lng: store.geometry.location.lng() 
+                    },
+                    title: store.name,
+                    content: markerContent
                 });
 
                 const infoWindow = new google.maps.InfoWindow({
@@ -115,7 +145,7 @@ class FavoritesModule {
 
                 this.markers.push(marker);
             }
-        });
+        }
 
         // 如果有店家，調整地圖視角以顯示所有標記
         if (stores.length > 0) {

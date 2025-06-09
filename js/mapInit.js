@@ -1,259 +1,197 @@
-// 地圖初始化模組
+// 地圖初始化模組 (新版 Places API，不含 fields)
 class MapInit {
     constructor() {
         this.map = null;
         this.markers = [];
-        this.placesService = null;
         this.isMapInitialized = false;
-        this.defaultLocation = { lat: 24.1477, lng: 120.6470 }; // 預設台中位置
+        this.defaultLocation = { lat: 25.0330, lng: 121.5654 }; // 預設台北
+        this.currentUserLocationMarker = null;
     }
 
-    // 初始化地圖
-    initMap() {
-        if (typeof google === 'undefined') {
-            console.error('Google Maps API 未載入');
-            return;
-        }
+    async init() {
+        try {
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
-        const mapElement = document.getElementById('map');
-        if (!mapElement) {
-            console.error('找不到地圖容器元素');
-            return;
-        }
-
-        // 嘗試獲取使用者位置
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => this.handleLocationSuccess(position),
-                (error) => this.handleLocationError(error)
-            );
-        } else {
-            this.handleLocationError(new Error('瀏覽器不支援地理位置功能'));
-        }
-    }
-
-    // 處理位置獲取成功
-    handleLocationSuccess(position) {
-        const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-        };
-
-        // 初始化地圖
-        this.map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 15,
-            center: userLocation,
-            mapTypeControl: false
-        });
-
-        // 添加使用者位置標記
-        this.addUserLocationMarker(userLocation);
-
-        // 初始化 Places Service
-        this.initializePlacesService(userLocation);
-    }
-
-    // 處理位置獲取失敗
-    handleLocationError(error) {
-        console.error('無法獲取位置:', error);
-        this.updateLocationStatus('使用預設位置進行搜尋');
-
-        // 使用預設位置初始化地圖
-        this.map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 15,
-            center: this.defaultLocation,
-            mapTypeControl: false
-        });
-
-        // 初始化 Places Service
-        this.initializePlacesService(this.defaultLocation);
-    }
-
-    // 添加使用者位置標記
-    addUserLocationMarker(location) {
-        if (this.currentUserLocationMarker) {
-            this.currentUserLocationMarker.setMap(null);
-        }
-
-        this.currentUserLocationMarker = new google.maps.Marker({
-            position: location,
-            map: this.map,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#4285F4",
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 2,
-            },
-            title: "您的位置"
-        });
-    }
-
-    // 初始化 Places Service
-    initializePlacesService(location) {
-        if (typeof google !== 'undefined' && typeof google.maps.places !== 'undefined') {
-            this.placesService = new google.maps.places.PlacesService(this.map);
-            this.isMapInitialized = true;
-
-            // 添加延遲以確保 Places Service 完成初始化
-            setTimeout(() => {
-                google.maps.event.addListenerOnce(this.map, 'idle', () => {
-                    this.updateLocationStatus('使用您的位置進行搜尋');
-                    this.searchNearbyRestaurants(location.lat, location.lng);
+            let center = this.defaultLocation;
+            if (navigator.geolocation) {
+                await new Promise(resolve => {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => {
+                            center = {
+                                lat: pos.coords.latitude,
+                                lng: pos.coords.longitude
+                            };
+                            resolve();
+                        },
+                        () => resolve(),
+                        { timeout: 3000 }
+                    );
                 });
-            }, 500);
-        }
-    }
-
-    // 搜尋附近的餐廳
-    searchNearbyRestaurants(lat, lng) {
-        if (!this.placesService) {
-            console.error('Places Service 未初始化');
-            return;
-        }
-
-        const request = {
-            location: new google.maps.LatLng(lat, lng),
-            radius: 5000,
-            type: ['restaurant']
-        };
-
-        this.placesService.nearbySearch(request, async (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                const mapped = await this.processPlaceResults(results);
-                window.allNearbyRestaurants = mapped;
-                window.currentRestaurants = mapped.slice(0, 4);
-                window.displayRestaurants(window.currentRestaurants);
-                this.updateResultsTitle('附近的餐廳');
-                this.showRestaurantsOnMap(mapped);
-            } else {
-                window.displayRestaurants([]);
-                this.updateResultsTitle('搜尋失敗，請檢查網路連線或稍後再試');
             }
-        });
+            this.map = new Map(document.getElementById('map'), {
+                center,
+                zoom: 15,
+                mapId: "DEMO_MAP_ID"
+            });
+            this.isMapInitialized = true;
+            await this.addUserLocationMarker(center);
+
+            await this.searchNearbyRestaurants(center.lat, center.lng);
+        } catch (error) {
+            console.error('初始化地圖時發生錯誤:', error);
+        }
     }
 
-    // 處理地點結果
-    async processPlaceResults(results) {
-        return await Promise.all(results.map(place => {
-            return new Promise(resolve => {
-                this.placesService.getDetails({
-                    placeId: place.place_id,
-                    fields: ['name', 'formatted_address', 'opening_hours', 'rating', 'user_ratings_total', 'photos', 'types', 'geometry']
-                }, (detail, detailStatus) => {
-                    if (detailStatus === google.maps.places.PlacesServiceStatus.OK && detail) {
-                        const mergedPlace = {
-                            ...place,
-                            photos: detail.photos || place.photos,
-                            opening_hours: detail.opening_hours || place.opening_hours,
-                            rating: detail.rating || place.rating,
-                            user_ratings_total: detail.user_ratings_total || place.user_ratings_total,
-                            types: detail.types || place.types,
-                            geometry: detail.geometry || place.geometry
-                        };
-                        resolve(this.mapPlaceResult(mergedPlace));
-                    } else {
-                        resolve(this.mapPlaceResult(place));
+    async searchNearbyRestaurants(lat, lng) {
+        try {
+            const { Place } = await google.maps.importLibrary("places");
+            const results = await Place.searchByText({
+                textQuery: "餐廳",
+                locationBias: {
+                    circle: {
+                        center: { latitude: lat, longitude: lng },
+                        radius: 5000
                     }
-                });
+                },
+                language: "zh-TW",
+                maxResultCount: 20
             });
+            if (!results || !results.places) throw new Error('Places search failed');
+            const mapped = await this.processPlaceResults(results.places);
+            window.allNearbyRestaurants = mapped;
+            window.currentRestaurants = mapped;
+            window.displayRestaurants(window.currentRestaurants);
+            this.updateResultsTitle('附近的餐廳');
+            await this.showRestaurantsOnMap(mapped);
+        } catch (error) {
+            console.error('搜尋餐廳時發生錯誤:', error);
+            window.displayRestaurants([]);
+            this.updateResultsTitle('搜尋失敗，請稍後再試');
+        }
+    }
+
+    async searchByType(type, keyword) {
+        try {
+            if (!this.map) return;
+            const location = this.map.getCenter();
+            const { Place } = await google.maps.importLibrary("places");
+            const results = await Place.searchByText({
+                textQuery: `${keyword} 餐廳`,
+                locationBias: {
+                    circle: {
+                        center: { latitude: location.lat(), longitude: location.lng() },
+                        radius: 5000
+                    }
+                },
+                language: "zh-TW",
+                maxResultCount: 20
+            });
+            if (!results || !results.places) throw new Error('Places search failed');
+            const mapped = await this.processPlaceResults(results.places);
+            window.allNearbyRestaurants = mapped;
+            window.currentRestaurants = mapped;
+            window.displayRestaurants(window.currentRestaurants);
+            this.updateResultsTitle(`${keyword}餐廳`);
+            await this.showRestaurantsOnMap(mapped);
+        } catch (error) {
+            console.error('搜尋餐廳時發生錯誤:', error);
+            window.displayRestaurants([]);
+            this.updateResultsTitle('搜尋失敗，請稍後再試');
+        }
+    }
+
+    async processPlaceResults(places) {
+        return Promise.all(places.map(async place => {
+            let photoUrl = "images/no-image.jpg";
+            if (place.photos && place.photos.length > 0 && place.photos[0].url) {
+                photoUrl = place.photos[0].url;
+            }
+            return {
+                id: place.id || place.place_id || "",
+                name: place.displayName?.text || place.name || "未知名稱",
+                address: place.formattedAddress || place.address || "",
+                rating: place.rating || 0,
+                user_ratings_total: place.userRatingCount || 0,
+                photos: photoUrl,
+                opening_hours: place.regularOpeningHours
+                    ? {
+                        isOpen: place.regularOpeningHours.openNow || false,
+                        periods: place.regularOpeningHours.periods || [],
+                        weekday_text: place.regularOpeningHours.weekdayDescriptions || []
+                    } : null,
+                location: place.location
+                    ? { lat: place.location.latitude, lng: place.location.longitude }
+                    : null,
+                types: place.types || []
+            };
         }));
     }
 
-    // 映射地點結果
-    mapPlaceResult(place) {
-        let imageUrl = '';
-        if (place.photos && place.photos[0]) {
-            if (place.photos[0].getUrl) {
-                imageUrl = place.photos[0].getUrl({
-                    maxWidth: 400,
-                    maxHeight: 300
-                });
-            } else if (place.photos[0].photo_reference) {
-                imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0`;
-            }
-        }
-
-        return {
-            id: place.place_id,
-            name: place.name,
-            rating: place.rating || 0,
-            user_ratings_total: place.user_ratings_total || 0,
-            address: place.vicinity || place.formatted_address || place.name || '地址未提供',
-            isOpen: (place.opening_hours && (place.opening_hours.open_now !== undefined)) ? place.opening_hours.open_now : false,
-            opening_hours: place.opening_hours,
-            image: imageUrl,
-            type: (place.types && place.types[0]) ? place.types[0] : 'restaurant',
-            location: place.geometry && place.geometry.location ? place.geometry.location : null
-        };
-    }
-
-    // 在地圖上顯示餐廳
-    showRestaurantsOnMap(restaurants) {
-        if (!this.map) {
-            console.warn('地圖未初始化，跳過地圖標記顯示');
-            return;
-        }
-
-        // 清除現有的標記
-        this.markers.forEach(marker => marker.setMap(null));
+    async showRestaurantsOnMap(restaurants) {
+        this.markers.forEach(marker => marker.map = null);
         this.markers = [];
-
-        restaurants.forEach(restaurant => {
-            if (restaurant.location) {
-                try {
-                    const marker = new google.maps.Marker({
-                        position: restaurant.location,
-                        map: this.map,
-                        title: restaurant.name
-                    });
-
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div class="map-info-window">
-                                <h3>${restaurant.name}</h3>
-                                <p>評分: ${restaurant.rating} ⭐</p>
-                                <p>${restaurant.address}</p>
-                            </div>
-                        `
-                    });
-
-                    marker.addListener('click', () => {
-                        infoWindow.open(this.map, marker);
-                    });
-
-                    this.markers.push(marker);
-                } catch (error) {
-                    console.warn('無法創建地圖標記:', error);
-                }
-            }
-        });
-
-        // 調整地圖視角以顯示所有標記
-        if (restaurants.length > 0 && restaurants[0].location) {
-            try {
-                const bounds = new google.maps.LatLngBounds();
-                restaurants.forEach(restaurant => {
-                    if (restaurant.location) {
-                        bounds.extend(restaurant.location);
-                    }
-                });
-                this.map.fitBounds(bounds);
-            } catch (error) {
-                console.warn('無法調整地圖視角:', error);
-            }
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+        const { LatLngBounds } = await google.maps.importLibrary("core");
+        const bounds = new LatLngBounds();
+        for (const restaurant of restaurants) {
+            if (!restaurant.location) continue;
+            const marker = new AdvancedMarkerElement({
+                map: this.map,
+                position: restaurant.location,
+                title: restaurant.name,
+                content: this.createMarkerContent(restaurant)
+            });
+            bounds.extend(restaurant.location);
+            this.markers.push(marker);
         }
+        if (restaurants.length > 0) this.map.fitBounds(bounds);
     }
 
-    // 更新位置狀態
-    updateLocationStatus(message) {
-        // ...（略）...
+    createMarkerContent(restaurant) {
+        const container = document.createElement('div');
+        container.className = 'marker-content';
+        container.innerHTML = `
+            <div class="marker-title">${restaurant.name}</div>
+            ${restaurant.rating ? `
+                <div class="marker-rating">
+                    <span class="stars">★</span>
+                    ${restaurant.rating.toFixed(1)}
+                </div>
+            ` : ''}
+        `;
+        return container;
     }
 
     updateResultsTitle(title) {
-        // ...（略）...
+        const titleElement = document.getElementById('results-title');
+        if (titleElement) {
+            titleElement.textContent = title;
+            titleElement.style.display = 'block';
+        }
+    }
+
+    async addUserLocationMarker(location) {
+        if (!location) return;
+        if (this.currentUserLocationMarker) {
+            this.currentUserLocationMarker.map = null;
+        }
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+        const dot = document.createElement('div');
+        dot.className = 'user-location-dot';
+        dot.style.cssText = `
+            width: 20px;
+            height: 20px;
+            background-color: #4285F4;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+        this.currentUserLocationMarker = new AdvancedMarkerElement({
+            map: this.map,
+            position: location,
+            title: "您的位置",
+            content: dot
+        });
     }
 }
-
-export default MapInit; 

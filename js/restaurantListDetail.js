@@ -507,7 +507,7 @@ class RestaurantDetail {
   }
 
   // 在 RestaurantDetail 內部初始化地圖的方法
-  initMapInDetail() {
+  async initMapInDetail() {
     // 檢查是否有位置資訊
     if (!this.restaurantData || !this.restaurantData.location) {
       console.error('無法獲取餐廳位置資訊');
@@ -533,10 +533,37 @@ class RestaurantDetail {
     });
 
     // 在餐廳位置添加標記
-    new google.maps.Marker({
-      position: center,
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+    const markerContent = document.createElement('div');
+    markerContent.className = 'restaurant-pin';
+    markerContent.style.cssText = `
+        background-color: #FF6B1A;
+        width: 24px;
+        height: 24px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    `;
+
+    const icon = document.createElement('div');
+    icon.innerHTML = '🍽️';
+    icon.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        font-size: 12px;
+    `;
+
+    markerContent.appendChild(icon);
+
+    new AdvancedMarkerElement({
       map: map,
-      title: this.restaurantData.name
+      position: center,
+      title: this.restaurantData.name,
+      content: markerContent
     });
 
     // 設置路線按鈕點擊事件 (保留在地圖初始化後設置)
@@ -560,7 +587,6 @@ class RestaurantDetail {
     if (businessHours) {
       businessHours.innerHTML = `<i class="far fa-clock"></i>營業時間：${this.restaurantData.businessHours || '營業時間未提供'}`;
     }
-
   }
 
   // 設置分享彈出視窗功能

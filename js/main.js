@@ -1,89 +1,41 @@
 // ===========================================
-// 全局變量聲明
+// 輪播功能
 // ===========================================
 let currentSlide = 0;
-let map, placesService;
-let isMapInitialized = false;
-let currentUserLocationMarker = null;
-window.mapReady = false;
-let pendingSearch = null;
-let userLocation = null; // 用戶位置
-let userCity = '台北'; // 預設城市
-let mapUserLocation = null; // 地圖獲取的用戶位置
 
-// ===========================================
-// 核心功能函數 - 優先定義
-// ===========================================
-
-// 輪播圖功能
 function showSlide(n) {
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.dot');
-    
     if (slides.length === 0) return;
-    
     currentSlide = (n + slides.length) % slides.length;
     const carouselWrapper = document.querySelector('.carousel-wrapper');
     if (carouselWrapper) {
         carouselWrapper.style.transform = `translateX(-${currentSlide * 33.333}%)`;
     }
-    
-    // 更新指示點
     dots.forEach((dot, index) => {
         dot.classList.toggle('active', index === currentSlide);
     });
 }
 
-// 初始化輪播圖功能
 function initCarousel() {
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.dot');
-    
-    if (slides.length === 0) {
-        console.log('沒有找到輪播圖元素');
-        return;
-    }
-    
-    console.log('初始化輪播圖，找到', slides.length, '個滑塊');
-    
-    // 自動輪播
-    setInterval(() => {
-        showSlide(currentSlide + 1);
-    }, 5000);
-
-    // 點擊指示點切換輪播圖
+    if (slides.length === 0) return;
+    setInterval(() => showSlide(currentSlide + 1), 5000);
     dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            showSlide(index);
-        });
+        dot.addEventListener('click', () => showSlide(index));
     });
-    
-    // 初始化第一張圖片
     showSlide(0);
 }
 
-// 更多分類功能
-function showMoreCategories() {
-    alert('更多分類功能開發中...');
-}
-
-// 更新結果標題
-function updateResultsTitle(title) {
-    const titleElement = document.getElementById('results-title');
-    if (titleElement) {
-        titleElement.textContent = title;
-        titleElement.style.display = 'block';
-    }
-}
-
-// 登入彈窗功能
+// ===========================================
+// 登入彈窗
+// ===========================================
 function initLoginModal() {
     const loginBtn = document.querySelector('.btn-login');
     const modal = document.getElementById('loginModal');
     const closeBtn = document.querySelector('.close');
     const loginForm = document.getElementById('loginForm');
-
-    // 檢查登入狀態並更新按鈕
     updateLoginStatus();
 
     if (loginBtn) {
@@ -97,21 +49,15 @@ function initLoginModal() {
         });
     }
     if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
+        closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
     }
     window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
+        if (e.target === modal) { modal.style.display = 'none'; }
     });
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            // 模擬登入成功
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userEmail', email);
             modal.style.display = 'none';
@@ -124,206 +70,137 @@ function initLoginModal() {
 function updateLoginStatus() {
     const loginBtn = document.querySelector('.btn-login');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (loginBtn) {
-        if (isLoggedIn) {
-            loginBtn.textContent = '會員中心';
-        } else {
-            loginBtn.textContent = '登入';
-        }
-    }
+    if (loginBtn) loginBtn.textContent = isLoggedIn ? '會員中心' : '登入';
 }
 
 function socialLogin(platform) {
     alert('社群登入（' + platform + '）功能尚未開放');
 }
 
-// Google Maps 與 Places API 初始化
-function initMap() {
-    if (typeof google === 'undefined') {
-        setTimeout(initMap, 1000);
-        return;
-    }
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                createMapWithLocation(userLocation);
-            },
-            (error) => {
-                const defaultLocation = { lat: 25.0330, lng: 121.5654 };
-                createMapWithLocation(defaultLocation);
-            }
-        );
+// ===========================================
+// 類型搜尋 → 全部導向 mapInit
+// ===========================================
+window.searchByType = function(type, keyword) {
+    if (window.mapInit && typeof window.mapInit.searchByType === 'function') {
+        window.mapInit.searchByType(type, keyword);
     } else {
-        const defaultLocation = { lat: 25.0330, lng: 121.5654 };
-        createMapWithLocation(defaultLocation);
+        alert('地圖尚未初始化完成，請稍候再試');
     }
-}
+};
 
-// 創建地圖
-function createMapWithLocation(location) {
-    const mapElement = document.getElementById('map');
-    map = new google.maps.Map(mapElement, {
-        zoom: 15,
-        center: location,
-        mapTypeControl: false
-    });
-
-    new google.maps.Marker({
-        position: location,
-        map: map,
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#4285F4",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-        },
-        title: "您的位置"
-    });
-
-    placesService = new google.maps.places.PlacesService(map);
-    isMapInitialized = true;
-}
-
-// 搜尋餐廳
-function searchByType(type, typeName) {
-    if (!isMapInitialized) return;
-
-    const container = document.getElementById('restaurants-container');
-    if (container) {
-        container.innerHTML = '<div class="loading-message">搜尋中...</div>';
-    }
-
-    const request = {
-        location: map.getCenter(),
-        radius: 3000,
-        type: ['restaurant'],
-        keyword: typeName
-    };
-
-    placesService.nearbySearch(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            const restaurants = results.slice(0, 8).map(mapPlaceResult);
-            displayRestaurants(restaurants);
-        } else {
-            if (container) {
-                container.innerHTML = '<div class="error-message">搜尋失敗，請稍後再試</div>';
-            }
-        }
-    });
-}
-
-// 顯示餐廳列表
-function displayRestaurants(restaurants) {
+// ===========================================
+// 餐廳列表顯示
+// ===========================================
+window.displayRestaurants = function(restaurants) {
     const container = document.getElementById('restaurants-container');
     if (!container) return;
-
-    if (restaurants.length === 0) {
+    if (!restaurants || restaurants.length === 0) {
         container.innerHTML = '<div class="no-results">找不到相關餐廳</div>';
         return;
     }
-
-    const html = restaurants.map((restaurant, index) => `
-        <div class="restaurant-card">
-            <div class="restaurant-image">
-                ${restaurant.photos ? 
-                    `<img src="${restaurant.photos}" alt="${restaurant.name}" loading="lazy">` : 
-                    '<div class="no-image">暫無圖片</div>'
-                }
-                <button class="favorite-btn ${isFavorite(restaurant.id) ? 'active' : ''}" 
-                        onclick="toggleFavoriteStore('${restaurant.id}', '${restaurant.name}')">
-                    <i class="fas fa-heart"></i>
-                </button>
-            </div>
-            <div class="restaurant-info">
-                <h3>${restaurant.name}</h3>
-                <div class="rating">
-                    ${restaurant.rating ? `
-                        <span class="stars" style="--rating: ${restaurant.rating};"></span>
-                        <span class="rating-text">${restaurant.rating} (${restaurant.user_ratings_total})</span>
-                    ` : '<span class="no-rating">尚無評分</span>'}
+    const html = restaurants.map(restaurant => {
+        const {
+            id = '',
+            name = '未知名稱',
+            address = '地址未提供',
+            rating = 0,
+            user_ratings_total = 0,
+            photos = null,
+            opening_hours = null
+        } = restaurant;
+        const escapedName = name.replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
+        return `
+            <div class="restaurant-card" data-id="${id}">
+                <div class="restaurant-image">
+                    ${photos ?
+                        `<img src="${photos}" alt="${escapedName}" loading="lazy" onerror="this.src='images/no-image.jpg';">` :
+                        '<div class="no-image">暫無圖片</div>'
+                    }
+                    <button class="favorite-btn ${window.isFavorite(id) ? 'active' : ''}"
+                            onclick="toggleFavorite('${id}', '${escapedName}')">
+                        <i class="fas fa-heart"></i>
+                    </button>
                 </div>
-                <p class="address">${restaurant.address || '地址未提供'}</p>
-                ${restaurant.opening_hours ? `
-                    <p class="opening-hours ${restaurant.opening_hours.isOpen ? 'open' : 'closed'}">
-                        ${restaurant.opening_hours.isOpen ? '營業中' : '休息中'}
+                <div class="restaurant-info">
+                    <h3>${escapedName}</h3>
+                    <div class="rating">
+                        ${rating > 0 ? `
+                            <div class="stars">
+                                ${Array(5).fill(0).map((_, i) => `
+                                    <i class="fas fa-star ${i < Math.floor(rating) ? 'filled' :
+                                        i < rating ? 'half-filled' : ''}"></i>
+                                `).join('')}
+                            </div>
+                            <span class="rating-text">${rating.toFixed(1)} (${user_ratings_total})</span>
+                        ` : '<span class="no-rating">尚無評分</span>'}
+                    </div>
+                    <p class="address" title="${address}">
+                        <i class="fas fa-map-marker-alt"></i> ${address}
                     </p>
-                ` : ''}
+                    ${opening_hours ? `
+                        <p class="opening-hours ${opening_hours.isOpen ? 'open' : 'closed'}">
+                            <i class="fas fa-clock"></i>
+                            ${opening_hours.isOpen ? '營業中' : '休息中'}
+                        </p>
+                    ` : ''}
+                </div>
             </div>
-        </div>
-    `).join('');
-
+        `;
+    }).join('');
     container.innerHTML = html;
-}
+};
 
+// ===========================================
 // 收藏功能
-function toggleFavoriteStore(id, name) {
-    let favorites = JSON.parse(localStorage.getItem('favoriteStores') || '[]');
-    const index = favorites.findIndex(store => store.id === id);
-    
+// ===========================================
+window.toggleFavorite = function(id, name) {
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const index = favorites.findIndex(fav => fav.id === id);
     if (index === -1) {
-        favorites.push({ id, name, timestamp: Date.now() });
+        favorites.push({ id, name });
         showToast('已加入收藏');
     } else {
         favorites.splice(index, 1);
-        showToast('已取消收藏');
+        showToast('已移除收藏');
     }
-    
-    localStorage.setItem('favoriteStores', JSON.stringify(favorites));
-    
-    const btn = document.querySelector(`button[onclick*="${id}"]`);
-    if (btn) {
-        btn.classList.toggle('active');
-    }
-}
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    const btn = document.querySelector(`[data-id="${id}"] .favorite-btn`);
+    if (btn) btn.classList.toggle('active');
+};
 
-function isFavorite(id) {
-    const favorites = JSON.parse(localStorage.getItem('favoriteStores') || '[]');
-    return favorites.some(store => store.id === id);
-}
+window.isFavorite = function(id) {
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    return favorites.some(fav => fav.id === id);
+};
 
-// 顯示提示訊息
+// ===========================================
+// Toast 提示
+// ===========================================
 function showToast(message) {
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
     document.body.appendChild(toast);
-    
+    toast.offsetHeight;
+    toast.classList.add('show');
     setTimeout(() => {
-        toast.classList.add('show');
+        toast.classList.remove('show');
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
-        }, 2000);
-    }, 100);
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
 }
 
-// 地點結果轉換
-function mapPlaceResult(place) {
-    return {
-        id: place.place_id,
-        name: place.name,
-        address: place.vicinity || place.formatted_address,
-        rating: place.rating,
-        user_ratings_total: place.user_ratings_total,
-        photos: place.photos ? place.photos[0].getUrl() : null,
-        opening_hours: place.opening_hours ? {
-            isOpen: place.opening_hours.isOpen(),
-            periods: place.opening_hours.periods
-        } : null,
-        location: place.geometry.location
-    };
-}
-
-// 初始化
-document.addEventListener('DOMContentLoaded', () => {
-    initMap();
+// ===========================================
+// 頁面初始化
+// ===========================================
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        initCarousel();
+        initLoginModal();
+    } catch (error) {
+        console.error('初始化頁面時發生錯誤:', error);
+    }
 });

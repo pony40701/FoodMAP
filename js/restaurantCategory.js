@@ -41,7 +41,7 @@ class RestaurantCategory {
     }
 
     // 根據類型搜尋餐廳
-    searchByType(type, typeName) {
+    async searchByType(type, typeName) {
         if (!window.placesService) {
             window.displayRestaurants([]);
             window.updateResultsTitle(`${typeName} 餐廳 (0 間)`);
@@ -49,23 +49,31 @@ class RestaurantCategory {
         }
 
         const request = {
-            keyword: typeName + '餐廳',
-            location: window.map ? window.map.getCenter() : new google.maps.LatLng(24.1477, 120.6470),
-            radius: 5000
+            query: typeName + '餐廳',
+            locationBias: {
+                center: window.map ? window.map.getCenter() : new google.maps.LatLng(24.1477, 120.6470),
+                radius: 5000
+            }
         };
 
-        window.placesService.nearbySearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                const restaurants = results.map(window.mapPlaceResult);
-                window.currentRestaurants = restaurants;
-                window.displayRestaurants(restaurants);
-                window.updateResultsTitle(`${typeName} 餐廳 (${restaurants.length} 間)`);
-                if (window.map) window.showRestaurantsOnMap(restaurants);
-            } else {
-                window.displayRestaurants([]);
-                window.updateResultsTitle(`${typeName} 餐廳 (0 間)`);
-            }
-        });
+        try {
+            window.placesService.textSearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                    const restaurants = results.map(window.mapPlaceResult);
+                    window.currentRestaurants = restaurants;
+                    window.displayRestaurants(restaurants);
+                    window.updateResultsTitle(`${typeName} 餐廳 (${restaurants.length} 間)`);
+                    if (window.map) window.showRestaurantsOnMap(restaurants);
+                } else {
+                    window.displayRestaurants([]);
+                    window.updateResultsTitle(`${typeName} 餐廳 (0 間)`);
+                }
+            });
+        } catch (error) {
+            console.error('搜尋餐廳時發生錯誤:', error);
+            window.displayRestaurants([]);
+            window.updateResultsTitle(`${typeName} 餐廳搜尋失敗`);
+        }
     }
 }
 
