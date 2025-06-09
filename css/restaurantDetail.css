@@ -1,0 +1,1418 @@
+/* 輪播圖區域樣式 */
+.restaurant-carousel {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #333;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.carousel-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+  left: 20px;
+}
+
+.next-btn {
+  right: 20px;
+}
+
+/* 餐廳資訊覆蓋層樣式 */
+.restaurant-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 30px;
+  color: white;
+  z-index: 5;
+}
+
+.restaurant-info-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.restaurant-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.restaurant-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: #FFFFFF;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+
+/* 認證標籤樣式 */
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #FF6B35; /* 橘色背景 */
+  color: #FFFFFF; /* 白色文字 */
+}
+
+.verified-badge i {
+  font-size: 12px;
+}
+
+.restaurant-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stars i {
+  color: #ffd700;
+}
+
+.rating-score {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.review-count {
+  color: #ccc;
+}
+
+.restaurant-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+}
+
+.price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.price {
+  color: #ccc;
+}
+
+.tags {
+  color: #ccc;
+}
+
+.business-hours {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 營業狀態樣式 */
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status.open {
+  background-color: #2ECC71; /* 綠色背景 */
+  color: #FFFFFF; /* 白色文字 */
+}
+
+.status.closed {
+  background-color: #E74C3C; /* 紅色背景 */
+  color: #FFFFFF; /* 白色文字 */
+}
+
+.hours {
+  color: #ccc;
+}
+
+/* 操作按鈕區域樣式 */
+.action-buttons {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  margin-bottom: 0;
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 1;
+}
+
+.action-buttons-container {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.action-btn i {
+  font-size: 16px;
+}
+
+.action-btn.write-review {
+  background-color: #FF6B35;
+  color: #fff;
+  border-color: #FF6B35;
+}
+
+.action-btn.write-review:hover {
+  background-color: #e05d2d; /* Slightly darker orange for hover */
+}
+
+.action-btn.save, .action-btn.share {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 6px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.action-btn.save i, .action-btn.share i {
+  font-size: 22px;
+  color: #ff6b1a;
+  transition: color 0.2s;
+}
+.action-btn.save.active i {
+  color: #ff6b1a;
+}
+.action-btn.save i.far {
+  font-weight: 400;
+  color: #ff6b1a;
+  /* 空心 */
+}
+.action-btn.save i.fas {
+  font-weight: 900;
+  color: #ff6b1a;
+  /* 實心 */
+}
+.action-btn.save:focus, .action-btn.share:focus {
+  outline: none;
+}
+.action-btn.save:hover, .action-btn.share:hover {
+  background: none;
+  box-shadow: none;
+}
+
+/* 內容區域包裝器 */
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  padding: 0 24px;
+  align-items: flex-start;
+  margin-top: 40px; /* Add top margin for spacing */
+}
+
+/* 右側邊欄 */
+.sidebar {
+  width: 33.333%;
+  float: right;
+  padding-top: 16px;
+  position: sticky; /* 讓地圖區域固定在視窗中 */
+  top: 80px; /* 與頂部保持一定距離 */
+  align-self: flex-start; /* 確保不會被拉伸 */
+}
+
+/* 清除浮動 */
+.content-wrapper::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* 菜單區域樣式 */
+.menu-section {
+  background-color: #fff;
+  padding: 16px 0;
+  border-bottom: 1px solid #e6e6e6;
+  width: 66.666%;
+  float: left;
+  flex-shrink: 0; /* 防止菜單區域被壓縮 */
+}
+
+.menu-container {
+  padding: 0 24px;
+  position: relative;
+}
+
+.menu-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.popular-dishes h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.menu-grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding-bottom: 8px; /* 為滾動條預留空間 */
+}
+
+/* 隱藏滾動條但保持功能 */
+.menu-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-item {
+  flex: 0 0 200px; /* 固定寬度，不允許伸縮 */
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fff;
+}
+
+.menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.menu-item-image {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+}
+
+.menu-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.menu-item:hover .menu-item-image img {
+  transform: scale(1.05);
+}
+
+.photo-count {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.photo-count i {
+  font-size: 11px;
+}
+
+.menu-item-info {
+  padding: 8px;
+}
+
+.menu-item-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #333;
+  line-height: 1.3;
+  /* 文字超出兩行顯示省略號 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.menu-item-meta .price {
+  font-weight: 600;
+  color: #333;
+}
+
+.menu-item-meta .review-count {
+  color: #666;
+  white-space: nowrap;
+}
+
+.view-full-menu {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  background-color: #fff;
+  border: 1px solid #FF6B35;
+  border-radius: 4px;
+  color: #FF6B35;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-full-menu:hover {
+  background-color: #FF6B35;
+  color: #fff;
+}
+
+/* 添加左右滾動按鈕 */
+.menu-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e6e6e6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.menu-scroll-btn:hover {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.menu-scroll-btn i {
+  font-size: 14px;
+  color: #333;
+}
+
+.menu-scroll-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 熱門菜色區塊內的滾動按鈕位置 */
+.popular-dishes {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.popular-dishes .menu-scroll-btn {
+  top: calc(50% - 35px);
+}
+
+.popular-dishes .menu-scroll-btn.prev {
+  left: -16px;
+}
+
+.popular-dishes .menu-scroll-btn.next {
+  right: -16px;
+}
+
+/* 推薦餐廳區塊樣式 */
+.recommended-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e6e6e6;
+}
+
+/* 推薦餐廳區塊內的滾動按鈕位置 */
+.recommended-restaurants {
+  position: relative;
+  padding: 0 1rem;
+}
+
+.recommended-restaurants .menu-scroll-btn.prev {
+  left: -8px;
+}
+
+.recommended-restaurants .menu-scroll-btn.next {
+  right: -8px;
+}
+
+/* 評論區塊樣式 */
+.reviews-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e6e6e6;
+}
+
+.reviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.review-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.reviewer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.reviewer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reviewer-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.review-date {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.review-rating .stars {
+  color: #ffb74d;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+.review-rating .rating-score {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.review-content {
+  margin-bottom: 1rem;
+}
+
+.review-content p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #444;
+  margin: 0;
+}
+
+.review-photos {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.review-photos::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.review-photos img {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.review-photos img:hover {
+  transform: scale(1.05);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .restaurant-carousel {
+    height: 300px;
+  }
+
+  .restaurant-name {
+    font-size: 1.8rem;
+  }
+
+  .restaurant-info-overlay {
+    padding: 15px;
+  }
+
+  .restaurant-meta {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .action-buttons-container {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .action-btn i {
+    font-size: 14px;
+  }
+
+  .content-wrapper {
+    flex-direction: column;
+    padding: 0 16px;
+    gap: 16px;
+  }
+
+  .menu-section {
+    width: 100%;
+    float: none;
+  }
+
+  .sidebar {
+    width: 100%;
+    float: none;
+    position: static; /* 在手機版取消固定定位 */
+  }
+
+  .menu-container {
+    padding: 0 16px;
+  }
+
+  .menu-item {
+    flex: 0 0 160px;
+  }
+
+  .menu-scroll-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .menu-scroll-btn.prev {
+    left: 4px;
+  }
+
+  .menu-scroll-btn.next {
+    right: 4px;
+  }
+
+  .menu-title {
+    font-size: 18px;
+  }
+
+  .popular-dishes h3 {
+    font-size: 15px;
+  }
+
+  .menu-item-info h4 {
+    font-size: 13px;
+  }
+
+  .menu-item-meta {
+    font-size: 11px;
+  }
+
+  .static-map {
+    height: 160px;
+  }
+
+  .reviews-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+
+  .review-card {
+    padding: 1.25rem;
+  }
+
+  .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .reviewer-name {
+    font-size: 0.95rem;
+  }
+
+  .review-date {
+    font-size: 0.8rem;
+  }
+
+  .review-rating .stars {
+    font-size: 1rem;
+  }
+
+  .review-rating .rating-score {
+    font-size: 0.95rem;
+  }
+
+  .review-content p {
+    font-size: 0.9rem;
+  }
+
+  .review-photos img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* 地圖區域樣式 */
+.map-section {
+  background-color: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  height: auto; /* 讓高度自適應內容 */
+}
+
+.map-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  padding: 16px;
+  margin: 0;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.map-container {
+  padding: 16px;
+}
+
+/* Google Maps JavaScript API 地圖容器樣式 */
+#map {
+  width: 100%;
+  height: 200px; /* 設定一個高度，您可以根據需要調整 */
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.static-map {
+  width: 100%;
+  height: 180px; /* 稍微減小地圖高度 */
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.map-info {
+  font-size: 14px;
+  color: #333;
+}
+
+.map-info p {
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-info i {
+  color: #666;
+  width: 16px;
+  text-align: center;
+}
+
+.address {
+  font-weight: 500;
+}
+
+.business-hours {
+  color: #666;
+}
+
+.directions-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #FF6B35;
+  border-radius: 4px;
+  color: #FF6B35;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.directions-btn:hover {
+  background-color: #FF6B35;
+  color: #fff;
+}
+
+.directions-btn i {
+  color: inherit;
+}
+
+/* 分享彈出視窗樣式 */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+  display: flex; /* 使用 Flexbox 居中小視窗 */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 確保在最上層 */
+  visibility: hidden; /* 預設隱藏 */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.share-modal-overlay.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.share-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  position: relative;
+  max-width: 400px; /* 設定最大寬度 */
+  width: 90%; /* 手機版適應 */
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #999;
+}
+
+.share-modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.share-options {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.share-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #555;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.share-icon i {
+  font-size: 36px; /* 圖標大小 */
+  margin-bottom: 5px;
+}
+
+.share-icon.facebook i {
+  color: #1877F2;
+}
+
+.share-icon.line i {
+  color: #00B900;
+}
+
+.share-icon.instagram i {
+  color: #E4405F;
+}
+
+.share-icon:hover {
+  color: #000;
+}
+
+.share-link-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.share-link-input {
+  flex-grow: 1;
+  border: none;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #555;
+  outline: none;
+}
+
+.copy-link-btn {
+  background-color: #eee;
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.copy-link-btn:hover {
+  background-color: #ddd;
+}
+
+/* 響應式調整 */
+@media (max-width: 480px) {
+  .share-modal-content {
+    padding: 20px;
+  }
+
+  .share-modal-content h2 {
+    font-size: 18px;
+  }
+
+  .share-options {
+    gap: 15px;
+  }
+
+  .share-icon i {
+    font-size: 30px;
+  }
+}
+
+/* 餐廳卡片樣式 (用於推薦店家) */
+.restaurant-card {
+  flex: 0 0 200px; /* Fixed width, no shrinking */
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fff;
+  text-decoration: none; /* Remove underline from links */
+  color: inherit; /* Inherit text color */
+  display: flex; /* Use flexbox for vertical layout */
+  flex-direction: column;
+  height: auto; /* Allow height to adjust based on content */
+}
+
+.restaurant-card:hover {
+  transform: translateY(-2px); /* Slight lift on hover */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.restaurant-card .menu-item-image {
+  position: relative;
+  width: 100%;
+  height: 140px; /* Image height - keep consistent */
+  overflow: hidden;
+  border-radius: 4px 4px 0 0; /* Apply border radius to top corners */
+}
+
+.restaurant-card .menu-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.restaurant-card:hover .menu-item-image img {
+  transform: scale(1.05); /* Zoom effect on hover */
+}
+
+.restaurant-card .photo-count {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.restaurant-card .photo-count i {
+  font-size: 11px;
+}
+
+.restaurant-card .menu-item-info {
+  padding: 8px; /* Info padding */
+  display: flex; /* Use flexbox for vertical layout */
+  flex-direction: column;
+  gap: 4px; /* Add gap between info items */
+  flex-grow: 1; /* Allow info section to grow */
+  justify-content: space-between; /* Distribute space */
+}
+
+.restaurant-card .restaurant-name {
+  font-size: 14px; /* Title font size */
+  font-weight: 600;
+  margin: 0; /* Remove default margin */
+  color: #FF6B35; /* Change color to orange */
+  line-height: 1.3;
+  text-shadow: none; /* Remove text shadow */
+  /* Text overflow handling */
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Limit to one line */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.restaurant-card .restaurant-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #ff6b6b;
+  margin: 0; /* Remove margin */
+}
+
+.restaurant-card .restaurant-rating i {
+  font-size: 0.9rem;
+}
+
+.restaurant-card .restaurant-rating span {
+  font-size: 12px; /* Rating score font size */
+}
+
+.restaurant-card .review-count {
+  color: #666;
+  font-size: 12px; /* Review count font size */
+  white-space: nowrap;
+}
+
+.restaurant-card .price-range {
+  /* Remove price range as it's not in the desired order */
+  display: none;
+}
+
+.restaurant-card .restaurant-tags {
+  margin-top: auto; /* Push tags to the bottom */
+  font-size: 11px; /* Tags font size */
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 響應式設計調整 */
+@media (max-width: 768px) {
+  .recommended-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+} 
+
+/* ========== 頁尾樣式 ========== */
+.footer {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(255, 107, 26, 0.1) 100%);
+    color: #fff;
+    padding: 50px 20px 20px 20px;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    margin-top: 60px;
+    border-top: 3px solid #ff6b1a;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+    gap: 40px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    text-align: left;
+}
+
+.footer-section h4 {
+    font-size: 22px;
+    color: #ff6b1a;
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b1a 0%, #ff8c42 100%);
+    border-radius: 1px;
+}
+
+.footer-section p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #ddd;
+    margin-bottom: 15px;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-links a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    padding: 5px 0;
+    border-radius: 4px;
+}
+
+.footer-links a:hover {
+    color: #ff6b1a;
+    padding-left: 10px;
+    background: rgba(255, 107, 26, 0.1);
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.social-icons a {
+    font-size: 28px;
+    color: #ff6b1a;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 50%;
+    background: rgba(255, 107, 26, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+}
+
+.social-icons a:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 107, 26, 0.4);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 107, 26, 0.3);
+    padding-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+    background: rgba(0, 0, 0, 0.3);
+    margin: 0 -20px -20px -20px;
+    padding: 20px;
+}
+
+/* ========== 頁尾響應式設計 ========== */
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 16px 16px 16px;
+        margin-top: 40px;
+    }
+    
+    .footer-container {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+    }
+    
+    .footer-section {
+        min-width: auto;
+        text-align: center;
+    }
+    
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .footer-links {
+        align-items: center;
+    }
+    
+    .social-icons {
+        justify-content: center;
+    }
+    
+    .footer-bottom {
+        margin: 0 -16px -16px -16px;
+        padding: 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 30px 12px 12px 12px;
+    }
+    
+    .footer-container {
+        gap: 25px;
+    }
+    
+    .footer-section h4 {
+        font-size: 20px;
+    }
+    
+    .footer-section p {
+        font-size: 15px;
+    }
+    
+    .footer-links a {
+        font-size: 15px;
+    }
+    
+    .social-icons a {
+        font-size: 24px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .footer-bottom {
+        margin: 0 -12px -12px -12px;
+        padding: 12px;
+        font-size: 12px;
+    }
+} 
+
+/* Added dropdown styles from index.html */
+.restaurant-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.restaurant-dropdown .nav-link {
+    color: #ff6b1a;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.restaurant-dropdown .nav-link:hover {
+    background: rgba(255, 107, 26, 0.1);
+    border-color: rgba(255, 107, 26, 0.3);
+}
+
+.restaurant-dropdown-content {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 107, 26, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+}
+
+.restaurant-dropdown:hover .restaurant-dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.restaurant-dropdown-content .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #ff6b1a;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 107, 26, 0.1);
+    white-space: nowrap;
+}
+
+.restaurant-dropdown-content .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.restaurant-dropdown-content .dropdown-item i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.restaurant-dropdown-content .dropdown-item:hover {
+    background: rgba(255, 107, 26, 0.1);
+    color: #ff8c42;
+}
+
+/* 下箭頭動畫效果 */
+.restaurant-dropdown .nav-link i {
+    margin-left: 6px;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.restaurant-dropdown:hover .nav-link i {
+    transform: rotate(180deg);
+} 
