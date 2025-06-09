@@ -642,8 +642,8 @@ function searchByType(type, typeName) {
         console.log('✅ 使用全局用戶位置進行搜尋');
         performDirectLocationSearch(typeName, userLocation, container);
     } else {
-        console.log('⚠️ 沒有用戶位置，使用改進搜尋策略');
-        performImprovedSearch(typeName, container);
+        console.log('⚠️ 沒有用戶位置，使用定位重試策略');
+        performLocationRetrySearch(typeName, container);
     }
 }
 
@@ -803,77 +803,96 @@ function showRestaurantsOnMap(restaurants) {
     }
 }
 
-// 改進的搜尋函數 - 更長的超時時間和更好的錯誤處理
-async function performImprovedSearch(typeName, container) {
+// 新的定位重試搜尋策略 - 定位失敗時自動重新載入頁面
+async function performLocationRetrySearch(typeName, container) {
     let searchCompleted = false;
-    let searchStartTime = Date.now();
+    let retryCount = sessionStorage.getItem('locationRetryCount') || 0;
+    retryCount = parseInt(retryCount);
     
-    console.log('🚀 啟動改進搜尋策略');
+    console.log('🚀 啟動定位重試搜尋策略，重試次數：', retryCount);
+    
+    // 如果已經重試超過2次，則使用預設搜尋
+    if (retryCount >= 2) {
+        console.log('⚠️ 已達到最大重試次數，使用預設搜尋');
+        sessionStorage.removeItem('locationRetryCount');
+        sessionStorage.removeItem('pendingSearchType');
+        performFallbackSearch(typeName, container);
+        return;
+    }
     
     try {
-        // 策略1：嘗試獲取用戶位置（延長到10秒）
+        // 保存當前搜尋類型，以便重新載入後繼續搜尋
+        sessionStorage.setItem('pendingSearchType', typeName);
+        
         console.log('📍 嘗試獲取用戶位置...');
         
         const locationPromise = getUserLocationImproved()
             .then(location => {
                 if (!searchCompleted) {
                     console.log('✅ 獲取位置成功，執行位置搜尋');
+                    // 清除重試計數器
+                    sessionStorage.removeItem('locationRetryCount');
+                    sessionStorage.removeItem('pendingSearchType');
                     return performRobustLocationSearch(typeName, location, container);
                 }
             })
             .catch(error => {
                 console.log('⚠️ 位置獲取失敗:', error.message);
+                
+                if (!searchCompleted) {
+                    searchCompleted = true;
+                    
+                    // 增加重試計數
+                    retryCount++;
+                    sessionStorage.setItem('locationRetryCount', retryCount.toString());
+                    
+                    console.log('🔄 定位失敗，即將重新載入頁面進行第', retryCount, '次重試');
+                    
+                    // 顯示重新載入訊息
+                    if (container) {
+                        container.innerHTML = `<div class="loading-message">📍 定位失敗，正在重新載入頁面進行第${retryCount}次重試...</div>`;
+                        updateResultsTitle('正在重新定位...');
+                    }
+                    
+                    // 3秒後重新載入頁面
+                    setTimeout(() => {
+                        console.log('🔄 開始重新載入頁面...');
+                        window.location.reload();
+                    }, 3000);
+                }
+                
                 return null;
             });
         
-        // 策略2：並行準備文字搜尋（作為備用）
-        const textSearchPromise = new Promise(resolve => {
-            setTimeout(() => {
-                if (!searchCompleted) {
-                    console.log('🔄 啟動備用文字搜尋');
-                    resolve(performRobustTextSearch(typeName, userCity, container));
-                } else {
-                    resolve(null);
+        // 10秒後如果仍未成功，直接重新載入
+        setTimeout(() => {
+            if (!searchCompleted) {
+                console.log('⏰ 定位超時，重新載入頁面');
+                searchCompleted = true;
+                
+                retryCount++;
+                sessionStorage.setItem('locationRetryCount', retryCount.toString());
+                
+                if (container) {
+                    container.innerHTML = '<div class="loading-message">📍 定位超時，正在重新載入頁面...</div>';
+                    updateResultsTitle('正在重新定位...');
                 }
-            }, 8000); // 8秒後啟動文字搜尋
-        });
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }, 10000);
         
-        // 策略3：15秒後強制使用預設搜尋
-        const fallbackPromise = new Promise(resolve => {
-            setTimeout(() => {
-                if (!searchCompleted) {
-                    console.log('⚡ 啟動強制搜尋');
-                    resolve(performFallbackSearch(typeName, container));
-                }
-            }, 15000);
-        });
-        
-        // 等待任何一個策略成功
-        const result = await Promise.race([locationPromise, textSearchPromise, fallbackPromise]);
-        
-        if (result && !searchCompleted) {
-            searchCompleted = true;
-            console.log('✅ 搜尋成功完成');
-        }
+        await locationPromise;
         
     } catch (error) {
-        console.error('❌ 搜尋過程錯誤:', error);
+        console.error('❌ 定位重試過程錯誤:', error);
         if (!searchCompleted) {
             searchCompleted = true;
             performFallbackSearch(typeName, container);
         }
     }
-    
-    // 如果20秒後仍未完成，顯示錯誤
-    setTimeout(() => {
-        if (!searchCompleted) {
-            console.error('❌ 所有搜尋策略都失敗了');
-            if (container) {
-                container.innerHTML = '<div class="error-message">搜尋失敗，請檢查網路連線或稍後重試</div>';
-                updateResultsTitle('搜尋失敗');
-            }
-        }
-    }, 20000);
 }
 
 // 改進的用戶定位函數 - 更長超時時間
@@ -1996,6 +2015,22 @@ function testNetworkConnection() {
     }, 1000);
 }
 
+// 檢查並恢復待處理的搜尋請求
+function checkAndResumePendingSearch() {
+    const pendingSearchType = sessionStorage.getItem('pendingSearchType');
+    const retryCount = sessionStorage.getItem('locationRetryCount');
+    
+    if (pendingSearchType) {
+        console.log('🔄 檢測到待處理的搜尋請求:', pendingSearchType, '重試次數:', retryCount);
+        
+        // 等待地圖初始化完成後再執行搜尋
+        setTimeout(() => {
+            console.log('🚀 恢復搜尋:', pendingSearchType);
+            searchByType('restaurant', pendingSearchType);
+        }, 3000); // 給地圖初始化一些時間
+    }
+}
+
 // DOM 加載完成後的初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM 加載完成');
@@ -2003,6 +2038,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 初始化輪播圖
     initCarousel();
+    
+    // 檢查是否有待處理的搜尋請求（重新載入後恢復搜尋）
+    checkAndResumePendingSearch();
     
     // 等待一下再測試基本狀態
     setTimeout(testBasicFunctionality, 2000);
@@ -2047,7 +2085,8 @@ window.isFavorite = isFavorite;
 window.toggleFavoriteStore = toggleFavoriteStore;
 window.displayRestaurants = displayRestaurants;
 // 新增的優化搜尋函數
-window.performImprovedSearch = performImprovedSearch;
+window.performLocationRetrySearch = performLocationRetrySearch;
+window.checkAndResumePendingSearch = checkAndResumePendingSearch;
 window.getUserLocationImproved = getUserLocationImproved;
 window.performRobustLocationSearch = performRobustLocationSearch;
 window.performRobustTextSearch = performRobustTextSearch;
@@ -2056,6 +2095,13 @@ window.getReliableSearchService = getReliableSearchService;
 // 新增的直接位置搜尋函數
 window.performDirectLocationSearch = performDirectLocationSearch;
 window.showRestaurantsOnMap = showRestaurantsOnMap;
+// 新增的地圖相關函數
+window.geocodeAddress = geocodeAddress;
+window.isValidCoordinate = isValidCoordinate;
+// 新增的營業時間功能
+window.showWeeklyHoursModal = showWeeklyHoursModal;
+window.closeWeeklyHoursModal = closeWeeklyHoursModal;
+window.populateWeeklyHoursModal = populateWeeklyHoursModal;
 
 console.log('✅ 所有函數已綁定到 window 對象');
 console.log('✅ initMap:', typeof window.initMap);
@@ -2083,7 +2129,7 @@ async function getDetailedRestaurantInfo(places, service) {
                 // 否則獲取詳細資訊
                 service.getDetails({
                     placeId: place.place_id,
-                    fields: ['name', 'formatted_address', 'opening_hours', 'rating', 'user_ratings_total', 'photos', 'types', 'geometry']
+                    fields: ['name', 'formatted_address', 'opening_hours', 'rating', 'user_ratings_total', 'photos', 'types', 'geometry', 'business_status']
                 }, (details, detailStatus) => {
                     if (detailStatus === google.maps.places.PlacesServiceStatus.OK && details) {
                         // 合併原始資料和詳細資料
@@ -2093,7 +2139,8 @@ async function getDetailedRestaurantInfo(places, service) {
                             opening_hours: details.opening_hours || place.opening_hours,
                             formatted_address: details.formatted_address || place.formatted_address,
                             rating: details.rating || place.rating,
-                            user_ratings_total: details.user_ratings_total || place.user_ratings_total
+                            user_ratings_total: details.user_ratings_total || place.user_ratings_total,
+                            business_status: details.business_status || place.business_status
                         });
                     } else {
                         resolve(place); // 如果獲取詳細資訊失敗，使用原始資料
@@ -2545,6 +2592,8 @@ function showRestaurantModal(restaurant) {
     const todayHours = getTodayOpeningHours(restaurant);
     document.getElementById('modal-today-hours').textContent = todayHours;
     
+    // 營業時間現在使用彈窗顯示，不需要預先初始化
+    
     // 收藏按鈕
     const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
     const isCurrentlyFavorite = isFavorite(restaurant.id);
@@ -2591,36 +2640,90 @@ function closeRestaurantModal() {
 // 初始化彈窗中的地圖
 function initModalMap(restaurant) {
     const modalMapElement = document.getElementById('modal-map');
-    if (!modalMapElement) return;
+    if (!modalMapElement) {
+        console.log('❌ 找不到地圖容器元素');
+        return;
+    }
     
-    // 檢查是否有座標資訊
-    let location;
+    console.log('🗺️ 初始化彈窗地圖，餐廳資料:', restaurant);
+    
+    // 檢查是否有座標資訊 - 增強版位置檢測
+    let location = null;
+    
+    // 優先順序1: 檢查 geometry.location (Google Places API 標準格式)
     if (restaurant.geometry && restaurant.geometry.location) {
         if (typeof restaurant.geometry.location.lat === 'function') {
+            // Google Maps LatLng 對象
             location = {
                 lat: restaurant.geometry.location.lat(),
                 lng: restaurant.geometry.location.lng()
             };
-        } else {
-            location = restaurant.geometry.location;
+            console.log('✅ 使用 geometry.location (LatLng 對象):', location);
+        } else if (restaurant.geometry.location.lat && restaurant.geometry.location.lng) {
+            // 普通座標對象
+            location = {
+                lat: parseFloat(restaurant.geometry.location.lat),
+                lng: parseFloat(restaurant.geometry.location.lng)
+            };
+            console.log('✅ 使用 geometry.location (座標對象):', location);
         }
-    } else if (restaurant.lat && restaurant.lng) {
+    }
+    
+    // 優先順序2: 檢查直接的 lat/lng 屬性
+    if (!location && restaurant.lat && restaurant.lng) {
         location = {
-            lat: restaurant.lat,
-            lng: restaurant.lng
+            lat: parseFloat(restaurant.lat),
+            lng: parseFloat(restaurant.lng)
         };
-    } else {
-        // 如果沒有座標，使用台北市中心
+        console.log('✅ 使用直接 lat/lng 屬性:', location);
+    }
+    
+    // 優先順序3: 檢查 location 屬性
+    if (!location && restaurant.location) {
+        if (typeof restaurant.location.lat === 'function') {
+            location = {
+                lat: restaurant.location.lat(),
+                lng: restaurant.location.lng()
+            };
+            console.log('✅ 使用 location 屬性 (LatLng 對象):', location);
+        } else if (restaurant.location.lat && restaurant.location.lng) {
+            location = {
+                lat: parseFloat(restaurant.location.lat),
+                lng: parseFloat(restaurant.location.lng)
+            };
+            console.log('✅ 使用 location 屬性 (座標對象):', location);
+        }
+    }
+    
+    // 如果仍然沒有位置，嘗試使用地址進行地理編碼
+    if (!location && restaurant.address && restaurant.address !== '地址未提供') {
+        console.log('⚠️ 沒有座標資訊，嘗試使用地址進行地理編碼:', restaurant.address);
+        geocodeAddress(restaurant.address, restaurant);
+        return;
+    }
+    
+    // 最後備案：使用預設位置（根據用戶當前城市或台北）
+    if (!location) {
+        location = userLocation || mapUserLocation || { lat: 25.0330, lng: 121.5654 };
+        console.log('⚠️ 使用預設位置:', location);
+    }
+    
+    // 驗證座標有效性
+    if (!isValidCoordinate(location.lat, location.lng)) {
+        console.log('❌ 座標無效，使用預設位置');
         location = { lat: 25.0330, lng: 121.5654 };
     }
     
+    console.log('🎯 最終使用的位置:', location);
+    
     // 創建地圖
     const modalMap = new google.maps.Map(modalMapElement, {
-        zoom: 16,
+        zoom: 17, // 增加縮放等級以顯示更詳細的位置
         center: location,
         mapTypeControl: false,
         streetViewControl: false,
-        fullscreenControl: false
+        fullscreenControl: false,
+        gestureHandling: 'cooperative' // 改善觸控體驗
     });
     
     // 添加標記
@@ -2628,51 +2731,434 @@ function initModalMap(restaurant) {
         position: location,
         map: modalMap,
         title: restaurant.name,
+        animation: google.maps.Animation.DROP, // 添加動畫效果
         icon: {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="16" cy="16" r="12" fill="#ff6b1a" stroke="#fff" stroke-width="3"/>
-                    <text x="16" y="20" text-anchor="middle" fill="white" font-size="16">🍽️</text>
+                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="15" fill="#ff6b1a" stroke="#fff" stroke-width="4"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="18">🍽️</text>
                 </svg>
             `),
-            scaledSize: new google.maps.Size(32, 32)
+            scaledSize: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(20, 20)
         }
+    });
+    
+    // 添加資訊視窗
+    const infoWindow = new google.maps.InfoWindow({
+        content: `
+            <div style="padding: 8px; min-width: 200px;">
+                <h4 style="margin: 0 0 8px 0; color: #ff6b1a;">${restaurant.name}</h4>
+                <p style="margin: 0 0 4px 0; color: #666;"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '地址未提供'}</p>
+                <p style="margin: 0; color: #666;"><i class="fas fa-star"></i> ${restaurant.rating ? restaurant.rating.toFixed(1) : 'N/A'} 分</p>
+            </div>
+        `
+    });
+    
+    // 點擊標記顯示資訊視窗
+    marker.addListener('click', () => {
+        infoWindow.open(modalMap, marker);
     });
     
     // 儲存地圖實例以供其他功能使用
     window.modalMap = modalMap;
     window.modalMarker = marker;
+    window.modalInfoWindow = infoWindow;
+    
+    console.log('✅ 彈窗地圖初始化完成');
+}
+
+// 新增：地址地理編碼函數
+function geocodeAddress(address, restaurant) {
+    const geocoder = new google.maps.Geocoder();
+    
+    console.log('🔍 開始地理編碼:', address);
+    
+    geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const location = {
+                lat: results[0].geometry.location.lat(),
+                lng: results[0].geometry.location.lng()
+            };
+            
+            console.log('✅ 地理編碼成功:', location);
+            
+            // 更新餐廳資料並重新初始化地圖
+            restaurant.geometry = {
+                location: location
+            };
+            
+            initModalMap(restaurant);
+        } else {
+            console.log('❌ 地理編碼失敗:', status);
+            
+            // 使用預設位置
+            restaurant.geometry = {
+                location: userLocation || mapUserLocation || { lat: 25.0330, lng: 121.5654 }
+            };
+            
+            initModalMap(restaurant);
+        }
+    });
+}
+
+// 新增：驗證座標有效性
+function isValidCoordinate(lat, lng) {
+    return !isNaN(lat) && !isNaN(lng) && 
+           lat >= -90 && lat <= 90 && 
+           lng >= -180 && lng <= 180 &&
+           lat !== 0 && lng !== 0; // 排除 (0,0) 座標
+}
+
+// 顯示營業時間詳細彈窗
+function showWeeklyHoursModal() {
+    const modal = document.getElementById('weeklyHoursModal');
+    const restaurant = window.currentModalRestaurant;
+    
+    if (!modal) {
+        console.log('❌ 找不到營業時間彈窗元素');
+        return;
+    }
+    
+    if (!restaurant) {
+        console.log('❌ 沒有餐廳資料');
+        return;
+    }
+    
+    console.log('📅 顯示營業時間彈窗:', restaurant.name);
+    console.log('🔍 餐廳資料:', restaurant);
+    
+    // 如果沒有詳細的營業時間資料，嘗試重新獲取
+    if (!restaurant.opening_hours || !restaurant.opening_hours.weekday_text) {
+        console.log('⚠️ 沒有詳細營業時間，嘗試重新獲取...');
+        fetchDetailedOpeningHours(restaurant, () => {
+            populateWeeklyHoursModal(restaurant);
+        });
+    } else {
+        populateWeeklyHoursModal(restaurant);
+    }
+    
+    // 顯示彈窗
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 防止背景滾動
+}
+
+// 關閉營業時間詳細彈窗
+function closeWeeklyHoursModal() {
+    const modal = document.getElementById('weeklyHoursModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // 恢復背景滾動
+    }
+}
+
+// 獲取詳細營業時間
+async function fetchDetailedOpeningHours(restaurant, callback) {
+    if (!restaurant.place_id) {
+        console.log('❌ 沒有 place_id，無法獲取詳細資訊');
+        callback();
+        return;
+    }
+    
+    try {
+        const service = await getReliableSearchService();
+        
+        service.getDetails({
+            placeId: restaurant.place_id,
+            fields: ['opening_hours', 'name', 'business_status']
+        }, (details, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && details) {
+                console.log('✅ 成功獲取詳細營業時間:', details.opening_hours);
+                
+                // 合併營業時間資料
+                if (details.opening_hours) {
+                    restaurant.opening_hours = details.opening_hours;
+                }
+                if (details.business_status) {
+                    restaurant.business_status = details.business_status;
+                }
+                
+                callback();
+            } else {
+                console.log('❌ 獲取詳細營業時間失敗:', status);
+                callback();
+            }
+        });
+    } catch (error) {
+        console.log('❌ 獲取詳細營業時間錯誤:', error);
+        callback();
+    }
+}
+
+// 填充營業時間彈窗內容
+function populateWeeklyHoursModal(restaurant) {
+    const modalBody = document.getElementById('weekly-hours-modal-body');
+    if (!modalBody) return;
+    
+    console.log('📊 處理營業時間資料 - 餐廳:', restaurant.name);
+    console.log('🕒 opening_hours 結構:', restaurant.opening_hours);
+    console.log('📋 完整餐廳資料:', {
+        place_id: restaurant.place_id,
+        business_status: restaurant.business_status,
+        isOpen: restaurant.isOpen,
+        opening_hours: restaurant.opening_hours
+    });
+    
+    const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+    const today = new Date().getDay(); // 0=Sunday, 1=Monday, etc.
+    
+    let weeklyHoursHTML = '<div class="weekly-hours-table">';
+    let hasRealData = false;
+    
+    // 檢查是否有Google Places API的weekday_text資料
+    if (restaurant.opening_hours && restaurant.opening_hours.weekday_text && 
+        Array.isArray(restaurant.opening_hours.weekday_text) && 
+        restaurant.opening_hours.weekday_text.length > 0) {
+        
+        console.log('✅ 找到 weekday_text 資料:', restaurant.opening_hours.weekday_text);
+        hasRealData = true;
+        
+        // 使用Google Places API的資料（weekday_text index 0=星期一）
+        restaurant.opening_hours.weekday_text.forEach((dayText, index) => {
+            // Google weekday_text: 0=星期一, 1=星期二, ..., 6=星期日
+            // 我們的dayNames: 0=週一, 1=週二, ..., 6=週日
+            const dayName = dayNames[index];
+            
+            // 判斷是否為今天
+            let todayIndex = today === 0 ? 6 : today - 1; // 轉換JavaScript的星期（0=週日）到我們的索引
+            const isToday = index === todayIndex;
+            
+            // 解析營業時間
+            let hoursText = '';
+            let hoursClass = '';
+            
+            console.log(`📅 解析第${index}天 (${dayName}):`, dayText);
+            
+            if (dayText.includes('休息') || dayText.includes('Closed') || 
+                dayText.includes('不營業') || dayText.includes('公休') ||
+                dayText.toLowerCase().includes('closed')) {
+                hoursText = '休息';
+                hoursClass = 'closed';
+            } else {
+                // 提取時間 - 支援多種格式
+                const timePatterns = [
+                    /(\d{1,2}:\d{2}\s*(?:AM|PM)?\s*[-–—]\s*\d{1,2}:\d{2}\s*(?:AM|PM)?)/i,
+                    /(\d{1,2}:\d{2}[\s]*[-–—][\s]*\d{1,2}:\d{2})/,
+                    /(\d{1,2}:\d{2})/
+                ];
+                
+                let timeMatch = null;
+                for (const pattern of timePatterns) {
+                    timeMatch = dayText.match(pattern);
+                    if (timeMatch) break;
+                }
+                
+                if (timeMatch) {
+                    hoursText = timeMatch[1].replace(/[-–—]/g, ' - ');
+                    hoursClass = 'open';
+                } else {
+                    // 如果無法解析，顯示原始文字（移除星期部分）
+                    hoursText = dayText.replace(/^[週星期]*[一二三四五六日天Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday]*[:：\s]*/, '').trim();
+                    hoursClass = hoursText.includes('休息') || hoursText.toLowerCase().includes('closed') ? 'closed' : 'open';
+                }
+            }
+            
+            const todayLabel = isToday ? ' (今天)' : '';
+            
+            weeklyHoursHTML += `
+                <div class="hours-day">
+                    <span class="day-name ${isToday ? 'today' : ''}">${dayName}${todayLabel}</span>
+                    <span class="day-hours ${hoursClass}">${hoursText}</span>
+                </div>
+            `;
+        });
+    } 
+    // 檢查periods資料
+    else if (restaurant.opening_hours && restaurant.opening_hours.periods && 
+             Array.isArray(restaurant.opening_hours.periods) && 
+             restaurant.opening_hours.periods.length > 0) {
+        
+        console.log('✅ 找到 periods 資料:', restaurant.opening_hours.periods);
+        hasRealData = true;
+        
+        const periods = restaurant.opening_hours.periods;
+        const weekData = new Array(7).fill(null).map(() => ({ open: null, close: null }));
+        
+        // 解析periods資料
+        periods.forEach(period => {
+            if (period.open && period.open.day !== undefined) {
+                const day = period.open.day; // 0=Sunday, 1=Monday...
+                weekData[day].open = period.open.time;
+                if (period.close) {
+                    weekData[day].close = period.close.time;
+                }
+            }
+        });
+        
+        // 轉換為顯示格式
+        dayNames.forEach((dayName, index) => {
+            // 將我們的索引轉換為Google的星期格式
+            const googleDay = index === 6 ? 0 : index + 1; // 週日=0, 週一=1...
+            const todayIndex = today === 0 ? 6 : today - 1;
+            const isToday = index === todayIndex;
+            
+            let hoursText = '';
+            let hoursClass = 'closed';
+            
+            const dayData = weekData[googleDay];
+            if (dayData && dayData.open) {
+                const openTime = formatGoogleTime(dayData.open);
+                const closeTime = dayData.close ? formatGoogleTime(dayData.close) : '24:00';
+                hoursText = `${openTime} - ${closeTime}`;
+                hoursClass = 'open';
+            } else {
+                hoursText = '休息';
+                hoursClass = 'closed';
+            }
+            
+            const todayLabel = isToday ? ' (今天)' : '';
+            
+            weeklyHoursHTML += `
+                <div class="hours-day">
+                    <span class="day-name ${isToday ? 'today' : ''}">${dayName}${todayLabel}</span>
+                    <span class="day-hours ${hoursClass}">${hoursText}</span>
+                </div>
+            `;
+        });
+    } else {
+        console.log('⚠️ 沒有詳細營業時間資料，使用預設資料');
+        
+        // 沒有詳細的營業時間資料，使用預設或餐廳的基本資訊
+        dayNames.forEach((dayName, index) => {
+            // 判斷是否為今天
+            let todayIndex = today === 0 ? 6 : today - 1;
+            const isToday = index === todayIndex;
+            
+            // 使用預設營業時間或餐廳的開放狀態
+            let hoursText = '';
+            let hoursClass = '';
+            
+            if (restaurant.business_status === 'CLOSED_PERMANENTLY') {
+                hoursText = '永久停業';
+                hoursClass = 'closed';
+            } else if (restaurant.business_status === 'CLOSED_TEMPORARILY') {
+                hoursText = '暫時停業';
+                hoursClass = 'closed';
+            } else if (restaurant.isOpen !== undefined) {
+                // 根據餐廳的營業狀態給出預設時間
+                if (restaurant.isOpen) {
+                    hoursText = '09:00 - 22:00';
+                    hoursClass = 'open';
+                } else {
+                    hoursText = '目前休息';
+                    hoursClass = 'closed';
+                }
+            } else {
+                // 完全沒有資料，給出一般營業時間
+                hoursText = '營業時間未知';
+                hoursClass = 'open';
+            }
+            
+            const todayLabel = isToday ? ' (今天)' : '';
+            
+            weeklyHoursHTML += `
+                <div class="hours-day">
+                    <span class="day-name ${isToday ? 'today' : ''}">${dayName}${todayLabel}</span>
+                    <span class="day-hours ${hoursClass}">${hoursText}</span>
+                </div>
+            `;
+        });
+    }
+    
+    // 添加標題
+    const headerText = hasRealData ? '營業時間' : '參考營業時間';
+    weeklyHoursHTML = `<div class="weekly-hours-header">${headerText}</div>` + weeklyHoursHTML;
+    
+    weeklyHoursHTML += '</div>'; // 關閉 weekly-hours-table
+    
+    modalBody.innerHTML = weeklyHoursHTML;
+    
+    console.log('✅ 營業時間彈窗內容已填充, 使用真實資料:', hasRealData);
+}
+
+// 格式化 Google 時間格式 (例如: "0900" -> "09:00")
+function formatGoogleTime(timeString) {
+    if (!timeString || timeString.length !== 4) {
+        return timeString || '00:00';
+    }
+    
+    const hours = timeString.substring(0, 2);
+    const minutes = timeString.substring(2, 4);
+    return `${hours}:${minutes}`;
 }
 
 // 開啟Google Maps導航
 function openGoogleMaps() {
     const restaurant = window.currentModalRestaurant;
-    if (!restaurant) return;
+    if (!restaurant) {
+        console.log('❌ 沒有餐廳資料');
+        return;
+    }
     
-    let location;
+    console.log('🗺️ 開啟 Google Maps 導航，餐廳資料:', restaurant);
+    
+    let location = null;
+    
+    // 使用與 initModalMap 相同的位置檢測邏輯
+    // 優先順序1: 檢查 geometry.location
     if (restaurant.geometry && restaurant.geometry.location) {
         if (typeof restaurant.geometry.location.lat === 'function') {
             location = {
                 lat: restaurant.geometry.location.lat(),
                 lng: restaurant.geometry.location.lng()
             };
-        } else {
-            location = restaurant.geometry.location;
+            console.log('✅ 導航使用 geometry.location (LatLng 對象):', location);
+        } else if (restaurant.geometry.location.lat && restaurant.geometry.location.lng) {
+            location = {
+                lat: parseFloat(restaurant.geometry.location.lat),
+                lng: parseFloat(restaurant.geometry.location.lng)
+            };
+            console.log('✅ 導航使用 geometry.location (座標對象):', location);
         }
-    } else if (restaurant.lat && restaurant.lng) {
-        location = {
-            lat: restaurant.lat,
-            lng: restaurant.lng
-        };
     }
     
-    if (location) {
-        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}&destination_place_id=${restaurant.place_id || ''}`;
+    // 優先順序2: 檢查直接的 lat/lng 屬性
+    if (!location && restaurant.lat && restaurant.lng) {
+        location = {
+            lat: parseFloat(restaurant.lat),
+            lng: parseFloat(restaurant.lng)
+        };
+        console.log('✅ 導航使用直接 lat/lng 屬性:', location);
+    }
+    
+    // 優先順序3: 檢查 location 屬性
+    if (!location && restaurant.location) {
+        if (typeof restaurant.location.lat === 'function') {
+            location = {
+                lat: restaurant.location.lat(),
+                lng: restaurant.location.lng()
+            };
+            console.log('✅ 導航使用 location 屬性 (LatLng 對象):', location);
+        } else if (restaurant.location.lat && restaurant.location.lng) {
+            location = {
+                lat: parseFloat(restaurant.location.lat),
+                lng: parseFloat(restaurant.location.lng)
+            };
+            console.log('✅ 導航使用 location 屬性 (座標對象):', location);
+        }
+    }
+    
+    // 如果有有效座標，使用座標導航
+    if (location && isValidCoordinate(location.lat, location.lng)) {
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}&destination_place_id=${restaurant.id || restaurant.place_id || ''}`;
+        console.log('🎯 使用座標導航:', googleMapsUrl);
         window.open(googleMapsUrl, '_blank');
     } else {
-        // 如果沒有座標，使用名稱和地址搜索
-        const query = encodeURIComponent(`${restaurant.name} ${restaurant.address || ''}`);
+        // 如果沒有有效座標，使用名稱和地址搜索
+        const searchQuery = `${restaurant.name} ${restaurant.address || ''}`.trim();
+        const query = encodeURIComponent(searchQuery);
         const googleMapsUrl = `https://www.google.com/maps/search/${query}`;
+        console.log('🔍 使用名稱地址搜索導航:', googleMapsUrl);
         window.open(googleMapsUrl, '_blank');
     }
 }
