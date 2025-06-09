@@ -402,16 +402,16 @@
       <aside class="sidebar">
         <!-- Google Maps 靜態地圖 -->
         <div class="map-section">
-          <div id="map" style="height: 450px; width: 100%; margin-bottom: 20px;"></div>
-          <p class="address" style="font-size: 0.63em; text-align: left; margin-bottom: 20px; padding-left: 11px;">
+          <div id="map" class="map-container"></div>
+          <p class="address">
             <i class="fas fa-map-marker-alt"></i>
             台北市信義區信義路五段7號
           </p>
-          <p class="business-hours" style="font-size: 0.63em; text-align: left; margin-bottom: 20px; padding-left: 10px;">
+          <p class="business-hours">
             <i class="far fa-clock"></i>
             營業時間：11:00 - 22:00
           </p>
-          <button class="directions-btn" style="margin-bottom: 10px;">
+          <button class="directions-btn">
             <i class="fas fa-directions"></i>
             查看路線
           </button>
@@ -442,7 +442,7 @@
           <div class="footer-links">
             <a href="#">商家註冊</a>
             <a href="#">排行榜</a>
-            <a href="#">寫評論</a>
+            <a href="javascript:void(0)" onclick="handleWriteReview()">寫評論</a>
             <a href="#">幫助中心</a>
           </div>
         </div>
@@ -468,6 +468,7 @@
     <script src="JS/restaurantList.js"></script>
     <script src="JS/restaurantListDetail.js"></script>
     <script src="js/login.js"></script>
+    <script src="js/dishModal.js"></script>
 
     <!-- 分享彈出視窗 -->
     <div class="share-modal-overlay">
@@ -578,7 +579,7 @@
     </div>
 
     <script>
-      // 處理寫食記按鈕點擊
+      // 處理寫評論按鈕點擊
       function handleWriteReview() {
         // 檢查是否已登入
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -589,15 +590,33 @@
           // 顯示登入彈跳視窗
           const loginModal = document.getElementById('loginModal');
           loginModal.style.display = 'block';
+          loginModal.classList.add('show');
           // 防止事件冒泡
           event.stopPropagation();
-          // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
+          // 登入成功後的回調函數 - 只在用戶確實要寫評論時才跳轉
           window.onLoginSuccess = function() {
-            window.location.href = 'blogPost.html';
+            // 獲取當前餐廳資訊
+            const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
+            const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+            
+            // 將餐廳資訊存儲到 localStorage
+            localStorage.setItem('restaurant_id', restaurantId);
+            localStorage.setItem('restaurant_name', restaurantName);
+            
+            // 跳轉到寫評論頁面
+            window.location.href = 'writeComment.html';
           };
         } else {
-          // 已登入，直接跳轉到寫食記頁面
-          window.location.href = 'blogPost.html';
+          // 已登入，獲取當前餐廳資訊並跳轉
+          const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
+          const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+          
+          // 將餐廳資訊存儲到 localStorage
+          localStorage.setItem('restaurant_id', restaurantId);
+          localStorage.setItem('restaurant_name', restaurantName);
+          
+          // 跳轉到寫評論頁面
+          window.location.href = 'writeComment.html';
         }
       }
 
@@ -609,11 +628,13 @@
         }
         const modal = document.getElementById('restaurantLoginModal');
         modal.style.display = 'block';
+        modal.classList.add('show');
       }
 
       function closeRestaurantLoginModal() {
         const modal = document.getElementById('restaurantLoginModal');
         modal.style.display = 'none';
+        modal.classList.remove('show');
       }
 
       // 初始化登入模態框
@@ -632,6 +653,7 @@
             event.stopPropagation();
             const loginModal = document.getElementById('loginModal');
             loginModal.style.display = 'block';
+            loginModal.classList.add('show');
           });
         }
 
@@ -644,6 +666,7 @@
               event.preventDefault();
               event.stopPropagation();
               loginModal.style.display = 'none';
+              loginModal.classList.remove('show');
             };
           }
 
@@ -688,6 +711,7 @@
         window.onclick = function(event) {
           if (event.target === loginModal) {
             loginModal.style.display = 'none';
+            loginModal.classList.remove('show');
           }
           if (event.target === restaurantLoginModal) {
             closeRestaurantLoginModal();
@@ -697,7 +721,7 @@
     </script>
 
     <!-- Dish Modal -->
-    <div id="dishModal" class="modal">
+    <div id="dishModal" class="modal dish-modal">
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="dishModalTitle"></h2>
@@ -724,410 +748,5 @@
         </div>
       </div>
     </div>
-
-    <style>
-      /* Modal Styles */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-
-      .modal.show {
-        opacity: 1;
-      }
-
-      .modal-content {
-        position: relative;
-        background-color: #fff;
-        margin: 5% auto;
-        padding: 24px;
-        width: 90%;
-        max-width: 600px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        transform: translateY(-20px);
-        transition: transform 0.3s ease;
-      }
-
-      .modal.show .modal-content {
-        transform: translateY(0);
-      }
-
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .modal-header h2 {
-        font-size: 24px;
-        font-weight: 600;
-        color: #333;
-        margin: 0;
-      }
-
-      .close-button {
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: #666;
-        cursor: pointer;
-        padding: 4px;
-        transition: color 0.2s;
-      }
-
-      .close-button:hover {
-        color: #333;
-      }
-
-      .modal-body {
-        max-height: 70vh;
-        overflow-y: auto;
-      }
-
-      /* Image Carousel Styles */
-      .image-carousel-container {
-        position: relative;
-        width: 100%;
-        margin-bottom: 24px;
-      }
-
-      .image-carousel {
-        display: flex;
-        gap: 12px;
-        overflow-x: hidden;
-        padding: 0 40px;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .image-carousel img {
-        width: 100%;
-        height: 300px;
-        object-fit: cover;
-        border-radius: 8px;
-        flex: 0 0 100%;
-        transition: transform 0.3s ease;
-      }
-
-      .carousel-nav-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 2;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        transition: all 0.2s ease;
-      }
-
-      .carousel-nav-btn:hover {
-        background: #fff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
-
-      .carousel-nav-btn i {
-        font-size: 18px;
-        color: #333;
-      }
-
-      .carousel-nav-btn.prev-btn {
-        left: 0;
-      }
-
-      .carousel-nav-btn.next-btn {
-        right: 0;
-      }
-
-      .carousel-nav-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      /* Reviews Styles */
-      .dish-reviews h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 16px;
-      }
-
-      .reviews-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .review-item {
-        display: flex;
-        gap: 12px;
-        padding: 16px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-      }
-
-      .review-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      .review-content {
-        flex: 1;
-      }
-
-      .review-name {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 4px;
-      }
-
-      .review-text {
-        color: #666;
-        line-height: 1.5;
-      }
-
-      /* 操作按鈕區域樣式 */
-      .action-buttons-wrapper {
-        display: flex;
-        gap: 8px;
-        padding: 16px 40px;
-        margin: 0 0 -40px 0;
-        width: 100%;
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-        background-color: transparent;
-      }
-
-      .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border: 1px solid #d8d8d8;
-        border-radius: 4px;
-        background-color: #fff;
-        color: #333;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      }
-
-      .action-btn:hover {
-        background-color: #f5f5f5;
-        border-color: #ccc;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .action-btn i {
-        font-size: 16px;
-      }
-
-      .action-btn.write-review {
-        background-color: #FF6B35;
-        color: #fff;
-        border-color: #FF6B35;
-      }
-
-      .action-btn.write-review:hover {
-        background-color: #e05d2d;
-      }
-
-      .action-btn.save, .action-btn.share {
-        background: none;
-        border: none;
-        box-shadow: none;
-        padding: 8px;
-        min-width: 0;
-        min-height: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-      }
-
-      .action-btn.save i, .action-btn.share i {
-        font-size: 22px;
-        color: #ff6b1a;
-        transition: color 0.2s;
-      }
-
-      .action-btn.save.active i {
-        color: #ff6b1a;
-      }
-
-      .action-btn.save i.far {
-        font-weight: 400;
-        color: #ff6b1a;
-      }
-
-      .action-btn.save i.fas {
-        font-weight: 900;
-        color: #ff6b1a;
-      }
-
-      .action-btn.save:focus, .action-btn.share:focus {
-        outline: none;
-      }
-
-      .action-btn.save:hover, .action-btn.share:hover {
-        background: none;
-        box-shadow: none;
-      }
-
-      @media (max-width: 768px) {
-        .action-buttons-wrapper {
-          padding: 16px;
-        }
-      }
-    </style>
-
-    <script>
-      // 開啟 dish modal
-      function openDishModal(dishName, images, reviews) {
-        const modal = document.getElementById('dishModal');
-        const title = document.getElementById('dishModalTitle');
-        const carousel = document.getElementById('dishImageCarousel');
-        const reviewsList = document.getElementById('dishReviewsList');
-        const prevBtn = carousel.parentElement.querySelector('.prev-btn');
-        const nextBtn = carousel.parentElement.querySelector('.next-btn');
-
-        // 設置標題
-        title.textContent = dishName;
-
-        // 清空並添加圖片
-        carousel.innerHTML = '';
-        images.forEach(img => {
-          const imgEl = document.createElement('img');
-          imgEl.src = img;
-          imgEl.alt = `${dishName} 圖片`;
-          carousel.appendChild(imgEl);
-        });
-
-        // 設置輪播功能
-        let currentIndex = 0;
-        const totalImages = images.length;
-
-        function updateCarousel() {
-          const offset = -currentIndex * 100;
-          carousel.style.transform = `translateX(${offset}%)`;
-          
-          // 更新按鈕狀態
-          prevBtn.disabled = currentIndex === 0;
-          nextBtn.disabled = currentIndex === totalImages - 1;
-        }
-
-        // 綁定按鈕事件
-        prevBtn.onclick = () => {
-          if (currentIndex > 0) {
-            currentIndex--;
-            updateCarousel();
-          }
-        };
-
-        nextBtn.onclick = () => {
-          if (currentIndex < totalImages - 1) {
-            currentIndex++;
-            updateCarousel();
-          }
-        };
-
-        // 初始化輪播狀態
-        updateCarousel();
-
-        // 清空並添加評論
-        reviewsList.innerHTML = '';
-        reviews.forEach(review => {
-          const reviewEl = document.createElement('div');
-          reviewEl.className = 'review-item';
-          reviewEl.innerHTML = `
-            <img src="${review.avatar}" alt="${review.name}" class="review-avatar">
-            <div class="review-content">
-              <div class="review-name">${review.name}</div>
-              <div class="review-text">${review.text}</div>
-            </div>
-          `;
-          reviewsList.appendChild(reviewEl);
-        });
-
-        // 顯示 modal
-        modal.style.display = 'block';
-        modal.offsetHeight;
-        modal.classList.add('show');
-      }
-
-      // 關閉 dish modal
-      function closeDishModal() {
-        const modal = document.getElementById('dishModal');
-        modal.classList.remove('show');
-        setTimeout(() => {
-          modal.style.display = 'none';
-        }, 300);
-      }
-
-      // 點擊 modal 外部關閉
-      window.onclick = function(event) {
-        const modal = document.getElementById('dishModal');
-        if (event.target === modal) {
-          closeDishModal();
-        }
-      }
-
-      // 為所有菜色卡片添加點擊事件
-      document.addEventListener('DOMContentLoaded', function() {
-        const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach(item => {
-          item.style.cursor = 'pointer';
-          item.addEventListener('click', function() {
-            const dishName = this.querySelector('h4').textContent;
-            // 使用穩定的圖片連結
-            const images = [
-              'https://images.pexels.com/photos/6940977/pexels-photo-6940977.jpeg',
-              'https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg',
-              'https://images.pexels.com/photos/6940991/pexels-photo-6940991.jpeg'
-            ];
-            // 假評論資料
-            const reviews = [
-              {
-                name: '美食家小明',
-                avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-                text: '這道菜色香味俱全，口感絕佳，是我吃過最好吃的版本之一！'
-              },
-              {
-                name: '饕客小華',
-                avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
-                text: '食材新鮮，烹調手法專業，每一口都能感受到廚師的用心。'
-              },
-              {
-                name: '美食部落客小紅',
-                avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-                text: '擺盤精緻，味道層次豐富，絕對值得推薦！'
-              }
-            ];
-            openDishModal(dishName, images, reviews);
-          });
-        });
-      });
-    </script>
   </body>
 </html>
