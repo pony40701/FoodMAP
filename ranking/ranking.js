@@ -117,6 +117,11 @@ const allRestaurants = {
 
 document.addEventListener('DOMContentLoaded', () => {
     const restaurantList = document.querySelector('.restaurant-list');
+    if (!restaurantList) {
+        console.warn('找不到餐廳列表容器');
+        return;
+    }
+
     let currentFilter = 'all';
     
     // 載入餐廳列表
@@ -149,6 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 更新餐廳列表
     function updateRestaurants(filterType) {
         const restaurants = allRestaurants[filterType];
+        if (!restaurants) {
+            console.warn(`找不到 ${filterType} 類型的餐廳資料`);
+            return;
+        }
+
         restaurantList.innerHTML = '';
         restaurants.forEach(restaurant => {
             restaurantList.innerHTML += createRestaurantItem(restaurant);
@@ -158,22 +168,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 設置收藏按鈕功能
     function setupFavoriteButtons() {
-        document.querySelectorAll('.favorite-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-                btn.textContent = btn.classList.contains('active') ? '♥' : '♡';
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        if (!favoriteButtons.length) {
+            console.warn('找不到收藏按鈕');
+            return;
+        }
+
+        favoriteButtons.forEach(btn => {
+            // 移除舊的事件監聽器
+            btn.replaceWith(btn.cloneNode(true));
+            const newBtn = btn.parentElement.querySelector('.favorite-btn');
+            
+            newBtn.addEventListener('click', () => {
+                newBtn.classList.toggle('active');
+                newBtn.textContent = newBtn.classList.contains('active') ? '♥' : '♡';
             });
         });
 
         // 設置詳情按鈕功能
-        document.querySelectorAll('.details-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const restaurantItem = btn.closest('.restaurant-item');
-                const rank = restaurantItem.querySelector('.rank').textContent.replace('#', '');
+        const detailButtons = document.querySelectorAll('.details-btn');
+        if (!detailButtons.length) {
+            console.warn('找不到詳情按鈕');
+            return;
+        }
+
+        detailButtons.forEach(btn => {
+            // 移除舊的事件監聽器
+            btn.replaceWith(btn.cloneNode(true));
+            const newBtn = btn.parentElement.querySelector('.details-btn');
+            
+            newBtn.addEventListener('click', () => {
+                const restaurantItem = newBtn.closest('.restaurant-item');
+                if (!restaurantItem) {
+                    console.warn('找不到餐廳項目');
+                    return;
+                }
+
+                const rankElement = restaurantItem.querySelector('.rank');
+                if (!rankElement) {
+                    console.warn('找不到排名元素');
+                    return;
+                }
+
+                const rank = rankElement.textContent.replace('#', '');
                 const restaurant = allRestaurants[currentFilter].find(r => r.rank === parseInt(rank));
                 
                 if (restaurant) {
                     showRestaurantDetail(restaurant);
+                } else {
+                    console.warn('找不到對應的餐廳資料');
                 }
             });
         });
@@ -182,7 +225,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 顯示餐廳詳細資訊
     function showRestaurantDetail(restaurant) {
         const modal = document.getElementById('restaurantModal');
+        if (!modal) {
+            console.warn('找不到模態框');
+            return;
+        }
+
         const detailContent = modal.querySelector('.restaurant-detail');
+        if (!detailContent) {
+            console.warn('找不到詳細內容容器');
+            return;
+        }
         
         detailContent.innerHTML = `
             <div class="detail-header">
@@ -241,16 +293,35 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         modal.classList.add('active');
+
+        // 添加關閉按鈕事件監聽器
+        const closeButton = modal.querySelector('.modal-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        }
     }
 
     // 過濾按鈕功能
     const filterButtons = document.querySelectorAll('.filter-btn');
+    if (!filterButtons.length) {
+        console.warn('找不到過濾按鈕');
+        return;
+    }
+
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
+            const filterType = button.getAttribute('data-filter');
+            if (!filterType) {
+                console.warn('過濾按鈕缺少 data-filter 屬性');
+                return;
+            }
+
             filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            currentFilter = button.getAttribute('data-filter');
-            updateRestaurants(currentFilter);
+            currentFilter = filterType;
+            updateRestaurants(filterType);
         });
     });
 
@@ -260,21 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('載入更多餐廳...');
     });
 
-    // 關閉模態框
-    const modalClose = document.querySelector('.modal-close');
-    const modal = document.getElementById('restaurantModal');
-
-    modalClose.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
-
-    // 點擊模態框外部關閉
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
-    });
-
-    // 初始化顯示
+    // 初始載入全部餐廳
     updateRestaurants('all');
 }); 

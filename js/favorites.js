@@ -69,7 +69,7 @@ async function loadStores() {
     // 使用 Promise.all 同時發送 Place Details 請求
     const fetchDetailsPromises = favoritePlaceIds.map(placeId => {
         return new Promise((resolve, reject) => {
-            service.getDetails({ placeId: placeId, fields: ['name', 'vicinity', 'photos', 'rating', 'user_ratings_total', 'geometry', 'opening_hours', 'place_id'] }, (place, status) => {
+            service.getDetails({ placeId: placeId /* fields parameter removed */ }, (place, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     favoriteStoresDetails.push(place);
                     resolve();
