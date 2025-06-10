@@ -41,7 +41,7 @@ class RestaurantCard {
 
         const isFavorite = this.favoriteStores.includes(place.id);
         const favoriteClass = isFavorite ? 'active' : '';
-        const favoriteIcon = isFavorite ? 'fas fa-star' : 'far fa-star';
+        const favoriteIcon = isFavorite ? 'fas fa-heart' : 'far fa-heart';
 
         card.innerHTML = `
             <div class="restaurant-image">
@@ -97,11 +97,11 @@ class RestaurantCard {
         if (index > -1) {
             this.favoriteStores.splice(index, 1);
             button.classList.remove('active');
-            button.querySelector('i').className = 'far fa-star';
+            button.querySelector('i').className = 'far fa-heart';
         } else {
             this.favoriteStores.push(placeId);
             button.classList.add('active');
-            button.querySelector('i').className = 'fas fa-star';
+            button.querySelector('i').className = 'fas fa-heart';
         }
 
         localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteStores));
