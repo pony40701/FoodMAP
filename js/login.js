@@ -16,7 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 // 清除任何之前設置的回調函數，避免不必要的跳轉
                 window.onLoginSuccess = null;
-                if (loginModal) loginModal.style.display = 'block';
+                if (loginModal) {
+                    loginModal.style.display = 'block';
+                }
+            } else {
+                window.location.href = 'userCenter.html';
             }
         });
     }
@@ -60,9 +64,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.onLoginSuccess();
                     // 清除回調函數，避免影響其他登入操作
                     window.onLoginSuccess = null;
+                    // 顯示登入成功並自動收藏的提示
+                    showToast('登入成功，已自動加入收藏！');
                 } else {
-                    // 登入成功後留在當前頁面，不跳轉
-                    console.log('登入成功，已更新登入狀態');
+                    showToast('登入成功！');
                 }
             } else {
                 alert('帳號或密碼錯誤！');
@@ -146,4 +151,10 @@ function socialLogin(platform) {
             alert('Line 登入功能尚未開放');
             break;
     }
-} 
+}
+
+// 顯示提示訊息
+function showToast(message) {
+    // 這裡可以自訂提示訊息的顯示方式
+    alert(message);
+}
