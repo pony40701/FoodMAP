@@ -219,8 +219,8 @@ async function getFavoriteStoresDetails(placeIds) {
 
         placeIds.forEach(placeId => {
             const request = {
-                placeId: placeId,
-                fields: ['name', 'formatted_address', 'photos', 'rating', 'user_ratings_total', 'geometry', 'opening_hours']
+                placeId: placeId
+                /* fields parameter removed */
             };
 
             service.getDetails(request, (place, status) => {
