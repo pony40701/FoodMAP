@@ -67,7 +67,7 @@ class MapInit {
         }
     }
 
-    async searchByType(cuisine) {
+    async searchByType(type, keywords) {
         try {
             // 顯示載入中提示
             this.updateResultsTitle("搜尋中...");
@@ -80,21 +80,21 @@ class MapInit {
                 throw new Error('地圖或搜尋服務尚未初始化');
             }
 
-            // 取得搜尋關鍵字
-            const keywords = this.cuisineKeywords[cuisine] || [cuisine];
-            const center = this.map.getCenter();
+            // 將關鍵字字串轉換為陣列
+            const keywordArray = keywords.split(',').map(k => k.trim());
+            const mainCategory = keywordArray[0]; // 主要分類名稱
 
             // 建立搜尋請求
             const request = {
-                location: center,
+                location: this.map.getCenter(),
                 radius: 5000,
                 type: 'restaurant',
-                keyword: keywords.join(' OR '),
+                keyword: mainCategory, // 使用主要分類作為關鍵字
                 language: 'zh-TW'
             };
 
             // 使用 Promise 封裝 nearbySearch
-            const searchResults = await new Promise((resolve, reject) => {
+            let searchResults = await new Promise((resolve, reject) => {
                 this.placesService.nearbySearch(request, (results, status) => {
                     if (status === google.maps.places.PlacesServiceStatus.OK && results) {
                         resolve(results);
@@ -104,41 +104,91 @@ class MapInit {
                 });
             });
 
+            // 如果主要分類搜尋結果為空，嘗試使用其他關鍵字
+            if (!searchResults || searchResults.length === 0) {
+                for (let i = 1; i < keywordArray.length && (!searchResults || searchResults.length === 0); i++) {
+                    request.keyword = keywordArray[i];
+                    searchResults = await new Promise((resolve, reject) => {
+                        this.placesService.nearbySearch(request, (results, status) => {
+                            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                                resolve(results);
+                            } else {
+                                reject(new Error(status));
+                            }
+                        });
+                    });
+                }
+            }
+
             if (!searchResults || searchResults.length === 0) {
                 this.updateResultsTitle('找不到相關餐廳');
                 window.displayRestaurants([]);
                 return;
             }
 
-            const mappedResults = searchResults.map(place => {
-                let photo = 'images/no-image.jpg';
-                if (place.photos && place.photos[0]) {
-                    try {
-                        photo = place.photos[0].getUrl({maxWidth: 400});
-                    } catch (e) {
-                        console.error('獲取圖片時發生錯誤:', e);
-                    }
-                }
-
-                return {
-                    id: place.place_id,
-                    name: place.name || '未知名稱',
-                    address: place.vicinity || place.formatted_address || '',
-                    rating: place.rating || 0,
-                    user_ratings_total: place.user_ratings_total || 0,
-                    photos: photo,
-                    location: {
-                        lat: place.geometry.location.lat(),
-                        lng: place.geometry.location.lng()
-                    },
-                    opening_hours: place.opening_hours || null
+            // 對每個搜尋結果進行詳細資訊查詢
+            const detailedResults = await Promise.all(searchResults.map(async place => {
+                const detailsRequest = {
+                    placeId: place.place_id,
+                    fields: ['name', 'formatted_address', 'rating', 'user_ratings_total', 'photos', 'geometry', 'opening_hours', 'types']
                 };
-            });
 
-            window.currentRestaurants = mappedResults;
-            window.displayRestaurants(mappedResults);
-            this.updateResultsTitle(`${cuisine}餐廳 (找到 ${mappedResults.length} 間)`);
-            await this.showRestaurantsOnMap(mappedResults);
+                try {
+                    const details = await new Promise((resolve, reject) => {
+                        this.placesService.getDetails(detailsRequest, (result, status) => {
+                            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                resolve(result);
+                            } else {
+                                reject(new Error(status));
+                            }
+                        });
+                    });
+
+                    // 檢查餐廳是否符合其他關鍵字
+                    const restaurantName = details.name.toLowerCase();
+                    const restaurantTypes = details.types ? details.types.join(' ').toLowerCase() : '';
+                    const matchesKeywords = keywordArray.some(keyword => 
+                        restaurantName.includes(keyword.toLowerCase()) || 
+                        restaurantTypes.includes(keyword.toLowerCase())
+                    );
+
+                    if (matchesKeywords) {
+                        return {
+                            id: details.place_id,
+                            name: details.name || '未知名稱',
+                            address: details.formatted_address || details.vicinity || '',
+                            rating: details.rating || 0,
+                            user_ratings_total: details.user_ratings_total || 0,
+                            photos: details.photos && details.photos[0] ? 
+                                   details.photos[0].getUrl({maxWidth: 400}) : 
+                                   'images/no-image.jpg',
+                            location: {
+                                lat: details.geometry.location.lat(),
+                                lng: details.geometry.location.lng()
+                            },
+                            opening_hours: details.opening_hours || null
+                        };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('獲取餐廳詳細資訊時發生錯誤:', error);
+                    return null;
+                }
+            }));
+
+            // 過濾掉不符合條件的結果
+            const filteredResults = detailedResults.filter(result => result !== null);
+
+            if (filteredResults.length === 0) {
+                this.updateResultsTitle('找不到相關餐廳');
+                window.displayRestaurants([]);
+                return;
+            }
+
+            window.currentRestaurants = filteredResults;
+            window.displayRestaurants(filteredResults);
+            this.updateResultsTitle(`${mainCategory}餐廳 (找到 ${filteredResults.length} 間)`);
+            await this.showRestaurantsOnMap(filteredResults);
 
         } catch (error) {
             console.error('搜尋餐廳時發生錯誤:', error);
