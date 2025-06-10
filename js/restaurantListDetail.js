@@ -917,4 +917,150 @@ function setupMenuScroll(containerSelector) {
 
     // 初始化按鈕狀態
     updateButtonStates();
-} 
+}
+
+// Google Map 初始化
+(function() {
+  var mapDiv = document.getElementById("map");
+  if (mapDiv) {
+    var lat = 25.0330; // 餐廳緯度，請替換成實際值
+    var lng = 121.5654; // 餐廳經度，請替換成實際值
+    var myMap = new google.maps.Map(mapDiv, { center: { lat: lat, lng: lng }, zoom: 15 });
+    var marker = new google.maps.Marker({ position: { lat: lat, lng: lng }, map: myMap, title: "餐廳位置" });
+  }
+})();
+
+// 處理寫評論按鈕點擊
+function handleWriteReview() {
+    // 檢查是否已登入
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn) {
+        // 顯示請先登入的 alert 訊息
+        alert('請先登入會員');
+        // 顯示登入彈跳視窗
+        const loginModal = document.getElementById('loginModal');
+        loginModal.style.display = 'block';
+        loginModal.classList.add('show');
+        // 防止事件冒泡
+        event.stopPropagation();
+        // 登入成功後的回調函數 - 只在用戶確實要寫評論時才跳轉
+        window.onLoginSuccess = function() {
+            // 獲取當前餐廳資訊
+            const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
+            const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+            
+            // 將餐廳資訊存儲到 localStorage
+            localStorage.setItem('restaurant_id', restaurantId);
+            localStorage.setItem('restaurant_name', restaurantName);
+            
+            // 跳轉到寫評論頁面
+            window.location.href = 'writeComment.html';
+        };
+    } else {
+        // 已登入，獲取當前餐廳資訊並跳轉
+        const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
+        const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+        
+        // 將餐廳資訊存儲到 localStorage
+        localStorage.setItem('restaurant_id', restaurantId);
+        localStorage.setItem('restaurant_name', restaurantName);
+        
+        // 跳轉到寫評論頁面
+        window.location.href = 'writeComment.html';
+    }
+}
+
+// 商家登入彈窗相關函數
+function openRestaurantLoginModal(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const modal = document.getElementById('restaurantLoginModal');
+  modal.style.display = 'block';
+  modal.classList.add('show');
+}
+
+function closeRestaurantLoginModal() {
+  const modal = document.getElementById('restaurantLoginModal');
+  modal.style.display = 'none';
+  modal.classList.remove('show');
+}
+
+// 初始化登入模態框
+function initLoginModals() {
+  // 檢查是否需要自動開啟商家登入彈窗
+  if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
+    sessionStorage.removeItem('openRestaurantLogin');
+    openRestaurantLoginModal();
+  }
+
+  // 登入按鈕點擊事件
+  const loginBtn = document.querySelector('.btn-login');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const loginModal = document.getElementById('loginModal');
+      loginModal.style.display = 'block';
+      loginModal.classList.add('show');
+    });
+  }
+
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal) {
+    // 關閉按鈕事件
+    const closeBtn = loginModal.querySelector('.close');
+    if (closeBtn) {
+      closeBtn.onclick = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        loginModal.style.display = 'none';
+        loginModal.classList.remove('show');
+      };
+    }
+    // 防止點擊模態框內容時關閉
+    loginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+      event.stopPropagation();
+    });
+  }
+
+  // 初始化商家登入模態框
+  const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+  if (restaurantLoginModal) {
+    // 防止點擊模態框內容時關閉
+    restaurantLoginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+      event.stopPropagation();
+    });
+    // 表單提交事件
+    const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+    if (restaurantLoginForm) {
+      restaurantLoginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const email = document.getElementById('restaurant-email').value;
+        const password = document.getElementById('restaurant-password').value;
+        const remember = document.getElementById('restaurant-remember').checked;
+        // 這裡可以添加實際的登入驗證邏輯
+        console.log('商家登入:', { email, password, remember });
+        alert('登入成功！');
+        closeRestaurantLoginModal();
+        window.location.href = 'restaurant.html';
+      });
+    }
+  }
+
+  // 點擊模態框外部關閉
+  window.onclick = function(event) {
+    if (event.target === loginModal) {
+      loginModal.style.display = 'none';
+      loginModal.classList.remove('show');
+    }
+    if (event.target === restaurantLoginModal) {
+      closeRestaurantLoginModal();
+    }
+  };
+}
+
+document.addEventListener('DOMContentLoaded', initLoginModals); 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寫評論 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/restaurantList.css">
+    <link rel="stylesheet" href="css/writeComment.css">
+</head>
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="./index.html">
+                <div class="logo-text">食力派ChowCrew</div>
+            </a>
+        </div>
+        <div class="navbar-right">
+            <a href="restaurantListDetail.html" class="btn-login">返回餐廳頁</a>
+        </div>
+    </nav>
+
+    <!-- 主內容區 -->
+    <div class="write-comment-container">
+        <!-- 左側主欄 -->
+        <div class="left-column">
+            <h1 id="restaurant-name">餐廳名稱</h1>
+            
+            <!-- 評分區塊 -->
+            <div class="rating-section">
+                <h3>您的評分</h3>
+                <div class="rating-stars">
+                    <span class="star" data-rating="1"><i class="far fa-star"></i></span>
+                    <span class="star" data-rating="2"><i class="far fa-star"></i></span>
+                    <span class="star" data-rating="3"><i class="far fa-star"></i></span>
+                    <span class="star" data-rating="4"><i class="far fa-star"></i></span>
+                    <span class="star" data-rating="5"><i class="far fa-star"></i></span>
+                </div>
+                <p class="rating-text">請點選星星來評分</p>
+            </div>
+
+            <!-- 評論輸入區塊 -->
+            <div class="comment-section">
+                <h3>您的評論</h3>
+                <textarea id="comment-text" 
+                    placeholder="分享您的用餐體驗，例如：服務態度、餐點品質、環境氛圍等..."
+                    class="comment-textarea"></textarea>
+            </div>
+
+            <!-- 照片上傳區塊 -->
+            <div class="upload-section">
+                <h3>上傳照片</h3>
+                <div class="upload-photo">
+                    <label for="photo-upload" class="upload-label">
+                        <i class="fas fa-camera"></i> 選擇照片
+                    </label>
+                    <input type="file" id="photo-upload" accept="image/*" multiple style="display: none;">
+                    <p class="upload-hint">最多可上傳 5 張照片</p>
+                </div>
+                <div id="photo-preview" class="photo-preview"></div>
+            </div>
+
+            <!-- 發佈按鈕 -->
+            <button id="submit-comment" class="btn-primary">
+                <i class="fas fa-paper-plane"></i> 發佈評論
+            </button>
+        </div>
+
+        <!-- 右側側欄 -->
+        <div class="right-column">
+            <h2>熱門評論</h2>
+            <div id="popular-reviews" class="popular-reviews">
+                <!-- 假資料熱門評論區塊，由 JS 動態填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 JS -->
+    <script src="js/writeComment.js"></script>
+</body>
+</html> 
