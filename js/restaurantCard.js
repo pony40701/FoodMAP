@@ -265,42 +265,62 @@ export class RestaurantCard {
             return;
         }
 
-        // 更新收藏狀態
-        const index = this.favoriteStores.indexOf(placeId);
-        const isFavorite = index === -1;
-
+        const isFavorite = favoritesCore.isStoreFavorite(placeId);
         if (isFavorite) {
-            this.favoriteStores.push(placeId);
+            if (favoritesCore.removeStore(placeId)) {
+                this.updateFavoriteButton(button, false);
+                this.syncFavoriteButtons(placeId, false);
+                this.showToast('已取消收藏');
+            }
         } else {
-            this.favoriteStores.splice(index, 1);
-        }
-
-        // 更新 localStorage
-        localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteStores));
-
-        // 更新按鈕狀態
-        if (button) {
-            if (button.id === 'modal-favorite-btn') {
-                // 模態框中的收藏按鈕
-                button.innerHTML = isFavorite ? 
-                    '<i class="fas fa-heart"></i> 已收藏' : 
-                    '<i class="far fa-heart"></i> 收藏';
-                button.classList.toggle('active', isFavorite);
-            } else {
-                // 卡片中的收藏按鈕
-                const icon = button.querySelector('i');
-                if (icon) {
-                    icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
-                }
-                button.classList.toggle('active', isFavorite);
+            if (favoritesCore.addStore(placeId)) {
+                this.updateFavoriteButton(button, true);
+                this.syncFavoriteButtons(placeId, true);
+                this.showToast('已加入收藏');
             }
         }
+    }
 
-        // 同步更新所有相同餐廳的收藏按鈕
-        this.syncFavoriteButtons(placeId, isFavorite);
+    // 更新收藏按鈕狀態
+    updateFavoriteButton(button, isFavorite) {
+        if (!button) return;
+        
+        const icon = button.querySelector('i');
+        if (icon) {
+            icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
+        }
+        button.classList.toggle('active', isFavorite);
+    }
 
-        // 如果在用戶中心頁面，同步更新收藏列表
-        this.syncWithUserCenter(placeId, isFavorite);
+    // 同步所有相同餐廳的收藏按鈕
+    syncFavoriteButtons(placeId, isFavorite) {
+        // 更新所有相同餐廳的卡片收藏按鈕
+        document.querySelectorAll(`.restaurant-card[data-place-id="${placeId}"] .favorite-btn`).forEach(btn => {
+            this.updateFavoriteButton(btn, isFavorite);
+        });
+
+        // 更新模態框中的收藏按鈕
+        const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
+        if (modalFavoriteBtn && modalFavoriteBtn.closest('#restaurantModal').style.display === 'block') {
+            this.updateFavoriteButton(modalFavoriteBtn, isFavorite);
+        }
+    }
+
+    // 顯示 Toast 提示
+    showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        // 顯示 Toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // 3秒後隱藏並移除 Toast
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     // 檢查用戶登入狀態
@@ -308,50 +328,6 @@ export class RestaurantCard {
         // 從 localStorage 獲取登入狀態
         const userInfo = localStorage.getItem('userInfo');
         return userInfo !== null;
-    }
-
-    // 同步更新所有相同餐廳的收藏按鈕
-    syncFavoriteButtons(placeId, isFavorite) {
-        // 更新卡片上的收藏按鈕
-        document.querySelectorAll(`.restaurant-card[data-place-id="${placeId}"] .favorite-btn`).forEach(btn => {
-            const icon = btn.querySelector('i');
-            if (icon) {
-                icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
-            }
-            btn.classList.toggle('active', isFavorite);
-        });
-
-        // 更新模態框中的收藏按鈕
-        const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
-        if (modalFavoriteBtn && modalFavoriteBtn.closest('#restaurantModal').style.display === 'block') {
-            modalFavoriteBtn.innerHTML = isFavorite ? 
-                '<i class="fas fa-heart"></i> 已收藏' : 
-                '<i class="far fa-heart"></i> 收藏';
-            modalFavoriteBtn.classList.toggle('active', isFavorite);
-        }
-    }
-
-    // 同步更新用戶中心的收藏列表
-    syncWithUserCenter(placeId, isFavorite) {
-        // 檢查是否在用戶中心頁面
-        if (window.location.pathname.includes('usercenter.html')) {
-            const favoritesList = document.querySelector('.favorites-list');
-            if (favoritesList) {
-                if (!isFavorite) {
-                    // 如果取消收藏，移除對應的項目
-                    const item = favoritesList.querySelector(`[data-place-id="${placeId}"]`);
-                    if (item) {
-                        item.remove();
-                    }
-                } else {
-                    // 如果是新增收藏，可能需要重新載入收藏列表
-                    // 這部分可能需要調用用戶中心的刷新函數
-                    if (typeof window.refreshFavorites === 'function') {
-                        window.refreshFavorites();
-                    }
-                }
-            }
-        }
     }
 
     // 更新結果標題

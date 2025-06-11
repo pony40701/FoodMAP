@@ -1,6 +1,3 @@
-// 導入收藏核心模組
-import favoritesCore from './core/favoritesCore.js';
-
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginModal = document.getElementById('loginModal');
@@ -19,11 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 // 清除任何之前設置的回調函數，避免不必要的跳轉
                 window.onLoginSuccess = null;
-                if (loginModal) {
-                    loginModal.style.display = 'block';
-                }
-            } else {
-                window.location.href = 'userCenter.html';
+                if (loginModal) loginModal.style.display = 'block';
             }
         });
     }
@@ -52,22 +45,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 預設帳號密碼檢查
             if (email === '111@gmail.com' && password === '123456789') {
-                // 設置登入狀態
+                // 儲存登入狀態
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userEmail', email);
-
-                // 更新界面
-                updateLoginStatus();
+                
+                // 關閉模態框
                 loginModal.style.display = 'none';
-
-                // 如果有登入成功的回調，執行它
-                if (typeof window.onLoginSuccess === 'function') {
+                
+                // 更新登入狀態
+                updateLoginStatus();
+                
+                // 檢查是否有登入成功後的回調函數
+                if (window.onLoginSuccess) {
                     window.onLoginSuccess();
-                    window.onLoginSuccess = null; // 執行後清除
+                    // 清除回調函數，避免影響其他登入操作
+                    window.onLoginSuccess = null;
+                } else {
+                    // 登入成功後留在當前頁面，不跳轉
+                    console.log('登入成功，已更新登入狀態');
                 }
-
-                // 重新載入收藏狀態
-                favoritesCore.loadFavorites();
             } else {
                 alert('帳號或密碼錯誤！');
             }
@@ -150,10 +146,4 @@ function socialLogin(platform) {
             alert('Line 登入功能尚未開放');
             break;
     }
-}
-
-// 顯示提示訊息
-function showToast(message) {
-    // 這裡可以自訂提示訊息的顯示方式
-    alert(message);
-}
+} 

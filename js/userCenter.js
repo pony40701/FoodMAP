@@ -1026,3 +1026,160 @@ function updateProfile() {
 
 // 當 DOM 載入完成時初始化頁面
 document.addEventListener('DOMContentLoaded', initializePage);
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化側邊欄選單
+    initializeSidebar();
+    
+    // 初始化收藏列表
+    initializeFavorites();
+    
+    // 監聽收藏更新事件
+    window.addEventListener('favoritesUpdated', function() {
+        updateFavoritesList();
+    });
+    // 收藏卡片事件代理綁在 .favorites-content（不會被重設）
+    const favoritesContent = document.querySelector('.favorites-content');
+    if (favoritesContent) {
+        favoritesContent.addEventListener('click', function(e) {
+            const btn = e.target.closest('.favorite-btn');
+            if (btn) {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                window.FavoritesManager.removeFavorite(id);
+                updateFavoritesList();
+            }
+        });
+    }
+});
+
+// 初始化側邊欄選單
+function initializeSidebar() {
+    const menuItems = document.querySelectorAll('.menu-item');
+    const sections = document.querySelectorAll('.content-section');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // 移除所有活動狀態
+            menuItems.forEach(i => i.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            // 添加新的活動狀態
+            this.classList.add('active');
+            const targetSection = document.querySelector(this.getAttribute('href'));
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        });
+    });
+}
+
+// 初始化收藏列表
+function initializeFavorites() {
+    // 初始化收藏頁籤切換
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const favoritesStores = document.querySelector('.favorites-stores');
+    const favoritesReviews = document.querySelector('.favorites-reviews');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const tab = this.dataset.tab;
+            if (tab === 'stores') {
+                favoritesStores.style.display = 'grid';
+                favoritesReviews.style.display = 'none';
+            } else {
+                favoritesStores.style.display = 'none';
+                favoritesReviews.style.display = 'grid';
+            }
+        });
+    });
+    
+    // 初始化收藏列表
+    updateFavoritesList();
+}
+
+// 更新收藏列表
+function updateFavoritesList() {
+    const favoritesStores = document.querySelector('.favorites-stores');
+    const favorites = window.FavoritesManager.getFavorites();
+    
+    if (!favorites || favorites.length === 0) {
+        favoritesStores.innerHTML = '<div class="no-favorites">還沒有收藏的餐廳</div>';
+        return;
+    }
+
+    // 取得今天是星期幾（0=日, 1=一...）
+    const today = new Date().getDay();
+
+    favoritesStores.innerHTML = favorites.map((restaurant, idx) => {
+        // 今日營業時間
+        let todayHours = '';
+        if (restaurant.opening_hours && Array.isArray(restaurant.opening_hours)) {
+            const weekdayIndex = today === 0 ? 6 : today - 1;
+            todayHours = restaurant.opening_hours[weekdayIndex] || '';
+        }
+        return `
+        <div class="restaurant-card" data-id="${restaurant.id}" data-idx="${idx}">
+            <div class="restaurant-image">
+                <img src="${restaurant.photos}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
+                <button class="favorite-btn active" data-id="${restaurant.id}" title="移除收藏">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            <div class="restaurant-info">
+                <div class="title-container">
+                    <h3>${restaurant.name}</h3>
+                </div>
+                <div class="rating">
+                    <div class="stars">
+                        ${getStarRating(restaurant.rating)}
+                    </div>
+                    <span class="rating-text">${restaurant.rating} (${restaurant.user_ratings_total})</span>
+                </div>
+                <p class="address">${restaurant.address}</p>
+                <p class="opening-hours">
+                    <i class="fas fa-clock"></i>
+                    ${todayHours ? todayHours : '無營業資訊'}
+                </p>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    // 綁定卡片點擊事件（不包含愛心）
+    Array.from(favoritesStores.querySelectorAll('.restaurant-card')).forEach(card => {
+        card.addEventListener('click', function(e) {
+            // 點擊愛心不觸發
+            if (e.target.closest('.favorite-btn')) return;
+            const idx = this.getAttribute('data-idx');
+            const restaurant = favorites[idx];
+            if (window.mapInit && typeof window.mapInit.showRestaurantDetail === 'function') {
+                window.mapInit.showRestaurantDetail(restaurant);
+            }
+        });
+    });
+}
+
+// 生成星級評分 (與 main.js 中相同的函數)
+function getStarRating(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    let stars = '';
+    
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            stars += '<i class="fas fa-star"></i>';
+        } else if (i === fullStars && hasHalfStar) {
+            stars += '<i class="fas fa-star-half-alt"></i>';
+        } else {
+            stars += '<i class="far fa-star"></i>';
+        }
+    }
+    
+    return stars;
+}

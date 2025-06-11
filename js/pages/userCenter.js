@@ -140,19 +140,38 @@ async function getFavoriteStoresDetails(placeIds) {
 // 從收藏中移除店家
 function removeFromFavorites(placeId) {
     if (confirm('確定要取消收藏這家店嗎？')) {
-        favoritesCore.removeStore(placeId);
-        // 顯示成功訊息
-        alert('已取消收藏');
+        if (favoritesCore.removeStore(placeId)) {
+            showToast('已取消收藏');
+            loadFavorites('stores'); // 重新載入收藏列表
+        }
     }
 }
 
 // 從收藏中移除心得
 function removeFromFavoriteReviews(reviewId) {
     if (confirm('確定要取消收藏這則心得嗎？')) {
-        favoritesCore.removeReview(reviewId);
-        // 顯示成功訊息
-        alert('已取消收藏心得');
+        if (favoritesCore.removeReview(reviewId)) {
+            showToast('已取消收藏心得');
+            loadFavorites('reviews'); // 重新載入收藏列表
+        }
     }
+}
+
+// 顯示 Toast 提示
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 顯示 Toast
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // 3秒後隱藏並移除 Toast
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 // 查看店家詳情
@@ -176,9 +195,10 @@ function addToFavoriteReviews(review) {
     }
 
     if (favoritesCore.addReview(review)) {
-        alert(`已收藏 ${review.storeName} 的心得`);
+        showToast(`已收藏 ${review.storeName} 的心得`);
+        loadFavorites('reviews'); // 重新載入收藏列表
     } else {
-        alert('此心得已在收藏清單中');
+        showToast('此心得已在收藏清單中');
     }
 }
 
@@ -208,9 +228,29 @@ function initializeFavorites() {
     favoritesCore.onStateChange('reviews', () => loadFavorites('reviews'));
 }
 
+// 檢查登入狀態
+function checkLoginStatus() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!isLoggedIn) {
+        window.location.href = 'index.html';
+        return;
+    }
+}
+
 // 初始化頁面
 document.addEventListener('DOMContentLoaded', () => {
+    // 檢查登入狀態
+    checkLoginStatus();
+    // 初始化收藏功能
     initializeFavorites();
+    // 安全綁定登出按鈕
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (window.logout) window.logout();
+        });
+    }
 });
 
 // 導出公共函數

@@ -104,14 +104,15 @@ window.displayRestaurants = function(restaurants) {
     container.innerHTML = '';
     
     // 為每個餐廳創建卡片
-    restaurants.forEach(restaurant => {
+    restaurants.forEach((restaurant, idx) => {
         const card = document.createElement('div');
         card.className = 'restaurant-card';
+        card.setAttribute('data-idx', idx);
         card.innerHTML = `
             <div class="restaurant-image">
                 <img src="${restaurant.photos}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
-                <button class="favorite-btn" onclick="event.stopPropagation();">
-                    <i class="far fa-heart"></i>
+                <button class="favorite-btn" data-id="${restaurant.id}">
+                    <i class="${FavoritesManager.isFavorite(restaurant.id) ? 'fas' : 'far'} fa-heart"></i>
                 </button>
             </div>
             <div class="restaurant-info">
@@ -129,14 +130,52 @@ window.displayRestaurants = function(restaurants) {
                 </p>
             </div>
         `;
-
-        // 添加點擊事件
-        card.addEventListener('click', () => {
-            window.mapInit.showRestaurantDetail(restaurant);
-        });
-
         container.appendChild(card);
     });
+
+    // 事件代理：只綁一次
+    container.onclick = function(e) {
+        const card = e.target.closest('.restaurant-card');
+        if (card && !e.target.closest('.favorite-btn')) {
+            const idx = card.getAttribute('data-idx');
+            const restaurant = restaurants[idx];
+            console.log('代理卡片被點擊', restaurant);
+            if (window.mapInit && typeof window.mapInit.showRestaurantDetail === 'function') {
+                window.mapInit.showRestaurantDetail(restaurant);
+            }
+        }
+    };
+
+    // 先移除舊的事件監聽器（用 cloneNode 方式）
+    // const newContainer = container.cloneNode(true);
+    // container.parentNode.replaceChild(newContainer, container);
+
+    // 事件代理：收藏按鈕
+    // newContainer.addEventListener('click', function(e) {
+    //     const btn = e.target.closest('.favorite-btn');
+    //     if (btn) {
+    //         e.stopPropagation();
+    //         const id = btn.getAttribute('data-id');
+    //         const restaurant = restaurants.find(r => r.id == id || r.place_id == id);
+    //         if (!restaurant) return;
+    //         // 收藏時存完整物件
+    //         if (FavoritesManager.isFavorite(id)) {
+    //             FavoritesManager.removeFavorite(id);
+    //         } else {
+    //             // 存入完整物件，確保會員中心能正確顯示
+    //             FavoritesManager.addFavorite({
+    //                 id: restaurant.id,
+    //                 name: restaurant.name,
+    //                 photos: restaurant.photos,
+    //                 rating: restaurant.rating,
+    //                 user_ratings_total: restaurant.user_ratings_total,
+    //                 address: restaurant.address,
+    //                 opening_hours: restaurant.opening_hours ? (restaurant.opening_hours.weekday_text || null) : null
+    //             });
+    //         }
+    //         btn.querySelector('i').className = FavoritesManager.isFavorite(id) ? 'fas fa-heart' : 'far fa-heart';
+    //     }
+    // });
 };
 
 // 生成星級評分顯示
@@ -257,11 +296,19 @@ function showRestaurantDetail(restaurant) {
         // 設置收藏按鈕事件
         const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
         if (modalFavoriteBtn) {
-            const isFavorite = false; // TODO: 檢查是否已收藏
+            const isFavorite = FavoritesManager.isFavorite(restaurant.id);
             modalFavoriteBtn.innerHTML = isFavorite ? 
                 '<i class="fas fa-heart"></i> 已收藏' : 
                 '<i class="far fa-heart"></i> 收藏';
-            modalFavoriteBtn.onclick = () => toggleFavorite(restaurant);
+            modalFavoriteBtn.onclick = () => {
+                if (FavoritesManager.isFavorite(restaurant.id)) {
+                    FavoritesManager.removeFavorite(restaurant.id);
+                    modalFavoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
+                } else {
+                    FavoritesManager.addFavorite(restaurant);
+                    modalFavoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
+                }
+            };
         }
 
         // 設置導航按鈕事件
@@ -314,21 +361,6 @@ function closeRestaurantModal() {
     }
 }
 
-// 切換收藏狀態
-function toggleFavorite(restaurant) {
-    const btn = document.getElementById('modal-favorite-btn');
-    if (!btn) return;
-
-    const isFavorite = btn.innerHTML.includes('已收藏');
-    if (isFavorite) {
-        btn.innerHTML = '<i class="far fa-heart"></i> 收藏';
-        showToast('已移除收藏');
-    } else {
-        btn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
-        showToast('已加入收藏');
-    }
-}
-
 // 顯示提示訊息
 function showToast(message) {
     const toast = document.createElement('div');
@@ -364,3 +396,112 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('初始化頁面時發生錯誤:', error);
     }
 });
+
+// 餐廳卡片相關功能
+document.addEventListener('DOMContentLoaded', function() {
+    const restaurantsContainer = document.getElementById('restaurants-container');
+
+    // 模擬餐廳數據
+    const restaurants = [
+        {
+            id: 1,
+            name: "美味餐廳",
+            image: "images/restaurant1.jpg",
+            rating: 4.5,
+            reviewCount: 128,
+            address: "台北市中山區中山北路二段",
+            isOpen: true,
+            openingHours: "11:00 - 21:00"
+        },
+        // 可以添加更多餐廳...
+    ];
+
+    // 渲染餐廳卡片
+    function renderRestaurants(restaurants) {
+        restaurantsContainer.innerHTML = restaurants.map(restaurant => `
+            <div class="restaurant-card" data-id="${restaurant.id}">
+                <div class="restaurant-image">
+                    <img src="${restaurant.image}" alt="${restaurant.name}">
+                    <button class="favorite-btn" onclick="handleFavoriteClick(event, ${restaurant.id})">
+                        <i class="fa${FavoritesManager.isFavorite(restaurant.id) ? 's' : 'r'} fa-heart"></i>
+                    </button>
+                </div>
+                <div class="restaurant-info">
+                    <div class="title-container">
+                        <h3>${restaurant.name}</h3>
+                    </div>
+                    <div class="rating">
+                        <div class="stars">
+                            ${getStarRating(restaurant.rating)}
+                        </div>
+                        <span class="rating-text">${restaurant.rating} (${restaurant.reviewCount})</span>
+                    </div>
+                    <p class="address">${restaurant.address}</p>
+                    <p class="opening-hours ${restaurant.isOpen ? 'open' : ''}">
+                        <i class="fas fa-clock"></i>
+                        ${restaurant.isOpen ? '營業中' : '休息中'} - ${restaurant.openingHours}
+                    </p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 生成星級評分
+    function getStarRating(rating) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+        let stars = '';
+        
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                stars += '<i class="fas fa-star"></i>';
+            } else if (i === fullStars && hasHalfStar) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+            } else {
+                stars += '<i class="far fa-star"></i>';
+            }
+        }
+        
+        return stars;
+    }
+
+    // 初始渲染
+    renderRestaurants(restaurants);
+
+    // 監聽收藏更新事件
+    window.addEventListener('favoritesUpdated', function() {
+        renderRestaurants(restaurants);
+    });
+});
+
+// 處理收藏按鈕點擊
+function handleFavoriteClick(event, restaurantId) {
+    event.stopPropagation(); // 防止觸發卡片點擊事件
+    
+    const button = event.currentTarget;
+    const restaurant = getRestaurantById(restaurantId); // 需要實現這個函數
+    
+    if (FavoritesManager.isFavorite(restaurantId)) {
+        FavoritesManager.removeFavorite(restaurantId);
+    } else {
+        FavoritesManager.addFavorite(restaurant);
+    }
+    
+    FavoritesManager.updateFavoriteButton(button, restaurantId);
+}
+
+// 獲取餐廳資訊的輔助函數
+function getRestaurantById(id) {
+    // 這裡應該從你的數據源獲取餐廳資訊
+    // 目前使用模擬數據
+    return {
+        id: id,
+        name: "美味餐廳",
+        image: "images/restaurant1.jpg",
+        rating: 4.5,
+        reviewCount: 128,
+        address: "台北市中山區中山北路二段",
+        isOpen: true,
+        openingHours: "11:00 - 21:00"
+    };
+}

@@ -261,4 +261,99 @@ function removeFromFavoriteReviews(reviewId) {
         // 重新載入頁面內容
         loadReviews();
     }
-} 
+}
+
+// 收藏功能管理
+const FavoritesManager = {
+    // 獲取所有收藏
+    getFavorites() {
+        const favorites = localStorage.getItem('favorites');
+        return favorites ? JSON.parse(favorites) : [];
+    },
+
+    // 保存收藏
+    saveFavorites(favorites) {
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        // 觸發自定義事件
+        window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+    },
+
+    // 添加收藏
+    addFavorite(restaurant) {
+        if (!this.isLoggedIn()) {
+            this.showLoginPrompt();
+            return false;
+        }
+
+        const favorites = this.getFavorites();
+        if (!favorites.some(fav => fav.id === restaurant.id)) {
+            favorites.push(restaurant);
+            this.saveFavorites(favorites);
+            this.showToast('已加入收藏！');
+            return true;
+        }
+        return false;
+    },
+
+    // 移除收藏
+    removeFavorite(restaurantId) {
+        if (!this.isLoggedIn()) {
+            this.showLoginPrompt();
+            return false;
+        }
+
+        const favorites = this.getFavorites();
+        const index = favorites.findIndex(fav => fav.id === restaurantId);
+        if (index !== -1) {
+            favorites.splice(index, 1);
+            this.saveFavorites(favorites);
+            this.showToast('已移除收藏！');
+            return true;
+        }
+        return false;
+    },
+
+    // 檢查是否已收藏
+    isFavorite(restaurantId) {
+        const favorites = this.getFavorites();
+        return favorites.some(fav => fav.id === restaurantId);
+    },
+
+    // 檢查是否已登入
+    isLoggedIn() {
+        return localStorage.getItem('isLoggedIn') === 'true';
+    },
+
+    // 顯示登入提示
+    showLoginPrompt() {
+        alert('請先登入會員！');
+        document.getElementById('loginModal').style.display = 'block';
+    },
+
+    // 顯示提示訊息
+    showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // 顯示 toast
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // 3秒後移除 toast
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    },
+
+    // 更新收藏按鈕狀態
+    updateFavoriteButton(button, restaurantId) {
+        const isFavorite = this.isFavorite(restaurantId);
+        button.innerHTML = `<i class="fa${isFavorite ? 's' : 'r'} fa-heart"></i>`;
+        button.classList.toggle('active', isFavorite);
+    }
+};
+
+// 導出 FavoritesManager
+window.FavoritesManager = FavoritesManager; 
