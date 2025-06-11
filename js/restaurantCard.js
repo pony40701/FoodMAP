@@ -1,7 +1,37 @@
 // 餐廳卡片模組
-class RestaurantCard {
+import favoritesCore from '../core/favoritesCore.js';
+
+export class RestaurantCard {
     constructor() {
-        this.favoriteStores = JSON.parse(localStorage.getItem('favoriteStores')) || [];
+        this.setupEventListeners();
+    }
+
+    // 設置事件監聽器
+    setupEventListeners() {
+        // 監聽收藏狀態變更
+        favoritesCore.onStateChange('stores', () => {
+            this.updateAllFavoriteButtons();
+        });
+
+        // 監聽收藏按鈕點擊
+        document.addEventListener('click', (e) => {
+            const favoriteBtn = e.target.closest('.favorite-btn');
+            if (!favoriteBtn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const restaurantCard = favoriteBtn.closest('.restaurant-card');
+            if (!restaurantCard) return;
+
+            const placeId = restaurantCard.dataset.placeId;
+            if (!placeId) {
+                console.error('找不到餐廳ID');
+                return;
+            }
+
+            this.toggleFavorite(placeId, favoriteBtn);
+        });
     }
 
     // 顯示餐廳列表
@@ -16,20 +46,23 @@ class RestaurantCard {
         if (!places || places.length === 0) {
             container.innerHTML = '<div class="no-results">沒有找到相關的餐廳</div>';
             return;
-        }
-
-        // 收藏排序
+        }        // 收藏排序
         const sortedPlaces = places.sort((a, b) => {
-            const aIsFavorite = this.favoriteStores.includes(a.id);
-            const bIsFavorite = this.favoriteStores.includes(b.id);
+            const aIsFavorite = favoritesCore.isStoreFavorite(a.place_id);
+            const bIsFavorite = favoritesCore.isStoreFavorite(b.place_id);
             if (aIsFavorite && !bIsFavorite) return -1;
             if (!aIsFavorite && bIsFavorite) return 1;
             return 0;
         });
 
-        sortedPlaces.forEach(place => {
-            const card = this.createRestaurantCard(place);
-            container.appendChild(card);
+        container.innerHTML = sortedPlaces.map(place => this.createRestaurantCard(place)).join('');
+
+        // 為每個卡片添加點擊事件
+        const cards = container.querySelectorAll('.restaurant-card');
+        cards.forEach((card, index) => {
+            card.addEventListener('click', () => {
+                this.showRestaurantDetail(places[index]);
+            });
         });
     }
 
@@ -43,32 +76,171 @@ class RestaurantCard {
         const favoriteClass = isFavorite ? 'active' : '';
         const favoriteIcon = isFavorite ? 'fas fa-heart' : 'far fa-heart';
 
-        card.innerHTML = `
+        // 構建卡片內容
+        const content = `
             <div class="restaurant-image">
-                <img src="${place.image || '../IMAGE/default-restaurant.jpg'}" alt="${place.name}">
-                <button class="favorite-btn ${favoriteClass}" onclick="window.toggleFavorite('${place.id}', this)">
+                <img src="${place.photos || '../images/no-image.jpg'}" alt="${place.name}" loading="lazy">
+                <button class="favorite-btn ${favoriteClass}" onclick="event.stopPropagation();">
                     <i class="${favoriteIcon}"></i>
                 </button>
             </div>
             <div class="restaurant-info">
-                <h3 class="restaurant-name">${place.name}</h3>
-                <div class="restaurant-rating">
-                    ${this.generateRatingStars(place.rating)}
-                    <span class="rating-count">(${place.user_ratings_total || 0})</span>
+                <div class="title-container">
+                    <h3>${place.name}</h3>
                 </div>
-                <p class="restaurant-address">${place.address}</p>
-                <div class="restaurant-status ${place.isOpen ? 'open' : 'closed'}">
-                    ${place.isOpen ? '營業中' : '休息中'}
+                <div class="rating">
+                    <div class="stars">
+                        ${this.generateRatingStars(place.rating)}
+                    </div>
+                    <span class="rating-text">(${place.user_ratings_total || 0})</span>
                 </div>
-            </div>
-            <div class="restaurant-actions">
-                <button class="btn-secondary view-detail" onclick="window.showRestaurantDetail('${place.id}')">
-                    查看詳情
-                </button>
+                <p class="address">${place.address}</p>
+                ${place.opening_hours ? `
+                    <div class="opening-hours ${place.opening_hours.isOpen() ? 'open' : 'closed'}">
+                        <i class="fas fa-clock"></i>
+                        ${place.opening_hours.isOpen() ? '營業中' : '休息中'}
+                    </div>
+                ` : ''}
             </div>
         `;
 
+        card.innerHTML = content;
+
+        // 添加點擊事件到整個卡片
+        card.addEventListener('click', (e) => {
+            // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
+            if (e.target.closest('.favorite-btn')) {
+                return;
+            }
+            
+            this.showRestaurantDetail(place);
+        });
+
+        // 為收藏按鈕添加點擊事件
+        const favoriteBtn = card.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleFavorite(place.id, favoriteBtn);
+            });
+        }
+
         return card;
+    }
+
+    // 顯示餐廳詳細資訊
+    showRestaurantDetail(place) {
+        // 獲取必要的 DOM 元素
+        const modal = document.getElementById('restaurantModal');
+        const modalName = document.getElementById('modal-restaurant-name');
+        const modalImg = document.getElementById('modal-restaurant-img');
+        const modalStars = document.getElementById('modal-stars');
+        const modalRating = document.getElementById('modal-rating');
+        const modalRatingCount = document.getElementById('modal-rating-count');
+        const modalAddress = document.getElementById('modal-address');
+        const modalStatus = document.querySelector('.modal-status');
+        const modalTodayHours = document.getElementById('modal-today-hours');
+        const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
+        const modalDirectionBtn = document.getElementById('modal-direction-btn');
+
+        // 設置餐廳基本資訊
+        modalName.textContent = place.name;
+        modalImg.src = place.photos || 'images/no-image.jpg';
+        modalImg.alt = place.name;
+
+        // 設置評分資訊
+        if (modalStars) {
+            modalStars.innerHTML = this.generateRatingStars(place.rating);
+        }
+        if (modalRating) {
+            modalRating.textContent = place.rating.toFixed(1);
+        }
+        if (modalRatingCount) {
+            modalRatingCount.textContent = `(${place.user_ratings_total || 0}則評論)`;
+        }
+
+        // 設置地址
+        if (modalAddress) {
+            modalAddress.textContent = place.address;
+        }
+
+        // 設置營業狀態
+        if (modalStatus && place.opening_hours) {
+            const isOpen = place.opening_hours.isOpen();
+            modalStatus.innerHTML = `
+                <i class="fas fa-clock"></i>
+                <span>${isOpen ? '營業中' : '休息中'}</span>
+            `;
+            modalStatus.className = `modal-status ${isOpen ? 'open' : 'closed'}`;
+        }
+
+        // 設置營業時間資訊
+        if (modalTodayHours && place.opening_hours && place.opening_hours.weekday_text) {
+            const today = new Date().getDay();
+            modalTodayHours.textContent = place.opening_hours.weekday_text[today];
+        }
+
+        // 設置收藏按鈕狀態和事件
+        if (modalFavoriteBtn) {
+            const isFavorite = this.favoriteStores.includes(place.id);
+            modalFavoriteBtn.classList.toggle('active', isFavorite);
+            modalFavoriteBtn.innerHTML = isFavorite ? 
+                '<i class="fas fa-heart"></i> 已收藏' : 
+                '<i class="far fa-heart"></i> 收藏';
+            
+            modalFavoriteBtn.onclick = () => {
+                this.toggleFavorite(place.id, modalFavoriteBtn);
+            };
+        }
+
+        // 設置導航按鈕事件
+        if (modalDirectionBtn) {
+            modalDirectionBtn.onclick = () => {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
+                window.open(url, '_blank');
+            };
+        }
+
+        // 初始化地圖
+        if (place.location && google && google.maps) {
+            const mapContainer = document.getElementById('modal-map');
+            if (mapContainer && place.location.lat && place.location.lng) {
+                const map = new google.maps.Map(mapContainer, {
+                    center: { 
+                        lat: place.location.lat, 
+                        lng: place.location.lng 
+                    },
+                    zoom: 15
+                });
+
+                new google.maps.Marker({
+                    position: { 
+                        lat: place.location.lat, 
+                        lng: place.location.lng 
+                    },
+                    map: map,
+                    title: place.name
+                });
+            }
+        }
+
+        // 顯示 Modal
+        modal.style.display = 'block';
+
+        // 設置關閉按鈕事件
+        const closeBtn = modal.querySelector('.restaurant-modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+
+        // 點擊 Modal 外部關閉
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
     }
 
     // 生成評分星星
@@ -85,36 +257,101 @@ class RestaurantCard {
         `;
     }    // 切換收藏狀態
     toggleFavorite(placeId, button) {
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        // 檢查登入狀態
+        const isLoggedIn = this.checkUserLoginStatus();
         if (!isLoggedIn) {
-            // 顯示提示訊息
-            alert('請先登入會員以使用收藏功能');
-            // 開啟登入視窗
+            alert('請先登入會員');
             document.getElementById('loginModal').style.display = 'block';
-            
-            // 設定登入成功後的回調函數
-            window.onLoginSuccess = () => {
-                // 登入成功後自動將餐廳加入收藏
-                this.favoriteStores.push(placeId);
-                button.classList.add('active');
-                button.querySelector('i').className = 'fas fa-heart';
-                localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteStores));
-            };
             return;
         }
 
+        // 更新收藏狀態
         const index = this.favoriteStores.indexOf(placeId);
-        if (index > -1) {
-            this.favoriteStores.splice(index, 1);
-            button.classList.remove('active');
-            button.querySelector('i').className = 'far fa-heart';
-        } else {
+        const isFavorite = index === -1;
+
+        if (isFavorite) {
             this.favoriteStores.push(placeId);
-            button.classList.add('active'); 
-            button.querySelector('i').className = 'fas fa-heart';
+        } else {
+            this.favoriteStores.splice(index, 1);
         }
 
+        // 更新 localStorage
         localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteStores));
+
+        // 更新按鈕狀態
+        if (button) {
+            if (button.id === 'modal-favorite-btn') {
+                // 模態框中的收藏按鈕
+                button.innerHTML = isFavorite ? 
+                    '<i class="fas fa-heart"></i> 已收藏' : 
+                    '<i class="far fa-heart"></i> 收藏';
+                button.classList.toggle('active', isFavorite);
+            } else {
+                // 卡片中的收藏按鈕
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
+                }
+                button.classList.toggle('active', isFavorite);
+            }
+        }
+
+        // 同步更新所有相同餐廳的收藏按鈕
+        this.syncFavoriteButtons(placeId, isFavorite);
+
+        // 如果在用戶中心頁面，同步更新收藏列表
+        this.syncWithUserCenter(placeId, isFavorite);
+    }
+
+    // 檢查用戶登入狀態
+    checkUserLoginStatus() {
+        // 從 localStorage 獲取登入狀態
+        const userInfo = localStorage.getItem('userInfo');
+        return userInfo !== null;
+    }
+
+    // 同步更新所有相同餐廳的收藏按鈕
+    syncFavoriteButtons(placeId, isFavorite) {
+        // 更新卡片上的收藏按鈕
+        document.querySelectorAll(`.restaurant-card[data-place-id="${placeId}"] .favorite-btn`).forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
+            }
+            btn.classList.toggle('active', isFavorite);
+        });
+
+        // 更新模態框中的收藏按鈕
+        const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
+        if (modalFavoriteBtn && modalFavoriteBtn.closest('#restaurantModal').style.display === 'block') {
+            modalFavoriteBtn.innerHTML = isFavorite ? 
+                '<i class="fas fa-heart"></i> 已收藏' : 
+                '<i class="far fa-heart"></i> 收藏';
+            modalFavoriteBtn.classList.toggle('active', isFavorite);
+        }
+    }
+
+    // 同步更新用戶中心的收藏列表
+    syncWithUserCenter(placeId, isFavorite) {
+        // 檢查是否在用戶中心頁面
+        if (window.location.pathname.includes('usercenter.html')) {
+            const favoritesList = document.querySelector('.favorites-list');
+            if (favoritesList) {
+                if (!isFavorite) {
+                    // 如果取消收藏，移除對應的項目
+                    const item = favoritesList.querySelector(`[data-place-id="${placeId}"]`);
+                    if (item) {
+                        item.remove();
+                    }
+                } else {
+                    // 如果是新增收藏，可能需要重新載入收藏列表
+                    // 這部分可能需要調用用戶中心的刷新函數
+                    if (typeof window.refreshFavorites === 'function') {
+                        window.refreshFavorites();
+                    }
+                }
+            }
+        }
     }
 
     // 更新結果標題
@@ -126,4 +363,4 @@ class RestaurantCard {
     }
 }
 
-export default RestaurantCard; 
+export default RestaurantCard;

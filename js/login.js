@@ -1,3 +1,6 @@
+// 導入收藏核心模組
+import favoritesCore from './core/favoritesCore.js';
+
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginModal = document.getElementById('loginModal');
@@ -49,26 +52,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 預設帳號密碼檢查
             if (email === '111@gmail.com' && password === '123456789') {
-                // 儲存登入狀態
+                // 設置登入狀態
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userEmail', email);
-                
-                // 關閉模態框
-                loginModal.style.display = 'none';
-                
-                // 更新登入狀態
+
+                // 更新界面
                 updateLoginStatus();
-                
-                // 檢查是否有登入成功後的回調函數
-                if (window.onLoginSuccess) {
+                loginModal.style.display = 'none';
+
+                // 如果有登入成功的回調，執行它
+                if (typeof window.onLoginSuccess === 'function') {
                     window.onLoginSuccess();
-                    // 清除回調函數，避免影響其他登入操作
-                    window.onLoginSuccess = null;
-                    // 顯示登入成功並自動收藏的提示
-                    showToast('登入成功，已自動加入收藏！');
-                } else {
-                    showToast('登入成功！');
+                    window.onLoginSuccess = null; // 執行後清除
                 }
+
+                // 重新載入收藏狀態
+                favoritesCore.loadFavorites();
             } else {
                 alert('帳號或密碼錯誤！');
             }
