@@ -56,12 +56,7 @@ function openDishModal(dishName, images, reviews) {
     const reviewEl = document.createElement('div');
     reviewEl.className = 'review-item';
     reviewEl.innerHTML = `
-      <img src="${review.avatar}" alt="${review.name}" class="review-avatar">
-      <div class="review-content">
-        <div class="review-name">${review.name}</div>
-        <div class="review-text">${review.text}</div>
-      </div>
-    `;
+      <div class=\"review-header-flex\">\n        <div class=\"review-header-line\">\n          <img src=\"${review.avatar}\" alt=\"${review.name}\" class=\"review-avatar\">\n          <span class=\"review-name\">${review.name}</span>\n        </div>\n        <div class=\"review-stars-line\">${renderStars(review.rating || 0)}<span class='review-score'>${review.rating ? review.rating : ''}</span></div>\n      </div>\n      <div class=\"review-text\">${review.text}</div>\n    `;
     reviewsList.appendChild(reviewEl);
   });
 
@@ -69,6 +64,16 @@ function openDishModal(dishName, images, reviews) {
   modal.style.display = 'block';
   modal.offsetHeight;
   modal.classList.add('show');
+}
+
+// 星星渲染工具
+function renderStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return '<i class="fas fa-star"></i>'.repeat(full) +
+         (half ? '<i class="fas fa-star-half-alt"></i>' : '') +
+         '<i class="far fa-star"></i>'.repeat(empty);
 }
 
 // 關閉 dish modal
@@ -101,22 +106,25 @@ document.addEventListener('DOMContentLoaded', function() {
         'https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg',
         'https://images.pexels.com/photos/6940991/pexels-photo-6940991.jpeg'
       ];
-      // 假評論資料
+      // 假評論資料，加入rating
       const reviews = [
         {
           name: '美食家小明',
           avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-          text: '這道菜色香味俱全，口感絕佳，是我吃過最好吃的版本之一！'
+          text: '這道菜色香味俱全，口感絕佳，是我吃過最好吃的版本之一！',
+          rating: 5
         },
         {
           name: '饕客小華',
           avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
-          text: '食材新鮮，烹調手法專業，每一口都能感受到廚師的用心。'
+          text: '食材新鮮，烹調手法專業，每一口都能感受到廚師的用心。',
+          rating: 4.5
         },
         {
           name: '美食部落客小紅',
           avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-          text: '擺盤精緻，味道層次豐富，絕對值得推薦！'
+          text: '擺盤精緻，味道層次豐富，絕對值得推薦！',
+          rating: 4
         }
       ];
       openDishModal(dishName, images, reviews);
