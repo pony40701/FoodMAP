@@ -1807,4 +1807,23 @@
   .action-buttons-wrapper {
     padding: 16px;
   }
+}
+
+/* 只限於餐點 modal 彈窗的評論頭像尺寸 */
+.dish-modal .review-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Dish modal 每則評論之間加上分隔線 */
+.dish-modal .reviews-list .review-item {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+.dish-modal .reviews-list .review-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 } 
