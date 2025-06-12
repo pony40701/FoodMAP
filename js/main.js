@@ -29,64 +29,15 @@ function initCarousel() {
 }
 
 // ===========================================
-// 登入彈窗
+// 地圖初始化
 // ===========================================
-function initLoginModal() {
-    const loginBtn = document.querySelector('.btn-login');
-    const modal = document.getElementById('loginModal');
-    const closeBtn = document.querySelector('.close');
-    const loginForm = document.getElementById('loginForm');
-    updateLoginStatus();
-
-    if (loginBtn) {
-        loginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (localStorage.getItem('isLoggedIn') === 'true') {
-                window.location.href = 'userCenter.html';
-            } else {
-                if (modal) modal.style.display = 'block';
-            }
-        });
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        window.mapInit = await new MapInit().init();
+    } catch (error) {
+        console.error('初始化地圖失敗:', error);
     }
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    }
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) { modal.style.display = 'none'; }
-    });
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userEmail', email);
-            modal.style.display = 'none';
-            updateLoginStatus();
-            window.location.href = 'userCenter.html';
-        });
-    }
-}
-
-function updateLoginStatus() {
-    const loginBtn = document.querySelector('.btn-login');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (loginBtn) loginBtn.textContent = isLoggedIn ? '會員中心' : '登入';
-}
-
-function socialLogin(platform) {
-    alert('社群登入（' + platform + '）功能尚未開放');
-}
-
-// ===========================================
-// 類型搜尋 → 全部導向 mapInit
-// ===========================================
-window.searchByType = function(type, keyword) {
-    if (window.mapInit && typeof window.mapInit.searchByType === 'function') {
-        window.mapInit.searchByType(type, keyword);
-    } else {
-        alert('地圖尚未初始化完成，請稍候再試');
-    }
-};
+});
 
 // ===========================================
 // 餐廳列表顯示
@@ -94,63 +45,175 @@ window.searchByType = function(type, keyword) {
 window.displayRestaurants = function(restaurants) {
     const container = document.getElementById('restaurants-container');
     if (!container) return;
+    
     if (!restaurants || restaurants.length === 0) {
         container.innerHTML = '<div class="no-results">找不到相關餐廳</div>';
         return;
     }
-    const html = restaurants.map(restaurant => {
-        const {
-            id = '',
-            name = '未知名稱',
-            address = '地址未提供',
-            rating = 0,
-            user_ratings_total = 0,
-            photos = null,
-            opening_hours = null
-        } = restaurant;
-        const escapedName = name.replace(/[&<>"']/g, char => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[char]));
-        return `
-            <div class="restaurant-card" data-id="${id}">
+
+    // 清空容器
+    container.innerHTML = '';
+    
+    // 為每個餐廳創建卡片
+    restaurants.forEach(restaurant => {
+        const card = document.createElement('div');
+        card.className = 'restaurant-card';
+        card.innerHTML = `
+            <div class="restaurant-image-wrapper">
                 <div class="restaurant-image">
-                    ${photos ?
-                        `<img src="${photos}" alt="${escapedName}" loading="lazy" onerror="this.src='images/no-image.jpg';">` :
-                        '<div class="no-image">暫無圖片</div>'
-                    }
-                    <button class="favorite-btn ${window.isFavorite(id) ? 'active' : ''}"
-                            onclick="toggleFavorite('${id}', '${escapedName}')">
-                        <i class="fas fa-heart"></i>
-                    </button>
+                    <img src="${restaurant.photos}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
                 </div>
-                <div class="restaurant-info">
-                    <h3>${escapedName}</h3>
-                    <div class="rating">
-                        ${rating > 0 ? `
-                            <div class="stars">
-                                ${Array(5).fill(0).map((_, i) => `
-                                    <i class="fas fa-star ${i < Math.floor(rating) ? 'filled' :
-                                        i < rating ? 'half-filled' : ''}"></i>
-                                `).join('')}
-                            </div>
-                            <span class="rating-text">${rating.toFixed(1)} (${user_ratings_total})</span>
-                        ` : '<span class="no-rating">尚無評分</span>'}
+                <button class="favorite-btn${window.isFavorite(restaurant.id) ? ' active' : ''}" aria-label="加入收藏" data-id="${restaurant.id}">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+            <div class="restaurant-info">
+                <h3>${restaurant.name}</h3>
+                <div class="rating">
+                    <div class="stars">
+                        ${window.mapInit.generateStars(restaurant.rating)}
                     </div>
-                    <p class="address" title="${address}">
-                        <i class="fas fa-map-marker-alt"></i> ${address}
-                    </p>
-                    ${opening_hours ? `
-                        <p class="opening-hours ${opening_hours.isOpen ? 'open' : 'closed'}">
-                            <i class="fas fa-clock"></i>
-                            ${opening_hours.isOpen ? '營業中' : '休息中'}
-                        </p>
-                    ` : ''}
+                    <span class="rating-text">${restaurant.rating} (${restaurant.user_ratings_total})</span>
                 </div>
+                <p class="address">${restaurant.address}</p>
+                <p class="opening-hours ${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? 'open' : 'closed'}">
+                    <i class="fas fa-clock"></i>
+                    ${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? '營業中' : '休息中'}
+                </p>
             </div>
         `;
-    }).join('');
-    container.innerHTML = html;
+
+        // 收藏按鈕事件
+        const favBtn = card.querySelector('.favorite-btn');
+        if (favBtn) {
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (localStorage.getItem('isLoggedIn') !== 'true') {
+                    alert('請先登入會員');
+                    const loginModal = document.getElementById('loginModal');
+                    if (loginModal) loginModal.style.display = 'block';
+                    return;
+                }
+                window.toggleFavorite(restaurant.id, restaurant.name);
+                favBtn.classList.toggle('active');
+            });
+        }
+
+        // 添加點擊事件
+        card.addEventListener('click', () => {
+            window.mapInit.showRestaurantDetail(restaurant);
+        });
+
+        container.appendChild(card);
+    });
 };
+
+// 生成星級評分
+function generateStars(rating) {
+    const fullStars = Math.floor(rating);
+    const halfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+    
+    return '★'.repeat(fullStars) + 
+           (halfStar ? '★' : '') + 
+           '☆'.repeat(emptyStars);
+}
+
+// 顯示餐廳詳情
+function showRestaurantDetail(restaurant) {
+    const modal = document.getElementById('restaurantModal');
+    if (!modal) return;
+
+    const content = modal.querySelector('.restaurant-modal-content');
+    content.innerHTML = `
+        <div class="restaurant-modal-header">
+            <h2>${restaurant.name}</h2>
+            <span class="restaurant-modal-close" onclick="closeRestaurantModal()">&times;</span>
+        </div>
+        <div class="restaurant-modal-body">
+            <div class="restaurant-details">
+                <div class="restaurant-main-info">
+                    <div class="restaurant-modal-image">
+                        <img src="${restaurant.photos}" alt="${restaurant.name}">
+                    </div>
+                    <div class="restaurant-info-text">
+                        <div class="modal-rating">
+                            <span class="modal-stars">${generateStars(restaurant.rating)}</span>
+                            <span class="modal-rating-value">${restaurant.rating}</span>
+                            <span class="modal-rating-count">(${restaurant.user_ratings_total} 則評論)</span>
+                        </div>
+                        <div class="modal-address">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${restaurant.address}</span>
+                        </div>
+                        <div class="modal-hours">
+                            <div class="modal-status ${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? 'open' : 'closed'}">
+                                <i class="fas fa-clock"></i>
+                                <span>${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? '營業中' : '休息中'}</span>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="modal-favorite-btn">
+                                <i class="far fa-heart"></i> 收藏
+                            </button>
+                            <button class="modal-direction-btn" onclick="openGoogleMaps('${restaurant.address}')">
+                                <i class="fas fa-directions"></i> 導航
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'block';
+
+    // 新增：監聽 ESC 鍵關閉彈窗
+    function escCloseHandler(e) {
+        if (e.key === 'Escape') {
+            closeRestaurantModal();
+        }
+    }
+    document.addEventListener('keydown', escCloseHandler);
+
+    // 關閉時移除監聽，避免重複
+    modal.querySelector('.restaurant-modal-close').onclick = function() {
+        closeRestaurantModal();
+        document.removeEventListener('keydown', escCloseHandler);
+    };
+
+    // 點擊彈窗外部也關閉
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeRestaurantModal();
+            document.removeEventListener('keydown', escCloseHandler);
+        }
+    };
+}
+
+// 關閉餐廳詳情
+function closeRestaurantModal() {
+    const modal = document.getElementById('restaurantModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 切換收藏狀態
+function toggleFavorite(restaurant) {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const index = favorites.findIndex(f => f.id === restaurant.id);
+    
+    if (index === -1) {
+        favorites.push(restaurant);
+        showToast('已加入收藏');
+    } else {
+        favorites.splice(index, 1);
+        showToast('已移除收藏');
+    }
+    
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
 
 // ===========================================
 // 收藏功能
@@ -193,14 +256,30 @@ function showToast(message) {
     }, 3000);
 }
 
+// 開啟 Google Maps 導航
+function openGoogleMaps(address) {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    window.open(url, '_blank');
+}
+
 // ===========================================
 // 頁面初始化
 // ===========================================
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         initCarousel();
-        initLoginModal();
+        // 不自動呼叫 initLoginModal();  // 只有點擊登入按鈕時才初始化登入彈窗
     } catch (error) {
         console.error('初始化頁面時發生錯誤:', error);
+    }
+    // 延遲初始化登入彈窗，只有點擊登入按鈕時才執行
+    const loginBtn = document.querySelector('.btn-login');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            if (!window._loginModalInited) {
+                initLoginModal();
+                window._loginModalInited = true;
+            }
+        }, { once: true });
     }
 });

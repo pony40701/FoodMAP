@@ -8,6 +8,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const rememberMeCheckbox = document.getElementById('rememberMe');
     const steps = document.querySelectorAll('.step');
     const stepContents = document.querySelectorAll('.step-content');
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const removeAvatarBtn = document.getElementById('removeAvatar');
+
+    // 大頭貼上傳處理
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // 檢查檔案類型
+            if (!file.type.startsWith('image/')) {
+                showError(avatarInput, '請上傳圖片檔案');
+                return;
+            }
+
+            // 檢查檔案大小（限制為 2MB）
+            if (file.size > 2 * 1024 * 1024) {
+                showError(avatarInput, '圖片大小不能超過 2MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreview.src = e.target.result;
+                removeAvatarBtn.style.display = 'flex';
+                clearError(avatarInput);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 移除大頭貼
+    removeAvatarBtn.addEventListener('click', function() {
+        avatarInput.value = '';
+        avatarPreview.src = 'images/default-avatar.png';
+        removeAvatarBtn.style.display = 'none';
+        clearError(avatarInput);
+    });
 
     // 密碼切換功能
     togglePasswordButtons.forEach(button => {
@@ -72,21 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'index.html';
     });
 
-    // 切換步驟
-    function goToStep(stepNumber) {
-        steps.forEach((step, index) => {
-            if (index + 1 <= stepNumber) {
-                step.classList.add('active');
-            } else {
-                step.classList.remove('active');
-            }
-        });
-
-        stepContents.forEach((content, index) => {
-            content.style.display = index + 1 === stepNumber ? 'block' : 'none';
-        });
-    }
-
     // 處理註冊表單提交
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -130,22 +152,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isValid) {
-            // 儲存註冊資料
-            const userData = {
-                email: email,
-                name: name,
-                phone: phone
-            };
-            localStorage.setItem('userData', JSON.stringify(userData));
+            // 更新確認資料頁面的內容
+            document.getElementById('confirmEmail').textContent = email;
+            document.getElementById('confirmName').textContent = name;
+            document.getElementById('confirmPhone').textContent = phone;
             
-            // 自動登入
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('isLoggedIn', 'true');
-            
-            // 跳轉到首頁
-            window.location.href = 'index.html';
+            // 切換到確認資料步驟
+            goToStep(2);
         }
     });
+
+    // 切換步驟
+    function goToStep(stepNumber) {
+        steps.forEach((step, index) => {
+            if (index + 1 <= stepNumber) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+
+        stepContents.forEach((content, index) => {
+            content.style.display = index + 1 === stepNumber ? 'block' : 'none';
+        });
+    }
+
+    // 返回上一步
+    window.prevStep = function() {
+        goToStep(1);
+    };
+
+    // 提交註冊
+    window.submitRegistration = function() {
+        // 儲存註冊資料
+        const userData = {
+            email: document.getElementById('email').value.trim(),
+            name: document.getElementById('name').value.trim(),
+            phone: document.getElementById('phone').value.trim()
+        };
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        // 切換到完成步驟
+        goToStep(3);
+    };
 
     // 即時驗證輸入
     document.querySelectorAll('input').forEach(input => {

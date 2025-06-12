@@ -166,141 +166,101 @@ document.addEventListener('DOMContentLoaded', () => {
         setupFavoriteButtons();
     }
 
-    // 設置收藏按鈕功能
-    function setupFavoriteButtons() {
-        const favoriteButtons = document.querySelectorAll('.favorite-btn');
-        if (!favoriteButtons.length) {
-            console.warn('找不到收藏按鈕');
-            return;
-        }
-
-        favoriteButtons.forEach(btn => {
-            // 移除舊的事件監聽器
-            btn.replaceWith(btn.cloneNode(true));
-            const newBtn = btn.parentElement.querySelector('.favorite-btn');
-            
-            newBtn.addEventListener('click', () => {
-                newBtn.classList.toggle('active');
-                newBtn.textContent = newBtn.classList.contains('active') ? '♥' : '♡';
-            });
-        });
-
-        // 設置詳情按鈕功能
-        const detailButtons = document.querySelectorAll('.details-btn');
-        if (!detailButtons.length) {
-            console.warn('找不到詳情按鈕');
-            return;
-        }
-
-        detailButtons.forEach(btn => {
-            // 移除舊的事件監聽器
-            btn.replaceWith(btn.cloneNode(true));
-            const newBtn = btn.parentElement.querySelector('.details-btn');
-            
-            newBtn.addEventListener('click', () => {
-                const restaurantItem = newBtn.closest('.restaurant-item');
-                if (!restaurantItem) {
-                    console.warn('找不到餐廳項目');
-                    return;
-                }
-
-                const rankElement = restaurantItem.querySelector('.rank');
-                if (!rankElement) {
-                    console.warn('找不到排名元素');
-                    return;
-                }
-
-                const rank = rankElement.textContent.replace('#', '');
-                const restaurant = allRestaurants[currentFilter].find(r => r.rank === parseInt(rank));
-                
-                if (restaurant) {
-                    showRestaurantDetail(restaurant);
-                } else {
-                    console.warn('找不到對應的餐廳資料');
-                }
-            });
-        });
-    }
-
-    // 顯示餐廳詳細資訊
+    // 顯示餐廳詳情
     function showRestaurantDetail(restaurant) {
         const modal = document.getElementById('restaurantModal');
-        if (!modal) {
-            console.warn('找不到模態框');
-            return;
-        }
-
-        const detailContent = modal.querySelector('.restaurant-detail');
-        if (!detailContent) {
-            console.warn('找不到詳細內容容器');
-            return;
-        }
+        const modalContent = modal.querySelector('.restaurant-detail');
         
-        detailContent.innerHTML = `
-            <div class="detail-header">
-                <div class="detail-image">
-                    <img src="${restaurant.image}" alt="${restaurant.name}">
-                </div>
-                <div class="detail-main-info">
-                    <h2 class="detail-title">${restaurant.name}</h2>
-                    <div class="detail-rating">
-                        <span class="stars">★★★★☆</span>
-                        <span class="score">${restaurant.rating}</span>
-                        <span class="reviews">(${restaurant.reviews}則評價)</span>
-                    </div>
-                    <div class="tags">
-                        ${restaurant.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    </div>
-                </div>
+        modalContent.innerHTML = `
+            <div class="detail-image">
+                <img src="${restaurant.image}" alt="${restaurant.name}">
+                <button class="modal-close">&times;</button>
             </div>
-            <div class="detail-section">
-                <h3>基本資訊</h3>
-                <div class="detail-info-grid">
-                    <div class="detail-info-item">
-                        <i>📍</i>
+            <div class="detail-content">
+                <div class="detail-header">
+                    <div class="detail-title">
+                        ${restaurant.name}
+                        <button class="favorite-btn" title="收藏">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="detail-rating">
+                        <div class="score">${restaurant.rating}</div>
+                        <div class="reviews">(${restaurant.reviews}則評論)</div>
+                    </div>
+                </div>
+                <div class="detail-info">
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
                         <span>${restaurant.address}</span>
                     </div>
-                    <div class="detail-info-item">
-                        <i>📞</i>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
                         <span>${restaurant.phone}</span>
                     </div>
-                    <div class="detail-info-item">
-                        <i>💰</i>
-                        <span>${restaurant.price}</span>
-                    </div>
-                    <div class="detail-info-item">
-                        <i>🕒</i>
+                    <div class="info-item open">
+                        <i class="fas fa-clock"></i>
+                        <span>營業中</span>
                         <span>${restaurant.hours}</span>
                     </div>
+                    <div class="info-item">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>${restaurant.price}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="detail-section">
-                <h3>餐廳介紹</h3>
-                <p class="detail-description">${restaurant.description}</p>
-            </div>
-            <div class="detail-section">
-                <h3>設施與服務</h3>
-                <div class="tags">
-                    ${restaurant.features.map(feature => `<span class="tag">${feature}</span>`).join('')}
-                </div>
-            </div>
-            <div class="detail-section">
-                <h3>付款方式</h3>
-                <div class="tags">
-                    ${restaurant.payment.map(method => `<span class="tag">${method}</span>`).join('')}
+                <div class="detail-tags">
+                    ${restaurant.tags.map(tag => `<span class="detail-tag">${tag}</span>`).join('')}
                 </div>
             </div>
         `;
 
-        modal.classList.add('active');
+        modal.style.display = 'block';
 
-        // 添加關閉按鈕事件監聽器
-        const closeButton = modal.querySelector('.modal-close');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                modal.classList.remove('active');
-            });
-        }
+        // 關閉按鈕功能
+        const closeBtn = modal.querySelector('.modal-close');
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+
+        // 點擊模態框外部關閉
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        // 收藏按鈕功能
+        const favoriteBtn = modal.querySelector('.favorite-btn');
+        favoriteBtn.onclick = (e) => {
+            e.stopPropagation();
+            favoriteBtn.classList.toggle('active');
+            const icon = favoriteBtn.querySelector('i');
+            icon.classList.toggle('far');
+            icon.classList.toggle('fas');
+        };
+    }
+
+    // 設置收藏按鈕功能
+    function setupFavoriteButtons() {
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        favoriteButtons.forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                btn.classList.toggle('active');
+                btn.innerHTML = btn.classList.contains('active') ? '♥' : '♡';
+            };
+        });
+
+        // 設置詳情按鈕功能
+        const detailButtons = document.querySelectorAll('.details-btn');
+        detailButtons.forEach(btn => {
+            btn.onclick = () => {
+                const restaurantItem = btn.closest('.restaurant-item');
+                const restaurantIndex = Array.from(restaurantList.children).indexOf(restaurantItem);
+                const restaurant = allRestaurants[currentFilter][restaurantIndex];
+                showRestaurantDetail(restaurant);
+            };
+        });
     }
 
     // 過濾按鈕功能
