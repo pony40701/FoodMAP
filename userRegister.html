@@ -70,6 +70,24 @@
                         <input type="tel" id="phone" name="phone" placeholder="請輸入手機號碼" required>
                         <div class="error-message"></div>
                     </div>
+                    <div class="form-group">
+                        <label for="avatar">大頭貼</label>
+                        <div class="avatar-upload-container">
+                            <div class="avatar-preview">
+                                <img id="avatarPreview" src="images/default-avatar.png" alt="預覽圖">
+                            </div>
+                            <div class="avatar-upload-buttons">
+                                <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;">
+                                <button type="button" class="btn-upload" onclick="document.getElementById('avatar').click()">
+                                    <i class="fas fa-upload"></i> 上傳照片
+                                </button>
+                                <button type="button" class="btn-remove" id="removeAvatar" style="display: none;">
+                                    <i class="fas fa-trash"></i> 移除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="error-message"></div>
+                    </div>
                     <div class="terms-checkbox">
                         <input type="checkbox" id="terms" name="terms" required>
                         <label for="terms">我已閱讀並同意<a href="termsOfService.html">服務條款</a>和<a href="privacyPolicy.html">隱私權政策</a></label>
@@ -108,6 +126,7 @@
                     <h2>註冊成功</h2>
                     <p>恭喜您成功註冊食力派ChowCrew會員</p>
                     <p>我們已發送驗證信到您的電子郵件</p>
+                    <p class="login-reminder">請登入以開始使用您的帳號</p>
                 </div>
                 <div class="button-group">
                     <button type="button" class="btn-submit" onclick="window.location.href='index.html'">前往首頁</button>

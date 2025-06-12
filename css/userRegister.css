@@ -102,6 +102,69 @@ body {
     opacity: 0.7;
 }
 
+/* 大頭貼上傳樣式 */
+.avatar-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-upload-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-upload, .btn-remove {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-upload {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+}
+
+.btn-upload:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-remove {
+    background-color: #f3f4f6;
+    color: var(--error);
+    border: 1px solid var(--border);
+}
+
+.btn-remove:hover {
+    background-color: #fee2e2;
+}
+
 /* 錯誤訊息 */
 .error-message {
     color: var(--error);
@@ -499,6 +562,14 @@ body {
 
 .success-message p {
     color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+.success-message .login-reminder {
+    color: var(--primary);
+    font-weight: 500;
+    margin-top: 1rem;
+    font-size: 1.1rem;
 }
 
 /* 彈跳視窗 */
@@ -712,4 +783,75 @@ body {
         min-width: 120px;
         justify-content: center;
     }
+}
+
+/* 確認資料頁面樣式 */
+.confirmation-data {
+    background-color: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.confirmation-data h2 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.data-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-item:last-child {
+    border-bottom: none;
+}
+
+.data-item label {
+    font-weight: 500;
+    color: var(--text);
+    min-width: 100px;
+}
+
+.data-item span {
+    color: var(--text-light);
+    flex: 1;
+}
+
+/* 按鈕組樣式 */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button-group .btn-submit,
+.button-group .btn-back {
+    flex: 1;
+}
+
+.btn-back {
+    background-color: #f3f4f6;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-back:active {
+    transform: translateY(1px);
 } 
