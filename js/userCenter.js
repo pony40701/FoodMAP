@@ -99,6 +99,11 @@ function getFavoriteReviews() {
     return JSON.parse(localStorage.getItem('favoriteReviews')) || [];
 }
 
+// 取得收藏餐廳（與 index.html/favorites 相同格式）
+function getFavoriteRestaurants() {
+    return JSON.parse(localStorage.getItem('favorites')) || [];
+}
+
 // 載入收藏
 async function loadFavorites(type = 'stores') {
     const storesContainer = document.querySelector('.favorites-stores');
@@ -415,7 +420,16 @@ function formatTime(timestamp) {
 function checkLoginStatus() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
-        window.location.href = 'userLogin.html';
+        // 顯示首頁登入彈窗（需跨頁觸發 index.html 的登入彈窗）
+        if (window.parent && window.parent.document.getElementById('loginModal')) {
+            window.parent.document.getElementById('loginModal').style.display = 'block';
+        } else if (document.getElementById('loginModal')) {
+            document.getElementById('loginModal').style.display = 'block';
+        } else {
+            // 若無彈窗，則跳轉首頁
+            window.location.href = 'index.html';
+        }
+        return;
     }
 }
 
@@ -711,7 +725,14 @@ window.addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     // 檢查登入狀態
     if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'userLogin.html';
+        // 顯示首頁登入彈窗（需跨頁觸發 index.html 的登入彈窗）
+        if (window.parent && window.parent.document.getElementById('loginModal')) {
+            window.parent.document.getElementById('loginModal').style.display = 'block';
+        } else if (document.getElementById('loginModal')) {
+            document.getElementById('loginModal').style.display = 'block';
+        } else {
+            window.location.href = 'index.html';
+        }
         return;
     }
 
@@ -1103,30 +1124,21 @@ function initializeFavorites() {
     updateFavoritesList();
 }
 
-// 更新收藏列表
+// 更新收藏列表（直接用 favorites 資料，不用 Google API）
 function updateFavoritesList() {
     const favoritesStores = document.querySelector('.favorites-stores');
-    const favorites = window.FavoritesManager.getFavorites();
-    
+    const favorites = getFavoriteRestaurants();
     if (!favorites || favorites.length === 0) {
         favoritesStores.innerHTML = '<div class="no-favorites">還沒有收藏的餐廳</div>';
         return;
     }
-
-    // 取得今天是星期幾（0=日, 1=一...）
-    const today = new Date().getDay();
-
     favoritesStores.innerHTML = favorites.map((restaurant, idx) => {
-        // 今日營業時間
-        let todayHours = '';
-        if (restaurant.opening_hours && Array.isArray(restaurant.opening_hours)) {
-            const weekdayIndex = today === 0 ? 6 : today - 1;
-            todayHours = restaurant.opening_hours[weekdayIndex] || '';
-        }
         return `
         <div class="restaurant-card" data-id="${restaurant.id}" data-idx="${idx}">
-            <div class="restaurant-image">
-                <img src="${restaurant.photos}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
+            <div class="restaurant-image-wrapper">
+                <div class="restaurant-image">
+                    <img src="${restaurant.photos}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
+                </div>
                 <button class="favorite-btn active" data-id="${restaurant.id}" title="移除收藏">
                     <i class="fas fa-heart"></i>
                 </button>
@@ -1144,17 +1156,15 @@ function updateFavoritesList() {
                 <p class="address">${restaurant.address}</p>
                 <p class="opening-hours">
                     <i class="fas fa-clock"></i>
-                    ${todayHours ? todayHours : '無營業資訊'}
+                    ${(restaurant.opening_hours && restaurant.opening_hours.weekday_text) ? restaurant.opening_hours.weekday_text[new Date().getDay() - 1] : '無營業資訊'}
                 </p>
             </div>
         </div>
         `;
     }).join('');
-
     // 綁定卡片點擊事件（不包含愛心）
     Array.from(favoritesStores.querySelectorAll('.restaurant-card')).forEach(card => {
         card.addEventListener('click', function(e) {
-            // 點擊愛心不觸發
             if (e.target.closest('.favorite-btn')) return;
             const idx = this.getAttribute('data-idx');
             const restaurant = favorites[idx];
@@ -1163,6 +1173,22 @@ function updateFavoritesList() {
             }
         });
     });
+    // 綁定移除收藏
+    Array.from(favoritesStores.querySelectorAll('.favorite-btn')).forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const id = this.getAttribute('data-id');
+            removeFavoriteRestaurant(id);
+        });
+    });
+}
+
+// 直接移除 favorites 裡的餐廳
+function removeFavoriteRestaurant(id) {
+    let favorites = getFavoriteRestaurants();
+    favorites = favorites.filter(f => String(f.id) !== String(id));
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    updateFavoritesList();
 }
 
 // 生成星級評分 (與 main.js 中相同的函數)

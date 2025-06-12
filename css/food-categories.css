@@ -577,13 +577,12 @@
 }
 
 .restaurants-grid {
-    display: flex !important;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    padding: 0 20px;
-    max-width: 1400px;
-    margin: 0 auto;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+    gap: 30px !important;
+    padding: 0 20px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
 }
 
 .restaurant-card {
@@ -597,66 +596,31 @@
     flex-direction: column !important;
     height: 500px !important;
     position: relative !important;
-    width: 350px !important;
+    width: 100% !important;
     min-width: 350px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-}
-
-.restaurant-card:hover .restaurant-image img {
-    transform: scale(1.05);
 }
 
 .restaurant-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
-.restaurant-card .favorite-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 10;
-}
-
-.restaurant-card .favorite-btn:hover {
-    transform: scale(1.1);
-    background: #fff;
-}
-
-.restaurant-card .favorite-btn.active {
-    color: #ff6b1a;
-}
-
+/* 圖片容器樣式 */
 .restaurant-image {
     position: relative !important;
     width: 100% !important;
-    height: 200px !important;
+    height: 220px !important;
     overflow: hidden !important;
-    line-height: 0 !important;
-    font-size: 0 !important;
 }
 
+.restaurant-card img,
 .restaurant-image img {
     width: 100% !important;
-    height: 100% !important;
+    height: 220px !important;
     object-fit: cover !important;
     object-position: center !important;
     display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transition: transform 0.3s ease !important;
+    flex-shrink: 0 !important;
 }
 
 .card-info {
@@ -866,6 +830,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    flex-shrink: 0;
 }
 
 /* 在圖片上的收藏按鈕樣式 */
@@ -1776,4 +1741,4 @@
         font-size: 10px;
         padding: 1px 4px;
     }
-}
+} 

@@ -9,18 +9,29 @@ function getFavoriteReviews() {
 
 // 初始化頁面
 document.addEventListener('DOMContentLoaded', function() {
-    // 檢查登入狀態
-    if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'userLogin.html';
-        return;
-    }
-
+    // 不再於載入時檢查登入狀態，僅初始化頁籤與內容
     initializeTabs();
     loadStores();
     loadReviews();
     initializeMap();
     initializeViewToggle();
 });
+
+// 收藏按鈕點擊時才檢查登入狀態
+window.handleFavoriteClick = function(restaurantId) {
+    if (!localStorage.getItem('isLoggedIn')) {
+        // 顯示首頁登入彈窗
+        if (window.parent && window.parent.document.getElementById('loginModal')) {
+            window.parent.document.getElementById('loginModal').style.display = 'block';
+        } else if (document.getElementById('loginModal')) {
+            document.getElementById('loginModal').style.display = 'block';
+        } else {
+            window.location.href = 'index.html';
+        }
+        return;
+    }
+    // ...執行收藏邏輯...
+}
 
 // 標籤切換功能
 function initializeTabs() {
@@ -356,4 +367,4 @@ const FavoritesManager = {
 };
 
 // 導出 FavoritesManager
-window.FavoritesManager = FavoritesManager; 
+window.FavoritesManager = FavoritesManager;
