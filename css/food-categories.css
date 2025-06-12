@@ -1190,13 +1190,12 @@
 .restaurant-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
+    z-index: 1000;
 }
 
 .restaurant-modal-content {
@@ -1212,17 +1211,6 @@
     animation: modalSlideIn 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
 .restaurant-modal-header {
     display: flex;
     justify-content: space-between;
@@ -1232,6 +1220,9 @@
     background: linear-gradient(135deg, #ff6b1a, #ff8c42);
     color: white;
     border-radius: 16px 16px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .restaurant-modal-header h2 {
@@ -1266,14 +1257,16 @@
 
 .restaurant-modal-image {
     flex: 0 0 300px;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .restaurant-modal-image img {
     width: 100%;
-    height: 200px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .restaurant-info-text {
@@ -1306,139 +1299,142 @@
     font-size: 14px;
 }
 
-.modal-address,
-.modal-type,
-.modal-hours {
+.modal-address {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
+    color: #666;
     font-size: 15px;
 }
 
-.modal-address i {
-    color: #ff6b1a;
-    margin-top: 2px;
-}
-
-.modal-type-icon {
-    font-size: 18px;
-}
-
-.modal-type-text {
-    background: rgba(255, 107, 26, 0.1);
-    color: #ff6b1a;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-weight: 600;
+.modal-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .modal-status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: 8px;
+    font-size: 15px;
 }
 
-.modal-status.status-open {
-    color: #4CAF50;
+.modal-status.open {
+    color: #2ecc71;
 }
 
-.modal-status.status-closed {
-    color: #F44336;
+.modal-status.closed {
+    color: #e74c3c;
 }
 
 .modal-today-hours {
     color: #666;
     font-size: 14px;
-    padding-left: 20px;
 }
 
 .modal-actions {
     display: flex;
     gap: 12px;
-    margin-top: 20px;
+    margin-top: 8px;
 }
 
 .modal-favorite-btn,
 .modal-direction-btn {
-    flex: 1;
-    padding: 12px 20px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 8px;
-    font-weight: 600;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 6px;
+    transition: all 0.3s ease;
 }
 
 .modal-favorite-btn {
-    background: #fff;
-    color: #ff6b1a;
-    border: 2px solid #ff6b1a;
+    background-color: #fff;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
 }
 
 .modal-favorite-btn:hover {
-    background: #ff6b1a;
-    color: white;
+    background-color: #ff6b6b;
+    color: #fff;
 }
 
-.modal-favorite-btn.favorited {
-    background: #ff6b1a;
-    color: white;
+.modal-favorite-btn.active {
+    background-color: #ff6b6b;
+    color: #fff;
 }
 
 .modal-direction-btn {
-    background: #007bff;
-    color: white;
+    background-color: #ff6b1a;
+    color: #fff;
 }
 
 .modal-direction-btn:hover {
-    background: #0056b3;
-    transform: translateY(-2px);
+    background-color: #e55a15;
 }
 
-.restaurant-map-container {
+.restaurant-map-section {
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid #eee;
 }
 
-.restaurant-map-container h3 {
+.restaurant-map-section h3 {
     margin: 0 0 16px 0;
+    font-size: 20px;
+    font-weight: 600;
     color: #333;
-    font-size: 1.3em;
 }
 
-/* 響應式設計 */
+.restaurant-map-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+#modal-map {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 768px) {
     .restaurant-modal-content {
-        width: 95%;
-        margin: 5% auto;
-        max-height: 95vh;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
     }
-    
+
+    .restaurant-modal-header {
+        border-radius: 0;
+    }
+
     .restaurant-main-info {
         flex-direction: column;
-        gap: 16px;
     }
-    
+
     .restaurant-modal-image {
         flex: none;
-    }
-    
-    .restaurant-modal-header {
-        padding: 16px 20px;
-    }
-    
-    .restaurant-modal-header h2 {
-        font-size: 1.5em;
-    }
-    
-    .restaurant-modal-body {
-        padding: 20px;
+        width: 100%;
     }
 }
 

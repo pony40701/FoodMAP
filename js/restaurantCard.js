@@ -83,13 +83,23 @@ class RestaurantCard {
             ${'<i class="far fa-star"></i>'.repeat(emptyStars)}
             <span class="rating-value">${rating.toFixed(1)}</span>
         `;
-    }
-
-    // 切換收藏狀態
+    }    // 切換收藏狀態
     toggleFavorite(placeId, button) {
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!isLoggedIn) {
-            alert('請先登入會員');
+            // 顯示提示訊息
+            alert('請先登入會員以使用收藏功能');
+            // 開啟登入視窗
+            document.getElementById('loginModal').style.display = 'block';
+            
+            // 設定登入成功後的回調函數
+            window.onLoginSuccess = () => {
+                // 登入成功後自動將餐廳加入收藏
+                this.favoriteStores.push(placeId);
+                button.classList.add('active');
+                button.querySelector('i').className = 'fas fa-heart';
+                localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteStores));
+            };
             return;
         }
 
@@ -100,7 +110,7 @@ class RestaurantCard {
             button.querySelector('i').className = 'far fa-heart';
         } else {
             this.favoriteStores.push(placeId);
-            button.classList.add('active');
+            button.classList.add('active'); 
             button.querySelector('i').className = 'fas fa-heart';
         }
 

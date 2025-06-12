@@ -1433,6 +1433,69 @@ function renderPagination(totalCount) {
   });
 }
 
+// 檢查用戶是否已登入
+function isUserLoggedIn() {
+    return localStorage.getItem('isLoggedIn') === 'true';
+}
+
+// 顯示登入窗口
+function showLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.style.display = 'block';
+    }
+}
+
+// 處理收藏按鈕點擊
+function handleFavoriteClick(button, restaurantId) {
+    if (!isUserLoggedIn()) {
+        alert('請先登入會員');
+        showLoginModal();
+        
+        // 設定登入成功後的回調函數
+        window.onLoginSuccess = () => {
+            // 登入成功後自動執行收藏
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            favorites.push({ id: restaurantId });
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            
+            // 更新按鈕狀態
+            button.classList.add('active');
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-heart';
+            }
+            
+            showToast('已加入收藏');
+        };
+        return;
+    }
+
+    const icon = button.querySelector('i');
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const index = favorites.findIndex(fav => fav.id === restaurantId);
+
+    if (index === -1) {
+        // 添加到收藏
+        favorites.push({ id: restaurantId });
+        button.classList.add('active');
+        if (icon) {
+            icon.className = 'fas fa-heart';
+        }
+        showToast('已加入收藏');
+    } else {
+        // 從收藏中移除
+        favorites.splice(index, 1);
+        button.classList.remove('active');
+        if (icon) {
+            icon.className = 'far fa-heart';
+        }
+        showToast('已取消收藏');
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
 // 獲取所有不重複的標籤
 function getAllUniqueTags() {
   // 定義要保留的餐廳類型標籤
@@ -1623,7 +1686,7 @@ function showRestaurantModal(restaurant) {
         <!-- 左側：商家圖片 -->
         <div style="flex: 0 0 400px;">
           <img src="${restaurant.image}" alt="${restaurant.name}" 
-               style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+               style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         </div>
 
         <!-- 右側：商家資訊 -->
@@ -1788,12 +1851,38 @@ function renderFilteredCards(pageData, totalCount) {
 
   // 更新分頁
   renderPagination(totalCount);
-
   // 為每個愛心按鈕添加點擊事件監聽器
   document.querySelectorAll('.favorite-btn').forEach(button => {
     button.addEventListener('click', function(event) {
       event.stopPropagation(); // 阻止事件冒泡到卡片點擊事件
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (!isLoggedIn) {
+        // 顯示提示訊息
+        alert('請先登入會員以使用收藏功能');
+        // 開啟登入視窗 
+        document.getElementById('loginModal').style.display = 'block';
+        
+        // 設定登入成功後的回調函數
+        window.onLoginSuccess = () => {
+          // 登入成功後自動將餐廳加入收藏
+          this.classList.add('active');
+          const icon = this.querySelector('i');
+          icon.classList.remove('far');
+          icon.classList.add('fas');
+        };
+        return;
+      }
+
+      // 已登入則切換收藏狀態
       this.classList.toggle('active');
+      const icon = this.querySelector('i');
+      if (this.classList.contains('active')) {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+      } else {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+      }
     });
   });
 }
@@ -1925,80 +2014,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error('Location search input not found!');
   }
 
-  // ... rest of the initialization code ...
-});
-
-// ... existing code ...
-
-// 初始化下拉選單和標籤功能
-function initializeDropdownAndTags() {
-  const dropdownTrigger = document.querySelector('.type-dropdown-trigger');
-  const dropdownType = document.querySelector('.dropdown-type');
-  const tagGrid = document.querySelector('.tag-grid');
-  const applyTagsBtn = document.querySelector('.apply-tags');
-  
-  if (!dropdownTrigger || !dropdownType || !tagGrid) {
-    console.error('Dropdown elements not found');
-    return;
-  }
-
-  // 點擊觸發器時切換下拉選單
-  dropdownTrigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdownType.classList.toggle('open');
-  });
-
-  // 點擊其他地方時關閉下拉選單
-  document.addEventListener('click', (e) => {
-    if (!dropdownType.contains(e.target)) {
-      dropdownType.classList.remove('open');
-    }
-  });
-
-  // 生成標籤選項
-  const uniqueTags = getAllUniqueTags();
-  const tagRow = document.querySelector('.tag-row');
-  
-  if (tagRow) {
-    uniqueTags.forEach(tag => {
-      const tagOption = document.createElement('div');
-      tagOption.className = 'tag-option';
-      tagOption.dataset.type = tag;
-      tagOption.innerHTML = `<span>${tag}</span>`;
-      
-      // 點擊標籤時切換選中狀態
-      tagOption.addEventListener('click', () => {
-        // 移除其他標籤的選中狀態
-        document.querySelectorAll('.tag-option').forEach(opt => {
-          opt.classList.remove('selected');
-        });
-        // 選中當前標籤
-        tagOption.classList.add('selected');
-        // 更新當前選中的標籤
-        currentSelectedTag = tag;
-      });
-      
-      tagRow.appendChild(tagOption);
-    });
-  }
-
-  // 套用篩選按鈕點擊事件
-  if (applyTagsBtn) {
-    applyTagsBtn.addEventListener('click', () => {
-      filterRestaurants();
-      dropdownType.classList.remove('open');
-    });
-  }
-}
-
-// 當 DOM 加載完成後初始化
-document.addEventListener('DOMContentLoaded', () => {
-  // ... existing code ...
-  
   // 初始化下拉選單和標籤功能
   initializeDropdownAndTags();
-  
-  // ... existing code ...
 });
-
-// ... existing code ...
