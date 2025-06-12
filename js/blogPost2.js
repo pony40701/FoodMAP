@@ -759,7 +759,7 @@ function loadUserData() {
     const avatarImg = document.getElementById('userAvatar');
     if (avatarImg) {
         // 先設置預設頭像
-        avatarImg.src = '/IMAGE/default-avatar.png';
+        avatarImg.src = 'images/pig.jpg';
         
         // 創建新的圖片物件來預載入用戶頭像
         const img = new Image();
