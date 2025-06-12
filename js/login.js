@@ -16,7 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 // 清除任何之前設置的回調函數，避免不必要的跳轉
                 window.onLoginSuccess = null;
-                if (loginModal) loginModal.style.display = 'block';
+                if (loginModal) {
+                    loginModal.style.display = 'block';
+                }
+            } else {
+                window.location.href = 'userCenter.html';
             }
         });
     }
@@ -60,9 +64,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.onLoginSuccess();
                     // 清除回調函數，避免影響其他登入操作
                     window.onLoginSuccess = null;
+                    // 顯示登入成功並自動收藏的提示
+                    showToast('登入成功，已自動加入收藏！');
                 } else {
-                    // 登入成功後留在當前頁面，不跳轉
-                    console.log('登入成功，已更新登入狀態');
+                    showToast('登入成功！');
                 }
             } else {
                 alert('帳號或密碼錯誤！');
@@ -115,6 +120,7 @@ function logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('favoriteStores');
     localStorage.removeItem('favoriteReviews');
+    localStorage.removeItem('favorites'); // 新增：清除收藏店家
     
     // 顯示登出成功訊息
     alert('已成功登出！');
@@ -126,8 +132,12 @@ function logout() {
     if (fileName === 'index.html' || fileName === '' || currentPath === '/') {
         // 在首頁：更新登入狀態顯示，不跳轉
         updateLoginStatus();
+        
+        // 重新渲染餐廳列表，讓收藏狀態消失
+        if (window.displayRestaurants && window.mapInit && window.mapInit.restaurants) {
+            window.displayRestaurants(window.mapInit.restaurants);
+        }
     } else {
-        // 不在首頁：跳轉到首頁
         window.location.href = 'index.html';
     }
 }
@@ -146,4 +156,14 @@ function socialLogin(platform) {
             alert('Line 登入功能尚未開放');
             break;
     }
-} 
+}
+
+// 顯示提示訊息
+function showToast(message) {
+    // 這裡可以自訂提示訊息的顯示方式
+    alert(message);
+}
+
+// 不要在 index.html 自動跳轉到 userLogin.html
+// 僅在需要登入的頁面（如 userCenter.html）才做強制跳轉
+// 此檔案無需任何自動跳轉邏輯

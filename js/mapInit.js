@@ -65,9 +65,7 @@ class MapInit {
             console.error('初始化地圖時發生錯誤:', error);
             throw error;
         }
-    }
-
-    async searchByType(type, keywords) {
+    }    async searchByType(type) {
         try {
             // 顯示載入中提示
             this.updateResultsTitle("搜尋中...");
@@ -80,9 +78,9 @@ class MapInit {
                 throw new Error('地圖或搜尋服務尚未初始化');
             }
 
-            // 將關鍵字字串轉換為陣列
-            const keywordArray = keywords.split(',').map(k => k.trim());
-            const mainCategory = keywordArray[0]; // 主要分類名稱
+            // 從預定義的關鍵字中獲取搜尋關鍵字
+            const keywordArray = this.cuisineKeywords[type] || [type];
+            const mainCategory = type; // 使用傳入的類型作為主要分類名稱
 
             // 建立搜尋請求
             const request = {
@@ -153,7 +151,7 @@ class MapInit {
                     );
 
                     if (matchesKeywords) {
-                        return {
+                        const restaurant = {
                             id: details.place_id,
                             name: details.name || '未知名稱',
                             address: details.formatted_address || details.vicinity || '',
@@ -168,6 +166,39 @@ class MapInit {
                             },
                             opening_hours: details.opening_hours || null
                         };
+
+                        // 添加點擊事件到餐廳卡片
+                        const card = document.createElement('div');
+                        card.className = 'restaurant-card';
+                        card.innerHTML = `
+                            <div class="restaurant-image">
+                                <img src="${restaurant.photos}" alt="${restaurant.name}">
+                                <button class="favorite-btn" onclick="event.stopPropagation();">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="restaurant-info">
+                                <h3>${restaurant.name}</h3>
+                                <div class="rating">
+                                    <div class="stars">
+                                        ${this.generateStars(restaurant.rating)}
+                                    </div>
+                                    <span class="rating-text">${restaurant.rating} (${restaurant.user_ratings_total})</span>
+                                </div>
+                                <p class="address">${restaurant.address}</p>
+                                <p class="opening-hours ${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? 'open' : 'closed'}">
+                                    <i class="fas fa-clock"></i>
+                                    ${restaurant.opening_hours && restaurant.opening_hours.isOpen() ? '營業中' : '休息中'}
+                                </p>
+                            </div>
+                        `;
+
+                        // 添加點擊事件
+                        card.addEventListener('click', () => {
+                            this.showRestaurantDetail(restaurant);
+                        });
+
+                        return restaurant;
                     }
                     return null;
                 } catch (error) {
@@ -366,6 +397,147 @@ class MapInit {
             title: "您的位置",
             content: dot
         });
+    }
+
+    // 顯示餐廳詳細資訊
+    showRestaurantDetail(restaurant) {
+        const modal = document.getElementById('restaurantModal');
+        const modalName = document.getElementById('modal-restaurant-name');
+        const modalImg = document.getElementById('modal-restaurant-img');
+        const modalStars = document.getElementById('modal-stars');
+        const modalRating = document.getElementById('modal-rating');
+        const modalRatingCount = document.getElementById('modal-rating-count');
+        const modalAddress = document.getElementById('modal-address');
+        const modalStatus = document.getElementById('modal-status');
+        const modalTodayHours = document.getElementById('modal-today-hours');
+        const modalFavoriteBtn = document.getElementById('modal-favorite-btn');
+        const modalDirectionBtn = document.getElementById('modal-direction-btn');
+
+        // 設置餐廳資訊
+        modalName.textContent = restaurant.name;
+        modalImg.src = restaurant.photos || 'images/no-image.jpg';
+        modalImg.alt = restaurant.name;
+
+        // 設置評分
+        const rating = restaurant.rating || 0;
+        modalRating.textContent = rating.toFixed(1);
+        modalRatingCount.textContent = `(${restaurant.user_ratings_total || 0}則評論)`;
+        
+        // 生成星星評分
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                starsHtml += '★';
+            } else if (i - 0.5 <= rating) {
+                starsHtml += '½';
+            } else {
+                starsHtml += '☆';
+            }
+        }
+        modalStars.textContent = starsHtml;
+
+        // 設置地址
+        modalAddress.textContent = restaurant.address;
+
+        // 設置營業狀態
+        if (restaurant.opening_hours) {
+            const isOpen = restaurant.opening_hours.isOpen();
+            modalStatus.innerHTML = `
+                <i class="fas fa-clock"></i>
+                <span class="modal-status-text">${isOpen ? '營業中' : '休息中'}</span>
+            `;
+            modalStatus.className = `modal-status ${isOpen ? 'open' : 'closed'}`;
+            
+            // 設置營業時間
+            if (restaurant.opening_hours.weekday_text) {
+                const today = new Date().getDay();
+                modalTodayHours.textContent = restaurant.opening_hours.weekday_text[today];
+            }
+        }
+
+        // 設置收藏按鈕事件
+        modalFavoriteBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isFavorite = modalFavoriteBtn.classList.contains('active');
+            if (isFavorite) {
+                modalFavoriteBtn.classList.remove('active');
+                modalFavoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
+            } else {
+                modalFavoriteBtn.classList.add('active');
+                modalFavoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
+            }
+        };
+
+        // 設置導航按鈕事件
+        modalDirectionBtn.onclick = () => {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(restaurant.address)}`;
+            window.open(url, '_blank');
+        };
+
+        // 初始化地圖
+        const mapContainer = document.getElementById('modal-map');
+        const location = restaurant.location;
+        
+        if (location && location.lat && location.lng) {
+            const mapOptions = {
+                center: { lat: location.lat, lng: location.lng },
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                mapTypeControl: false,
+                fullscreenControl: false
+            };
+
+            const map = new google.maps.Map(mapContainer, mapOptions);
+
+            // 添加標記
+            new google.maps.Marker({
+                position: { lat: location.lat, lng: location.lng },
+                map: map,
+                title: restaurant.name,
+                animation: google.maps.Animation.DROP
+            });
+        }
+
+        // 顯示彈窗
+        modal.style.display = 'block';
+
+        // 關閉按鈕功能
+        const closeBtn = modal.querySelector('.restaurant-modal-close');
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+
+        // 點擊彈窗外部關閉
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+
+    // 生成星星評分的輔助函數
+    generateStars(rating) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+        let starsHtml = '';
+        
+        // 全星
+        for (let i = 0; i < fullStars; i++) {
+            starsHtml += '<i class="fas fa-star filled"></i>';
+        }
+        
+        // 半星
+        if (hasHalfStar) {
+            starsHtml += '<i class="fas fa-star-half-alt filled"></i>';
+        }
+        
+        // 空星
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        for (let i = 0; i < emptyStars; i++) {
+            starsHtml += '<i class="far fa-star"></i>';
+        }
+        
+        return starsHtml;
     }
 }
 

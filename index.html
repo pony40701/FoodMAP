@@ -510,6 +510,9 @@
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
             padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         /* 載入中提示樣式 */
@@ -537,147 +540,64 @@
 
         /* 餐廳卡片樣式 */
         .restaurant-card {
-            background: white;
+            width: 100%;
+            height: 100%;
+            background: #fff;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            /* 移除外部多餘的 margin/padding，讓卡片緊貼 */
+            margin: 0;
+            padding: 0;
         }
 
-        .restaurant-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        .restaurant-image-wrapper {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            overflow: hidden;
+            /* 移除 padding，避免白邊 */
+            padding: 0;
+            margin: 0;
         }
 
         .restaurant-image {
-            position: relative;
-            height: 200px;
-            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            /* 移除 padding/margin，確保圖片填滿 */
+            padding: 0;
+            margin: 0;
         }
 
         .restaurant-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-
-        .no-image {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f5;
-            color: #999;
-        }
-
-        .favorite-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
+            object-position: center center;
+            display: block;
+            /* 移除邊框與間距 */
             border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .favorite-btn i {
-            color: #ff6b6b;
-            font-size: 18px;
-        }
-
-        .favorite-btn.active {
-            background: #ff6b6b;
-        }
-
-        .favorite-btn.active i {
-            color: white;
-        }
-
-        .restaurant-info {
-            padding: 15px;
-        }
-
-        .restaurant-info h3 {
-            margin: 0 0 10px;
-            font-size: 18px;
-            color: #333;
-        }
-
-        .rating {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .stars {
-            display: flex;
-            margin-right: 8px;
-        }
-
-        .stars i {
-            color: #ddd;
-            margin-right: 2px;
-        }
-
-        .stars i.filled {
-            color: #ffd700;
-        }
-
-        .stars i.half-filled {
-            position: relative;
-            color: #ddd;
-        }
-
-        .stars i.half-filled::before {
-            content: '\f089';
-            position: absolute;
-            color: #ffd700;
-            width: 50%;
-            overflow: hidden;
-        }
-
-        .rating-text {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .address {
-            color: #666;
-            font-size: 14px;
-            margin: 0 0 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .opening-hours {
-            font-size: 14px;
             margin: 0;
-            display: flex;
-            align-items: center;
+            padding: 0;
+            background: none;
         }
 
-        .opening-hours i {
-            margin-right: 5px;
-        }
-
-        .opening-hours.open {
-            color: #2ecc71;
-        }
-
-        .opening-hours.closed {
-            color: #e74c3c;
-        }
-
-        @media (max-width: 768px) {
-            .restaurants-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                padding: 10px;
-            }
+        /* 讓卡片之間的間距只由 .restaurants-grid 控制 */
+        .restaurants-grid {
+            gap: 20px;
+            padding: 20px;
         }
 
         /* Toast 提示樣式 */
@@ -700,11 +620,207 @@
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
+
+        /* 餐廳詳細資訊彈窗樣式 */
+        .restaurant-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow-y: auto;
+        }
+
+        .restaurant-modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .restaurant-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .restaurant-modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .restaurant-modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .restaurant-modal-close:hover {
+            color: #ff6b1a;
+        }
+
+        .restaurant-main-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .restaurant-modal-image {
+            width: 300px;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .restaurant-modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .restaurant-info-text {
+            flex: 1;
+        }
+
+        .modal-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-stars {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .modal-rating-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .modal-rating-count {
+            color: #666;
+        }
+
+        .modal-address {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .modal-address i {
+            margin-right: 8px;
+            color: #ff6b1a;
+        }
+
+        .modal-hours {
+            margin-bottom: 15px;
+        }
+
+        .modal-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .modal-status i {
+            margin-right: 8px;
+        }
+
+        .modal-status.open {
+            color: #2ecc71;
+        }
+
+        .modal-status.closed {
+            color: #e74c3c;
+        }
+
+        .modal-today-hours {
+            color: #666;
+            margin-left: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-favorite-btn,
+        .modal-direction-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .modal-favorite-btn {
+            background-color: #ff6b1a;
+            color: white;
+        }
+
+        .modal-favorite-btn:hover {
+            background-color: #e55a15;
+        }
+
+        .modal-direction-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .modal-direction-btn:hover {
+            background-color: #45a049;
+        }
+
+        .restaurant-map-container {
+            margin-top: 20px;
+        }
+
+        .restaurant-map-container h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .restaurant-modal-content {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+            }
+
+            .restaurant-main-info {
+                flex-direction: column;
+            }
+
+            .restaurant-modal-image {
+                width: 100%;
+                height: 200px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    console.log("載入的 mapInit.js");
     <!-- 登入彈跳視窗 -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
@@ -914,78 +1030,53 @@
     <!-- 美食類型區塊 -->
     <section class="food-types-section">
         <h2>美食類型</h2>
-        <div class="food-types">
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '中式,粵菜,川菜,湘菜,台菜,客家菜,麵食,餃子,小籠包')">
+        <div class="food-types">            <div class="food-type-item" onclick="window.mapInit.searchByType('中式')">
                 <div class="emoji-circle chinese">
                     🥢
                 </div>
                 <span>中式</span>
             </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '美式,漢堡,炸雞,牛肉捲,三明治,美式早午餐,美式餐廳')">
-                <div class="emoji-circle american">
-                    🍔
+            <div class="food-type-item" onclick="window.mapInit.searchByType('日式')">
+                <div class="emoji-circle japanese">
+                    🍱
                 </div>
-                <span>美式</span>
+                <span>日式</span>
             </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '韓式,韓國料理,韓式炸雞,韓式烤肉,部隊鍋,韓式拌飯,韓式小菜')">
+            <div class="food-type-item" onclick="window.mapInit.searchByType('韓式')">
                 <div class="emoji-circle korean">
                     🍜
                 </div>
                 <span>韓式</span>
             </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '義式,義大利麵,披薩,燉飯,義式前菜,提拉米蘇,義式冰淇淋')">
+            <div class="food-type-item" onclick="window.mapInit.searchByType('泰式')">
+                <div class="emoji-circle thai">
+                    🍛
+                </div>
+                <span>泰式</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('美式')">
+                <div class="emoji-circle american">
+                    🍔
+                </div>
+                <span>美式</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('義式')">
                 <div class="emoji-circle italian">
-                    🍝
+                    🍕
                 </div>
                 <span>義式</span>
             </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '法式,法國料理,法式甜點,法式麵包,法式咖啡廳,法式餐廳')">
+            <div class="food-type-item" onclick="window.mapInit.searchByType('法式')">
                 <div class="emoji-circle french">
                     🥐
                 </div>
                 <span>法式</span>
             </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '泰式,泰國菜,泰式料理,泰式炒河粉,泰式咖哩,泰式炒飯,泰式奶茶')">
-                <div class="emoji-circle thai">
-                    🥘
-                </div>
-                <span>泰式</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '火鍋,麻辣鍋,涮涮鍋,石頭鍋,羊肉爐,薑母鴨,個人鍋')">
+            <div class="food-type-item" onclick="window.mapInit.searchByType('火鍋')">
                 <div class="emoji-circle hotpot">
                     🍲
                 </div>
                 <span>火鍋</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '牛排,排餐,西餐廳,和牛,炭烤牛排,牛排館')">
-                <div class="emoji-circle steak">
-                    🥩
-                </div>
-                <span>牛排</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '燒烤,串燒,居酒屋,烤肉,燒肉,炭烤,串烤')">
-                <div class="emoji-circle bbq">
-                    🔥
-                </div>
-                <span>燒烤</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '飲品,咖啡廳,手搖飲,茶飲,果汁,氣泡飲,奶茶')">
-                <div class="emoji-circle drinks">
-                    🥤
-                </div>
-                <span>飲品</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '異國料理,印度菜,墨西哥菜,越南菜,中東料理,西班牙菜,葡萄牙菜')">
-                <div class="emoji-circle international">
-                    🌎
-                </div>
-                <span>異國料理</span>
-            </div>
-            <div class="food-type-item" onclick="window.searchByType('restaurant', '素食,蔬食,全素,蛋奶素,養生,禪食,有機')">
-                <div class="emoji-circle vegetarian">
-                    🥗
-                </div>
-                <span>素食</span>
             </div>
         </div>
     </section>
@@ -994,6 +1085,29 @@
     <section class="restaurants-section">
         <h3 id="results-title">推薦餐廳</h3>
         <div id="restaurants-container" class="restaurants-grid">
+            <!-- 示例餐廳卡片結構 -->
+            <div class="restaurant-card">
+                <div class="restaurant-image-wrapper">
+                    <div class="restaurant-image">
+                        <img src="path_to_image.jpg" alt="餐廳圖片" loading="lazy">
+                    </div>
+                    <button class="favorite-btn" aria-label="加入收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="restaurant-info">
+                    <h3>餐廳名稱</h3>
+                    <div class="rating">
+                        <div class="stars">★★★★★</div>
+                        <span class="rating-text">4.5 (123)</span>
+                    </div>
+                    <p class="address">餐廳地址</p>
+                    <p class="opening-hours">
+                        <i class="fas fa-clock"></i>
+                        營業中
+                    </p>
+                </div>
+            </div>
             <!-- 載入中提示 -->
             <div class="loading-message">
                 <i class="fas fa-spinner fa-spin"></i>
@@ -1119,131 +1233,10 @@
         </div>
     </footer>
 
-    <script src="js/mapInit.js"></script>
+    <!-- 加入必要的 JavaScript -->
+    <script src="js/favorites.js"></script>
+    <script src="JS/mapInit.js"></script>
     <script src="js/main.js"></script>
     <script src="js/login.js"></script>
-    <script src="ranking/ranking.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                window.mapInit = new MapInit();
-                await window.mapInit.init();
-            } catch (error) {
-                console.error('初始化地圖時發生錯誤:', error);
-            }
-        });
-    </script>
-    <script>
-        // 處理寫食記按鈕點擊
-        function handleWriteReview() {
-            // 檢查是否已登入（這裡需要根據您的登入狀態管理方式來實現）
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-            if (!isLoggedIn) {
-                // 顯示請先登入的 alert 訊息
-                alert('請先登入會員');
-                // 顯示登入彈跳視窗
-                document.getElementById('loginModal').style.display = 'block';
-                // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
-                window.onLoginSuccess = function () {
-                    window.location.href = 'blogPost.html';
-                };
-            } else {
-                // 已登入，直接跳轉到寫食記頁面
-                window.location.href = 'blogPost.html';
-            }
-        }
-
-        // 商家登入彈窗相關函數
-        function openRestaurantLoginModal() {
-            document.getElementById('restaurantLoginModal').style.display = 'block';
-        }
-
-        function closeRestaurantLoginModal() {
-            document.getElementById('restaurantLoginModal').style.display = 'none';
-        }
-
-        // 初始化登入模態框
-        document.addEventListener('DOMContentLoaded', function () {
-            // 檢查是否需要自動開啟商家登入彈窗
-            if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
-                sessionStorage.removeItem('openRestaurantLogin');
-                openRestaurantLoginModal();
-            }
-            const loginModal = document.getElementById('loginModal');
-            if (loginModal) {
-                // 關閉按鈕事件
-                const closeBtn = loginModal.querySelector('.close');
-                if (closeBtn) {
-                    closeBtn.onclick = function () {
-                        loginModal.style.display = 'none';
-                    };
-                }
-            }
-
-            // 初始化商家登入模態框
-            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
-            if (restaurantLoginModal) {
-                // 關閉按鈕事件已在 HTML 中設置 onclick
-
-                // 表單提交事件
-                const restaurantLoginForm = document.getElementById('restaurantLoginForm');
-                if (restaurantLoginForm) {
-                    restaurantLoginForm.addEventListener('submit', function (e) {
-                        e.preventDefault();
-
-                        const email = document.getElementById('restaurant-email').value;
-                        const password = document.getElementById('restaurant-password').value;
-                        const remember = document.getElementById('restaurant-remember').checked;
-
-                        // 這裡可以添加實際的登入驗證邏輯
-                        console.log('商家登入:', { email, password, remember });
-
-                        // 模擬登入成功，跳轉到商家後台
-                        alert('登入成功！');
-                        closeRestaurantLoginModal();
-                        // 跳轉到商家後台主頁
-                        window.location.href = 'restaurant.html';
-                    });
-                }
-            }
-
-            // 初始化餐廳詳細資訊彈窗
-            const restaurantModal = document.getElementById('restaurantModal');
-            if (restaurantModal) {
-                // 關閉按鈕事件
-                const closeBtn = restaurantModal.querySelector('.restaurant-modal-close');
-                if (closeBtn) {
-                    closeBtn.onclick = function () {
-                        closeRestaurantModal();
-                    };
-                }
-            }
-
-            // 點擊模態框外部關閉
-            window.onclick = function (event) {
-                if (event.target === loginModal) {
-                    loginModal.style.display = 'none';
-                }
-                if (event.target === restaurantModal) {
-                    closeRestaurantModal();
-                }
-                const restaurantLoginModal = document.getElementById('restaurantLoginModal');
-                if (event.target === restaurantLoginModal) {
-                    closeRestaurantLoginModal();
-                }
-                const weeklyHoursModal = document.getElementById('weeklyHoursModal');
-                if (event.target === weeklyHoursModal) {
-                    closeWeeklyHoursModal();
-                }
-            };
-        });
-    </script>
-    <script type="module">
-        import FavoritesModule from './js/favoritesModule.js';
-        const favoritesModule = new FavoritesModule();
-        favoritesModule.loadFavorites && favoritesModule.loadFavorites();
-    </script>
 </body>
-
 </html>
