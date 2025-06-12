@@ -114,32 +114,45 @@ function updateLoginStatus() {
 
 // 登出功能
 function logout() {
-    // 清除所有登入相關的 localStorage 數據
+    // 清除收藏狀態
+    if (window.clearFavorites) {
+        window.clearFavorites();
+    }
+    
+    // 清除登入狀態
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('favoriteStores');
-    localStorage.removeItem('favoriteReviews');
-    localStorage.removeItem('favorites'); // 新增：清除收藏店家
     
-    // 顯示登出成功訊息
-    alert('已成功登出！');
-    
-    // 檢查當前頁面
-    const currentPath = window.location.pathname;
-    const fileName = currentPath.split('/').pop() || '';
-    
-    if (fileName === 'index.html' || fileName === '' || currentPath === '/') {
-        // 在首頁：更新登入狀態顯示，不跳轉
-        updateLoginStatus();
-        
-        // 重新渲染餐廳列表，讓收藏狀態消失
-        if (window.displayRestaurants && window.mapInit && window.mapInit.restaurants) {
-            window.displayRestaurants(window.mapInit.restaurants);
+    // 清除所有收藏相關的localStorage
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+        if (key.startsWith('favorites_')) {
+            localStorage.removeItem(key);
         }
-    } else {
-        window.location.href = 'index.html';
+    });
+    
+    // 更新所有收藏按鈕的狀態
+    const favoriteButtons = document.querySelectorAll('.favorite-btn');
+    favoriteButtons.forEach(btn => {
+        btn.classList.remove('active');
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = 'far fa-heart';
+        }
+    });
+    
+    // 如果有餐廳列表，重新整理顯示
+    if (window.infiniteScroll) {
+        window.infiniteScroll.reset();
+        if (window.currentRestaurants) {
+            window.infiniteScroll.setRestaurants([...window.currentRestaurants]);
+        }
     }
+    
+    // 更新登入狀態UI
+    updateLoginStatus();
 }
 
 // 社交媒體登入

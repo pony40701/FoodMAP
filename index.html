@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>美食地圖FoodMAP</title>
     <!-- 防止 favicon.ico 404 錯誤 -->
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="css/food-categories.css">
+    <link rel="icon" href="data:,">    <link rel="stylesheet" href="css/food-categories.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/favoritesStyle.css">
     <link rel="stylesheet" href="ranking/ranking.css">
     <link rel="stylesheet" href="css/food-types.css">
     <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="css/favoritesStyle.css">
+    <link rel="stylesheet" href="css/restaurant-card-v2.css">
+    <link rel="stylesheet" href="css/business-hours.css">
     <!-- 添加 Google Maps API -->
     <script>
         (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
@@ -28,7 +29,7 @@
         .modal {
             display: none;
             position: fixed;
-            z-index: 2000;
+            z-index: 3000;
             left: 0;
             top: 0;
             width: 100%;
@@ -539,65 +540,8 @@
         }
 
         /* 餐廳卡片樣式 */
-        .restaurant-card {
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            /* 移除外部多餘的 margin/padding，讓卡片緊貼 */
-            margin: 0;
-            padding: 0;
-        }
-
-        .restaurant-image-wrapper {
-            width: 100%;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f5;
-            overflow: hidden;
-            /* 移除 padding，避免白邊 */
-            padding: 0;
-            margin: 0;
-        }
-
-        .restaurant-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            /* 移除 padding/margin，確保圖片填滿 */
-            padding: 0;
-            margin: 0;
-        }
-
-        .restaurant-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center center;
-            display: block;
-            /* 移除邊框與間距 */
-            border: none;
-            margin: 0;
-            padding: 0;
-            background: none;
-        }
-
-        /* 讓卡片之間的間距只由 .restaurants-grid 控制 */
-        .restaurants-grid {
-            gap: 20px;
-            padding: 20px;
+        .restaurant-card v3 {
+            /* ... existing styles ... */
         }
 
         /* Toast 提示樣式 */
@@ -1030,35 +974,24 @@
     <!-- 美食類型區塊 -->
     <section class="food-types-section">
         <h2>美食類型</h2>
-        <div class="food-types">            <div class="food-type-item" onclick="window.mapInit.searchByType('中式')">
+        <div class="food-types">
+            <div class="food-type-item" onclick="window.mapInit.searchByType('中式')">
                 <div class="emoji-circle chinese">
                     🥢
                 </div>
                 <span>中式</span>
-            </div>
-            <div class="food-type-item" onclick="window.mapInit.searchByType('日式')">
-                <div class="emoji-circle japanese">
-                    🍱
-                </div>
-                <span>日式</span>
-            </div>
-            <div class="food-type-item" onclick="window.mapInit.searchByType('韓式')">
-                <div class="emoji-circle korean">
-                    🍜
-                </div>
-                <span>韓式</span>
-            </div>
-            <div class="food-type-item" onclick="window.mapInit.searchByType('泰式')">
-                <div class="emoji-circle thai">
-                    🍛
-                </div>
-                <span>泰式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('美式')">
                 <div class="emoji-circle american">
                     🍔
                 </div>
                 <span>美式</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('韓式')">
+                <div class="emoji-circle korean">
+                    🍜
+                </div>
+                <span>韓式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('義式')">
                 <div class="emoji-circle italian">
@@ -1072,11 +1005,41 @@
                 </div>
                 <span>法式</span>
             </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('泰式')">
+                <div class="emoji-circle thai">
+                    🍛
+                </div>
+                <span>泰式</span>
+            </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('火鍋')">
                 <div class="emoji-circle hotpot">
                     🍲
                 </div>
                 <span>火鍋</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('牛排')">
+                <div class="emoji-circle steak">
+                    🥩
+                </div>
+                <span>牛排</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('燒烤')">
+                <div class="emoji-circle bbq">
+                    🍖
+                </div>
+                <span>燒烤</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('飲品')">
+                <div class="emoji-circle drinks">
+                    🥤
+                </div>
+                <span>飲品</span>
+            </div>
+            <div class="food-type-item" onclick="window.mapInit.searchByType('異國料理')">
+                <div class="emoji-circle world">
+                    🌎
+                </div>
+                <span>異國料理</span>
             </div>
         </div>
     </section>
@@ -1086,26 +1049,41 @@
         <h3 id="results-title">推薦餐廳</h3>
         <div id="restaurants-container" class="restaurants-grid">
             <!-- 示例餐廳卡片結構 -->
-            <div class="restaurant-card">
+            <div class="restaurant-card v3">
                 <div class="restaurant-image-wrapper">
-                    <div class="restaurant-image">
-                        <img src="path_to_image.jpg" alt="餐廳圖片" loading="lazy">
-                    </div>
-                    <button class="favorite-btn" aria-label="加入收藏">
+                    <img src="path_to_image.jpg" alt="餐廳圖片" loading="lazy">
+                    <button class="favorite-btn" title="加入收藏">
                         <i class="far fa-heart"></i>
                     </button>
                 </div>
                 <div class="restaurant-info">
-                    <h3>餐廳名稱</h3>
-                    <div class="rating">
-                        <div class="stars">★★★★★</div>
-                        <span class="rating-text">4.5 (123)</span>
+                    <div class="restaurant-title-row">
+                        <h3 class="restaurant-name">餐廳名稱</h3>
                     </div>
-                    <p class="address">餐廳地址</p>
-                    <p class="opening-hours">
-                        <i class="fas fa-clock"></i>
-                        營業中
-                    </p>
+                    <div class="restaurant-rating-row">
+                        <div class="rating-stars">★★★★★</div>
+                        <span class="rating-score">4.8</span>
+                        <span class="rating-count">(6839則評論)</span>
+                    </div>
+                    <div class="restaurant-address-row">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>407台灣台中市西屯朝富路252號1F</span>
+                    </div>
+                    <div class="restaurant-tags-row">
+                        <span class="tag tag-food">
+                            <i class="fas fa-utensils"></i>
+                            餐廳
+                        </span>
+                        <span class="tag tag-bar">
+                            <i class="fas fa-glass-martini-alt"></i>
+                            酒吧
+                        </span>
+                    </div>
+                    <div class="restaurant-status-row">
+                        <span class="status-dot open"></span>
+                        <span class="status-text open">營業中</span>
+                        <span class="status-hours">營業至 22:00</span>
+                    </div>
                 </div>
             </div>
             <!-- 載入中提示 -->
@@ -1188,7 +1166,7 @@
         <div class="weekly-hours-modal-content">
             <div class="weekly-hours-modal-header">
                 <h3>營業時間</h3>
-                <span class="weekly-hours-modal-close" onclick="closeWeeklyHoursModal()">&times;</span>
+                <span class="weekly-hours-modal-close" onclick="window.closeWeeklyHoursModal()">&times;</span>
             </div>
             <div class="weekly-hours-modal-body" id="weekly-hours-modal-body">
                 <!-- 一週的營業時間將由JavaScript動態填充 -->
@@ -1218,7 +1196,8 @@
             </div>
             <div class="footer-section">
                 <h4>聯絡我們</h4>
-                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a>
+                </p>
                 <p>📞 02-1234-5678</p>
                 <div class="social-icons">
                     <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -1231,12 +1210,15 @@
         <div class="footer-bottom">
             <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
         </div>
-    </footer>
-
-    <!-- 加入必要的 JavaScript -->
+    </footer>    <!-- 加入必要的 JavaScript -->
+    <script src="js/BusinessHours.js"></script>
+    <script src="js/searchService.js"></script>
+    <script src="js/infiniteScroll.js"></script>
     <script src="js/favorites.js"></script>
-    <script src="JS/mapInit.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/mapInit.js"></script>
+    <script src="js/restaurantList.js"></script>
     <script src="js/login.js"></script>
 </body>
+
 </html>

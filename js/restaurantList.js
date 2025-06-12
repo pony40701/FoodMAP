@@ -1639,6 +1639,9 @@ function updateDropdownMenu() {
 
 // 修改 showRestaurantModal 函數
 function showRestaurantModal(restaurant) {
+  // 保存當前選中的餐廳，供其他函數使用
+  window.currentSelectedRestaurant = restaurant;
+  
   const modal = document.getElementById('restaurant-modal');
   const modalContent = document.getElementById('modal-content-container');
   
@@ -1669,6 +1672,36 @@ function showRestaurantModal(restaurant) {
   };
 
   const reviews = getRandomReviews(restaurant);
+  
+  // 獲取今天是星期幾
+  const today = new Date().getDay();
+  const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][today];
+  
+  // 設置營業時間
+  let businessHoursHtml = '';
+  if (restaurant.businessHours) {
+    businessHoursHtml = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+        <i class="fas fa-clock" style="color: #666; width: 20px;"></i>
+        <span>${restaurant.businessHours || '週一至週日 11:00-22:00'}</span>
+        <div class="modal-hours-info-btn" onclick="window.showWeeklyHoursModal()">
+          <i class="fas fa-info-circle"></i>
+          <span>完整時間</span>
+        </div>
+      </div>
+    `;
+  } else {
+    businessHoursHtml = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+        <i class="fas fa-clock" style="color: #666; width: 20px;"></i>
+        <span>${dayName} 11:00-22:00</span>
+        <div class="modal-hours-info-btn" onclick="window.showWeeklyHoursModal()">
+          <i class="fas fa-info-circle"></i>
+          <span>完整時間</span>
+        </div>
+      </div>
+    `;
+  }
   
   // 設置彈出視窗內容
   modalContent.innerHTML = `
@@ -1711,10 +1744,7 @@ function showRestaurantModal(restaurant) {
               <i class="fas fa-phone" style="color: #666; width: 20px;"></i>
               <span>${restaurant.phone || '02-1234-5678'}</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-clock" style="color: #666; width: 20px;"></i>
-              <span>${restaurant.businessHours || '週一至週日 11:00-22:00'}</span>
-            </div>
+            ${businessHoursHtml}
           </div>
 
           <!-- 標籤區域 -->
@@ -1794,77 +1824,193 @@ function showRestaurantModal(restaurant) {
 
 // 修改 renderFilteredCards 函數中的卡片渲染部分
 function renderFilteredCards(pageData, totalCount) {
-  console.log(`Rendering page with ${pageData.length} items. Total count: ${totalCount}`);
-  
+ 
   const cardsContainer = document.getElementById('restaurant-cards');
   if (!cardsContainer) return;
 
-  const cards = pageData.map(restaurant => `
-    <div class="restaurant-card yelp-style" style="display: flex; gap: 16px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); align-items: center; cursor: pointer;" 
-      onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
-      <div class="yelp-img-wrap" style="flex: 0 0 200px; height: 150px; overflow: hidden; border-radius: 4px;">
-        <img src="${restaurant.image}" alt="${restaurant.name}" class="yelp-image" style="width: 100%; height: 100%; object-fit: cover;" />
-      </div>
-      <div class="yelp-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-        <div class="yelp-row yelp-title-row">
-          <h3 class="yelp-name" style="font-size: 18px; font-weight: 600; margin: 0; line-height: 1.3;">
-            ${restaurant.name}
-          </h3>
-          ${restaurant.isVerified ? '<div style="color: #d32323; font-size: 13px; margin-top: 2px;">✓ 食力派</div>' : ''}
+  const cards = pageData.map(restaurant => {
+    // 星星評分
+    const fullStars = Math.floor(restaurant.rating);
+    const halfStar = restaurant.rating % 1 >= 0.5;
+    let starsHtml = '';
+    for (let i = 0; i < fullStars; i++) {
+      starsHtml += '<i class="fas fa-star"></i>';
+    }
+    if (halfStar) starsHtml += '<i class="fas fa-star-half-alt"></i>';
+    // 標籤
+    const tagHtml = (restaurant.tags || []).map(tag => {
+      
+      let tagClass = 'tag-food', icon = 'fa-utensils';
+      if (tag.includes('酒吧') || tag.includes('bar')) { tagClass = 'tag-bar'; icon = 'fa-glass-martini-alt'; }
+      return `<span class="tag ${tagClass}"><i class="fas ${icon}"></i>${tag}</span>`;
+      
+    }).join('');
+
+    // ====== robust 營業狀態判斷 ======
+    let isOpen = false;
+    let todayHours = '';
+    let statusHtml = '';
+    let jsDay = new Date().getDay();
+    // 修正：Google API 的 weekday_text 順序是 [週一, 週二, ..., 週日]
+    // 所以需要將 JavaScript 的 day (0=週日, 1=週一, ...) 轉換為 weekday_text 的索引
+    let weekdayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    if (restaurant.opening_hours) {
+      if (typeof restaurant.opening_hours.isOpen === 'function') {
+        isOpen = restaurant.opening_hours.isOpen();
+      } else if (restaurant.opening_hours.open_now !== undefined) {
+        isOpen = restaurant.opening_hours.open_now;
+      } else if (restaurant.opening_hours.weekday_text) {
+        const todayText = restaurant.opening_hours.weekday_text[weekdayIndex];
+        let timePart = todayText.split(':')[1]?.trim();
+        if (!timePart) timePart = todayText.split('：')[1]?.trim();
+        
+        // 顯示今日營業時間，不管是否營業中
+        const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][jsDay];
+        todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${dayName} ${timePart || '休息'}</span>`;
+        
+        if (timePart && !/休息|公休|無營業/.test(timePart)) {
+          let fixedTimePart = timePart.replace(/：/g, ':').replace(/[－—–]/g, '-');
+          const now = new Date();
+          const nowMinutes = now.getHours() * 60 + now.getMinutes();
+          const periods = fixedTimePart.split(',');
+          
+          // 添加調試信息
+          console.log('[restaurantList] 營業時間判斷:', {
+              timePart: timePart,
+              fixedTimePart: fixedTimePart,
+              now: now.toLocaleTimeString(),
+              nowMinutes: nowMinutes,
+              periods: periods
+          });
+          
+          isOpen = false; // 預設為休息中，如果符合任一時段則設為營業中
+          
+          for (let period of periods) {
+            period = period.trim();
+            const [start, end] = period.split('-').map(s => s.trim());
+            if (start && end) {
+              // 使用更嚴格的解析方式
+              const startParts = start.split(':');
+              const endParts = end.split(':');
+              
+              const startH = parseInt(startParts[0], 10) || 0;
+              const startM = parseInt(startParts[1], 10) || 0;
+              const endH = parseInt(endParts[0], 10) || 0;
+              const endM = parseInt(endParts[1], 10) || 0;
+              
+              const startMin = startH * 60 + startM;
+              const endMin = endH * 60 + endM;
+              
+              // 添加調試信息
+              console.log('[restaurantList] 時段解析:', {
+                  period: period,
+                  start: start,
+                  end: end,
+                  startH: startH,
+                  startM: startM,
+                  endH: endH,
+                  endM: endM,
+                  startMin: startMin,
+                  endMin: endMin
+              });
+              
+              // 處理跨日的情況
+              if (endH < startH || (endH === startH && endM < startM)) {
+                // 例如 11:00-02:00 的情況
+                console.log('[restaurantList] 跨日營業時間');
+                // 將結束時間加上24小時的分鐘數
+                endMin += 24 * 60;
+                
+                // 如果當前時間小於結束時間，需要將當前時間也加上24小時
+                if (nowMinutes < endMin) {
+                    const adjustedNowMinutes = nowMinutes + 24 * 60;
+                    console.log('[restaurantList] 調整後的時間:', {
+                        adjustedNowMinutes: adjustedNowMinutes,
+                        endMin: endMin
+                    });
+                    
+                    if (startMin <= nowMinutes || adjustedNowMinutes <= endMin) {
+                        console.log('[restaurantList] 符合跨日營業條件 - 營業中');
+                        isOpen = true;
+                        break;
+                    }
+                } else {
+                    if (startMin <= nowMinutes) {
+                        console.log('[restaurantList] 符合跨日營業條件 - 營業中');
+                        isOpen = true;
+                        break;
+                    }
+                }
+              } else {
+                // 一般情況 如 09:00-22:00
+                if (nowMinutes >= startMin && nowMinutes <= endMin) {
+                  console.log('[restaurantList] 符合一般營業條件 - 營業中');
+                  isOpen = true;
+                  break;
+                }
+              }
+            }
+          }
+          
+          // 最終營業狀態
+          console.log('[restaurantList] 最終營業狀態:', isOpen ? '營業中' : '休息中');
+        } else {
+          isOpen = false;
+        }
+      }
+    }
+    
+    statusHtml = `
+      <span class="status-dot ${isOpen ? 'open' : 'closed'}"></span>
+      <span class="status-text ${isOpen ? 'open' : 'closed'}">${isOpen ? '營業中' : '休息中'}</span>
+    `;
+    // ====== END robust 營業狀態判斷 ======
+
+    return `
+      <div class="restaurant-card v3" data-id="${restaurant.id}">
+        <div class="restaurant-image-wrapper" onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
+          <img src="${restaurant.image}" alt="${restaurant.name}" loading="lazy">
+          <button class="favorite-btn" title="加入收藏" data-id="${restaurant.id}">
+            <i class="far fa-heart"></i>
+          </button>
         </div>
-        <div class="yelp-row yelp-rating-row" style="display: flex; align-items: center; gap: 4px;">
-          <span class="stars" style="color: #d32323; font-size: 14px;">${"★".repeat(Math.floor(restaurant.rating))}${restaurant.rating % 1 >= 0.5 ? "½" : ""}</span>
-          <span class="rating-text" style="color: #666; font-size: 13px;">${restaurant.rating} (${restaurant.ratingCount} 則評論)</span>
-        </div>
-        <div class="yelp-row yelp-tags-row" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${restaurant.tags.map(tag => `<span class="yelp-tag" style="background: #f5f5f5; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${tag}</span>`).join("")}
-        </div>
-        <div class="yelp-row yelp-price-row" style="display: flex; gap: 12px; align-items: center;">
-          <div style="color: #666; font-size: 13px; font-weight: 500; background: #f8f8f8; padding: 2px 8px; border-radius: 4px;">均消 ${restaurant.price}</div>
-          <div style="color: #666; font-size: 13px;">${restaurant.address}</div>
-        </div>
-        <div class="yelp-row yelp-review-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #eee;">
-          <div style="display: flex; gap: 8px; align-items: flex-start;">
-            <img src="${restaurant.reviewImage}" alt="評論照片" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;" />
-            <div style="flex: 1;">
-              <div style="font-size: 13px; margin-bottom: 2px;">
-                <span style="font-weight: 500;">${restaurant.reviewer}</span>
-                <span style="color: #666; margin-left: 6px;">${restaurant.rating} ★</span>
-              </div>
-              <p style="font-size: 13px; color: #333; margin: 0; line-height: 1.4;">${restaurant.review}</p>
-            </div>
+        <div class="restaurant-info">
+          <div class="restaurant-title-row">
+            <h3 class="restaurant-name">${restaurant.name}</h3>
+          </div>
+          <div class="restaurant-rating-row">
+            <span class="rating-stars">${starsHtml}</span>
+            <span class="rating-score">${restaurant.rating}</span>
+            <span class="rating-count">(${restaurant.ratingCount} 則評論)</span>
+          </div>
+          <div class="restaurant-address-row">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>${restaurant.address}</span>
+          </div>
+          <div class="restaurant-tags-row">${tagHtml}</div>
+          <div class="restaurant-status-row">
+            ${statusHtml}
+            ${todayHours || ''}
           </div>
         </div>
-        <div class="favorite-btn" data-id="${restaurant.id}">
-          <i class="far fa-heart"></i> <!-- 預設空心愛心 -->
-        </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   cardsContainer.innerHTML = `
-    <div class="yelp-cards-list" style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
-      <div class="results-count">顯示 ${pageData.length} 個結果，共 ${totalCount} 個</div>
-      ${cards}
-    </div>
+    <div class="results-count">顯示 ${pageData.length} 個結果，共 ${totalCount} 個</div>
+    <div class="restaurants-grid">${cards}</div>
   `;
 
-  // 更新分頁
   renderPagination(totalCount);
-  // 為每個愛心按鈕添加點擊事件監聽器
   document.querySelectorAll('.favorite-btn').forEach(button => {
     button.addEventListener('click', function(event) {
-      event.stopPropagation(); // 阻止事件冒泡到卡片點擊事件
+      event.stopPropagation();
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       if (!isLoggedIn) {
-        // 顯示提示訊息
         alert('請先登入會員以使用收藏功能');
-        // 開啟登入視窗 
         document.getElementById('loginModal').style.display = 'block';
-        
-        // 設定登入成功後的回調函數
         window.onLoginSuccess = () => {
-          // 登入成功後自動將餐廳加入收藏
           this.classList.add('active');
           const icon = this.querySelector('i');
           icon.classList.remove('far');
@@ -1872,8 +2018,6 @@ function renderFilteredCards(pageData, totalCount) {
         };
         return;
       }
-
-      // 已登入則切換收藏狀態
       this.classList.toggle('active');
       const icon = this.querySelector('i');
       if (this.classList.contains('active')) {

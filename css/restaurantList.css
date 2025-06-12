@@ -463,201 +463,6 @@ body {
     overflow: hidden;
 }
 
-/* ========== 餐廳卡片樣式 (Yelp 風格) ========== */
-.restaurant-card.yelp-style {
-    display: flex;
-    gap: 24px;
-    padding: 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    align-items: stretch;
-    position: relative; /* 確保子元素 (愛心按鈕) 絕對定位的基準 */
-}
-
-.restaurant-card.yelp-style:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* 圖片容器樣式 - 確保高度被拉伸，且不設固定高度 */
-.restaurant-card.yelp-style .yelp-img-wrap {
-    flex: 0 0 280px; /* 固定寬度，不影響高度拉伸 */
-    height: 100%; /* 強制填滿其父容器 (restaurant-card) 的高度 */
-    overflow: hidden;
-    border-radius: 8px;
-    /* 確保沒有其他屬性干擾高度拉伸 */
-}
-
-/* 圖片樣式 - 確保填滿其父容器 (yelp-img-wrap) 並保持比例 */
-.restaurant-card.yelp-style .yelp-image {
-    width: 100%;
-    height: 100%; /* 確保圖片填滿其父容器的高度 */
-    object-fit: cover; /* 保持比例並填滿，可裁切 */
-    object-position: center;
-    display: block; /* 避免圖片下方產生額外空間 */
-}
-
-/* 資訊容器樣式 - 保持 flex 佈局以適應內容高度 */
-.restaurant-card.yelp-style .yelp-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 4px 0;
-    /* 這裡不需要額外的 height: 100% 或 min-height，因為 align-items: stretch 會確保它與圖片容器等高 */
-}
-
-/* 標題行樣式 */
-.restaurant-card.yelp-style .yelp-title-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.restaurant-card.yelp-style .yelp-name {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0;
-    line-height: 1.3;
-    color: #333;
-}
-
-/* 評分行樣式 */
-.restaurant-card.yelp-style .yelp-rating-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.restaurant-card.yelp-style .stars {
-    color: #d32323;
-    font-size: 16px;
-}
-
-.restaurant-card.yelp-style .rating-text {
-    color: #666;
-    font-size: 14px;
-}
-
-/* 標籤行樣式 */
-.restaurant-card.yelp-style .yelp-tags-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.restaurant-card.yelp-style .yelp-tag {
-    background: #f5f5f5;
-    color: #666;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-    transition: all 0.2s ease;
-}
-
-.restaurant-card.yelp-style .yelp-tag:hover {
-    background: #ff6b1a;
-    color: white;
-}
-
-/* 價格與地址行樣式 */
-.restaurant-card.yelp-style .yelp-price-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    color: #666;
-    font-size: 14px;
-}
-
-.restaurant-card.yelp-style .yelp-price-row .price {
-    font-weight: 500;
-    background: #f8f8f8;
-    padding: 4px 12px;
-    border-radius: 20px;
-}
-
-/* 評論行樣式 */
-.restaurant-card.yelp-style .yelp-review-row {
-    margin-top: auto; /* 將評論推到底部 */
-    padding-top: 12px;
-    border-top: 1px solid #eee;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .review-image {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .review-content {
-    flex: 1;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .reviewer-info {
-    font-size: 13px;
-    margin-bottom: 4px;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .reviewer-name {
-    font-weight: 500;
-    color: #333;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .review-rating {
-    color: #666;
-    margin-left: 8px;
-}
-
-.restaurant-card.yelp-style .yelp-review-row .review-text {
-    font-size: 14px;
-    color: #333;
-    margin: 0;
-    line-height: 1.5;
-}
-
-/* 響應式設計調整 */
-@media (max-width: 1200px) {
-    .restaurant-card.yelp-style {
-        gap: 20px;
-        padding: 16px;
-    }
-
-    .restaurant-card.yelp-style .yelp-img-wrap {
-        flex: 0 0 240px; /* 平板版稍微縮小圖片寬度 */
-    }
-}
-
-@media (max-width: 768px) {
-    .restaurant-card.yelp-style {
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .restaurant-card.yelp-style .yelp-img-wrap {
-        flex: none;
-        width: 100%;
-        aspect-ratio: 4/3; /* 在手機版使用固定寬高比 */
-    }
-
-    .restaurant-card.yelp-style .yelp-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .restaurant-card.yelp-style .yelp-info {
-        gap: 10px;
-    }
-
-    .restaurant-card.yelp-style .yelp-name {
-        font-size: 18px;
-    }
-}
-
 /* ========== 分頁按鈕 ========== */
 .pagination {
     display: flex;
@@ -1553,5 +1358,200 @@ body {
     }
     100% {
         transform: scale(1);
+    }
+}
+
+/* ========== 餐廳卡片樣式 (Yelp 風格) ========== */
+.restaurant-card.yelp-style {
+    display: flex;
+    gap: 24px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    align-items: stretch;
+    position: relative; /* 確保子元素 (愛心按鈕) 絕對定位的基準 */
+}
+
+.restaurant-card.yelp-style:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 圖片容器樣式 - 確保高度被拉伸，且不設固定高度 */
+.restaurant-card.yelp-style .yelp-img-wrap {
+    flex: 0 0 280px; /* 固定寬度，不影響高度拉伸 */
+    height: 100%; /* 強制填滿其父容器 (restaurant-card) 的高度 */
+    overflow: hidden;
+    border-radius: 8px;
+    /* 確保沒有其他屬性干擾高度拉伸 */
+}
+
+/* 圖片樣式 - 確保填滿其父容器 (yelp-img-wrap) 並保持比例 */
+.restaurant-card.yelp-style .yelp-image {
+    width: 100%;
+    height: 100%; /* 確保圖片填滿其父容器的高度 */
+    object-fit: cover; /* 保持比例並填滿，可裁切 */
+    object-position: center;
+    display: block; /* 避免圖片下方產生額外空間 */
+}
+
+/* 資訊容器樣式 - 保持 flex 佈局以適應內容高度 */
+.restaurant-card.yelp-style .yelp-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0;
+    /* 這裡不需要額外的 height: 100% 或 min-height，因為 align-items: stretch 會確保它與圖片容器等高 */
+}
+
+/* 標題行樣式 */
+.restaurant-card.yelp-style .yelp-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.restaurant-card.yelp-style .yelp-name {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    color: #333;
+}
+
+/* 評分行樣式 */
+.restaurant-card.yelp-style .yelp-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.restaurant-card.yelp-style .stars {
+    color: #d32323;
+    font-size: 16px;
+}
+
+.restaurant-card.yelp-style .rating-text {
+    color: #666;
+    font-size: 14px;
+}
+
+/* 標籤行樣式 */
+.restaurant-card.yelp-style .yelp-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.restaurant-card.yelp-style .yelp-tag {
+    background: #f5f5f5;
+    color: #666;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.restaurant-card.yelp-style .yelp-tag:hover {
+    background: #ff6b1a;
+    color: white;
+}
+
+/* 價格與地址行樣式 */
+.restaurant-card.yelp-style .yelp-price-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.restaurant-card.yelp-style .yelp-price-row .price {
+    font-weight: 500;
+    background: #f8f8f8;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* 評論行樣式 */
+.restaurant-card.yelp-style .yelp-review-row {
+    margin-top: auto; /* 將評論推到底部 */
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .review-image {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .review-content {
+    flex: 1;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .reviewer-info {
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .reviewer-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .review-rating {
+    color: #666;
+    margin-left: 8px;
+}
+
+.restaurant-card.yelp-style .yelp-review-row .review-text {
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 響應式設計調整 */
+@media (max-width: 1200px) {
+    .restaurant-card.yelp-style {
+        gap: 20px;
+        padding: 16px;
+    }
+
+    .restaurant-card.yelp-style .yelp-img-wrap {
+        flex: 0 0 240px; /* 平板版稍微縮小圖片寬度 */
+    }
+}
+
+@media (max-width: 768px) {
+    .restaurant-card.yelp-style {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .restaurant-card.yelp-style .yelp-img-wrap {
+        flex: none;
+        width: 100%;
+        aspect-ratio: 4/3; /* 在手機版使用固定寬高比 */
+    }
+
+    .restaurant-card.yelp-style .yelp-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .restaurant-card.yelp-style .yelp-info {
+        gap: 10px;
+    }
+
+    .restaurant-card.yelp-style .yelp-name {
+        font-size: 18px;
     }
 }
