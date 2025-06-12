@@ -469,5 +469,31 @@
     <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6_6-dHTpnaLn6NKtn6OhmCFUqf1B4YN4&callback=initMap">
     </script>
+
+    <!-- Dish Modal -->
+    <div id="dishModal" class="modal dish-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="dishModalTitle"></h2>
+        </div>
+        <div class="modal-body">
+          <div class="dish-images">
+            <div class="image-carousel-container">
+              <button class="carousel-nav-btn prev-btn" aria-label="上一張">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="dishImageCarousel" class="image-carousel"></div>
+              <button class="carousel-nav-btn next-btn" aria-label="下一張">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          <div class="dish-reviews">
+            <h3>顧客評論</h3>
+            <div id="dishReviewsList" class="reviews-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

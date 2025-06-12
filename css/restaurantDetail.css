@@ -1807,4 +1807,122 @@
   .action-buttons-wrapper {
     padding: 16px;
   }
+}
+
+/* 只限於餐點 modal 彈窗的評論頭像尺寸 */
+.dish-modal .review-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Dish modal 每則評論之間加上分隔線 */
+.dish-modal .reviews-list .review-item {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+.dish-modal .reviews-list .review-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.dish-modal .modal-header {
+  background: transparent;
+  border-radius: 12px 12px 0 0;
+  color: #333;
+  padding: 24px 32px 20px 32px;
+  box-shadow: 0 4px 16px rgba(255, 107, 26, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.dish-modal .modal-header h2 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 1px;
+}
+.dish-modal-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.3rem;
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 6px 16px;
+  box-shadow: 0 2px 8px rgba(255,107,26,0.08);
+}
+.dish-modal-rating .stars i,
+.review-stars i {
+  color: #ffd700;
+  font-size: 1.2em;
+  margin-right: 2px;
+}
+.dish-modal-rating .rating-score {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-left: 4px;
+}
+.review-item {
+  padding-bottom: 18px;
+}
+.review-header-flex {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.review-name {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-right: 8px;
+}
+.review-score {
+  margin-left: 4px;
+  color: #ff6b1a;
+  font-weight: 600;
+  font-size: 1em;
+}
+.review-stars {
+  display: flex;
+  align-items: center;
+  margin-left: 48px;
+  margin-bottom: 2px;
+}
+.review-stars-line {
+  display: flex;
+  align-items: center;
+  margin-left: 0;
+  margin-bottom: 2px;
+  gap: 6px;
+  justify-content: flex-end;
+  font-size: 0.95em;
+}
+.review-stars-line i {
+  color: #ff6b1a !important;
+  font-size: 1em;
+  margin-right: 2px;
+}
+.review-score {
+  margin-left: 2px;
+  color: #ff6b1a;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+.review-text {
+  padding-left: 68px;
+  margin-top: 6px;
 } 

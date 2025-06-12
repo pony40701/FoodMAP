@@ -10,6 +10,34 @@
     />
     <link rel="stylesheet" href="css/restaurantList.css" />
     <link rel="stylesheet" href="css/menuDetail.css" />
+    <style>
+      .menu-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 20px;
+      }
+      .menu-item-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .menu-item-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .menu-item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    </style>
   </head>
   <body>
     <!-- 導覽列（header） -->
@@ -111,67 +139,91 @@
         <div class="menu-items">
           <!-- 菜單項目將由商家上傳 -->
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">招牌牛肉麵</h3>
-              <p class="menu-item-description">使用特選牛腱肉，搭配手工拉麵，湯頭濃郁</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">招牌牛肉麵</h3>
+                <p class="menu-item-description">使用特選牛腱肉，搭配手工拉麵，湯頭濃郁</p>
+              </div>
+              <div class="menu-item-price">NT$ 180</div>
             </div>
-            <div class="menu-item-price">NT$ 180</div>
+            <div class="menu-item-image" data-food-type="beef-noodle"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">紅燒排骨飯</h3>
-              <p class="menu-item-description">嚴選豬肋排，搭配特製醬汁，附贈時令蔬菜</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">紅燒排骨飯</h3>
+                <p class="menu-item-description">嚴選豬肋排，搭配特製醬汁，附贈時令蔬菜</p>
+              </div>
+              <div class="menu-item-price">NT$ 150</div>
             </div>
-            <div class="menu-item-price">NT$ 150</div>
+            <div class="menu-item-image" data-food-type="pork-rib-rice"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">黃金炸雞排</h3>
-              <p class="menu-item-description">外酥內嫩，搭配特製胡椒鹽，附贈飲料</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">黃金炸雞排</h3>
+                <p class="menu-item-description">外酥內嫩，搭配特製胡椒鹽，附贈飲料</p>
+              </div>
+              <div class="menu-item-price">NT$ 120</div>
             </div>
-            <div class="menu-item-price">NT$ 120</div>
+            <div class="menu-item-image" data-food-type="fried-chicken"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">鮮蝦炒飯</h3>
-              <p class="menu-item-description">使用新鮮蝦仁，搭配蛋炒飯，香氣四溢</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">鮮蝦炒飯</h3>
+                <p class="menu-item-description">使用新鮮蝦仁，搭配蛋炒飯，香氣四溢</p>
+              </div>
+              <div class="menu-item-price">NT$ 160</div>
             </div>
-            <div class="menu-item-price">NT$ 160</div>
+            <div class="menu-item-image" data-food-type="shrimp-fried-rice"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">台式滷肉飯</h3>
-              <p class="menu-item-description">傳統台式風味，肥瘦適中，搭配滷蛋</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">台式滷肉飯</h3>
+                <p class="menu-item-description">傳統台式風味，肥瘦適中，搭配滷蛋</p>
+              </div>
+              <div class="menu-item-price">NT$ 80</div>
             </div>
-            <div class="menu-item-price">NT$ 80</div>
+            <div class="menu-item-image" data-food-type="lu-rou-fan"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">珍珠奶茶</h3>
-              <p class="menu-item-description">使用台灣茶葉，搭配手工珍珠</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">珍珠奶茶</h3>
+                <p class="menu-item-description">使用台灣茶葉，搭配手工珍珠</p>
+              </div>
+              <div class="menu-item-price">NT$ 60</div>
             </div>
-            <div class="menu-item-price">NT$ 60</div>
+            <div class="menu-item-image" data-food-type="bubble-tea"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">檸檬紅茶</h3>
-              <p class="menu-item-description">新鮮檸檬片，搭配紅茶</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">檸檬紅茶</h3>
+                <p class="menu-item-description">新鮮檸檬片，搭配紅茶</p>
+              </div>
+              <div class="menu-item-price">NT$ 50</div>
             </div>
-            <div class="menu-item-price">NT$ 50</div>
+            <div class="menu-item-image" data-food-type="lemon-tea"></div>
           </div>
 
           <div class="menu-item">
-            <div class="menu-item-info">
-              <h3 class="menu-item-name">水果茶</h3>
-              <p class="menu-item-description">使用當季新鮮水果，清爽解膩</p>
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">水果茶</h3>
+                <p class="menu-item-description">使用當季新鮮水果，清爽解膩</p>
+              </div>
+              <div class="menu-item-price">NT$ 70</div>
             </div>
-            <div class="menu-item-price">NT$ 70</div>
+            <div class="menu-item-image" data-food-type="fruit-tea"></div>
           </div>
         </div>
       </div>
