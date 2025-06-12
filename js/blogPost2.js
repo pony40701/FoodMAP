@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 初始化導覽列
 function initializeNavbar() {
     // 恢復按鈕狀態
-    restoreButtonStates();
+    // restoreButtonStates();
     
     // 設置當前頁面的導覽連結為 active
     const currentPath = window.location.pathname;
@@ -74,48 +74,48 @@ function removeFromFavorites(restaurantId) {
 }
 
 // 頁面載入時恢復按鈕狀態
-function restoreButtonStates() {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+// function restoreButtonStates() {
+//     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+//     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     
-    wishlist.forEach(id => {
-        const button = document.querySelector(`.wishlist-btn[data-restaurant-id="${id}"]`);
-        if (button) {
-            button.classList.add('active');
-            button.querySelector('.btn-icon').textContent = '💖';
-            button.querySelector('.btn-text').textContent = '已加入';
-        }
-    });
+//     wishlist.forEach(id => {
+//         const button = document.querySelector(`.wishlist-btn[data-restaurant-id="${id}"]`);
+//         if (button) {
+//             button.classList.add('active');
+//             button.querySelector('.btn-icon').textContent = '💖';
+//             button.querySelector('.btn-text').textContent = '已加入';
+//         }
+//     });
     
-    favorites.forEach(id => {
-        const button = document.querySelector(`.favorite-btn[data-restaurant-id="${id}"]`);
-        if (button) {
-            button.classList.add('active');
-            button.querySelector('.btn-icon').textContent = '🌟';
-            button.querySelector('.btn-text').textContent = '已收藏';
-        }
-    });
-}
+//     favorites.forEach(id => {
+//         const button = document.querySelector(`.favorite-btn[data-restaurant-id="${id}"]`);
+//         if (button) {
+//             button.classList.add('active');
+//             button.querySelector('.btn-icon').textContent = '🌟';
+//             button.querySelector('.btn-text').textContent = '已收藏';
+//         }
+//     });
+// }
 
-// 通知功能
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
+// // 通知功能
+// function showNotification(message, type = 'info') {
+//     const notification = document.createElement('div');
+//     notification.className = `notification ${type}`;
+//     notification.textContent = message;
     
-    document.body.appendChild(notification);
+//     document.body.appendChild(notification);
     
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 100);
+//     setTimeout(() => {
+//         notification.classList.add('show');
+//     }, 100);
     
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 2000);
-}
+//     setTimeout(() => {
+//         notification.classList.remove('show');
+//         setTimeout(() => {
+//             notification.remove();
+//         }, 300);
+//     }, 2000);
+// }
 
 // 切換不同區段顯示
 function showSection(sectionId) {
@@ -1195,6 +1195,12 @@ function editPost(postId) {
         if (starsContainer) {
             starsContainer.setAttribute('data-selected-rating', rating);
             updateStars(starsContainer, rating);
+            // 新增：同步更新評分數值
+            const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+            if (ratingValue) {
+                ratingValue.textContent = rating + '.0';
+            }
+            updateOverallRating();
         }
     });
 
@@ -1727,6 +1733,12 @@ function editDraft(draftId) {
         if (starsContainer) {
             starsContainer.setAttribute('data-selected-rating', rating);
             updateStars(starsContainer, rating);
+            // 新增：同步更新評分數值
+            const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+            if (ratingValue) {
+                ratingValue.textContent = rating + '.0';
+            }
+            updateOverallRating();
         }
     });
 
@@ -1747,9 +1759,11 @@ function deleteDraft(draftId, silent = false) {
     const updatedDrafts = drafts.filter(d => d.id !== draftId);
     localStorage.setItem('blogDrafts', JSON.stringify(updatedDrafts));
     
+    // 無論 silent 狀態都刷新草稿列表
+    loadDrafts();
+
     if (!silent) {
         showNotification('草稿已刪除', 'success');
-        loadDrafts();
     }
 }
 
@@ -1910,4 +1924,4 @@ function stripHtml(html) {
 function truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
-} 
+}
