@@ -91,8 +91,8 @@ const mockNotifications = [
 
 // 從 localStorage 獲取收藏數據
 function getFavoriteStores() {
-    // 直接儲存 Place ID 列表
-    return JSON.parse(localStorage.getItem('favoriteStores')) || [];
+    // 使用新的收藏格式
+    return JSON.parse(localStorage.getItem('favorites')) || [];
 }
 
 function getFavoriteReviews() {
@@ -110,10 +110,10 @@ async function loadFavorites(type = 'stores') {
     }
 
     if (type === 'stores') {
-        // 從 localStorage 獲取收藏的 Place ID 列表
-        const favoritePlaceIds = getFavoriteStores();
+        // 從 localStorage 獲取收藏的餐廳資料
+        const favorites = getFavoriteStores();
         
-        if (favoritePlaceIds.length === 0) {
+        if (favorites.length === 0) {
             storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
         } else {
             // 顯示載入中
@@ -121,7 +121,7 @@ async function loadFavorites(type = 'stores') {
             
             // 使用 Google Places API 獲取店家詳細資訊
             try {
-                const favoriteStoresDetails = await getFavoriteStoresDetails(favoritePlaceIds);
+                const favoriteStoresDetails = await getFavoriteStoresDetails(favorites);
                 
                 if (favoriteStoresDetails.length === 0) {
                     storesContainer.innerHTML = '<div class="no-data">無法載入收藏店家資訊</div>';
@@ -129,8 +129,8 @@ async function loadFavorites(type = 'stores') {
                     storesContainer.innerHTML = favoriteStoresDetails.map(store => `
                         <div class="store-card" data-place-id="${store.place_id}">
                             <img src="${store.image}" alt="${store.name}" class="store-image">
-                            <button class="favorite-btn" onclick="removeFromFavorites('${store.place_id}')">
-                                <i class="fas fa-star"></i>
+                            <button class="favorite-btn" onclick="removeFavorite('${store.place_id}')">
+                                <i class="fas fa-heart"></i>
                             </button>
                             <div class="store-info">
                                 <h3 class="store-name">${store.name}</h3>
@@ -147,8 +147,8 @@ async function loadFavorites(type = 'stores') {
                                 </div>
                             </div>
                             <div class="store-actions">
-                                <button onclick="viewStoreDetail('${store.place_id}')" class="btn-secondary">查看詳情</button>
-                                <button onclick="removeFromFavorites('${store.place_id}')" class="btn-secondary">取消收藏</button>
+                                <button onclick="viewRestaurant('${store.place_id}')" class="btn-secondary">查看詳情</button>
+                                <button onclick="removeFavorite('${store.place_id}')" class="btn-secondary">取消收藏</button>
                             </div>
                         </div>
                     `).join('');
@@ -178,7 +178,7 @@ async function loadFavorites(type = 'stores') {
                             <div class="reviewer-name">${review.author || review.reviewerName || '匿名'}</div>
                             <div class="store-name">${review.storeName}</div>
                         </div>
-                        <button class="favorite-btn" onclick="removeFromFavoriteReviews(${review.id})">
+                        <button class="favorite-btn" onclick="removeFavoriteReview(${review.id})">
                             <i class="fas fa-heart"></i>
                         </button>
                     </div>
@@ -199,7 +199,7 @@ async function loadFavorites(type = 'stores') {
 }
 
 // 使用 Google Places API 獲取收藏店家的詳細資訊
-async function getFavoriteStoresDetails(placeIds) {
+async function getFavoriteStoresDetails(favorites) {
     return new Promise((resolve, reject) => {
         // 檢查 Google Maps API 是否可用
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
@@ -212,21 +212,21 @@ async function getFavoriteStoresDetails(placeIds) {
         const favoriteStoresDetails = [];
         let completedRequests = 0;
 
-        if (placeIds.length === 0) {
+        if (favorites.length === 0) {
             resolve([]);
             return;
         }
 
-        placeIds.forEach(placeId => {
+        favorites.forEach(favorite => {
             const request = {
-                placeId: placeId
-                /* fields parameter removed */
+                placeId: favorite.id,
+                fields: ['name', 'rating', 'formatted_address', 'geometry', 'photos', 'opening_hours', 'user_ratings_total', 'vicinity']
             };
 
             service.getDetails(request, (place, status) => {
                 completedRequests++;
                 
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                     let imageUrl = '';
                     if (place.photos && place.photos[0] && place.photos[0].getUrl) {
                         imageUrl = place.photos[0].getUrl({maxWidth: 400});
@@ -236,19 +236,28 @@ async function getFavoriteStoresDetails(placeIds) {
                         place_id: place.place_id,
                         name: place.name,
                         rating: place.rating,
-                        address: place.formatted_address,
-                        isOpen: place.opening_hours?.isOpen(),
-                        image: imageUrl || './IMAGE/default-restaurant.jpg',
+                        address: place.formatted_address || place.vicinity,
+                        isOpen: place.opening_hours?.isOpen?.() || place.opening_hours?.open_now,
+                        image: imageUrl || 'images/no-image.jpg',
                         user_ratings_total: place.user_ratings_total,
                         location: place.geometry?.location
                     };
                     favoriteStoresDetails.push(storeData);
                 } else {
-                    console.error('Place Details request failed for', placeId, 'with status:', status);
+                    console.warn(`無法獲取地點詳細資訊 (${favorite.id}):`, status);
+                    // 使用基本資訊建立卡片
+                    favoriteStoresDetails.push({
+                        place_id: favorite.id,
+                        name: favorite.name || '未知餐廳',
+                        rating: undefined,
+                        address: '無法獲取地址',
+                        isOpen: undefined,
+                        image: 'images/no-image.jpg',
+                        user_ratings_total: 0
+                    });
                 }
-
-                // 如果所有請求都完成了，解析結果
-                if (completedRequests === placeIds.length) {
+                
+                if (completedRequests === favorites.length) {
                     resolve(favoriteStoresDetails);
                 }
             });
@@ -256,23 +265,91 @@ async function getFavoriteStoresDetails(placeIds) {
     });
 }
 
-// 從收藏中移除店家
-function removeFromFavorites(placeId) {
-    if (confirm('確定要取消收藏這家店嗎？')) {
-        let favoritePlaceIds = getFavoriteStores();
-        favoritePlaceIds = favoritePlaceIds.filter(id => id !== placeId);
-        localStorage.setItem('favoriteStores', JSON.stringify(favoritePlaceIds));
+// 顯示登入彈窗，確保它在最上層
+function showLoginModal() {
+    // 顯示提示訊息
+    alert('請先登入會員');
+    
+    // 強制關閉餐廳詳情彈窗（如果存在）
+    const restaurantModal = document.getElementById('restaurantModal');
+    if (restaurantModal) {
+        restaurantModal.style.display = 'none';
+    }
+    
+    // 顯示登入彈窗
+    let loginModal;
+    if (window.parent && window.parent.document.getElementById('loginModal')) {
+        loginModal = window.parent.document.getElementById('loginModal');
+    } else if (document.getElementById('loginModal')) {
+        loginModal = document.getElementById('loginModal');
+    }
+    
+    if (loginModal) {
+        // 確保登入彈窗在最上層
+        loginModal.style.zIndex = '3000';
+        loginModal.style.display = 'block';
         
-        // 重新載入收藏列表
-        loadFavorites('stores');
-        
-        // 顯示成功訊息
-        alert('已取消收藏');
+        // 將登入彈窗移到最前面
+        document.body.appendChild(loginModal);
     }
 }
 
+// 從收藏中移除餐廳
+function removeFavorite(id) {
+    // 檢查是否已登入
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        // 顯示登入彈窗
+        showLoginModal();
+        return;
+    }
+
+    if (confirm('確定要取消收藏這家店嗎？')) {
+        // 從 localStorage 中獲取收藏列表
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        
+        // 找到要移除的項目索引
+        const index = favorites.findIndex(fav => fav.id === id);
+        
+        // 如果找到了，就移除它
+        if (index !== -1) {
+            favorites.splice(index, 1);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            
+            // 顯示提示訊息
+            showToast('已取消收藏');
+            
+            // 重新載入收藏列表
+            updateFavoritesList();
+        }
+    }
+}
+
+// 顯示 Toast 提示訊息
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 顯示 toast
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // 3秒後移除 toast
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 // 從收藏中移除心得
-function removeFromFavoriteReviews(reviewId) {
+function removeFavoriteReview(reviewId) {
+    // 檢查是否已登入
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        // 顯示登入彈窗
+        showLoginModal();
+        return;
+    }
+    
     if (confirm('確定要取消收藏這則心得嗎？')) {
         let favoriteReviews = getFavoriteReviews();
         favoriteReviews = favoriteReviews.filter(review => review.id !== reviewId);
@@ -287,7 +364,7 @@ function removeFromFavoriteReviews(reviewId) {
 }
 
 // 查看店家詳情
-function viewStoreDetail(placeId) {
+function viewRestaurant(placeId) {
     // 跳轉到店家詳情頁面
     window.location.href = `storeDetail.html?place_id=${placeId}`;
 }
@@ -331,8 +408,19 @@ function switchFavoritesTab(tab) {
         targetTabBtn.classList.add('active');
     }
 
-    // 載入對應的收藏內容
-    loadFavorites(tab);
+    // 顯示對應的內容
+    const storesContainer = document.querySelector('.favorites-stores');
+    const reviewsContainer = document.querySelector('.favorites-reviews');
+    
+    if (tab === 'stores') {
+        storesContainer.style.display = 'grid';
+        reviewsContainer.style.display = 'none';
+        updateFavoritesList();
+    } else {
+        storesContainer.style.display = 'none';
+        reviewsContainer.style.display = 'grid';
+        loadFavorites('reviews');
+    }
 }
 
 // 更新設定
@@ -415,7 +503,9 @@ function formatTime(timestamp) {
 function checkLoginStatus() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
-        window.location.href = 'userLogin.html';
+        // 顯示登入彈窗
+        showLoginModal();
+        return;
     }
 }
 
@@ -711,12 +801,39 @@ window.addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     // 檢查登入狀態
     if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'userLogin.html';
+        // 顯示登入彈窗
+        showLoginModal();
         return;
     }
 
     // 初始化頁面
     initializePage();
+    
+    // 初始化收藏列表
+    const favoritesSection = document.getElementById('favorites');
+    if (favoritesSection && favoritesSection.classList.contains('active')) {
+        updateFavoritesList();
+    }
+    
+    // 監聽收藏標籤按鈕點擊事件
+    const tabButtons = document.querySelectorAll('.favorites-tabs .tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.getAttribute('data-tab');
+            switchFavoritesTab(tab);
+        });
+    });
+    
+    // 監聽側邊欄選單點擊事件
+    const menuItems = document.querySelectorAll('.sidebar .menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const section = this.getAttribute('data-section');
+            if (section === 'favorites') {
+                updateFavoritesList();
+            }
+        });
+    });
 });
 
 // 初始化頁面所有組件
@@ -1026,3 +1143,188 @@ function updateProfile() {
 
 // 當 DOM 載入完成時初始化頁面
 document.addEventListener('DOMContentLoaded', initializePage);
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化側邊欄選單
+    initializeSidebar();
+    
+    // 初始化收藏列表
+    initializeFavorites();
+    
+    // 監聽收藏更新事件
+    window.addEventListener('favoritesUpdated', function() {
+        updateFavoritesList();
+    });
+    // 收藏卡片事件代理綁在 .favorites-content（不會被重設）
+    const favoritesContent = document.querySelector('.favorites-content');
+    if (favoritesContent) {
+        favoritesContent.addEventListener('click', function(e) {
+            const btn = e.target.closest('.favorite-btn');
+            if (btn) {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                window.FavoritesManager.removeFavorite(id);
+                updateFavoritesList();
+            }
+        });
+    }
+});
+
+// 初始化側邊欄選單
+function initializeSidebar() {
+    const menuItems = document.querySelectorAll('.menu-item');
+    const sections = document.querySelectorAll('.content-section');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // 移除所有活動狀態
+            menuItems.forEach(i => i.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            // 添加新的活動狀態
+            this.classList.add('active');
+            const targetSection = document.querySelector(this.getAttribute('href'));
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        });
+    });
+}
+
+// 初始化收藏列表
+function initializeFavorites() {
+    // 初始化收藏頁籤切換
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const favoritesStores = document.querySelector('.favorites-stores');
+    const favoritesReviews = document.querySelector('.favorites-reviews');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const tab = this.dataset.tab;
+            if (tab === 'stores') {
+                favoritesStores.style.display = 'grid';
+                favoritesReviews.style.display = 'none';
+            } else {
+                favoritesStores.style.display = 'none';
+                favoritesReviews.style.display = 'grid';
+            }
+        });
+    });
+    
+    // 初始化收藏列表
+    updateFavoritesList();
+}
+
+// 更新收藏列表（直接用 favorites 資料，不用 Google API）
+function updateFavoritesList() {
+    const favoritesStores = document.querySelector('.favorites-stores');
+    const favorites = getFavoriteStores();
+    if (!favorites || favorites.length === 0) {
+        favoritesStores.innerHTML = '<div class="no-favorites">還沒有收藏的餐廳</div>';
+        return;
+    }
+    
+    console.log('收藏的餐廳資料:', favorites); // 調試用
+    
+    // 餐廳圖片選項
+    const restaurantImages = [
+        'images/restaurant1.jpg',
+        'images/restaurant2.jpg',
+        'images/restaurant3.jpg'
+    ];
+    
+    // 使用與 index 頁面相同的卡片樣式，但不使用外部圖片
+    favoritesStores.innerHTML = favorites.map((restaurant, idx) => {
+        // 隨機選擇一張餐廳圖片
+        const photoUrl = restaurantImages[idx % restaurantImages.length];
+        
+        // 營業時間處理（簡化版，因為收藏的餐廳可能沒有完整的營業時間資訊）
+        let isOpen = false;
+        let todayHours = '';
+        
+        if (restaurant.opening_hours) {
+            isOpen = restaurant.opening_hours.open_now || false;
+        }
+        
+        return `
+        <div class="restaurant-card v3" data-id="${restaurant.id}" data-idx="${idx}">
+            <div class="restaurant-image-wrapper v3">
+                <img src="${photoUrl}" alt="${restaurant.name}" class="restaurant-image">
+            </div>
+            <div class="restaurant-info v3">
+                <div class="restaurant-title-row v3">
+                    <h3 class="restaurant-name v3">${restaurant.name}</h3>
+                    <button class="favorite-btn v3 active" aria-label="取消收藏" data-id="${restaurant.id}">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                </div>
+                <div class="restaurant-rating-row v3">
+                    <span class="rating-stars v3">${generateStars(restaurant.rating || 0)}</span>
+                    <span class="rating-score v3">${restaurant.rating ? restaurant.rating.toFixed(1) : 'N/A'}</span>
+                    <span class="rating-count v3">(${restaurant.user_ratings_total || 0}則評論)</span>
+                </div>
+                <div class="restaurant-address-row v3">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="address-text v3">${restaurant.address || ''}</span>
+                </div>
+                ${restaurant.types && restaurant.types.length > 0 ? `
+                    <div class="restaurant-tags-row v3">
+                        ${restaurant.types.slice(0, 3).map(type => `<span class="tag v3">${type}</span>`).join('')}
+                    </div>
+                ` : ''}
+                <div class="restaurant-status-row v3">
+                    <span class="status-dot v3 ${isOpen ? 'open' : 'closed'}"></span>
+                    <span class="status-text v3 ${isOpen ? 'open' : 'closed'}">${isOpen ? '營業中' : '休息中'}</span>
+                    ${todayHours}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    
+    // 綁定卡片點擊事件
+    const cards = favoritesStores.querySelectorAll('.restaurant-card');
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.favorite-btn')) return; // 避免點擊收藏按鈕時觸發卡片點擊
+            
+            const idx = this.getAttribute('data-idx');
+            const id = this.getAttribute('data-id');
+            const restaurant = favorites[idx];
+            
+            // 跳轉到餐廳詳情頁面
+            window.location.href = `restaurantList.html?place_id=${id}`;
+        });
+    });
+    
+    // 綁定收藏按鈕點擊事件
+    const favButtons = favoritesStores.querySelectorAll('.favorite-btn');
+    favButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const id = this.getAttribute('data-id');
+            // 檢查是否已登入
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+                // 顯示登入彈窗
+                showLoginModal();
+                return;
+            }
+            removeFavorite(id);
+        });
+    });
+}
+
+// 生成星級評分（與 main.js 中保持一致）
+function generateStars(rating) {
+    const fullStars = Math.floor(rating);
+    const halfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+    
+    return '★'.repeat(fullStars) + 
+           (halfStar ? '★' : '') + 
+           '☆'.repeat(emptyStars);
+}
