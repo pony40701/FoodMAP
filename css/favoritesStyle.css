@@ -15,14 +15,18 @@
     padding: 10px 20px;
     border: none;
     border-radius: 20px;
-    background: #f0f0f0;
+    background: #f0f0f0;  /* 淺灰色背景 */
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .tab-btn.active {
-    background: #ff6b6b;
+    background: #666;  /* 改為灰色 */
     color: white;
+}
+
+.tab-btn:hover {
+    background: #e0e0e0;  /* 淺灰色背景 */
 }
 
 .tab-content {
@@ -116,9 +120,9 @@
 }
 
 .btn-secondary.active {
-    background: #ff6b6b;
+    background: #ff6b1a;
     color: white;
-    border-color: #ff6b6b;
+    border-color: #ff6b1a;
 }
 
 .map-container {
@@ -217,14 +221,14 @@
     padding: 10px 20px;
     font-size: 16px;
     font-weight: 500;
-    color: #666;
+    color: #ff6b1a;
     cursor: pointer;
     position: relative;
     transition: color 0.3s ease;
 }
 
 .tab-btn:hover {
-    color: #ff6b1a;
+    color: #ea580c;
 }
 
 .tab-btn.active {
@@ -272,4 +276,14 @@
         padding: 8px 15px;
         font-size: 14px;
     }
+}
+
+.favorites-tabs .tab-btn.active {
+    color: #ff6b1a;
+    border-bottom-color: #ff6b1a;
+    font-weight: 600;
+}
+
+.favorites-tabs .tab-btn:hover {
+    color: #ea580c;
 } 

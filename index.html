@@ -906,7 +906,7 @@
             </div>
             <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
-                <button class="btn-login">登入</button>
+                <button class="btn-login" id="loginButton">登入</button>
             </div>
 
             <!-- 已登入狀態 - 顯示會員頭像 -->
@@ -1219,6 +1219,32 @@
     <script src="js/mapInit.js"></script>
     <script src="js/restaurantList.js"></script>
     <script src="js/login.js"></script>
+    
+    <!-- 調試用登入按鈕 -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="debugLoginBtn" style="padding: 10px; background: #ff6b1a; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            測試登入
+        </button>
+    </div>
+    
+    <script>
+        // 調試用登入按鈕事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const debugLoginBtn = document.getElementById('debugLoginBtn');
+            if (debugLoginBtn) {
+                debugLoginBtn.addEventListener('click', function() {
+                    console.log('調試登入按鈕被點擊');
+                    const loginModal = document.getElementById('loginModal');
+                    if (loginModal) {
+                        loginModal.style.display = 'block';
+                    } else {
+                        console.error('找不到登入彈窗元素');
+                        alert('找不到登入彈窗元素');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

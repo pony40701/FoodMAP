@@ -1,0 +1,17 @@
+com\foodmap\backend\config\WebConfig.class
+com\foodmap\backend\model\UserProfile.class
+com\foodmap\backend\dto\UserDto.class
+com\foodmap\backend\controller\UserController.class
+com\foodmap\backend\security\JwtTokenUtil.class
+com\foodmap\backend\BackendApplication.class
+com\foodmap\backend\config\JacksonConfig.class
+com\foodmap\backend\service\UserService.class
+com\foodmap\backend\BackendApplication$1.class
+com\foodmap\backend\dto\RegisterRequest.class
+com\foodmap\backend\repository\UserRepository.class
+com\foodmap\backend\controller\AuthController.class
+com\foodmap\backend\service\impl\UserServiceImpl.class
+com\foodmap\backend\dto\LoginRequest.class
+com\foodmap\backend\dto\LoginResponse.class
+com\foodmap\backend\model\User.class
+com\foodmap\backend\security\WebSecurityConfig.class
