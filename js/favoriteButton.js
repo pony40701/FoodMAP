@@ -1,4 +1,4 @@
-// 收藏按鈕處理模組
+view-full-hours-btn// 收藏按鈕處理模組
 class FavoriteButton {
     constructor() {
         this.initialized = false;

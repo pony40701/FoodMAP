@@ -563,41 +563,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 將模組掛載到全局對象
     window.RestaurantModal = RestaurantModal;
-    
-    // 綁定測試按鈕
-    const testModalBtn = document.getElementById('testModalBtn');
-    if (testModalBtn) {
-        testModalBtn.addEventListener('click', function() {
-            // 創建一個測試餐廳對象
-            const testRestaurant = {
-                id: 'test-restaurant-id',
-                place_id: 'test-restaurant-id',
-                name: 'Burger Joint 7分so美式廚房-朝富店',
-                rating: 4.8,
-                user_ratings_total: 6830,
-                address: '407台灣台中市西屯朝富路252號1F',
-                photos: 'images/carousel1.jpg',
-                types: ['餐廳', '美式料理', '漢堡'],
-                location: {
-                    lat: 24.1681,
-                    lng: 120.6438
-                },
-                opening_hours: {
-                    open_now: true,
-                    weekday_text: [
-                        '星期一: 09:00 – 22:00',
-                        '星期二: 09:00 – 22:00',
-                        '星期三: 09:00 – 22:00',
-                        '星期四: 09:00 – 22:00',
-                        '星期五: 09:00 – 23:00',
-                        '星期六: 10:00 – 23:00',
-                        '星期日: 10:00 – 21:00'
-                    ]
-                }
-            };
-            
-            // 顯示測試餐廳彈窗
-            RestaurantModal.showRestaurantDetail(testRestaurant);
-        });
-    }
 }); 

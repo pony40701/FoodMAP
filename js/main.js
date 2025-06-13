@@ -405,48 +405,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.favoriteButton) {
             await window.favoriteButton.initialize();
         }
-        
-        // 綁定測試按鈕點擊事件
-        const testModalBtn = document.getElementById('testModalBtn');
-        if (testModalBtn) {
-            testModalBtn.addEventListener('click', function() {
-                // 創建一個測試餐廳對象
-                const testRestaurant = {
-                    id: 'test-restaurant-id',
-                    place_id: 'test-restaurant-id',
-                    name: '測試餐廳',
-                    rating: 4.5,
-                    user_ratings_total: 123,
-                    address: '台北市測試路123號',
-                    photos: 'images/carousel1.jpg',
-                    types: ['餐廳', '咖啡廳', '甜點'],
-                    opening_hours: {
-                        open_now: true,
-                        weekday_text: [
-                            '星期一: 09:00 – 22:00',
-                            '星期二: 09:00 – 22:00',
-                            '星期三: 09:00 – 22:00',
-                            '星期四: 09:00 – 22:00',
-                            '星期五: 09:00 – 23:00',
-                            '星期六: 10:00 – 23:00',
-                            '星期日: 10:00 – 21:00'
-                        ]
-                    }
-                };
-                
-                // 優先使用新的彈窗功能
-                if (window.RestaurantModal) {
-                    window.RestaurantModal.showRestaurantDetail(testRestaurant);
-                }
-                // 如果新彈窗不可用，則使用舊的彈窗功能
-                else if (window.mapInit && typeof window.mapInit.showRestaurantDetail === 'function') {
-                    window.mapInit.showRestaurantDetail(testRestaurant);
-                } else {
-                    console.error('找不到 showRestaurantDetail 函數');
-                    showToast('無法顯示餐廳詳情，請重新整理頁面');
-                }
-            });
-        }
     } catch (error) {
         console.error('初始化頁面時發生錯誤:', error);
         showToast('初始化失敗，請重新整理頁面');
