@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarPreview = document.getElementById('avatarPreview');
     const removeAvatarBtn = document.getElementById('removeAvatar');
 
+    // API 基礎 URL
+    const API_BASE_URL = 'http://localhost:8090/api';
+
     // 大頭貼上傳處理
     avatarInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -184,16 +187,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 提交註冊
     window.submitRegistration = function() {
-        // 儲存註冊資料
-        const userData = {
-            email: document.getElementById('email').value.trim(),
-            name: document.getElementById('name').value.trim(),
-            phone: document.getElementById('phone').value.trim()
-        };
-        localStorage.setItem('userData', JSON.stringify(userData));
+        // 獲取表單數據
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         
-        // 切換到完成步驟
-        goToStep(3);
+        // 獲取大頭貼，但限制大小
+        let avatarUrl = '';
+        if (avatarInput.files && avatarInput.files[0]) {
+            // 使用一個簡單的標記，而不是發送整個 base64 數據
+            avatarUrl = 'user_uploaded_avatar';
+        }
+        
+        // 準備註冊資料
+        const registerData = {
+            email: email,
+            password: password,
+            name: name,
+            phone: phone,
+            avatarUrl: avatarUrl
+        };
+        
+        // 顯示載入中狀態
+        const submitButton = document.querySelector('.btn-submit');
+        submitButton.disabled = true;
+        submitButton.textContent = '註冊中...';
+        
+        // 發送註冊請求
+        fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registerData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('註冊響應:', data);
+            
+            if (data.success) {
+                // 註冊成功
+                console.log('註冊成功');
+                
+                // 儲存用戶資料
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userId', data.user.id);
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                
+                // 切換到完成步驟
+                goToStep(3);
+            } else {
+                // 註冊失敗
+                console.error('註冊失敗:', data.message);
+                alert('註冊失敗: ' + data.message);
+                
+                // 恢復按鈕狀態
+                submitButton.disabled = false;
+                submitButton.textContent = '確認註冊';
+            }
+        })
+        .catch(error => {
+            console.error('註冊請求發生錯誤:', error);
+            alert('系統錯誤，請稍後再試');
+            
+            // 恢復按鈕狀態
+            submitButton.disabled = false;
+            submitButton.textContent = '確認註冊';
+        });
     };
 
     // 即時驗證輸入

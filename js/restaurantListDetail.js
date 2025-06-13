@@ -875,7 +875,7 @@ function createRecommendedRestaurantCard(restaurant) {
     const tags = Array.isArray(restaurant.tags) ? restaurant.tags : (restaurant.tags ? restaurant.tags.split(',').map(tag => tag.trim()) : []);
 
     return `
-        <a href="#" class="menu-item restaurant-card">
+        <a href="#" class="menu-item restaurant-card v3">
           <div class="menu-item-image">
             <img src="${restaurant.image}" alt="${restaurant.name}" onerror="this.src='https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'">
             <!-- Photo count from restaurantData is not available, so we omit it or use a placeholder -->

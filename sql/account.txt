@@ -1,0 +1,6 @@
+Database Configuration:
+Database System: MySQL
+Server: 34.80.228.222
+Username: testuser
+Password: 12345678
+Database Name: foodmap_shrshengfake

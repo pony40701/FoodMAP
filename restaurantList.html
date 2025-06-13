@@ -9,6 +9,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/restaurantList.css" />
+    <link rel="stylesheet" href="css/restaurant-card-v2.css">
+    <link rel="stylesheet" href="css/business-hours.css">
     <!-- 添加 login.js -->
     <script src="js/login.js"></script>
     <!-- 加入 Google Maps API -->
@@ -182,6 +184,19 @@
         <button class="modal-close" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
         <div id="modal-content-container">
           <!-- 內容將由 JavaScript 動態填充 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 營業時間詳細彈窗 -->
+    <div id="weeklyHoursModal" class="weekly-hours-modal">
+      <div class="weekly-hours-modal-content">
+        <div class="weekly-hours-modal-header">
+          <h3>營業時間</h3>
+          <span class="weekly-hours-modal-close" onclick="window.closeWeeklyHoursModal()">&times;</span>
+        </div>
+        <div class="weekly-hours-modal-body" id="weekly-hours-modal-body">
+          <!-- 一週的營業時間將由JavaScript動態填充 -->
         </div>
       </div>
     </div>

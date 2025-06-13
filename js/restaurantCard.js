@@ -18,6 +18,11 @@ class RestaurantCard {
             return;
         }
 
+        // 在渲染卡片前，先計算每家餐廳的 isOpen 狀態
+        places.forEach(place => {
+            place.isOpen = this.isRestaurantOpen(place.openTime, place.closeTime);
+        });
+
         // 收藏排序
         const sortedPlaces = places.sort((a, b) => {
             const aIsFavorite = this.favoriteStores.includes(a.id);
@@ -36,10 +41,13 @@ class RestaurantCard {
     // 創建餐廳卡片
     createRestaurantCard(place) {
         const card = document.createElement('div');
-        card.className = 'restaurant-card';
+        card.className = 'restaurant-card v3';
         card.dataset.placeId = place.id;
 
-        const isFavorite = this.favoriteStores.includes(place.id);
+        // 使用全局的 isFavorite 函數檢查收藏狀態
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        const isFavorite = isLoggedIn && window.isFavorite && window.isFavorite(place.id);
+        
         const favoriteClass = isFavorite ? 'active' : '';
         const favoriteIcon = isFavorite ? 'fas fa-heart' : 'far fa-heart';
 
@@ -83,7 +91,9 @@ class RestaurantCard {
             ${'<i class="far fa-star"></i>'.repeat(emptyStars)}
             <span class="rating-value">${rating.toFixed(1)}</span>
         `;
-    }    // 切換收藏狀態
+    }
+
+    // 切換收藏狀態
     toggleFavorite(placeId, button) {
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!isLoggedIn) {
@@ -122,6 +132,20 @@ class RestaurantCard {
         const titleElement = document.getElementById('results-title');
         if (titleElement) {
             titleElement.textContent = title;
+        }
+    }
+
+    isRestaurantOpen(openTime, closeTime) {
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const [openHour, openMinute] = openTime.split(":").map(Number);
+        const [closeHour, closeMinute] = closeTime.split(":").map(Number);
+        const openMinutes = openHour * 60 + openMinute;
+        const closeMinutes = closeHour * 60 + closeMinute;
+        if (openMinutes < closeMinutes) {
+            return nowMinutes >= openMinutes && nowMinutes < closeMinutes;
+        } else {
+            return nowMinutes >= openMinutes || nowMinutes < closeMinutes;
         }
     }
 }
