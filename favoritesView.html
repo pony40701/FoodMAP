@@ -1,77 +1,214 @@
-<!-- 收藏功能視圖模板 -->
-<template id="favorites-template">
-    <div class="favorites-container">
-        <h2>我的收藏</h2>
-        <div class="favorites-tabs">
-            <button class="tab-btn active" data-tab="stores">收藏店家</button>
-            <button class="tab-btn" data-tab="reviews">收藏心得</button>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - 美食地圖FoodMAP</title>
+    <!-- 防止 favicon.ico 404 錯誤 -->
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/favoritesStyle.css">
+    <link rel="stylesheet" href="css/restaurant-card-v2.css">
+    <!-- 添加 Google Maps API -->
+    <script>
+        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({
+            key: "AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0",
+            v: "beta",
+            solution: ["places", "routes"],
+            libraries: ["places"],
+            region: "TW",
+            mapId: "DEMO_MAP_ID"
+        });
+    </script>
+</head>
+<body>
+    <!-- 導航欄 (Header) -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="index.html">食力派ChowCrew</a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首頁</a>
+                <a href="restaurantList.html">美食探索</a>
+                <a href="ranking/index.html">人氣排行</a>
+                <a href="about.html">關於我們</a>
+            </div>
+            <div class="user-actions">
+                <a href="favoritesView.html" class="active"><i class="fas fa-heart"></i> 我的收藏</a>
+                <a href="userCenter.html"><i class="fas fa-user"></i> 會員中心</a>
+            </div>
         </div>
-
-        <div class="favorites-content">
-            <!-- 收藏店家標籤內容 -->
-            <div id="storesTab" class="tab-content active">
-                <!-- 視圖切換按鈕 -->
-                <div class="view-toggle">
-                    <button id="listViewBtn" class="btn-secondary active">列表視圖</button>
-                    <button id="mapViewBtn" class="btn-secondary">地圖視圖</button>
-                </div>
-
-                <!-- 列表視圖 -->
-                <div id="storesListView" class="stores-grid">
-                    <!-- 收藏店家將由 JavaScript 動態載入 -->
-                </div>
-
-                <!-- 地圖視圖 -->
-                <div id="storesMapView" class="map-container" style="display: none;">
-                    <div id="map"></div>
-                </div>
+    </header>
+    
+    <!-- 主要內容 -->
+    <main class="main-container">
+        <div class="favorites-container">
+            <h2>我的收藏</h2>
+            <div class="favorites-tabs">
+                <button class="tab-btn active" data-tab="stores">收藏店家</button>
+                <button class="tab-btn" data-tab="reviews">收藏心得</button>
             </div>
 
-            <!-- 收藏心得標籤內容 -->
-            <div id="reviewsTab" class="tab-content">
-                <div class="reviews-grid">
-                    <!-- 收藏心得將由 JavaScript 動態載入 -->
+            <div class="favorites-content">
+                <!-- 收藏店家標籤內容 -->
+                <div id="storesTab" class="tab-content active">
+                    <!-- 視圖切換按鈕 -->
+                    <div class="view-toggle">
+                        <button id="listViewBtn" class="btn-secondary active">列表視圖</button>
+                        <button id="mapViewBtn" class="btn-secondary">地圖視圖</button>
+                    </div>
+
+                    <!-- 列表視圖 -->
+                    <div class="stores-grid">
+                        <!-- 收藏店家將由 JavaScript 動態載入 -->
+                        <div class="loading">載入中...</div>
+                    </div>
+
+                    <!-- 地圖視圖 -->
+                    <div id="mapContainer" class="map-container" style="display: none;">
+                        <div id="map"></div>
+                    </div>
                 </div>
+
+                <!-- 收藏心得標籤內容 -->
+                <div id="reviewsTab" class="tab-content">
+                    <div class="reviews-grid">
+                        <!-- 收藏心得將由 JavaScript 動態載入 -->
+                        <div class="loading">載入中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>美食地圖FoodMAP</h3>
+                    <p>發現您附近的美食，分享您的用餐體驗</p>
+                </div>
+                <div class="footer-section">
+                    <h3>關於</h3>
+                    <a href="about.html">關於我們</a>
+                    <a href="helpcenter.html">幫助中心</a>
+                </div>
+                <div class="footer-section">
+                    <h3>法律</h3>
+                    <a href="terms-of-service.html">使用條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+                <div class="footer-section">
+                    <h3>聯絡我們</h3>
+                    <a href="mailto:support@foodmap.com">support@foodmap.com</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 美食地圖FoodMAP. 保留所有權利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 餐廳詳情彈窗 -->
+    <div id="restaurantModal" class="modal">
+        <div class="restaurant-modal-content">
+            <!-- 內容將由 JavaScript 動態添加 -->
+        </div>
+    </div>
+
+    <!-- 營業時間週表彈窗 -->
+    <div id="weeklyHoursModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>營業時間</h2>
+                <span class="close" onclick="closeWeeklyHoursModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="weekly-hours-modal-body">
+                <!-- 內容將由 JavaScript 動態添加 -->
             </div>
         </div>
     </div>
 
-    <!-- 店家卡片模板 -->
-    <template id="store-card-template">
-        <div class="store-card" data-place-id="">
-            <img src="" alt="" class="store-image">
-            <button class="favorite-btn">
-                <i class="fas fa-star"></i>
-            </button>
-            <div class="store-info">
-                <h3 class="store-name"></h3>
-                <div class="store-rating"></div>
-                <p class="store-address"></p>
-                <div class="store-status"></div>
-            </div>
-            <div class="store-actions">
-                <button class="btn-secondary view-detail">查看詳情</button>
-            </div>
-        </div>
-    </template>
+    <!-- 檢查按鈕 - 用於測試與偵錯 -->
+    <div class="debug-panel" style="position: fixed; bottom: 10px; left: 10px; z-index: 9999; background: rgba(0,0,0,0.7); color: white; padding: 15px; border-radius: 5px;">
+        <button id="checkModal" style="padding: 5px; margin: 5px;">檢查彈窗</button>
+        <button id="testModal" style="padding: 5px; margin: 5px;">測試彈窗</button>
+    </div>
 
-    <!-- 心得卡片模板 -->
-    <template id="review-card-template">
-        <div class="review-card" data-review-id="">
-            <div class="review-header">
-                <img src="" alt="" class="reviewer-avatar">
-                <div class="reviewer-info">
-                    <span class="reviewer-name"></span>
-                    <div class="review-rating"></div>
-                </div>
-            </div>
-            <div class="review-content"></div>
-            <div class="review-footer">
-                <span class="review-date"></span>
-                <button class="favorite-btn">
-                    <i class="fas fa-star"></i>
-                </button>
-            </div>
-        </div>
-    </template>
-</template> 
+    <!-- 最先加載 Toast 通知和主要 JS -->
+    <script src="js/main.js"></script>
+    
+    <!-- 清除測試數據 -->
+    <script src="js/clearTestData.js"></script>
+    
+    <!-- 加載收藏功能的核心 JS 文件 -->
+    <script src="js/favoriteSystem.js"></script>
+    <script src="js/favoritesModule.js"></script>
+    
+    <!-- 加載我們的 UI 處理文件 -->
+    <script src="js/favoriteUI.js"></script>
+    
+    <!-- 最後加載 userCenter.js，確保其不會覆蓋我們的方法 -->
+    <script src="js/userCenter.js"></script>
+    
+    <!-- 初始化收藏 UI 和測試按鈕 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('favoritesView.html 正在初始化...');
+                
+                // 測試按鈕功能
+                document.getElementById('checkModal').addEventListener('click', () => {
+                    const modal = document.getElementById('restaurantModal');
+                    if (modal) {
+                        console.log('找到餐廳彈窗元素:', modal);
+                        alert('餐廳彈窗元素存在');
+                    } else {
+                        console.error('找不到餐廳彈窗元素!');
+                        alert('找不到餐廳彈窗元素!');
+                    }
+                    
+                    // 檢查是否有店家卡片及其數據
+                    const cards = document.querySelectorAll('.store-card');
+                    console.log(`找到 ${cards.length} 個店家卡片`);
+                    
+                    cards.forEach((card, index) => {
+                        const storeId = card.getAttribute('data-store-id');
+                        console.log(`卡片 ${index + 1} 的 storeId:`, storeId);
+                    });
+                });
+                
+                document.getElementById('testModal').addEventListener('click', () => {
+                    const cards = document.querySelectorAll('.store-card');
+                    if (cards.length > 0) {
+                        const storeId = cards[0].getAttribute('data-store-id');
+                        if (storeId) {
+                            console.log('嘗試顯示第一個店家的詳情彈窗:', storeId);
+                            if (window.favoriteUI) {
+                                window.favoriteUI.viewStoreDetail(storeId);
+                            } else {
+                                console.error('favoriteUI 不存在!');
+                                alert('favoriteUI 不存在!');
+                            }
+                        } else {
+                            console.error('第一張卡片沒有 storeId!');
+                            alert('第一張卡片沒有 storeId!');
+                        }
+                    } else {
+                        console.error('找不到店家卡片!');
+                        alert('找不到店家卡片!');
+                    }
+                });
+                
+                console.log('偵錯功能已初始化');
+            } catch (error) {
+                console.error('初始化失敗:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -21,7 +21,6 @@
 }
 
 .tab-btn.active {
-    background: #ff6b6b;
     color: white;
 }
 
@@ -272,4 +271,215 @@
         padding: 8px 15px;
         font-size: 14px;
     }
+}
+
+/* 添加餐廳詳情彈窗的樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.restaurant-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 10vh auto;
+    max-width: 800px;
+    width: 90%;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modal-open 0.3s ease-out;
+}
+
+.restaurant-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.restaurant-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.restaurant-modal-close {
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.restaurant-modal-close:hover {
+    color: #ff4757;
+}
+
+.restaurant-modal-body {
+    padding: 20px;
+}
+
+.restaurant-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.restaurant-main-info {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .restaurant-main-info {
+        flex-direction: column;
+    }
+}
+
+.restaurant-modal-image {
+    flex: 0 0 40%;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 200px;
+}
+
+.restaurant-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.restaurant-info-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-stars {
+    color: #FFD700;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+
+.modal-rating-value {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.modal-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.modal-address i {
+    color: #555;
+    margin-top: 3px;
+}
+
+.modal-hours {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.modal-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.modal-status.open {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.modal-status.closed {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-favorite-btn, .modal-direction-btn {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.modal-favorite-btn {
+    background-color: #fff;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+.modal-favorite-btn.active {
+    background-color: #ff6b6b;
+    color: #fff;
+}
+
+.modal-direction-btn {
+    background-color: #4a6bff;
+    color: #fff;
+}
+
+.modal-direction-btn:hover {
+    background-color: #3a5bef;
+}
+
+@keyframes modal-open {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 覆蓋任何可能的衝突樣式 */
+#restaurantModal {
+    display: none !important;
+}
+
+#restaurantModal.active {
+    display: block !important;
+}
+
+/* 確保彈窗可見且樣式正常 */
+.restaurant-modal-overlay,
+.restaurant-modal {
+    z-index: auto !important;
 } 

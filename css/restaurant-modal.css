@@ -1,0 +1,439 @@
+/* 餐廳彈窗樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    overflow: auto;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.restaurant-modal-content {
+    position: relative;
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+    margin: 0 auto;
+    z-index: 2001;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 彈窗標題區域 */
+.restaurant-modal-header {
+    position: relative;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    background-color: #fff;
+    color: #333;
+}
+
+.restaurant-modal-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    max-width: calc(100% - 30px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #333;
+}
+
+.restaurant-modal-close {
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    font-size: 22px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.restaurant-modal-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-details {
+    padding: 0;
+}
+
+/* 主要資訊區域佈局 */
+.restaurant-main-info {
+    display: flex;
+    flex-direction: row;
+    padding: 0 16px 16px;
+}
+
+.restaurant-modal-image {
+    width: 140px;
+    height: 140px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 14px;
+    padding: 0;
+}
+
+.restaurant-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.restaurant-info-text {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 評分區域 */
+.modal-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.modal-stars {
+    color: #FFD700;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+.modal-rating-value {
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-right: 3px;
+}
+
+.modal-rating-count {
+    color: #666;
+    font-size: 0.75rem;
+}
+
+/* 地址區域 */
+.modal-address {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    color: #333;
+    line-height: 1.3;
+    font-size: 0.85rem;
+}
+
+.modal-address i {
+    color: #FF6B1A;
+    margin-right: 7px;
+    margin-top: 2px;
+    font-size: 0.85rem;
+}
+
+/* 營業時間區域 */
+.modal-hours {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-status {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 2px;
+    font-size: 0.85rem;
+}
+
+.modal-status.open {
+    color: #4CAF50;
+}
+
+.modal-status.closed {
+    color: #F44336;
+}
+
+.modal-status i {
+    margin-right: 6px;
+    font-size: 0.85rem;
+}
+
+/* 今日營業時間樣式 */
+.modal-today-hours {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.today-name {
+    font-weight: 600;
+    margin-right: 2px;
+    color: #333;
+}
+
+.today-hours {
+    color: #555;
+    font-weight: normal;
+}
+
+/* 營業時間查看按鈕 */
+.view-full-hours-btn {
+    background: none;
+    border: none;
+    color: #1A73E8;
+    padding: 0;
+    cursor: pointer;
+    display: inline;
+    font-size: 0.75em;
+    text-decoration: underline;
+    margin: 0;
+    text-align: left;
+}
+
+.view-full-hours-btn:hover {
+    color: #135CBD;
+}
+
+/* 餐廳類型標籤 */
+.restaurant-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.restaurant-tag {
+    background-color: #F0F0F0;
+    color: #666;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* 按鈕區域 */
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 5px;
+}
+
+.modal-favorite-btn,
+.modal-direction-btn {
+    flex: 1;
+    height: 32px;
+    border: none;
+    border-radius: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+.modal-favorite-btn {
+    background-color: #ffffff;
+    color: #FF6B1A;
+    border: 1px solid #FF6B1A;
+}
+
+.modal-favorite-btn.active {
+    background-color: #FFF0E8;
+    color: #FF6B1A;
+}
+
+.modal-favorite-btn:hover {
+    background-color: #FFF0E8;
+}
+
+.modal-favorite-btn i {
+    margin-right: 5px;
+    font-size: 0.85rem;
+}
+
+.modal-direction-btn {
+    background-color: #1A73E8;
+    color: white;
+}
+
+.modal-direction-btn:hover {
+    background-color: #135CBD;
+}
+
+.modal-direction-btn i {
+    margin-right: 5px;
+    font-size: 0.85rem;
+}
+
+/* 響應式調整 */
+@media (max-width: 767px) {
+    .restaurant-main-info {
+        flex-direction: column;
+    }
+
+    .restaurant-modal-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .restaurant-info-text {
+        padding: 0;
+    }
+}
+
+/* 周邊景點 */
+.nearby-places {
+    padding: 16px;
+    border-top: 1px solid #eee;
+}
+
+.nearby-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.nearby-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.nearby-item {
+    display: flex;
+    align-items: center;
+    width: calc(50% - 8px);
+    color: #333;
+}
+
+.nearby-item i {
+    color: #FF6B1A;
+    margin-right: 8px;
+}
+
+/* 週營業時間表格樣式 */
+.weekly-hours-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2200;
+    justify-content: center;
+    align-items: center;
+}
+
+.weekly-hours-modal.active {
+    display: flex;
+}
+
+.weekly-hours-modal-content {
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+    z-index: 2201;
+}
+
+.weekly-hours-modal-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.weekly-hours-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.weekly-hours-modal-close {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #666;
+}
+
+.weekly-hours-modal-body {
+    padding: 16px;
+}
+
+.weekly-hours-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hours-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hours-row:last-child {
+    border-bottom: none;
+}
+
+.hours-row.today {
+    background-color: #FFF0E8;
+    font-weight: 600;
+    position: relative;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 0 -12px;
+}
+
+.day-name {
+    flex: 1;
+    color: #333;
+}
+
+.day-hours {
+    color: #555;
+} 

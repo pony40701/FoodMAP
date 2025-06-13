@@ -4,6 +4,33 @@
 class BusinessHours {
     constructor() {
         this.DEBUG = true; // 是否輸出調試信息
+        this.forcedDay = null; // 強制設置的星期幾 (0-6)
+    }
+
+    /**
+     * 強制設置當前是星期幾，用於測試
+     * @param {number} day - 星期幾 (0-6，0=星期日)
+     */
+    forceDay(day) {
+        if (day >= 0 && day <= 6) {
+            this.forcedDay = day;
+            console.log(`[BusinessHours] 已強制設置當前為星期${['日', '一', '二', '三', '四', '五', '六'][day]}`);
+        } else {
+            this.forcedDay = null;
+            console.log('[BusinessHours] 已取消強制設置日期');
+        }
+    }
+
+    /**
+     * 獲取當前是星期幾
+     * @returns {number} - 星期幾 (0-6，0=星期日)
+     */
+    getCurrentDay() {
+        // 如果有強制設置的日期，則使用強制值
+        if (this.forcedDay !== null) {
+            return this.forcedDay;
+        }
+        return new Date().getDay();
     }
 
     /**
@@ -157,7 +184,7 @@ class BusinessHours {
     getTodayHours(weekdayText) {
         if (!Array.isArray(weekdayText)) return null;
 
-        const today = new Date().getDay();
+        const today = this.getCurrentDay();
         // 轉換星期幾的索引 (API中 0=週一, 6=週日)
         const index = today === 0 ? 6 : today - 1;
         

@@ -11,22 +11,16 @@ class InfiniteScroll {
         this.bindScrollEvent();
     }    // 設置餐廳數據
     setRestaurants(restaurants) {
-        // 對餐廳進行排序：收藏的排在前面，然後按照評分排序
+        // 收藏功能已被移除，只按照評分排序
         this.allRestaurants = restaurants.sort((a, b) => {
-            // 先判斷是否被收藏
-            const aFavorite = window.isFavorite(a.id);
-            const bFavorite = window.isFavorite(b.id);
-            
-            if (aFavorite && !bFavorite) return -1;
-            if (!aFavorite && bFavorite) return 1;
-            
-            // 如果收藏狀態相同，則按照評分排序
+            // 按照評分排序
             if (b.rating === a.rating) {
                 return b.user_ratings_total - a.user_ratings_total;
             }
             return b.rating - a.rating;
         });
         
+        // 重置頁面並顯示
         this.currentPage = 1;
         this.hasMore = restaurants.length > this.pageSize;
         this.displayCurrentPage();
@@ -71,3 +65,23 @@ class InfiniteScroll {
 
 // 創建實例並掛載到 window
 window.infiniteScroll = new InfiniteScroll();
+
+// 顯示提示訊息的輔助函數
+function showToast(message) {
+    if (window.showToast) {
+        window.showToast(message);
+    } else {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        toast.offsetHeight;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+}

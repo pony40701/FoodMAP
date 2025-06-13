@@ -1447,53 +1447,48 @@ function showLoginModal() {
 }
 
 // 處理收藏按鈕點擊
-function handleFavoriteClick(button, restaurantId) {
-    if (!isUserLoggedIn()) {
-        alert('請先登入會員');
-        showLoginModal();
-        
-        // 設定登入成功後的回調函數
-        window.onLoginSuccess = () => {
-            // 登入成功後自動執行收藏
-            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-            favorites.push({ id: restaurantId });
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-            
-            // 更新按鈕狀態
-            button.classList.add('active');
-            const icon = button.querySelector('i');
-            if (icon) {
-                icon.className = 'fas fa-heart';
-            }
-            
-            showToast('已加入收藏');
-        };
+async function handleFavoriteClick(button, placeId) {
+    // 檢查收藏系統是否已初始化
+    if (!window.favoriteSystem) {
+        console.error('收藏系統未初始化');
+        showToast('收藏系統初始化失敗，請重新整理頁面');
         return;
     }
 
-    const icon = button.querySelector('i');
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const index = favorites.findIndex(fav => fav.id === restaurantId);
+    const placeId = button.getAttribute('data-place-id');
+    const restaurantName = button.getAttribute('data-name');
 
-    if (index === -1) {
-        // 添加到收藏
-        favorites.push({ id: restaurantId });
-        button.classList.add('active');
-        if (icon) {
-            icon.className = 'fas fa-heart';
-        }
-        showToast('已加入收藏');
-    } else {
-        // 從收藏中移除
-        favorites.splice(index, 1);
-        button.classList.remove('active');
-        if (icon) {
-            icon.className = 'far fa-heart';
-        }
-        showToast('已取消收藏');
+    if (!placeId) {
+        console.error('找不到餐廳ID');
+        return;
     }
 
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+    // 檢查是否已收藏
+    const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
+    
+    try {
+        if (isFavorited) {
+            // 如果已收藏，則移除收藏
+            await window.favoriteSystem.removeStore(placeId);
+            button.querySelector('i').classList.replace('fas', 'far');
+            button.classList.remove('active');
+            showToast('已取消收藏');
+        } else {
+            // 如果未收藏，則添加收藏
+            const storeData = {
+                id: placeId,
+                name: restaurantName,
+                favoriteTime: new Date().toISOString()
+            };
+            await window.favoriteSystem.addStore(storeData);
+            button.querySelector('i').classList.replace('far', 'fas');
+            button.classList.add('active');
+            showToast('已加入收藏');
+        }
+    } catch (error) {
+        console.error('收藏操作失敗:', error);
+        showToast('收藏操作失敗，請稍後再試');
+    }
 }
 
 // 獲取所有不重複的標籤
@@ -1970,13 +1965,13 @@ function renderFilteredCards(pageData, totalCount) {
       <div class="restaurant-card v3" data-id="${restaurant.id}">
         <div class="restaurant-image-wrapper" onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
           <img src="${restaurant.image}" alt="${restaurant.name}" loading="lazy">
-          <button class="favorite-btn" title="加入收藏" data-id="${restaurant.id}">
-            <i class="far fa-heart"></i>
-          </button>
         </div>
         <div class="restaurant-info">
           <div class="restaurant-title-row">
             <h3 class="restaurant-name">${restaurant.name}</h3>
+            <button class="favorite-btn" title="加入收藏" data-place-id="${restaurant.id}" data-name="${restaurant.name.replace(/"/g, '&quot;')}">
+              <i class="${window.favoriteSystem && window.favoriteSystem.isFavorite(restaurant.id) ? 'fas' : 'far'} fa-heart"></i>
+            </button>
           </div>
           <div class="restaurant-rating-row">
             <span class="rating-stars">${starsHtml}</span>
@@ -2006,27 +2001,12 @@ function renderFilteredCards(pageData, totalCount) {
   document.querySelectorAll('.favorite-btn').forEach(button => {
     button.addEventListener('click', function(event) {
       event.stopPropagation();
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      if (!isLoggedIn) {
-        alert('請先登入會員以使用收藏功能');
-        document.getElementById('loginModal').style.display = 'block';
-        window.onLoginSuccess = () => {
-          this.classList.add('active');
-          const icon = this.querySelector('i');
-          icon.classList.remove('far');
-          icon.classList.add('fas');
-        };
+      const placeId = this.getAttribute('data-place-id');
+      if (!placeId) {
+        console.error('找不到餐廳ID');
         return;
       }
-      this.classList.toggle('active');
-      const icon = this.querySelector('i');
-      if (this.classList.contains('active')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-      } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-      }
+      handleFavoriteClick(this, placeId);
     });
   });
 }
@@ -2102,6 +2082,17 @@ function handleSearch() {
 // 初始化
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM Content Loaded');
+
+  // 確保每個餐廳都有唯一的 ID
+  restaurantData.forEach((restaurant, index) => {
+    if (!restaurant.id) {
+      restaurant.id = `restaurant_${index}`;
+    } else {
+      // 確保 ID 是字符串，避免數字 ID 被視為相同
+      restaurant.id = String(restaurant.id);
+    }
+    console.log(`餐廳 ID: ${restaurant.id}, 名稱: ${restaurant.name}`);
+  });
 
   // 初始化地圖
   if (typeof google !== 'undefined' && google.maps) {
