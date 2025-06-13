@@ -1,0 +1,9 @@
+@echo off
+echo 安裝 Maven 插件...
+cd /d C:\Users\saucy\Desktop\FoodMAP\backend
+echo 正在更新 Maven 設定...
+call mvn dependency:get -Dartifact=org.springframework.boot:spring-boot-maven-plugin:2.7.13
+echo Spring Boot Maven 插件安裝完成！
+echo 執行測試命令...
+call mvn -v
+pause 

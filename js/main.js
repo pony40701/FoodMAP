@@ -578,3 +578,29 @@ document.addEventListener('keydown', function(e) {
         closeRestaurantModal();
     }
 });
+
+// 初始化登入彈窗
+function initLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    const closeBtn = document.querySelector('#loginModal .close');
+    const loginForm = document.getElementById('loginForm');
+    
+    if (!loginModal || !closeBtn || !loginForm) {
+        console.error('找不到登入彈窗相關元素');
+        return;
+    }
+    
+    // 關閉按鈕點擊事件
+    closeBtn.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+    });
+    
+    // 點擊模態框外部時關閉
+    window.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.style.display = 'none';
+        }
+    });
+    
+    console.log('登入彈窗初始化完成');
+}
