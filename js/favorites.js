@@ -423,9 +423,14 @@ const FavoritesManager = {
 
     // 更新收藏按鈕狀態
     updateFavoriteButton(button, restaurantId) {
-        const isFavorite = this.isFavorite(restaurantId);
-        button.innerHTML = `<i class="fa${isFavorite ? 's' : 'r'} fa-heart"></i>`;
-        button.classList.toggle('active', isFavorite);
+        const isFav = this.isFavorite(restaurantId);
+        if (isFav) {
+            button.classList.add('active');
+            button.querySelector('i').style.color = '#ff6b1a'; // 修改從 #ff4757 (粉紅色) 為 #ff6b1a (橙色)
+        } else {
+            button.classList.remove('active');
+            button.querySelector('i').style.color = '#ccc';
+        }
     }
 };
 
