@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="css/business-hours.css">
     <!-- 添加 login.js -->
     <script src="js/login.js"></script>
+    <!-- 加入 Google Maps API -->
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places,geometry&callback=initMap">
+    </script>
   </head>
   <body>
     <!--only complete this page's search cuz no idea with others page-->
@@ -312,9 +316,7 @@
     </div>
 
     <!-- 加入必要的 JavaScript -->
-    <script src="js/favorites.js"></script>
-    <script src="js/main.js"></script>
-    <script src="JS/restaurantList.js"></script>
+    <script src="js/restaurantList.js"></script>
     <script>
       // 處理寫食記按鈕點擊
       function handleWriteReview() {
@@ -412,9 +414,6 @@
         }
       });
     </script>
-    <!-- 加入 Google Maps API -->
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6_6-dHTpnaLn6NKtn6OhmCFUqf1B4YN4&callback=initMap">
-    </script>
+    
   </body>
 </html>
