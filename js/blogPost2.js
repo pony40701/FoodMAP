@@ -1152,28 +1152,26 @@ document.addEventListener('DOMContentLoaded', function() {
 function editPost(postId) {
     const posts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
     const post = posts.find(p => p.id === postId);
-    
     if (!post) return;
 
     // 設置編輯模式標記
     isEditingPost = true;
     editingPostId = post.id;
 
-    // 將文章轉為草稿
+    // 產生新的草稿 id，避免覆蓋原本草稿
+    const newDraftId = Date.now();
+
+    // 將文章轉為草稿（給新 id）
     const draft = {
         ...post,
-        lastModified: new Date().toISOString()
+        id: newDraftId,
+        lastModified: new Date().toISOString(),
+        status: 'draft'
     };
 
     // 儲存為草稿
     const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
-    // 檢查是否已經存在相同ID的草稿
-    const existingDraftIndex = drafts.findIndex(d => d.id === draft.id);
-    if (existingDraftIndex !== -1) {
-        drafts[existingDraftIndex] = draft;
-    } else {
-        drafts.push(draft);
-    }
+    drafts.push(draft);
     localStorage.setItem('blogDrafts', JSON.stringify(drafts));
 
     // 刪除已發布文章
@@ -1181,14 +1179,14 @@ function editPost(postId) {
 
     // 切換到編輯頁面
     showSection('write');
-    
+
     // 填充表單
     document.getElementById('postTitle').value = draft.title;
     document.getElementById('restaurantName').value = draft.restaurant;
     document.getElementById('restaurantLocation').value = draft.location;
     document.getElementById('editor').innerHTML = draft.content;
     document.getElementById('tags').value = draft.tags.join(', ');
-    
+
     // 設置評分
     Object.entries(draft.ratings).forEach(([category, rating]) => {
         const starsContainer = document.querySelector(`.stars[data-category="${category}"]`);
