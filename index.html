@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="css/business-hours.css">
     <link rel="stylesheet" href="css/modal-fix.css">
     <link rel="stylesheet" href="css/restaurant-modal-new.css">
+    <!-- 加載API配置和服務 -->
+    <script src="js/config.js"></script>
+    <script src="js/restaurantService.js"></script>
     <!-- 添加 Google Maps API -->
     <script>
         (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
@@ -979,7 +982,7 @@
             </div>
             <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
-                <button class="btn-login">登入</button>
+                <button class="btn-login" id="loginButton">登入</button>
             </div>
 
             <!-- 已登入狀態 - 顯示會員頭像 -->
@@ -1356,11 +1359,6 @@
     <script src="js/mapInit.js"></script>
     <script src="js/restaurantList.js"></script>
     <script src="js/login.js"></script>
-
-    <!-- 在 body 結尾前添加測試按鈕 -->
-    <!-- 移除測試按鈕 -->
-
-    <!-- 在其他 JS 文件之後引入新的 JS 文件 -->
     <script src="js/restaurant-modal.js"></script>
 </body>
 

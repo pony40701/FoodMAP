@@ -148,6 +148,34 @@ class MapInit {
 
     async searchNearbyRestaurants(lat, lng) {
         try {
+            console.log('開始從數據庫獲取附近餐廳');
+            
+            // 檢查餐廳服務是否可用
+            if (window.restaurantService && window.restaurantService.initialized) {
+                // 使用餐廳服務獲取附近餐廳
+                const searchResults = await window.restaurantService.getNearbyRestaurants(lat, lng, 5000);
+                
+                if (!searchResults || searchResults.length === 0) {
+                    this.updateResultsTitle('找不到相關餐廳');
+                    window.displayRestaurants([]);
+                    return;
+                }
+                
+                console.log(`成功從數據庫獲取 ${searchResults.length} 間餐廳的詳細資訊`);
+                
+                // 更新結果標題
+                this.updateResultsTitle(`附近餐廳 (找到 ${searchResults.length} 間)`);
+                
+                // 使用無限滾動來顯示結果
+                window.infiniteScroll.setRestaurants(searchResults);
+                
+                // 更新地圖上的標記
+                await this.showRestaurantsOnMap(searchResults);
+                
+                return;
+            }
+            
+            // 如果餐廳服務不可用，使用原始Google API實現
             if (!this.map || !this.placesService) {
                 throw new Error('地圖或搜尋服務尚未初始化');
             }
@@ -159,7 +187,7 @@ class MapInit {
                 language: 'zh-TW'
             };
 
-            console.log('開始搜尋附近餐廳:', request);
+            console.log('開始使用Google API搜尋附近餐廳:', request);
 
             // 使用 Promise 封裝 nearbySearch
             const searchResults = await new Promise((resolve, reject) => {
@@ -250,14 +278,28 @@ class MapInit {
         }
     }
 
-    // 獲取地點詳細資訊
+    // 修改getPlaceDetails函數，優先使用數據庫
     async getPlaceDetails(placeId) {
         if (!placeId) {
             console.error('getPlaceDetails: 缺少 placeId 參數');
             return null;
         }
-
-        console.log(`開始獲取地點詳細資訊 (ID: ${placeId})`);
+        
+        // 嘗試從餐廳服務獲取詳情
+        if (window.restaurantService && window.restaurantService.initialized) {
+            try {
+                const restaurantDetails = await window.restaurantService.getRestaurantDetails(placeId);
+                if (restaurantDetails) {
+                    console.log(`成功從數據庫獲取餐廳詳情 (ID: ${placeId})`);
+                    return restaurantDetails;
+                }
+            } catch (error) {
+                console.warn(`從數據庫獲取餐廳詳情失敗，嘗試使用Google API: ${error.message}`);
+            }
+        }
+        
+        // 如果從數據庫獲取失敗，使用Google Places API
+        console.log(`開始從Google API獲取地點詳細資訊 (ID: ${placeId})`);
 
         return new Promise((resolve, reject) => {
             const request = {
@@ -273,7 +315,7 @@ class MapInit {
                         place.place_id = placeId;
                     }
                     
-                    console.log(`成功獲取地點詳細資訊 (ID: ${placeId}, 名稱: ${place.name})`);
+                    console.log(`成功從Google API獲取地點詳細資訊 (ID: ${placeId}, 名稱: ${place.name})`);
                     resolve(place);
                 } else {
                     console.warn(`無法獲取地點詳細資訊 (${placeId}):`, status);

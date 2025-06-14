@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美食心得 - 美食外送平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/style.css">
+    <link rel="stylesheet" href="../CSS/foodReview.css">
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <div class="review-list-container">
+        <div class="search-filter-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜尋心得...">
+                <button id="searchBtn">搜尋</button>
+            </div>
+            <div class="filter-options">
+                <select id="ratingFilter">
+                    <option value="all">所有評分</option>
+                    <option value="5">5星</option>
+                    <option value="4">4星以上</option>
+                    <option value="3">3星以上</option>
+                </select>
+                <select id="sortBy">
+                    <option value="newest">最新發布</option>
+                    <option value="oldest">最早發布</option>
+                    <option value="highest">最高評分</option>
+                    <option value="lowest">最低評分</option>
+                </select>
+                <div class="tag-filter">
+                    <input type="text" id="tagFilter" placeholder="輸入標籤篩選">
+                    <div id="selectedTags" class="selected-tags"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reviews-grid">
+            <!-- 心得列表將由 JavaScript 動態載入 -->
+        </div>
+
+        <div class="pagination">
+            <button id="prevPage" class="btn-secondary">上一頁</button>
+            <span id="pageInfo">第 1 頁</span>
+            <button id="nextPage" class="btn-secondary">下一頁</button>
+        </div>
+    </div>
+
+    <!-- 心得詳情彈窗 -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="reviewDetails">
+                <!-- 心得詳情將由 JavaScript 動態載入 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function(){
+            $("#nav-placeholder").load("nav.html");
+        });
+    </script>
+    <script src="../JS/foodReviewList.js"></script>
+</body>
+</html> 

@@ -484,3 +484,80 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
+// 初始化登入彈窗
+function initLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    const closeBtn = document.querySelector('#loginModal .close');
+    const loginForm = document.getElementById('loginForm');
+    
+    if (!loginModal || !closeBtn || !loginForm) {
+        console.error('找不到登入彈窗相關元素');
+        return;
+    }
+    
+    // 關閉按鈕點擊事件
+    closeBtn.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+    });
+    
+    // 點擊模態框外部時關閉
+    window.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.style.display = 'none';
+        }
+    });
+    
+    console.log('登入彈窗初始化完成');
+}
+
+// 檢查 URL 參數，處理從其他頁面跳轉過來的餐廳詳情請求
+function checkUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const showRestaurantId = urlParams.get('showRestaurant');
+    
+    if (showRestaurantId) {
+        console.log('檢測到 showRestaurant 參數:', showRestaurantId);
+        
+        // 嘗試從 sessionStorage 獲取餐廳數據
+        try {
+            const restaurantData = JSON.parse(sessionStorage.getItem('selectedRestaurant'));
+            console.log('從 sessionStorage 獲取的餐廳數據:', restaurantData);
+            
+            if (restaurantData && (restaurantData.place_id === showRestaurantId || restaurantData.id === showRestaurantId)) {
+                // 等待地圖初始化完成
+                setTimeout(() => {
+                    if (window.mapInit) {
+                        console.log('使用 mapInit 顯示餐廳詳情');
+                        window.mapInit.showRestaurantDetail(restaurantData);
+                    } else {
+                        console.log('嘗試初始化 MapInit');
+                        // 嘗試初始化 mapInit
+                        const mapInitInstance = new MapInit();
+                        mapInitInstance.init().then(() => {
+                            window.mapInit = mapInitInstance;
+                            window.mapInit.showRestaurantDetail(restaurantData);
+                        }).catch(error => {
+                            console.error('初始化 MapInit 失敗:', error);
+                        });
+                    }
+                }, 1000); // 給地圖加載一些時間
+                
+                // 清除 sessionStorage 中的數據
+                sessionStorage.removeItem('selectedRestaurant');
+            } else {
+                console.warn('sessionStorage 中的餐廳 ID 與 URL 參數不匹配');
+            }
+        } catch (error) {
+            console.error('解析 sessionStorage 餐廳數據時出錯:', error);
+        }
+    }
+}
+
+// 頁面加載完成後執行
+document.addEventListener('DOMContentLoaded', function() {
+    // 檢查 URL 參數
+    checkUrlParameters();
+    
+    // 其他初始化代碼...
+});

@@ -4,6 +4,10 @@ class FavoriteSystem {
         this.initialized = false;
         this.stores = [];
         this.reviews = [];
+        
+        // 設置API支持標誌
+        this.useApi = false;
+        this.userId = null;
     }
 
     // 初始化收藏系統
@@ -11,36 +15,30 @@ class FavoriteSystem {
         console.log('初始化收藏系統');
         
         try {
-            // 從 localStorage 讀取收藏數據
-            const favoriteStores = localStorage.getItem('favoriteStores');
-            const favoriteReviews = localStorage.getItem('favoriteReviews');
+            // 檢查登入狀態和用戶ID
+            this.isLoggedIn = this.checkLoginStatus();
+            this.userId = parseInt(localStorage.getItem('userId') || '0');
             
-            // 解析收藏數據
-            if (favoriteStores) {
+            // 檢查是否使用API
+            this.useApi = !!window.restaurantService && window.restaurantService.initialized;
+            console.log(`收藏系統模式: ${this.useApi ? '資料庫API' : '本地存儲'}`);
+            
+            // 從存儲加載數據
+            if (this.useApi && this.userId > 0) {
+                // 使用API從數據庫加載
                 try {
-                    this.stores = JSON.parse(favoriteStores);
-                    console.log(`成功載入 ${this.stores.length} 個收藏餐廳`);
+                    this.stores = await window.restaurantService.getFavoriteRestaurants(this.userId) || [];
+                    console.log(`成功從API載入 ${this.stores.length} 個收藏餐廳`);
+                    // 注意: 評論收藏暫時使用localStorage
+                    const favoriteReviews = localStorage.getItem('favoriteReviews');
+                    this.reviews = favoriteReviews ? JSON.parse(favoriteReviews) : [];
                 } catch (error) {
-                    console.error('解析收藏餐廳數據失敗:', error);
-                    this.stores = [];
+                    console.error('從API加載收藏失敗，回退到localStorage:', error);
+                    await this.loadFromLocalStorage();
                 }
             } else {
-                console.log('沒有找到收藏餐廳數據，初始化為空數組');
-                this.stores = [];
-            }
-            
-            // 解析收藏心得數據
-            if (favoriteReviews) {
-                try {
-                    this.reviews = JSON.parse(favoriteReviews);
-                    console.log(`成功載入 ${this.reviews.length} 個收藏心得`);
-                } catch (error) {
-                    console.error('解析收藏心得數據失敗:', error);
-                    this.reviews = [];
-                }
-            } else {
-                console.log('沒有找到收藏心得數據，初始化為空數組');
-                this.reviews = [];
+                // 使用localStorage
+                await this.loadFromLocalStorage();
             }
             
             // 設置初始化標誌
@@ -52,6 +50,41 @@ class FavoriteSystem {
             console.error('初始化收藏系統失敗:', error);
             this.initialized = false;
             throw error;
+        }
+    }
+    
+    // 從localStorage加載數據
+    async loadFromLocalStorage() {
+        // 從 localStorage 讀取收藏數據
+        const favoriteStores = localStorage.getItem('favoriteStores');
+        const favoriteReviews = localStorage.getItem('favoriteReviews');
+        
+        // 解析收藏數據
+        if (favoriteStores) {
+            try {
+                this.stores = JSON.parse(favoriteStores);
+                console.log(`成功從localStorage載入 ${this.stores.length} 個收藏餐廳`);
+            } catch (error) {
+                console.error('解析收藏餐廳數據失敗:', error);
+                this.stores = [];
+            }
+        } else {
+            console.log('沒有找到收藏餐廳數據，初始化為空數組');
+            this.stores = [];
+        }
+        
+        // 解析收藏心得數據
+        if (favoriteReviews) {
+            try {
+                this.reviews = JSON.parse(favoriteReviews);
+                console.log(`成功從localStorage載入 ${this.reviews.length} 個收藏心得`);
+            } catch (error) {
+                console.error('解析收藏心得數據失敗:', error);
+                this.reviews = [];
+            }
+        } else {
+            console.log('沒有找到收藏心得數據，初始化為空數組');
+            this.reviews = [];
         }
     }
 
@@ -69,12 +102,24 @@ class FavoriteSystem {
     // 載入收藏數據
     async loadFavorites() {
         try {
-            // 從 localStorage 讀取收藏數據
-            const storedStores = localStorage.getItem('favoriteStores');
-            const storedReviews = localStorage.getItem('favoriteReviews');
+            // 如果是API模式且已登入，則重新獲取數據
+            if (this.useApi && this.userId > 0) {
+                try {
+                    // 使用API從數據庫加載
+                    this.stores = await window.restaurantService.getFavoriteRestaurants(this.userId) || [];
+                    console.log(`成功從API重新載入 ${this.stores.length} 個收藏餐廳`);
+                } catch (error) {
+                    console.error('從API加載收藏失敗:', error);
+                    // 使用本地數據
+                }
+            } else {
+                // 從 localStorage 讀取收藏數據
+                const storedStores = localStorage.getItem('favoriteStores');
+                const storedReviews = localStorage.getItem('favoriteReviews');
 
-            this.stores = storedStores ? JSON.parse(storedStores) : [];
-            this.reviews = storedReviews ? JSON.parse(storedReviews) : [];
+                this.stores = storedStores ? JSON.parse(storedStores) : [];
+                this.reviews = storedReviews ? JSON.parse(storedReviews) : [];
+            }
 
             // 確保每個收藏的餐廳都有 place_id
             this.stores = this.stores.filter(store => {
@@ -131,6 +176,28 @@ class FavoriteSystem {
                 console.log('該店家已在收藏列表中');
                 return true; // 已經收藏了，視為成功
             }
+            
+            // API模式且已登入
+            if (this.useApi && this.userId > 0) {
+                try {
+                    const success = await window.restaurantService.addFavorite(this.userId, storeData.place_id);
+                    if (success) {
+                        console.log(`成功透過API收藏餐廳: ${storeData.name} (ID: ${storeData.place_id})`);
+                        // 添加到本地列表
+                        storeData.favoriteTime = new Date().toISOString();
+                        this.stores.push(storeData);
+                        // 觸發收藏變更事件
+                        this.triggerFavoritesChangedEvent();
+                        return true;
+                    } else {
+                        console.error('API收藏餐廳失敗');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('API收藏失敗，回退到本地存儲:', error);
+                    // 失敗後回退到本地存儲
+                }
+            }
 
             // 添加收藏時間戳
             storeData.favoriteTime = new Date().toISOString();
@@ -163,6 +230,29 @@ class FavoriteSystem {
             if (!storeId) {
                 console.error('移除收藏失敗: 缺少餐廳ID');
                 return false;
+            }
+            
+            // API模式且已登入
+            if (this.useApi && this.userId > 0) {
+                try {
+                    const success = await window.restaurantService.removeFavorite(this.userId, storeId);
+                    if (success) {
+                        console.log(`成功透過API移除餐廳收藏 (ID: ${storeId})`);
+                        // 從本地列表中移除
+                        this.stores = this.stores.filter(store => 
+                            store.id !== storeId && store.place_id !== storeId
+                        );
+                        // 觸發收藏變更事件
+                        this.triggerFavoritesChangedEvent();
+                        return true;
+                    } else {
+                        console.error('API移除收藏失敗');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('API移除收藏失敗，回退到本地存儲:', error);
+                    // 失敗後回退到本地存儲
+                }
             }
 
             // 從列表中移除 (檢查 id 和 place_id)
@@ -316,8 +406,26 @@ class FavoriteSystem {
     // 檢查店家是否已收藏
     isStoreFavorited(storeId) {
         if (!storeId) return false;
+        
+        // API模式且已登入
+        if (this.useApi && this.userId > 0 && window.restaurantService) {
+            // 先從本地列表查詢，避免每次都調用API
+            const isInLocalList = this.stores.some(store => 
+                (store.id && store.id === storeId) || (store.place_id && store.place_id === storeId)
+            );
+            
+            if (isInLocalList) {
+                return true;
+            }
+            
+            // 如果本地不存在，可以考慮調用API確認
+            // 注意：這裡不使用異步調用，避免複雜性
+        }
+        
+        // 從本地列表檢查
         return this.stores.some(store => 
-            (store && store.id === storeId) || (store && store.place_id === storeId)
+            (store.id && store.id === storeId) || 
+            (store.place_id && store.place_id === storeId)
         );
     }
 

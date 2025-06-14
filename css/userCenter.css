@@ -12,6 +12,155 @@ body {
     line-height: 1.6;
 }
 
+/* 彈窗樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+.restaurant-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.restaurant-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.restaurant-modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #888;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+.restaurant-main-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.restaurant-modal-image {
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.restaurant-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.modal-stars {
+    color: #ff6b1a;
+    font-size: 18px;
+}
+
+.modal-rating-count {
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-address, .modal-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #444;
+}
+
+.modal-status.open .modal-status-text {
+    color: #4CAF50;
+}
+
+.modal-status.closed .modal-status-text {
+    color: #F44336;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.favorite-btn, .modal-direction-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+}
+
+.favorite-btn {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.favorite-btn.active {
+    background-color: #ff6b1a;
+    color: white;
+}
+
+.modal-direction-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-direction-btn:hover {
+    background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+    .restaurant-main-info {
+        flex-direction: column;
+    }
+    
+    .restaurant-modal-image {
+        width: 100%;
+        height: auto;
+    }
+}
+
 /* 導覽列樣式 */
 .navbar {
     background-color: #fff;
@@ -25,6 +174,7 @@ body {
     left: 0;
     right: 0;
     z-index: 1000;
+    width: 100%;
 }
 
 .navbar-left .logo-text {
@@ -69,6 +219,7 @@ body {
     display: flex;
     margin-top: 80px;
     min-height: calc(100vh - 80px);
+    padding-top: 20px;
 }
 
 /* 側邊選單樣式 */
@@ -77,6 +228,10 @@ body {
     background-color: #fff;
     padding: 2rem;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 80px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
 }
 
 .user-info {
@@ -142,6 +297,7 @@ body {
     margin: 0 2rem 2rem 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
 }
 
 /* 內容區塊通用樣式 */
@@ -217,7 +373,7 @@ body {
 
 /* 個人資料區塊 */
 #profile {
-    background-color: #FFF7ED;
+    background-color: #FFF;
 }
 
 .form-group {
@@ -251,7 +407,7 @@ body {
 
 /* 訂單歷史區塊 */
 #orders {
-    background-color: #FFF7ED;
+    background-color: #FFF;
 }
 
 .orders-list {
@@ -281,7 +437,7 @@ body {
 
 /* 評論區塊 */
 #reviews {
-    background-color: #FFF7ED;
+    background-color: #FFF;
 }
 
 .reviews-list {
@@ -333,7 +489,7 @@ body {
 
 /* 通知中心區塊 */
 #notifications {
-    background-color: #FFF7ED;
+    background-color: #FFF;
 }
 
 .notifications-list {
@@ -363,7 +519,7 @@ body {
 
 /* 帳號設定區塊 */
 #settings {
-    background-color: #FFF7ED;
+    background-color: #FFF;
 }
 
 .settings-section {
@@ -478,19 +634,20 @@ select:focus {
     }
 }
 
-/* 標籤頁樣式 */
+/* 收藏頁籤樣式 */
 .favorites-tabs {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: transparent;
 }
 
 .favorites-tabs .tab-btn {
     padding: 12px 24px;
     background: none;
     border: none;
-    color: #666;
+    color: #ff6b1a;
     font-size: 16px;
     cursor: pointer;
     border-bottom: 3px solid transparent;
@@ -503,7 +660,7 @@ select:focus {
 }
 
 .favorites-tabs .tab-btn:hover {
-    color: #ff6b6b;
+    color: #ea580c;
 }
 
 .favorites-content {
@@ -532,11 +689,17 @@ select:focus {
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .store-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.store-card:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .store-card .store-image {
@@ -737,7 +900,7 @@ select:focus {
 
 .favorite-btn i {
     font-size: 16px;
-    color: #ff4757;
+    color: #ff6b1a;
     transition: all 0.3s ease;
 }
 
@@ -755,7 +918,7 @@ select:focus {
     width: 20px;
     height: 20px;
     border: 2px solid #f3f3f3;
-    border-top: 2px solid #ff4757;
+    border-top: 2px solid #ff6b1a;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-right: 10px;
@@ -1071,7 +1234,7 @@ select:focus {
 }
 
 .favorites-stores .favorite-btn i {
-  color: #ff6b6b;
+  color: #ff6b1a;
   font-size: 18px;
   transition: all 0.3s ease;
 }
@@ -1365,5 +1528,357 @@ select:focus {
     
     .restaurant-modal-image {
         height: 150px;
+    }
+}
+
+/* 新版餐廳詳情彈窗樣式 */
+.restaurant-modal-new {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.restaurant-modal-new.active {
+    display: flex;
+}
+
+.restaurant-modal-content-new {
+    background-color: #fff;
+    width: 90%;
+    max-width: 900px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.restaurant-modal-header-new {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.restaurant-modal-header-new h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+}
+
+.restaurant-modal-close-new {
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.2s;
+}
+
+.restaurant-modal-close-new:hover {
+    color: #333;
+}
+
+.restaurant-modal-body-new {
+    padding: 20px;
+}
+
+.restaurant-main-info-new {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.restaurant-modal-image-new {
+    width: 40%;
+    height: 250px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.restaurant-modal-image-new img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.restaurant-info-text-new {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-rating-new {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-stars-new {
+    color: #ff9800;
+    font-size: 18px;
+}
+
+.modal-rating-value-new {
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.modal-rating-count-new {
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-address-new {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #555;
+}
+
+.modal-address-new i {
+    margin-top: 3px;
+    color: #ff5722;
+}
+
+.modal-hours-new {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-status-new {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-status-new.open .modal-status-text-new {
+    color: #4CAF50;
+}
+
+.modal-status-new.closed .modal-status-text-new {
+    color: #F44336;
+}
+
+.modal-today-hours-new {
+    font-size: 14px;
+    color: #666;
+}
+
+.view-full-hours-btn-new {
+    background: none;
+    border: none;
+    color: #2196F3;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    text-decoration: underline;
+    align-self: flex-start;
+}
+
+.restaurant-tags-new {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.restaurant-tags-new .restaurant-tag {
+    background-color: #f0f0f0;
+    color: #666;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+}
+
+.modal-actions-new {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.modal-btn-new {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.modal-favorite-btn-new {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.modal-favorite-btn-new.active {
+    background-color: #ff5722;
+    color: white;
+}
+
+.modal-favorite-btn-new:hover {
+    background-color: #e0e0e0;
+}
+
+.modal-favorite-btn-new.active:hover {
+    background-color: #e64a19;
+}
+
+.modal-direction-btn-new {
+    background-color: #2196F3;
+    color: white;
+}
+
+.modal-direction-btn-new:hover {
+    background-color: #1976D2;
+}
+
+.restaurant-location-new {
+    margin-top: 20px;
+}
+
+.restaurant-location-new h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+.restaurant-map-container-new {
+    height: 250px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+/* 營業時間彈窗樣式 */
+.weekly-hours-modal-new {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2100;
+    justify-content: center;
+    align-items: center;
+}
+
+.weekly-hours-modal-new.active {
+    display: flex;
+}
+
+.weekly-hours-modal-content-new {
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+}
+
+.weekly-hours-modal-header-new {
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.weekly-hours-modal-header-new h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.weekly-hours-modal-close-new {
+    font-size: 24px;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.2s;
+}
+
+.weekly-hours-modal-close-new:hover {
+    color: #333;
+}
+
+.weekly-hours-modal-body-new {
+    padding: 16px;
+}
+
+.weekly-hours-list-new {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.weekly-hours-item-new {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.weekly-hours-item-new:last-child {
+    border-bottom: none;
+}
+
+.weekly-hours-day-new {
+    font-weight: 500;
+    color: #333;
+}
+
+.weekly-hours-time-new {
+    color: #666;
+}
+
+.weekly-hours-item-new.today {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.weekly-hours-item-new.today .weekly-hours-day-new {
+    color: #ff5722;
+    font-weight: 600;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .restaurant-main-info-new {
+        flex-direction: column;
+    }
+    
+    .restaurant-modal-image-new {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .restaurant-modal-content-new {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .restaurant-map-container-new {
+        height: 200px;
     }
 } 

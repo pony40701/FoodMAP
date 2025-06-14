@@ -12,31 +12,36 @@ const RestaurantModal = (function() {
     let modalMarker = null;
     
     // 緩存DOM元素
-    const elements = {
-        modal: document.getElementById('restaurantModalNew'),
-        name: document.getElementById('modal-restaurant-name-new'),
-        image: document.getElementById('modal-restaurant-img-new'),
-        stars: document.getElementById('modal-stars-new'),
-        rating: document.getElementById('modal-rating-new'),
-        ratingCount: document.getElementById('modal-rating-count-new'),
-        address: document.getElementById('modal-address-new'),
-        status: document.getElementById('modal-status-new'),
-        statusText: document.querySelector('#modal-status-new .modal-status-text-new'),
-        todayHours: document.getElementById('modal-today-hours-new'),
-        viewHoursBtn: document.getElementById('view-full-hours-btn-new'),
-        tags: document.getElementById('modal-tags-new'),
-        favoriteBtn: document.getElementById('modal-favorite-btn-new'),
-        directionBtn: document.getElementById('modal-direction-btn-new'),
-        closeBtn: document.querySelector('.restaurant-modal-close-new'),
-        mapContainer: document.getElementById('modal-map-new'),
-        
-        hoursModal: document.getElementById('weeklyHoursModalNew'),
-        hoursModalBody: document.getElementById('weekly-hours-modal-body-new'),
-        hoursModalCloseBtn: document.querySelector('.weekly-hours-modal-close-new')
-    };
+    let elements = {};
     
     // 初始化
     function init() {
+        // 獲取DOM元素
+        elements = {
+            modal: document.getElementById('restaurantModalNew'),
+            name: document.getElementById('modal-restaurant-name-new'),
+            image: document.getElementById('modal-restaurant-img-new'),
+            stars: document.getElementById('modal-stars-new'),
+            rating: document.getElementById('modal-rating-new'),
+            ratingCount: document.getElementById('modal-rating-count-new'),
+            address: document.getElementById('modal-address-new'),
+            status: document.getElementById('modal-status-new'),
+            statusText: document.querySelector('#modal-status-new .modal-status-text-new'),
+            todayHours: document.getElementById('modal-today-hours-new'),
+            viewHoursBtn: document.getElementById('view-full-hours-btn-new'),
+            tags: document.getElementById('modal-tags-new'),
+            favoriteBtn: document.getElementById('modal-favorite-btn-new'),
+            directionBtn: document.getElementById('modal-direction-btn-new'),
+            closeBtn: document.querySelector('.restaurant-modal-close-new'),
+            mapContainer: document.getElementById('modal-map-new'),
+            
+            hoursModal: document.getElementById('weeklyHoursModalNew'),
+            hoursModalBody: document.getElementById('weekly-hours-modal-body-new'),
+            hoursModalCloseBtn: document.querySelector('.weekly-hours-modal-close-new')
+        };
+        
+        console.log('餐廳彈窗DOM元素:', elements);
+        
         // 綁定事件
         if (elements.closeBtn) {
             elements.closeBtn.addEventListener('click', closeModal);
@@ -85,7 +90,16 @@ const RestaurantModal = (function() {
             }
         });
         
-        console.log('餐廳彈窗模組初始化完成');
+        // 將模組掛載到全局對象
+        window.RestaurantModal = {
+            init: init,
+            showRestaurantDetail: showRestaurantDetail,
+            closeModal: closeModal,
+            showWeeklyHours: showWeeklyHours,
+            closeWeeklyHoursModal: closeWeeklyHoursModal
+        };
+        
+        console.log('餐廳彈窗模組初始化完成，已掛載到 window.RestaurantModal');
     }
     
     // 顯示餐廳詳情
@@ -96,6 +110,12 @@ const RestaurantModal = (function() {
         }
         
         console.log('顯示餐廳詳情:', restaurant);
+        
+        // 確保DOM元素已初始化
+        if (!elements.modal) {
+            console.log('DOM元素未初始化，重新獲取');
+            init();
+        }
         
         // 保存當前餐廳數據
         currentRestaurant = restaurant;
@@ -209,7 +229,7 @@ const RestaurantModal = (function() {
             elements.tags.innerHTML = '';
             restaurant.types.slice(0, 3).forEach(type => {
                 const tag = document.createElement('span');
-                tag.className = 'restaurant-tag-new';
+                tag.className = 'restaurant-tag';
                 tag.textContent = type;
                 elements.tags.appendChild(tag);
             });
@@ -234,6 +254,9 @@ const RestaurantModal = (function() {
         // 顯示彈窗
         if (elements.modal) {
             elements.modal.classList.add('active');
+            console.log('彈窗已顯示');
+        } else {
+            console.error('找不到彈窗元素');
         }
         
         // 初始化地圖
@@ -249,24 +272,21 @@ const RestaurantModal = (function() {
                 } else if (restaurant.geometry && restaurant.geometry.location) {
                     lat = restaurant.geometry.location.lat();
                     lng = restaurant.geometry.location.lng();
+                } else if (restaurant.lat && restaurant.lng) {
+                    lat = restaurant.lat;
+                    lng = restaurant.lng;
                 }
                 
                 if (lat && lng) {
-                    // 延遲一下再初始化地圖，確保容器已經渲染
-                    setTimeout(async () => {
-                        try {
-                            await initModalMap({ lat, lng }, restaurant.name);
-                        } catch (error) {
-                            console.error('初始化地圖失敗:', error);
-                            elements.mapContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">無法載入地圖</div>';
-                        }
-                    }, 300);
+                    const location = { lat, lng };
+                    initModalMap(location, restaurant.name);
                 } else {
-                    elements.mapContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">無法獲取餐廳位置</div>';
+                    console.warn('餐廳缺少位置數據，無法顯示地圖');
+                    elements.mapContainer.innerHTML = '<div class="map-error">無法顯示地圖，缺少位置數據</div>';
                 }
             } catch (error) {
-                console.error('處理地圖時發生錯誤:', error);
-                elements.mapContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">無法載入地圖</div>';
+                console.error('初始化地圖失敗:', error);
+                elements.mapContainer.innerHTML = '<div class="map-error">載入地圖時發生錯誤</div>';
             }
         }
     }
@@ -559,8 +579,6 @@ const RestaurantModal = (function() {
 
 // 頁面加載完成後初始化
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('頁面載入完成，初始化 RestaurantModal');
     RestaurantModal.init();
-    
-    // 將模組掛載到全局對象
-    window.RestaurantModal = RestaurantModal;
 }); 
