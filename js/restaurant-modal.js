@@ -132,35 +132,25 @@ const RestaurantModal = (function() {
         if (elements.name) elements.name.textContent = restaurant.name;
         
         // 處理圖片URL
-        let photoUrl = 'images/default-restaurant.jpg';
+        let photoUrl = 'images/default-restaurant.jpg';  // 修改預設圖片路徑
         
-        if (restaurant.photos) {
-            // 如果photos是字符串，直接使用
-            if (typeof restaurant.photos === 'string') {
-                photoUrl = restaurant.photos;
-            }
-            // 如果photos是陣列且有內容
-            else if (Array.isArray(restaurant.photos) && restaurant.photos.length > 0) {
-                // 如果第一個元素有url屬性
-                if (restaurant.photos[0].url) {
-                    photoUrl = restaurant.photos[0].url;
-                }
-                // 如果第一個元素是字符串
-                else if (typeof restaurant.photos[0] === 'string') {
-                    photoUrl = restaurant.photos[0];
-                }
-            }
-            // 如果photos是對象且有url屬性
-            else if (restaurant.photos.url) {
-                photoUrl = restaurant.photos.url;
-            }
+        if (restaurantId) {
+            // 使用統一的 API 端點
+            photoUrl = `http://localhost:8080/api/restaurant-images/${restaurantId}/raw`;
+            console.log('使用資料庫圖片:', photoUrl, '餐廳ID:', restaurantId);
+        } else {
+            console.log('找不到餐廳ID，使用預設圖片');
         }
         
         // 設置圖片
         if (elements.image) {
+            console.log('設置餐廳圖片:', photoUrl);
             elements.image.src = photoUrl;
             elements.image.alt = restaurant.name;
-            elements.image.onerror = function() { this.src = 'images/default-restaurant.jpg'; };
+            elements.image.onerror = function() {
+                console.log('圖片載入失敗，使用預設圖片');
+                this.src = 'images/default-restaurant.jpg';
+            };
         }
         
         // 設置評分
@@ -225,14 +215,24 @@ const RestaurantModal = (function() {
         }
         
         // 設置餐廳標籤
-        if (elements.tags && restaurant.types && restaurant.types.length > 0) {
-            elements.tags.innerHTML = '';
-            restaurant.types.slice(0, 3).forEach(type => {
-                const tag = document.createElement('span');
-                tag.className = 'restaurant-tag';
-                tag.textContent = type;
-                elements.tags.appendChild(tag);
-            });
+        if (elements.tags) {
+            let tagsHtml = '';
+            if (restaurant.types) {
+                let typeArray = [];
+                if (Array.isArray(restaurant.types)) {
+                    typeArray = restaurant.types;
+                } else if (typeof restaurant.types === 'string') {
+                    typeArray = restaurant.types.split(',').map(type => type.trim());
+                } else if (restaurant.types) {
+                    typeArray = [restaurant.types];
+                }
+                
+                // 只取前三個類型
+                typeArray.slice(0, 3).forEach(type => {
+                    tagsHtml += `<span class="restaurant-tag">${type}</span>`;
+                });
+            }
+            elements.tags.innerHTML = tagsHtml;
         }
         
         // 設置收藏按鈕

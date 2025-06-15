@@ -1,7 +1,9 @@
-view-full-hours-btn// 收藏按鈕處理模組
+// 收藏按鈕處理模組
 class FavoriteButton {
     constructor() {
         this.initialized = false;
+        // API 基礎 URL
+        this.apiBaseUrl = 'http://localhost:8080';
     }
 
     // 初始化收藏按鈕
@@ -13,7 +15,7 @@ class FavoriteButton {
             }
 
             // 初始化所有收藏按鈕
-            this.initializeAllButtons();
+            await this.initializeAllButtons();
             
             this.initialized = true;
             console.log('收藏按鈕初始化成功');
@@ -25,20 +27,27 @@ class FavoriteButton {
     }
 
     // 初始化所有收藏按鈕
-    initializeAllButtons() {
+    async initializeAllButtons() {
         try {
             // 找到所有收藏按鈕
             const buttons = document.querySelectorAll('.favorite-btn');
             console.log(`找到 ${buttons.length} 個收藏按鈕`);
             
-            buttons.forEach(button => {
+            for (const button of buttons) {
                 // 獲取店家/評論ID
                 const placeId = button.getAttribute('data-place-id');
                 const reviewId = button.getAttribute('data-review-id');
 
+                console.log('處理按鈕:', {
+                    placeId: placeId,
+                    reviewId: reviewId,
+                    classes: button.className,
+                    hasIcon: !!button.querySelector('i')
+                });
+
                 if (placeId) {
                     // 設置店家收藏按鈕狀態
-                    this.updateStoreButtonState(button, placeId);
+                    await this.updateStoreButtonState(button, placeId);
                     // 添加點擊事件
                     button.onclick = (e) => {
                         e.preventDefault();
@@ -58,20 +67,31 @@ class FavoriteButton {
                 } else {
                     console.warn('發現沒有 ID 的收藏按鈕');
                 }
-            });
+
+                // 確認按鈕初始化後的狀態
+                const icon = button.querySelector('i');
+                console.log('按鈕初始化後狀態:', {
+                    id: placeId || reviewId,
+                    isActive: button.classList.contains('active'),
+                    iconClass: icon ? icon.className : 'no icon',
+                    buttonClasses: button.className
+                });
+            }
         } catch (error) {
             console.error('初始化收藏按鈕時發生錯誤:', error);
         }
     }
 
     // 更新店家收藏按鈕狀態
-    updateStoreButtonState(button, placeId) {
+    async updateStoreButtonState(button, placeId) {
         if (!window.favoriteSystem) {
             console.warn('收藏系統未初始化，無法更新按鈕狀態');
             return;
         }
         
-        const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
+        console.log('更新按鈕狀態，檢查ID:', placeId);
+        const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
+        console.log('按鈕狀態檢查結果:', isFavorited);
         this.updateButtonUI(button, isFavorited);
     }
 
@@ -88,12 +108,42 @@ class FavoriteButton {
 
     // 更新按鈕UI
     updateButtonUI(button, isFavorited) {
-        if (isFavorited) {
-            button.classList.add('active');
-            button.querySelector('i').className = 'fas fa-heart';
-        } else {
-            button.classList.remove('active');
-            button.querySelector('i').className = 'far fa-heart';
+        try {
+            console.log('更新按鈕UI:', {
+                button: button,
+                isFavorited: isFavorited,
+                hasIcon: !!button.querySelector('i')
+            });
+
+            if (!button) {
+                console.error('按鈕元素不存在');
+                return;
+            }
+
+            const icon = button.querySelector('i');
+            if (!icon) {
+                console.error('按鈕中找不到圖標元素');
+                return;
+            }
+
+            if (isFavorited) {
+                console.log('設置按鈕為已收藏狀態');
+                button.classList.add('active');
+                icon.className = 'fas fa-heart';
+            } else {
+                console.log('設置按鈕為未收藏狀態');
+                button.classList.remove('active');
+                icon.className = 'far fa-heart';
+            }
+
+            // 檢查更新後的狀態
+            console.log('按鈕更新後狀態:', {
+                classes: button.className,
+                iconClasses: icon.className,
+                isActive: button.classList.contains('active')
+            });
+        } catch (error) {
+            console.error('更新按鈕UI時發生錯誤:', error);
         }
     }
 
@@ -112,8 +162,11 @@ class FavoriteButton {
                 return;
             }
 
+            console.log('處理收藏切換，餐廳ID:', placeId);
+
             // 檢查是否已登入
-            if (!localStorage.getItem('isLoggedIn')) {
+            const userId = localStorage.getItem('userId');
+            if (!userId || !localStorage.getItem('isLoggedIn')) {
                 this.showToast('請先登入會員');
                 if (window.showLoginModal) {
                     window.showLoginModal();
@@ -121,18 +174,11 @@ class FavoriteButton {
                 return;
             }
             
-            const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
+            // 檢查收藏狀態
+            const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
+            console.log('當前收藏狀態:', isFavorited);
             
-            if (isFavorited) {
-                // 移除收藏
-                const success = await window.favoriteSystem.removeStore(placeId);
-                if (success) {
-                    this.showToast('已取消收藏');
-                } else {
-                    this.showToast('取消收藏失敗，請稍後再試');
-                    return;
-                }
-            } else {
+            if (!isFavorited) {
                 // 獲取店家資訊
                 const name = button.getAttribute('data-name') || '未知餐廳';
                 
@@ -157,30 +203,44 @@ class FavoriteButton {
                     id: placeId,
                     place_id: placeId,
                     name: name,
-                    photos: photos,  // 加入圖片資訊
+                    photos: photos,
                     favoriteTime: new Date().toISOString()
                 };
                 
+                console.log('準備添加收藏:', storeData);
+                
+                // 更新前端收藏系統
                 const success = await window.favoriteSystem.addStore(storeData);
                 if (success) {
                     this.showToast('已加入收藏');
+                    // 更新按鈕狀態
+                    this.updateButtonUI(button, true);
                 } else {
                     this.showToast('加入收藏失敗，請稍後再試');
                     return;
                 }
+            } else {
+                // 移除收藏
+                const success = await window.favoriteSystem.removeStore(placeId);
+                if (success) {
+                    this.showToast('已取消收藏');
+                    // 更新按鈕狀態
+                    this.updateButtonUI(button, false);
+                } else {
+                    this.showToast('取消收藏失敗，請稍後再試');
+                    return;
+                }
             }
 
-            // 更新按鈕狀態
-            this.updateStoreButtonState(button, placeId);
+            // 更新所有相同 ID 的按鈕
+            await this.updateAllButtonsWithSameId(placeId);
 
             // 如果在收藏頁面，重新載入內容
-            if (window.favoriteUI) {
-                await window.favoriteUI.loadContent();
+            if (window.location.pathname.includes('userCenter.html')) {
+                if (window.favoriteUI && typeof window.favoriteUI.loadContent === 'function') {
+                    await window.favoriteUI.loadContent();
+                }
             }
-            
-            // 更新所有相同 ID 的按鈕
-            this.updateAllButtonsWithSameId(placeId);
-            
         } catch (error) {
             console.error('切換收藏狀態失敗:', error);
             this.showToast('操作失敗，請稍後再試');
@@ -255,16 +315,30 @@ class FavoriteButton {
     }
 
     // 更新所有具有相同ID的按鈕
-    updateAllButtonsWithSameId(placeId) {
+    async updateAllButtonsWithSameId(placeId) {
         try {
-            const buttons = document.querySelectorAll(`.favorite-btn[data-place-id="${placeId}"]`);
-            const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
+            console.log(`開始更新所有 ID 為 ${placeId} 的按鈕`);
             
-            buttons.forEach(button => {
+            const buttons = document.querySelectorAll(`.favorite-btn[data-place-id="${placeId}"]`);
+            console.log(`找到 ${buttons.length} 個按鈕需要更新`);
+            
+            const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
+            console.log(`獲取到的收藏狀態: ${isFavorited}`);
+            
+            buttons.forEach((button, index) => {
+                console.log(`更新第 ${index + 1} 個按鈕`);
                 this.updateButtonUI(button, isFavorited);
             });
             
-            console.log(`更新了 ${buttons.length} 個相同ID的按鈕`);
+            // 驗證更新結果
+            buttons.forEach((button, index) => {
+                const icon = button.querySelector('i');
+                console.log(`按鈕 ${index + 1} 更新後狀態:`, {
+                    isActive: button.classList.contains('active'),
+                    iconClass: icon ? icon.className : 'no icon',
+                    buttonClasses: button.className
+                });
+            });
         } catch (error) {
             console.error('更新相同ID按鈕時發生錯誤:', error);
         }
@@ -290,6 +364,7 @@ class FavoriteButton {
         if (window.showToast) {
             window.showToast(message);
         } else {
+            console.error('找不到 showToast 函數');
             alert(message);
         }
     }

@@ -12,12 +12,19 @@
   <link rel="stylesheet" href="css/restaurant-card-v3.css">
   <link rel="stylesheet" href="css/favoritesStyle.css">
   <link rel="stylesheet" href="css/business-hours.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/modal-fix.css">
   <link rel="stylesheet" href="css/restaurant-modal.css">
-  <!-- 添加 Google Maps API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places&v=weekly" async defer></script>
   <!-- 添加登入相關功能 -->
+  <script src="js/config.js"></script>
+  <script src="js/toast.js"></script>
   <script src="js/login.js"></script>
+  <script src="js/loginModal.js"></script>
+  <script src="js/userCenter.js"></script>
+  <!-- 核心功能模組 -->
+  <script src="js/favoriteSystem.js"></script>
+  <script src="js/favoriteButton.js"></script>
+  <script src="js/businessHours.js"></script>
+  <script src="js/restaurantService.js"></script>
 </head>
 <body>
   <!-- 導覽列 -->
@@ -41,7 +48,7 @@
     <div class="sidebar">
       <div class="user-info">
         <div class="user-avatar">
-          <i class="fas fa-user-circle"></i>
+          <img src="images/default-avatar.png" alt="會員頭像" class="avatar-img">
         </div>
         <div class="user-name">載入中...</div>
         <div class="user-email">載入中...</div>
@@ -76,7 +83,7 @@
       <!-- 個人資料區塊 -->
       <section id="profile" class="content-section active">
         <h2>個人資料</h2>
-        <form id="profileForm" class="form">
+        <form id="profileForm" class="form" onsubmit="return false;">
           <div class="form-group">
             <label for="name">姓名</label>
             <input type="text" id="name" name="name" required>
@@ -93,7 +100,7 @@
             <label for="address">地址</label>
             <input type="text" id="address" name="address">
           </div>
-          <button type="submit" class="btn-primary">更新資料</button>
+          <button type="button" class="btn-primary update-profile-btn" onclick="updateProfile()">更新資料</button>
         </form>
       </section>
 
@@ -270,26 +277,20 @@
       </section>
 
       <!-- 收藏區塊 -->
-      <section id="favorites" class="content-section">
-        <h2>我的收藏</h2>
-        
-        <div class="favorites-tabs">
-          <button class="tab-btn active" data-tab="stores">收藏店家</button>
-          <button class="tab-btn" data-tab="reviews">收藏心得</button>
-        </div>
-
-        <div class="favorites-content">
-          <!-- 添加收藏店家列表容器 -->
-          <div class="favorites-stores">
-            <!-- 收藏店家將由 JavaScript 動態載入 -->
-            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> 載入收藏餐廳中...</div>
-          </div>
-
-          <!-- 添加收藏心得列表容器 -->
-          <div class="favorites-reviews" style="display: none;">
-            <!-- 收藏心得將由 JavaScript 動態載入 -->
+      <section id="favorites" class="content-section active">
+        <div class="section-header">
+          <h2>我的收藏</h2>
+          <div class="view-toggle">
+            <button class="toggle-btn active" data-view="stores">
+              <i class="fas fa-store"></i>收藏店家
+            </button>
+            <button class="toggle-btn" data-view="reviews">
+              <i class="fas fa-comment"></i>收藏心得
+            </button>
           </div>
         </div>
+        <div class="favorites-stores"></div>
+        <div class="favorites-reviews" style="display: none;"></div>
       </section>
 
       <!-- 設定區塊 -->
@@ -297,48 +298,32 @@
         <h2>帳號設定</h2>
         <form id="settingsForm" class="form">
           <div class="form-group">
-            <label>通知設定</label>
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="orderNotifications" checked>
-                訂單通知
-              </label>
-              <label>
-                <input type="checkbox" id="promotionNotifications" checked>
-                優惠通知
-              </label>
-              <label>
-                <input type="checkbox" id="systemNotifications" checked>
-                系統通知
-              </label>
-            </div>
+            <label>使用者名稱</label>
+            <input type="text" id="username" name="username" required>
           </div>
           <div class="form-group">
-            <label>隱私設定</label>
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="showProfile" checked>
-                公開個人資料
-              </label>
-              <label>
-                <input type="checkbox" id="showReviews" checked>
-                公開評論
-              </label>
-            </div>
+            <label>電子郵件</label>
+            <input type="email" id="email" name="email" required>
           </div>
           <div class="form-group">
-            <label for="currentPassword">目前密碼</label>
+            <label>目前密碼</label>
             <input type="password" id="currentPassword" name="currentPassword">
           </div>
           <div class="form-group">
-            <label for="newPassword">新密碼</label>
+            <label>新密碼</label>
             <input type="password" id="newPassword" name="newPassword">
           </div>
           <div class="form-group">
-            <label for="confirmPassword">確認新密碼</label>
+            <label>確認新密碼</label>
             <input type="password" id="confirmPassword" name="confirmPassword">
           </div>
-          <button type="submit" class="btn-primary">更新設定</button>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="emailNotification" name="emailNotification">
+              接收最新優惠通知
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">儲存變更</button>
         </form>
       </section>
     </div>
@@ -371,8 +356,6 @@
   <script src="js/BusinessHours.js"></script>
   <script src="js/favoriteSystem.js"></script>
   <script src="js/favoriteButton.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/mapInit.js"></script>
   <script src="js/userCenter.js"></script>
   
   <!-- 添加登出功能的腳本 -->
@@ -475,5 +458,17 @@
       </div>
     </div>
   </div>
+
+  <script>
+    const finalCheck = new Set();
+    const finalDuplicates = [];
+    processedRestaurants.forEach(restaurant => {
+        const id = restaurant.place_id || restaurant.id;
+        if (finalCheck.has(id)) {
+            finalDuplicates.push(restaurant);
+        }
+        finalCheck.add(id);
+    });
+  </script>
 </body>
 </html> 

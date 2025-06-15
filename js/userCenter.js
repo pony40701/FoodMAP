@@ -1,6 +1,7 @@
-// API 基礎 URL - 使用正確的本地伺服器端口
+// API 基礎 URL 配置
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// 移除臨時模擬登入資料
 // 假資料
 const mockOrders = [
     {
@@ -139,226 +140,99 @@ async function loadFavorites(type = 'stores') {
         return;
     }
 
-    const userId = parseInt(localStorage.getItem('userId') || '1'); // 如果沒有登入，使用預設用戶 ID 1
-    const authToken = localStorage.getItem('authToken');
-    
-    // 檢查API基礎URL是否正確
-    if (!API_BASE_URL) {
-        console.error('API基礎URL未設置');
-        showToast('無法連接到伺服器');
-        return;
-    }
-    
-    // 確保API_BASE_URL不以斜線結尾
-    const apiBaseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-     
     if (type === 'stores') {
         // 顯示載入中狀態
         storesContainer.innerHTML = '<div class="loading">載入收藏店家中...</div>';
         
         try {
-            // 從 localStorage 或 favoriteSystem 獲取收藏店家資料
-            let favoriteRestaurants = [];
+            // 只從 favoriteSystem 獲取收藏店家資料
+            let favoriteStores = [];
             
             if (window.favoriteSystem && window.favoriteSystem.initialized) {
-                favoriteRestaurants = window.favoriteSystem.getFavoriteStores();
-                console.log('從 favoriteSystem 獲取的收藏店家資料:', favoriteRestaurants);
-            } else {
-                // 嘗試從 localStorage 獲取
-                try {
-                    favoriteRestaurants = JSON.parse(localStorage.getItem('favoriteStores') || '[]');
-                    console.log('從 localStorage 獲取的收藏店家資料:', favoriteRestaurants);
-                } catch (e) {
-                    console.error('解析 localStorage 收藏數據時出錯:', e);
-                    favoriteRestaurants = [];
-                }
+                favoriteStores = await window.favoriteSystem.getFavoriteStores();
+                console.log('從 favoriteSystem 獲取的收藏資料:', favoriteStores);
             }
             
-            if (!favoriteRestaurants || favoriteRestaurants.length === 0) {
+            if (!favoriteStores || favoriteStores.length === 0) {
                 storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
             } else {
-                renderFavoriteStores(favoriteRestaurants);
+                await renderFavoriteStores(favoriteStores);
             }
         } catch (error) {
-            console.error('獲取收藏店家資料失敗:', error);
-            storesContainer.innerHTML = `<div class="error-message">
-                <p>無法獲取收藏店家資料</p>
-                <p class="error-details">${error.message}</p>
-                <button onclick="loadFavorites('stores')" class="btn-retry">重試</button>
-            </div>`;
+            console.error('載入收藏店家失敗:', error);
+            storesContainer.innerHTML = '<div class="error">載入收藏店家失敗，請稍後再試</div>';
         }
-        
-        storesContainer.style.display = 'grid';
-        reviewsContainer.style.display = 'none';
-    } else { // type === 'reviews'
-        // 顯示載入中狀態
-        reviewsContainer.innerHTML = '<div class="loading">載入收藏心得中...</div>';
-        
-        try {
-            // 從 localStorage 或 favoriteSystem 獲取收藏評論資料
-            let favoriteReviews = [];
-            
-            if (window.favoriteSystem && window.favoriteSystem.initialized) {
-                favoriteReviews = window.favoriteSystem.getFavoriteReviews();
-                console.log('從 favoriteSystem 獲取的收藏評論資料:', favoriteReviews);
-            } else {
-                // 嘗試從 localStorage 獲取
-                try {
-                    favoriteReviews = JSON.parse(localStorage.getItem('favoriteReviews') || '[]');
-                    console.log('從 localStorage 獲取的收藏評論資料:', favoriteReviews);
-                } catch (e) {
-                    console.error('解析 localStorage 收藏評論數據時出錯:', e);
-                    favoriteReviews = [];
-                }
-            }
-            
-            if (!favoriteReviews || favoriteReviews.length === 0) {
-                reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何評論</div>';
-            } else {
-                renderFavoriteReviews(favoriteReviews);
-            }
-        } catch (error) {
-            console.error('獲取收藏評論資料失敗:', error);
-            reviewsContainer.innerHTML = `<div class="error-message">
-                <p>無法獲取收藏評論資料</p>
-                <p class="error-details">${error.message}</p>
-                <button onclick="loadFavorites('reviews')" class="btn-retry">重試</button>
-            </div>`;
-        }
-        
-        storesContainer.style.display = 'none';
-        reviewsContainer.style.display = 'grid';
+    }
+}
+
+// 渲染收藏店家列表
+async function renderFavoriteStores(stores) {
+    console.log('渲染收藏店家列表:', stores);
+    const storesContainer = document.querySelector('.favorites-stores');
+    
+    if (!storesContainer) {
+        console.error('找不到收藏店家容器');
+        return;
     }
     
-    // 渲染收藏店家列表
-    function renderFavoriteStores(stores) {
-        console.log('渲染收藏店家列表:', stores);
-        
-        if (!stores || stores.length === 0) {
-            storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
-            return;
-        }
-        
-        storesContainer.innerHTML = stores.map(store => {
-            // 確保店家ID存在
-            const storeId = store.place_id || store.restaurantId || store.id || '';
-            
-            // 處理圖片URL
-            let imageUrl = 'images/restaurant-default.jpg';
-            if (store.image) {
-                imageUrl = store.image;
-            } else if (store.imageUrl) {
-                imageUrl = store.imageUrl;
-            } else if (store.photos) {
-                if (typeof store.photos === 'string') {
-                    imageUrl = store.photos;
-                } else if (Array.isArray(store.photos) && store.photos.length > 0) {
-                    if (typeof store.photos[0] === 'string') {
-                        imageUrl = store.photos[0];
-                    } else if (store.photos[0] && store.photos[0].url) {
-                        imageUrl = store.photos[0].url;
-                    }
-                }
-            }
-            
-            // 使用真實的圖片作為默認圖片
-            imageUrl = imageUrl || 'images/restaurant1.jpg';
-            
-            // 處理評分
-            let ratingDisplay = '暫無評分';
-            if (store.rating) {
-                const fullStars = Math.floor(store.rating);
-                const hasHalfStar = (store.rating % 1) >= 0.5;
-                ratingDisplay = `<span class="stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}</span> ${store.rating}`;
-            }
-            
-            // 處理評論數
-            let reviewCountDisplay = '';
-            if (store.user_ratings_total || store.ratingCount) {
-                reviewCountDisplay = ` (${store.user_ratings_total || store.ratingCount} 則評論)`;
-            }
-            
-            // 處理地址
-            const address = store.address || store.vicinity || store.formattedAddress || '地址未知';
-            
-            // 處理營業狀態
-            let statusDisplay = '<span class="status-unknown">狀態未知</span>';
-            if (store.isOpen !== undefined) {
-                statusDisplay = store.isOpen ? 
-                    '<span class="status-open">營業中</span>' : 
-                    '<span class="status-closed">休息中</span>';
-            }
-            
-            return `
-            <div class="store-card" data-place-id="${storeId}">
-                <img src="${imageUrl}" alt="${store.name || '未知餐廳'}" class="store-image" onerror="this.src='images/restaurant1.jpg'">
+    if (!stores || stores.length === 0) {
+        storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
+        return;
+    }
+    
+    // 只顯示有效的收藏店家
+    const validStores = stores.filter(store => store && store.place_id && store.name);
+    
+    if (validStores.length === 0) {
+        storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
+        return;
+    }
+    
+    storesContainer.innerHTML = validStores.map(store => `
+        <div class="restaurant-card" data-id="${store.place_id}">
+            <div class="restaurant-info">
+                <h3>${store.name}</h3>
+                <div class="restaurant-actions">
+                    <button class="btn-view" onclick="viewRestaurant('${store.place_id}')">
+                        <i class="fas fa-eye"></i> 查看
+                    </button>
+                    <button class="btn-remove" onclick="removeFavorite('${store.place_id}')">
+                        <i class="fas fa-trash"></i> 移除
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 渲染收藏評論列表
+function renderFavoriteReviews(reviews) {
+    if (!reviews || reviews.length === 0) {
+        reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何心得</div>';
+        return;
+    }
+    
+    reviewsContainer.innerHTML = reviews.map(review => `
+        <div class="review-card">
+            <div class="review-header">
+                <img src="${review.avatar || review.userAvatar || 'images/default-avatar.jpg'}" alt="${review.author || review.reviewerName || review.userName || '匿名'}" class="reviewer-avatar" onerror="this.src='images/default-avatar.jpg'">
+                <div>
+                    <div class="reviewer-name">${review.author || review.reviewerName || review.userName || '匿名'}</div>
+                    <div class="store-name">${review.storeName || review.restaurantName}</div>
+                </div>
                 <span class="favorite-tag">已收藏</span>
-                <div class="store-info">
-                    <h3 class="store-name">${store.name || '未知餐廳'}</h3>
-                    <div class="store-rating">
-                        ${ratingDisplay}${reviewCountDisplay}
-                    </div>
-                    <p class="store-address">${address}</p>
-                    <div class="store-status">
-                        ${statusDisplay}
-                    </div>
-                </div>
-                <div class="store-actions">
-                    <button onclick="viewRestaurant('${storeId}')" class="btn-secondary">查看詳情</button>
-                    <button onclick="removeFavorite('${storeId}')" class="btn-secondary">取消收藏</button>
-                </div>
             </div>
-            `;
-        }).join('');
-        
-        // 為每個卡片添加點擊事件
-        const storeCards = storesContainer.querySelectorAll('.store-card');
-        storeCards.forEach(card => {
-            card.addEventListener('click', function(e) {
-                // 如果點擊的是按鈕，不觸發卡片點擊事件
-                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    e.stopPropagation();
-                    return;
-                }
-                
-                const placeId = this.getAttribute('data-place-id');
-                console.log('卡片被點擊，placeId:', placeId);
-                if (placeId) {
-                    viewRestaurant(placeId);
-                }
-            });
-        });
-    }
-    
-    // 渲染收藏評論列表
-    function renderFavoriteReviews(reviews) {
-        if (!reviews || reviews.length === 0) {
-            reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何心得</div>';
-            return;
-        }
-        
-        reviewsContainer.innerHTML = reviews.map(review => `
-            <div class="review-card">
-                <div class="review-header">
-                    <img src="${review.avatar || review.userAvatar || 'images/default-avatar.jpg'}" alt="${review.author || review.reviewerName || review.userName || '匿名'}" class="reviewer-avatar" onerror="this.src='images/default-avatar.jpg'">
-                    <div>
-                        <div class="reviewer-name">${review.author || review.reviewerName || review.userName || '匿名'}</div>
-                        <div class="store-name">${review.storeName || review.restaurantName}</div>
-                    </div>
-                    <span class="favorite-tag">已收藏</span>
-                </div>
-                <div class="review-content">${review.content}</div>
-                <div class="review-footer">
-                    <div class="review-rating">${'★'.repeat(review.rating)}</div>
-                    <div class="review-date">${review.date || new Date(review.time || review.createdAt || Date.now()).toLocaleDateString()}</div>
-                </div>
-                <div class="review-actions">
-                    <button onclick="viewReviewDetail(${review.id || review.reviewId})" class="btn-secondary">查看詳情</button>
-                    <button onclick="removeFavoriteReview(${review.id || review.reviewId})" class="btn-secondary">取消收藏</button>
-                </div>
+            <div class="review-content">${review.content}</div>
+            <div class="review-footer">
+                <div class="review-rating">${'★'.repeat(review.rating)}</div>
+                <div class="review-date">${review.date || new Date(review.time || review.createdAt || Date.now()).toLocaleDateString()}</div>
             </div>
-        `).join('');
-    }
+            <div class="review-actions">
+                <button onclick="viewReviewDetail(${review.id || review.reviewId})" class="btn-secondary">查看詳情</button>
+                <button onclick="removeFavoriteReview(${review.id || review.reviewId})" class="btn-secondary">取消收藏</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 // 使用 Google Places API 獲取收藏店家的詳細資訊
@@ -1028,16 +902,17 @@ function formatTime(timestamp) {
 
 // 檢查登入狀態
 function checkLoginStatus() {
+    console.log('檢查登入狀態');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    console.log('登入狀態檢查:', isLoggedIn);
+    const user = localStorage.getItem('user');
     
-    if (!isLoggedIn) {
-        // 如果未登入，重定向到首頁
-        console.log('用戶未登入，將重定向到首頁');
-        // 注意：開發測試階段暫時不重定向
-        // window.location.href = 'index.html';
+    if (!isLoggedIn || !user) {
+        console.log('用戶未登入，重定向到首頁');
+        window.location.href = 'index.html';
         return false;
     }
+    
+    console.log('用戶已登入');
     return true;
 }
 
@@ -1146,87 +1021,150 @@ function initFilters() {
 }
 
 // 載入使用者資料
-function loadUserData() {
-    const userEmail = localStorage.getItem('userEmail');
-    const userId = parseInt(localStorage.getItem('userId') || '1');
+async function loadUserData() {
+    console.log('載入使用者資料');
+    
+    // 從 localStorage 獲取用戶 token 和 ID
     const authToken = localStorage.getItem('authToken');
-    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || { email: userEmail };
+    const userId = localStorage.getItem('userId');
+    
+    console.log('用戶認證資訊:', { userId, hasToken: !!authToken });
 
-    if (userEmail) {
-        // 嘗試從 API 獲取最新的用戶資料
-        if (authToken) {
-            fetch(`${API_BASE_URL}/users/${userId}`, {
+    if (!authToken || !userId) {
+        console.log('未找到用戶認證資訊，重定向到登入頁面');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    try {
+        // 從後端 API 獲取用戶資料
+        console.log('開始從 API 獲取用戶資料');
+        const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
-            })
-            .then(response => {
+        });
+
                 if (!response.ok) {
-                    throw new Error('無法獲取用戶資料');
+            throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`);
                 }
-                return response.json();
-            })
-            .then(userData => {
-                console.log('從 API 獲取的用戶資料:', userData);
+
+        const userData = await response.json();
+        console.log('API 回應的完整用戶資料:', userData);
+        
+        // 檢查頭像資料
+        if (userData.avatar_url) {
+            console.log('頭像資料長度:', userData.avatar_url.length);
+            console.log('頭像資料前綴:', userData.avatar_url.substring(0, 50) + '...');
+        } else {
+            console.log('用戶資料中沒有頭像');
+        }
                 
                 // 更新 localStorage 中的用戶資料
-                localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(userData));
                 
-                // 更新使用者資訊顯示
+        // 更新顯示
                 updateUserDisplay(userData);
-                
-                // 更新個人資料表單
                 updateProfileForm(userData);
-            })
-            .catch(error => {
-                console.error('獲取用戶資料失敗:', error);
-                // 使用本地存儲的資料作為備用
-                updateUserDisplay(currentUser);
-                updateProfileForm(currentUser);
-            });
-        } else {
-            // 沒有 token，使用本地存儲的資料
-            updateUserDisplay(currentUser);
-            updateProfileForm(currentUser);
-        }
-    } else {
-        // 如果沒有登入郵箱，顯示預設值或空白
-        document.querySelector('.user-email').textContent = 'N/A';
-        document.querySelector('.user-name').textContent = '訪客';
         
-        const profileForm = document.getElementById('profileForm');
-        if (profileForm) {
-            profileForm.querySelector('#email').value = '';
-            profileForm.querySelector('#name').value = '';
-            profileForm.querySelector('#phone').value = '';
-            profileForm.querySelector('#address').value = '';
-        }
+    } catch (error) {
+                console.error('獲取用戶資料失敗:', error);
+        showToast('獲取用戶資料失敗，請重新登入');
+        // 清除本地存儲並重定向到登入頁面
+        localStorage.clear();
+        window.location.href = 'index.html';
     }
 }
 
 // 更新使用者顯示資訊
 function updateUserDisplay(userData) {
-    document.querySelector('.user-email').textContent = userData.email || 'N/A';
-    document.querySelector('.user-name').textContent = userData.name || userData.email.split('@')[0] || '會員';
+    console.log('更新使用者資訊顯示:', userData);
+    
+    if (!userData) {
+        console.error('無效的用戶資料');
+        return;
+        }
+    
+    // 更新用戶名稱
+    const userNameElement = document.querySelector('.user-name');
+    if (userNameElement) {
+        userNameElement.textContent = userData.username || userData.fullName || userData.email || '未知用戶';
+    }
+    
+    // 更新用戶郵箱
+    const userEmailElement = document.querySelector('.user-email');
+    if (userEmailElement) {
+        userEmailElement.textContent = userData.email || '';
+    }
+    
+    // 更新用戶頭像 - 檢查 image_url 和 avatar_url
+    const userAvatarImg = document.querySelector('.avatar-img');
+    if (userAvatarImg) {
+        const avatarUrl = userData.avatar_url;
+        console.log('頭像URL:', avatarUrl);
+        
+        if (avatarUrl) {
+            userAvatarImg.src = avatarUrl;  // 直接使用返回的 base64 URL
+            userAvatarImg.alt = userData.username || '會員頭像';
+            console.log('設置用戶頭像成功');
+        } else {
+            console.log('用戶沒有頭像，使用預設頭像');
+            userAvatarImg.src = 'images/default-avatar.jpg';
+            userAvatarImg.alt = '預設頭像';
+        }
+    }
 }
 
 // 更新個人資料表單
 function updateProfileForm(userData) {
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.querySelector('#email').value = userData.email || '';
-        profileForm.querySelector('#name').value = userData.name || '';
-        profileForm.querySelector('#phone').value = userData.phoneNumber || '';
-        profileForm.querySelector('#address').value = userData.address || '';
+    console.log('更新個人資料表單:', userData);
+    
+    if (!userData) {
+        console.error('無效的用戶資料');
+        return;
+    }
+    
+    // 更新姓名欄位
+    const nameInput = document.querySelector('input[name="name"]');
+    if (nameInput) {
+        nameInput.value = userData.fullName || '';
+    }
+    
+    // 更新電子郵件欄位
+    const emailInput = document.querySelector('input[name="email"]');
+    if (emailInput) {
+        emailInput.value = userData.email || '';
+        // 設置為唯讀
+        emailInput.readOnly = true;
+    }
+    
+    // 更新電話欄位
+    const phoneInput = document.querySelector('input[name="phone"]');
+    if (phoneInput) {
+        phoneInput.value = userData.phoneNumber || '';
+    }
+    
+    // 更新地址欄位
+    const addressInput = document.querySelector('input[name="address"]');
+    if (addressInput) {
+        addressInput.value = userData.address || '';
     }
 }
 
 // 更新個人資料
-function updateProfile() {
-    const formData = new FormData(document.getElementById('profileForm'));
-    const userId = parseInt(localStorage.getItem('userId') || '1');
+async function updateProfile() {
+    console.log('開始更新個人資料');
+    
+    // 獲取更新按鈕
+    const updateBtn = document.querySelector('.update-profile-btn');
+    if (updateBtn.disabled) {
+        console.log('請求正在處理中，請稍候...');
+        return;
+    }
+    
+    const userId = localStorage.getItem('userId');
     const authToken = localStorage.getItem('authToken');
     
     if (!userId || !authToken) {
@@ -1234,55 +1172,73 @@ function updateProfile() {
         return;
     }
     
+    // 禁用按鈕，防止重複提交
+    updateBtn.disabled = true;
+    updateBtn.textContent = '更新中...';
+    
+    try {
+        // 獲取表單數據
+        const name = document.querySelector('input[name="name"]').value;
+        const phone = document.querySelector('input[name="phone"]').value;
+        const address = document.querySelector('input[name="address"]').value;
+        
+        console.log('準備更新的資料:', { name, phone, address });
+        
+        // 準備要發送的數據
     const userData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phoneNumber: formData.get('phone'),
-        address: formData.get('address')
+            fullName: name,
+            phoneNumber: phone,
+            address: address
     };
 
-    // 發送 API 請求更新用戶資料
-    fetch(`${API_BASE_URL}/users/${userId}`, {
+        // 發送更新請求
+        const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
         headers: {
             'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
         },
         body: JSON.stringify(userData)
-    })
-    .then(response => {
+        });
+        
+        console.log('更新請求回應狀態:', response.status);
+        
         if (!response.ok) {
-            throw new Error('更新資料失敗');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `更新失敗: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(updatedUser => {
-        console.log('API 更新成功，返回資料:', updatedUser);
         
-        // 更新 localStorage
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-        Object.assign(currentUser, updatedUser);
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        const updatedUser = await response.json();
+        console.log('更新成功，返回資料:', updatedUser);
+        
+        // 更新本地存儲的用戶資料
+        localStorage.setItem('user', JSON.stringify(updatedUser));
 
         // 更新顯示
-        document.querySelector('.user-name').textContent = updatedUser.name || updatedUser.email.split('@')[0];
+        updateUserDisplay(updatedUser);
 
-        showToast('個人資料已更新');
-    })
-    .catch(error => {
+        showToast('個人資料更新成功');
+    } catch (error) {
         console.error('更新個人資料失敗:', error);
-        
-        // 備用方案：僅更新本地資料
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-        Object.assign(currentUser, userData);
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-        // 更新顯示
-        document.querySelector('.user-name').textContent = userData.name || userData.email.split('@')[0];
-
-        showToast('個人資料已更新 (本地儲存)');
-    });
+        showToast(error.message || '更新失敗，請稍後再試');
+    } finally {
+        // 恢復按鈕狀態
+        updateBtn.disabled = false;
+        updateBtn.textContent = '更新資料';
+    }
 }
+
+// 在頁面載入時綁定更新按鈕事件
+document.addEventListener('DOMContentLoaded', function() {
+    const updateBtn = document.querySelector('.update-profile-btn');
+    if (updateBtn) {
+        console.log('找到更新按鈕，綁定點擊事件');
+        updateBtn.addEventListener('click', updateProfile);
+    } else {
+        console.error('未找到更新按鈕');
+    }
+});
 
 // 載入訂單
 function loadOrders(statusFilter = 'all') {
@@ -1692,7 +1648,7 @@ function initializeFavorites() {
             this.classList.add('active');
             
             const tab = this.dataset.tab;
-            loadFavorites(tab); // 載入對應頁籤的收藏內容
+            loadFavorites(tab);
         });
     });
     
@@ -1700,55 +1656,17 @@ function initializeFavorites() {
     const activeTab = document.querySelector('.tab-btn.active');
     const defaultTab = activeTab ? activeTab.dataset.tab : 'stores';
     loadFavorites(defaultTab);
-    
-    // 添加全局事件委托，處理卡片點擊
-    favoritesStores.addEventListener('click', function(e) {
-        // 找到最近的卡片元素
-        const card = e.target.closest('.store-card');
-        
-        if (card) {
-            // 如果點擊的是按鈕，不觸發卡片點擊事件
-            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                return;
-            }
-            
-            const placeId = card.getAttribute('data-place-id');
-            console.log('卡片被點擊 (事件委托)，placeId:', placeId);
-            if (placeId) {
-                viewRestaurant(placeId);
-            }
-        }
-    });
 }
 
 // 頁面載入完成後的主要初始化
 function initializePage() {
     console.log('初始化會員中心頁面');
     
-    // 檢查API連接狀態
-    checkApiConnection();
-    
-    // 檢查用戶是否已登入
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-        console.log('用戶未登入，重定向到首頁');
-        window.location.href = 'index.html';
+    // 檢查登入狀態
+    if (!checkLoginStatus()) {
         return;
     }
-
-    // 初始化 RestaurantModal 模組
-    if (typeof RestaurantModal !== 'undefined' && typeof RestaurantModal.init === 'function') {
-        console.log('直接初始化 RestaurantModal 模組');
-        RestaurantModal.init();
-    } else if (window.RestaurantModal && typeof window.RestaurantModal.init === 'function') {
-        console.log('通過 window 對象初始化 RestaurantModal 模組');
-        window.RestaurantModal.init();
-    } else {
-        console.warn('RestaurantModal 模組不可用，無法初始化');
-    }
-
-    // 載入使用者資料
-    loadUserData();
-
+    
     // 初始化選單
     initMenu();
 
@@ -1758,17 +1676,8 @@ function initializePage() {
     // 初始化篩選功能
     initFilters();
 
-    // 載入訂單資料
-    loadOrders();
-
-    // 載入評論資料
-    loadReviews();
-
-    // 載入通知資料
-    loadNotifications();
-    
-    // 載入數據分析資料
-    loadAnalyticsData('month');
+    // 載入使用者資料
+    loadUserData();
 
     // 初始化收藏功能
     initializeFavorites();
@@ -1776,33 +1685,12 @@ function initializePage() {
     // 設置事件監聽器
     setupEventListeners();
 
-    // 處理 URL 錨點，如果沒有則顯示個人資料區塊
+    // 處理 URL 錨點
     handleURLHash();
-    
-    // 設置登出按鈕事件
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            console.log('登出按鈕被點擊');
-            // 執行登出功能
-            if (typeof logout === 'function') {
-                logout();
-                // 登出後跳轉到首頁
-                window.location.href = 'index.html';
-            } else {
-                console.error('logout 函數不存在');
-                // 備用方案：直接清除登入狀態
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUser');
-                // 登出後跳轉到首頁
-                window.location.href = 'index.html';
-            }
-        });
-    }
 }
+
+// 頁面載入時執行初始化
+document.addEventListener('DOMContentLoaded', initializePage);
 
 // 處理 URL 錨點
 function handleURLHash() {
@@ -1845,11 +1733,10 @@ function setupEventListeners() {
         });
     });
 
-    // 個人資料表單提交 (保持原狀)
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) { // 添加檢查確保元素存在
-        profileForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    // 個人資料表單提交 (修改為按鈕點擊事件)
+    const updateProfileBtn = document.querySelector('.update-profile-btn');
+    if (updateProfileBtn) {
+        updateProfileBtn.addEventListener('click', function() {
             updateProfile();
         });
     }
@@ -1929,9 +1816,6 @@ function switchSection(sectionId) {
     }
 }
 
-// 當 DOM 載入完成時初始化頁面
-document.addEventListener('DOMContentLoaded', initializePage);
-
 // 檢查API連接狀態
 function checkApiConnection() {
     console.log(`檢查API連接狀態: ${API_BASE_URL}`);
@@ -1954,4 +1838,84 @@ function checkApiConnection() {
         console.error('API連接失敗:', error);
     });
 }
+
+// 確保只初始化一次的標誌
+let isInitialized = false;
+
+// 初始化用戶中心
+async function initializeUserCenter() {
+    if (isInitialized) {
+        console.log('用戶中心已經初始化過，跳過重複初始化');
+        return;
+    }
+    
+    console.log('開始初始化用戶中心...');
+    
+    try {
+        // 初始化收藏系統
+        if (window.favoriteSystem && !window.favoriteSystem.initialized) {
+            await window.favoriteSystem.initialize();
+        }
+        
+        // 初始化收藏按鈕
+        if (window.favoriteButton && !window.favoriteButton.initialized) {
+            await window.favoriteButton.initialize();
+        }
+        
+        // 載入收藏列表
+        await loadFavorites();
+        
+        // 設置初始化完成標誌
+        isInitialized = true;
+        console.log('用戶中心初始化完成');
+    } catch (error) {
+        console.error('初始化用戶中心時發生錯誤:', error);
+    }
+}
+
+// 載入收藏
+async function loadFavorites(type = 'stores') {
+    console.log(`開始載入收藏 (類型: ${type})`);
+    
+    const storesContainer = document.querySelector('.favorites-stores');
+    const reviewsContainer = document.querySelector('.favorites-reviews');
+    
+    if (!storesContainer || !reviewsContainer) {
+        console.error('找不到收藏列表的容器元素');
+        return;
+    }
+
+    if (type === 'stores') {
+        // 顯示載入中狀態
+        storesContainer.innerHTML = '<div class="loading">載入收藏店家中...</div>';
+        
+        try {
+            // 只從 favoriteSystem 獲取收藏店家資料
+            let favoriteStores = [];
+            
+            if (window.favoriteSystem && window.favoriteSystem.initialized) {
+                favoriteStores = await window.favoriteSystem.getFavoriteStores();
+                console.log('從 favoriteSystem 獲取的收藏資料:', favoriteStores);
+            }
+            
+            if (!favoriteStores || favoriteStores.length === 0) {
+                storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
+            } else {
+                await renderFavoriteStores(favoriteStores);
+            }
+        } catch (error) {
+            console.error('載入收藏店家失敗:', error);
+            storesContainer.innerHTML = '<div class="error">載入收藏店家失敗，請稍後再試</div>';
+        }
+    }
+}
+
+// 在 DOMContentLoaded 時初始化
+document.addEventListener('DOMContentLoaded', initializeUserCenter);
+
+// 導出必要的函數
+window.userCenter = {
+    initialize: initializeUserCenter,
+    loadFavorites: loadFavorites
+};
 

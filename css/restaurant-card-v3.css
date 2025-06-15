@@ -67,48 +67,49 @@
     padding-right: 40px; /* 為收藏按鈕預留空間 */
 }
 
-.favorite-btn {
-    background: none;
+.favorite-btn.v3 {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
     border: none;
-    cursor: pointer;
-    color: #ccc;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    padding: 5px;
     border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10; /* 確保不會高於彈窗的 z-index */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10;
 }
 
-.favorite-btn:hover {
-    background-color: rgba(255, 107, 26, 0.1);
+.favorite-btn.v3:hover {
+    background: white;
     transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.favorite-btn.v3 i {
+    font-size: 18px;
     color: #ff6b1a;
+    transition: all 0.3s ease;
 }
 
-.favorite-btn.active {
-    color: #ff6b1a;
+.favorite-btn.v3:hover i {
+    color: #ff8c42;
+    transform: scale(1.1);
 }
 
-.favorite-btn.active i {
-    animation: heartbeat 0.5s;
+.favorite-btn.v3.active {
+    background: #ff6b1a;
 }
 
-@keyframes heartbeat {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+.favorite-btn.v3.active i {
+    color: white;
 }
 
 .restaurant-rating-row.v3 {

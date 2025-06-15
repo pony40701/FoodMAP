@@ -8,6 +8,9 @@ class FavoriteSystem {
         // 設置API支持標誌
         this.useApi = false;
         this.userId = null;
+        
+        // API 基礎 URL
+        this.apiBaseUrl = 'http://localhost:8080';
     }
 
     // 初始化收藏系統
@@ -20,22 +23,12 @@ class FavoriteSystem {
             this.userId = parseInt(localStorage.getItem('userId') || '0');
             
             // 檢查是否使用API
-            this.useApi = !!window.restaurantService && window.restaurantService.initialized;
+            this.useApi = true; // 直接使用 API 模式
             console.log(`收藏系統模式: ${this.useApi ? '資料庫API' : '本地存儲'}`);
             
             // 從存儲加載數據
             if (this.useApi && this.userId > 0) {
-                // 使用API從數據庫加載
-                try {
-                    this.stores = await window.restaurantService.getFavoriteRestaurants(this.userId) || [];
-                    console.log(`成功從API載入 ${this.stores.length} 個收藏餐廳`);
-                    // 注意: 評論收藏暫時使用localStorage
-                    const favoriteReviews = localStorage.getItem('favoriteReviews');
-                    this.reviews = favoriteReviews ? JSON.parse(favoriteReviews) : [];
-                } catch (error) {
-                    console.error('從API加載收藏失敗，回退到localStorage:', error);
-                    await this.loadFromLocalStorage();
-                }
+                await this.loadFavorites();
             } else {
                 // 使用localStorage
                 await this.loadFromLocalStorage();
@@ -43,7 +36,7 @@ class FavoriteSystem {
             
             // 設置初始化標誌
             this.initialized = true;
-            console.log('收藏系統初始化完成');
+            console.log('收藏系統初始化完成，當前收藏數量:', this.stores.length);
             
             return true;
         } catch (error) {
@@ -102,41 +95,43 @@ class FavoriteSystem {
     // 載入收藏數據
     async loadFavorites() {
         try {
-            // 如果是API模式且已登入，則重新獲取數據
-            if (this.useApi && this.userId > 0) {
-                try {
-                    // 使用API從數據庫加載
-                    this.stores = await window.restaurantService.getFavoriteRestaurants(this.userId) || [];
-                    console.log(`成功從API重新載入 ${this.stores.length} 個收藏餐廳`);
-                } catch (error) {
-                    console.error('從API加載收藏失敗:', error);
-                    // 使用本地數據
-                }
-            } else {
-                // 從 localStorage 讀取收藏數據
-                const storedStores = localStorage.getItem('favoriteStores');
-                const storedReviews = localStorage.getItem('favoriteReviews');
-
-                this.stores = storedStores ? JSON.parse(storedStores) : [];
-                this.reviews = storedReviews ? JSON.parse(storedReviews) : [];
+            // 檢查登入狀態
+            if (!this.userId) {
+                console.log('用戶未登入，清空收藏列表');
+                this.stores = [];
+                this.reviews = [];
+                return {
+                    stores: [],
+                    reviews: []
+                };
             }
 
-            // 確保每個收藏的餐廳都有 place_id
-            this.stores = this.stores.filter(store => {
-                if (!store || (!store.id && !store.place_id)) {
-                    console.warn('發現無效的收藏餐廳數據，已過濾');
-                    return false;
-                }
-                
-                // 確保 id 和 place_id 一致
-                if (!store.place_id && store.id) {
-                    store.place_id = store.id;
-                } else if (!store.id && store.place_id) {
-                    store.id = store.place_id;
-                }
-                
-                return true;
+            console.log(`開始載入用戶 ${this.userId} 的收藏數據`);
+
+            // 從後端 API 獲取收藏的餐廳列表
+            const response = await fetch(`${this.apiBaseUrl}/api/favorites/${this.userId}/restaurants`);
+            if (!response.ok) {
+                throw new Error(`獲取收藏列表失敗: ${response.status}`);
+            }
+
+            const favorites = await response.json();
+            console.log('從API獲取到的原始收藏數據:', favorites);
+
+            // 更新本地收藏列表
+            this.stores = favorites.map(favorite => {
+                const store = {
+                    id: favorite.targetId,
+                    place_id: favorite.targetId,
+                    favoriteTime: favorite.favoritedAt
+                };
+                console.log('處理收藏數據:', store);
+                return store;
             });
+
+            // 更新 localStorage
+            localStorage.setItem('favoriteStores', JSON.stringify(this.stores));
+            console.log('成功更新本地收藏列表，數量:', this.stores.length);
+            console.log('當前收藏列表:', this.stores);
 
             return {
                 stores: this.stores,
@@ -144,12 +139,12 @@ class FavoriteSystem {
             };
         } catch (error) {
             console.error('載入收藏數據失敗:', error);
-            // 重置收藏數據
-            this.stores = [];
-            this.reviews = [];
-            localStorage.removeItem('favoriteStores');
-            localStorage.removeItem('favoriteReviews');
-            throw error;
+            // 如果API調用失敗，嘗試從localStorage讀取
+            await this.loadFromLocalStorage();
+            return {
+                stores: this.stores,
+                reviews: this.reviews
+            };
         }
     }
 
@@ -157,8 +152,7 @@ class FavoriteSystem {
     async addStore(storeData) {
         try {
             if (!this.initialized) {
-                console.error('收藏系統未初始化');
-                return false;
+                await this.initialize();
             }
 
             // 確保有 place_id
@@ -171,50 +165,67 @@ class FavoriteSystem {
                 return false;
             }
 
+            console.log('準備添加收藏:', storeData);
+
             // 檢查是否已收藏
-            if (this.isStoreFavorited(storeData.place_id)) {
+            const isFavorited = await this.isStoreFavorited(storeData.place_id);
+            console.log('檢查是否已收藏:', storeData.place_id, isFavorited);
+            
+            if (isFavorited) {
                 console.log('該店家已在收藏列表中');
                 return true; // 已經收藏了，視為成功
             }
-            
-            // API模式且已登入
-            if (this.useApi && this.userId > 0) {
-                try {
-                    const success = await window.restaurantService.addFavorite(this.userId, storeData.place_id);
-                    if (success) {
-                        console.log(`成功透過API收藏餐廳: ${storeData.name} (ID: ${storeData.place_id})`);
-                        // 添加到本地列表
-                        storeData.favoriteTime = new Date().toISOString();
-                        this.stores.push(storeData);
-                        // 觸發收藏變更事件
-                        this.triggerFavoritesChangedEvent();
-                        return true;
-                    } else {
-                        console.error('API收藏餐廳失敗');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('API收藏失敗，回退到本地存儲:', error);
-                    // 失敗後回退到本地存儲
-                }
+
+            // 檢查登入狀態
+            if (!this.userId) {
+                console.error('用戶未登入，無法添加收藏');
+                return false;
             }
 
-            // 添加收藏時間戳
-            storeData.favoriteTime = new Date().toISOString();
+            // 呼叫後端 API 新增收藏
+            const requestBody = {
+                userId: this.userId,
+                targetId: storeData.place_id,
+                targetType: 'restaurant'
+            };
+            console.log('發送收藏請求:', requestBody);
 
-            // 添加到收藏列表
-            this.stores.push(storeData);
+            const response = await fetch(`${this.apiBaseUrl}/api/favorites`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API 回應錯誤:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText
+                });
+                throw new Error(`API 呼叫失敗: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('API 回應結果:', result);
+
+            if (!result.success) {
+                throw new Error(result.message || '新增收藏失敗');
+            }
+
+            // 重新載入收藏列表
+            await this.loadFavorites();
             
-            // 保存到 localStorage
-            localStorage.setItem('favoriteStores', JSON.stringify(this.stores));
-            console.log(`成功收藏餐廳: ${storeData.name} (ID: ${storeData.place_id})`);
-
-            // 觸發收藏變更事件
+            // 觸發事件
             this.triggerFavoritesChangedEvent();
-
+            
+            console.log('成功新增收藏:', storeData);
             return true;
         } catch (error) {
-            console.error('添加店家收藏失敗:', error);
+            console.error('添加收藏失敗:', error);
             return false;
         }
     }
@@ -404,34 +415,55 @@ class FavoriteSystem {
     }
 
     // 檢查店家是否已收藏
-    isStoreFavorited(storeId) {
-        if (!storeId) return false;
-        
-        // API模式且已登入
-        if (this.useApi && this.userId > 0 && window.restaurantService) {
-            // 先從本地列表查詢，避免每次都調用API
-            const isInLocalList = this.stores.some(store => 
-                (store.id && store.id === storeId) || (store.place_id && store.place_id === storeId)
-            );
-            
-            if (isInLocalList) {
-                return true;
-            }
-            
-            // 如果本地不存在，可以考慮調用API確認
-            // 注意：這裡不使用異步調用，避免複雜性
+    async isStoreFavorited(storeId) {
+        if (!storeId) {
+            console.log('無效的 storeId');
+            return false;
         }
         
-        // 從本地列表檢查
-        return this.stores.some(store => 
-            (store.id && store.id === storeId) || 
-            (store.place_id && store.place_id === storeId)
-        );
+        try {
+            // 確保已初始化
+            if (!this.initialized) {
+                console.log('系統未初始化，進行初始化');
+                await this.initialize();
+            }
+
+            // 如果使用API且已登入，重新載入收藏列表
+            if (this.useApi && this.userId > 0) {
+                console.log(`正在檢查用戶 ${this.userId} 的收藏狀態，storeId: ${storeId}`);
+                await this.loadFavorites();
+            }
+
+            console.log('當前收藏列表:', this.stores);
+
+            // 檢查是否在收藏列表中
+            const isFavorited = this.stores.some(store => {
+                console.log('比對收藏記錄:', {
+                    store_id: store.id,
+                    store_place_id: store.place_id,
+                    checking_id: storeId,
+                    matches_id: store.id === storeId,
+                    matches_place_id: store.place_id === storeId
+                });
+                
+                const match = store.id === storeId || store.place_id === storeId;
+                if (match) {
+                    console.log('找到匹配的收藏記錄:', store);
+                }
+                return match;
+            });
+
+            console.log(`檢查收藏狀態 - storeId: ${storeId}, 結果: ${isFavorited}`);
+            return isFavorited;
+        } catch (error) {
+            console.error('檢查收藏狀態失敗:', error);
+            return false;
+        }
     }
 
     // 為了兼容性，添加 isFavorite 作為 isStoreFavorited 的別名
-    isFavorite(storeId) {
-        return this.isStoreFavorited(storeId);
+    async isFavorite(storeId) {
+        return await this.isStoreFavorited(storeId);
     }
 
     // 檢查評論是否已收藏

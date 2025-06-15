@@ -1,252 +1,303 @@
-// 餐廳服務模組 - 數據庫連接版本
+// 餐廳服務模組 - 僅支援後端 API
 class RestaurantService {
     constructor() {
-        // 檢查API設置是否存在
-        if (!window.API_CONFIG) {
-            console.error('API配置未找到，請確保已載入config.js');
+        // 儲存從後端獲取的資料
+        this.apiData = [];
+        this.dataLoaded = false;
+        
+        // 初始化收藏資料結構
+        this.favoriteData = this.loadFavoriteData();
+        
+        this.initialized = false;
+        console.log('餐廳服務已創建，準備初始化');
+    }
+    
+    // 初始化方法
+    async init() {
+        try {
+            console.log('開始初始化餐廳服務...');
+            
+            // 從 API 載入資料
+            await this.preloadRestaurantData();
+            
+            this.initialized = true;
+            console.log('餐廳服務初始化完成');
+            return true;
+        } catch (error) {
+            console.error('餐廳服務初始化失敗:', error);
+            return false;
         }
-        
-        this.API = window.API_CONFIG ? window.API_CONFIG.RESTAURANT : null;
-        this.BASE_URL = window.API_CONFIG ? window.API_CONFIG.BASE_URL : null;
-        
-        // 初始化本地緩存
-        this.cache = {
-            restaurants: {},
-            searchResults: {}
-        };
-        
-        this.initialized = !!this.API;
-        
-        if (this.initialized) {
-            console.log('餐廳服務已初始化，使用數據庫模式');
-        } else {
-            console.error('餐廳服務初始化失敗，API配置不可用');
+    }
+    
+    // 預載餐廳資料
+    async preloadRestaurantData() {
+        try {
+            if (!window.config || !window.config.api) {
+                throw new Error('API 配置未找到');
+            }
+            
+            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.all}`;
+            console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API 回應錯誤: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log(`API 回應資料長度: ${data.length}`);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                this.apiData = data;
+                this.dataLoaded = true;
+                console.log(`成功從 API 載入 ${data.length} 間餐廳資料`);
+            } else {
+                throw new Error('從 API 獲取的資料為空或格式不正確');
+            }
+        } catch (error) {
+            console.error('從 API 載入餐廳資料失敗:', error);
+            throw error; // 向上傳遞錯誤
+        }
+    }
+    
+    // 載入收藏資料
+    loadFavoriteData() {
+        try {
+            // 嘗試載入舊版收藏資料
+            const oldFavoritesJson = localStorage.getItem('googleMapsFavorites');
+            const userId = localStorage.getItem('userId');
+            
+            let favoriteData = {};
+            
+            if (userId && oldFavoritesJson) {
+                const oldFavorites = JSON.parse(oldFavoritesJson);
+                favoriteData[userId] = Object.keys(oldFavorites);
+            }
+            
+            return favoriteData;
+        } catch (error) {
+            console.error('載入收藏資料失敗:', error);
+            return {};
         }
     }
     
     // 獲取附近餐廳列表
     async getNearbyRestaurants(lat, lng, radius = 5000) {
+        console.log(`獲取附近餐廳: 緯度${lat}, 經度${lng}, 半徑${radius}`);
+        
+        // 如果已經從 API 載入了資料，直接使用
+        if (this.dataLoaded && this.apiData.length > 0) {
+            console.log(`使用已載入的 ${this.apiData.length} 間餐廳資料`);
+            return this.apiData;
+        }
+        
         try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            
-            const cacheKey = `${lat},${lng},${radius}`;
-            
-            // 檢查緩存
-            if (this.cache.searchResults[cacheKey]) {
-                console.log('從緩存返回附近餐廳數據');
-                return this.cache.searchResults[cacheKey];
+            if (!window.config || !window.config.api) {
+                throw new Error('API 配置未找到');
             }
             
-            const url = `${this.API.GET_ALL}?lat=${lat}&lng=${lng}&radius=${radius}`;
-            const response = await fetch(url);
+            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.all}`;
+            console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             
             if (!response.ok) {
-                throw new Error(`獲取餐廳列表失敗: ${response.status}`);
+                throw new Error(`API 回應錯誤: ${response.status}`);
             }
             
             const data = await response.json();
+            console.log(`API 回應資料長度: ${data.length}`);
             
-            // 處理從數據庫返回的JSON數據
-            const restaurants = data.map(item => {
-                // 如果有json_raw字段，解析它
-                if (item.jsonRaw) {
-                    try {
-                        const googleData = JSON.parse(item.jsonRaw);
-                        // 合併數據庫和Google數據
-                        return {
-                            ...googleData,
-                            id: item.placeId,
-                            place_id: item.placeId,
-                            name: item.name || googleData.name,
-                            address: item.address || googleData.formatted_address || googleData.vicinity
-                        };
-                    } catch (e) {
-                        console.error('解析JSON數據失敗:', e);
-                    }
-                }
-                
-                // 若沒有json_raw或解析失敗，使用數據庫字段
-                return {
-                    id: item.placeId,
-                    place_id: item.placeId,
-                    name: item.name || '未知名稱',
-                    address: item.address || '',
-                    rating: item.rating || 0,
-                    user_ratings_total: item.reviewCount || 0,
-                    photos: item.photoUrl ? [item.photoUrl] : null,
-                    location: item.latitude && item.longitude ? {
-                        lat: item.latitude,
-                        lng: item.longitude
-                    } : null
-                };
-            });
-            
-            // 緩存搜索結果
-            this.cache.searchResults[cacheKey] = restaurants;
-            return restaurants;
+            if (Array.isArray(data) && data.length > 0) {
+                this.apiData = data;
+                this.dataLoaded = true;
+                console.log(`成功從 API 載入 ${data.length} 間餐廳資料`);
+                return data;
+            } else {
+                throw new Error('從 API 獲取的資料為空或格式不正確');
+            }
         } catch (error) {
-            console.error('獲取附近餐廳失敗:', error);
-            // 失敗時返回空數組
-            return [];
+            console.error('從 API 載入餐廳資料失敗:', error);
+            throw error; // 向上傳遞錯誤
         }
     }
     
     // 獲取餐廳詳情
     async getRestaurantDetails(placeId) {
+        console.log(`獲取餐廳詳情: ${placeId}`);
+        
+        if (!placeId) {
+            throw new Error('未提供餐廳ID');
+        }
+        
+        // 優先使用已載入的資料
+        if (this.dataLoaded && this.apiData.length > 0) {
+            const restaurant = this.apiData.find(r => r.place_id === placeId || r.id === placeId);
+            if (restaurant) return restaurant;
+        }
+        
         try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            if (!placeId) throw new Error('缺少餐廳ID');
-            
-            // 檢查緩存
-            if (this.cache.restaurants[placeId]) {
-                console.log(`從緩存返回餐廳數據: ${placeId}`);
-                return this.cache.restaurants[placeId];
+            if (!window.config || !window.config.api) {
+                throw new Error('API 配置未找到');
             }
             
-            const url = this.API.GET_BY_ID(placeId);
-            const response = await fetch(url);
+            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.byId}${placeId}`;
+            console.log(`從 API 獲取餐廳詳情: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             
             if (!response.ok) {
-                throw new Error(`獲取餐廳詳情失敗: ${response.status}`);
+                throw new Error(`API 回應錯誤: ${response.status}`);
             }
             
             const data = await response.json();
-            let restaurant = data;
-            
-            // 處理從數據庫返回的JSON數據
-            if (data.jsonRaw) {
-                try {
-                    const googleData = JSON.parse(data.jsonRaw);
-                    // 合併數據庫和Google數據
-                    restaurant = {
-                        ...googleData,
-                        id: data.placeId,
-                        place_id: data.placeId,
-                        name: data.name || googleData.name,
-                        address: data.address || googleData.formatted_address || googleData.vicinity
-                    };
-                } catch (e) {
-                    console.error('解析JSON數據失敗:', e);
-                }
+            if (data) {
+                console.log(`成功從 API 載入餐廳詳情`);
+                return data;
+            } else {
+                throw new Error('餐廳詳情資料為空');
             }
-            
-            // 緩存餐廳詳情
-            this.cache.restaurants[placeId] = restaurant;
-            return restaurant;
         } catch (error) {
-            console.error(`獲取餐廳詳情失敗 (ID: ${placeId}):`, error);
-            return null;
+            console.error('從 API 載入餐廳詳情失敗:', error);
+            throw error;
         }
     }
     
     // 獲取用戶收藏的餐廳
     async getFavoriteRestaurants(userId) {
+        console.log(`獲取用戶收藏: ${userId}`);
+        
         try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            if (!userId) throw new Error('缺少用戶ID');
-            
-            const url = this.API.GET_FAVORITES(userId);
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`獲取收藏餐廳失敗: ${response.status}`);
-            }
-            
-            const jsonStrings = await response.json();
-            
-            // 解析JSON字符串為對象
-            const restaurants = jsonStrings.map(jsonStr => {
-                try {
-                    return JSON.parse(jsonStr);
-                } catch (e) {
-                    console.error('解析餐廳JSON失敗:', e, jsonStr);
-                    return null;
+            // 檢查是否有舊版收藏資料
+            const oldFavoritesJson = localStorage.getItem('googleMapsFavorites');
+            if (oldFavoritesJson) {
+                const oldFavorites = JSON.parse(oldFavoritesJson);
+                // 將舊版收藏資料轉換為新格式
+                if (!this.favoriteData[userId]) {
+                    this.favoriteData[userId] = [];
                 }
-            }).filter(item => item !== null);
-            
-            return restaurants;
+                this.favoriteData[userId] = [...new Set([
+                    ...this.favoriteData[userId],
+                    ...Object.keys(oldFavorites)
+                ])];
+                // 清除舊版收藏資料
+                localStorage.removeItem('googleMapsFavorites');
+            }
         } catch (error) {
-            console.error('獲取收藏餐廳失敗:', error);
-            return [];
+            console.error('處理舊版收藏資料失敗:', error);
         }
+        
+        return this.favoriteData[userId] || [];
     }
     
     // 添加餐廳收藏
     async addFavorite(userId, placeId) {
-        try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            if (!userId || !placeId) throw new Error('缺少用戶ID或餐廳ID');
-            
-            const url = this.API.ADD_FAVORITE;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `userId=${userId}&placeId=${placeId}`
-            });
-            
-            if (!response.ok) {
-                throw new Error(`添加收藏失敗: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            return result.success;
-        } catch (error) {
-            console.error('添加收藏失敗:', error);
-            return false;
+        console.log(`添加收藏: 用戶${userId}, 餐廳${placeId}`);
+        
+        if (!userId || !placeId) {
+            throw new Error('未提供用戶ID或餐廳ID');
         }
+        
+        if (!this.favoriteData[userId]) {
+            this.favoriteData[userId] = [];
+        }
+        
+        if (!this.favoriteData[userId].includes(placeId)) {
+            this.favoriteData[userId].push(placeId);
+            // 同步到本地存儲
+            this.saveFavoriteData();
+        }
+        
+        return true;
     }
     
     // 移除餐廳收藏
     async removeFavorite(userId, placeId) {
-        try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            if (!userId || !placeId) throw new Error('缺少用戶ID或餐廳ID');
-            
-            const url = `${this.API.REMOVE_FAVORITE}?userId=${userId}&placeId=${placeId}`;
-            const response = await fetch(url, { method: 'DELETE' });
-            
-            if (!response.ok) {
-                throw new Error(`移除收藏失敗: ${response.status}`);
+        console.log(`移除收藏: 用戶${userId}, 餐廳${placeId}`);
+        
+        if (!userId || !placeId) {
+            throw new Error('未提供用戶ID或餐廳ID');
+        }
+        
+        if (this.favoriteData[userId]) {
+            const index = this.favoriteData[userId].indexOf(placeId);
+            if (index !== -1) {
+                this.favoriteData[userId].splice(index, 1);
+                // 同步到本地存儲
+                this.saveFavoriteData();
+                return true;
             }
-            
-            const result = await response.json();
-            return result.success;
+        }
+        
+        return false;
+    }
+    
+    // 保存收藏資料到本地存儲
+    saveFavoriteData() {
+        try {
+            const userId = localStorage.getItem('userId');
+            if (userId && this.favoriteData[userId]) {
+                // 保存完整的收藏資料
+                localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteData[userId]));
+                console.log(`已保存 ${this.favoriteData[userId].length} 個收藏餐廳`);
+            }
         } catch (error) {
-            console.error('移除收藏失敗:', error);
-            return false;
+            console.error('保存收藏資料失敗:', error);
+            throw error;
         }
     }
     
     // 檢查餐廳是否已收藏
     async isFavorited(userId, placeId) {
-        try {
-            if (!this.initialized) throw new Error('服務未初始化');
-            if (!userId || !placeId) return false;
-            
-            const url = `${this.API.CHECK_FAVORITE}?userId=${userId}&placeId=${placeId}`;
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`檢查收藏狀態失敗: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            return result.is_favorited === true;
-        } catch (error) {
-            console.error('檢查收藏狀態失敗:', error);
-            return false;
-        }
+        if (!userId || !placeId) return false;
+        
+        return !!(this.favoriteData[userId] && this.favoriteData[userId].includes(placeId));
     }
     
-    // 清除緩存
+    // 清除快取
     clearCache() {
-        this.cache = {
-            restaurants: {},
-            searchResults: {}
-        };
-        console.log('餐廳服務緩存已清除');
+        this.apiData = [];
+        this.dataLoaded = false;
+        console.log('已清除餐廳資料快取');
+    }
+    
+    // 獲取所有餐廳資料
+    async getAllRestaurantsJson() {
+        if (!this.initialized) {
+            console.log('服務尚未初始化，進行初始化...');
+            await this.init();
+        }
+        
+        if (this.dataLoaded && this.apiData.length > 0) {
+            return this.apiData;
+        }
+        
+        try {
+            await this.preloadRestaurantData();
+            return this.apiData;
+        } catch (error) {
+            console.error('獲取餐廳資料失敗:', error);
+            throw error;
+        }
     }
 }
 

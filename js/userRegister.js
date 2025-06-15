@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeAvatarBtn = document.getElementById('removeAvatar');
 
     // API 基礎 URL
-    const API_BASE_URL = 'http://localhost:8090/api';
+    const API_BASE_URL = 'http://localhost:8080/api';
 
     // 大頭貼上傳處理
     avatarInput.addEventListener('change', function(e) {
@@ -33,7 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                avatarPreview.src = e.target.result;
+                const base64Data = e.target.result;  // 保留完整的 base64 字串
+                avatarPreview.src = base64Data;
+                avatarPreview.dataset.base64 = base64Data;  // 儲存完整的 base64 字串
                 removeAvatarBtn.style.display = 'flex';
                 clearError(avatarInput);
             };
@@ -44,7 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 移除大頭貼
     removeAvatarBtn.addEventListener('click', function() {
         avatarInput.value = '';
-        avatarPreview.src = 'images/default-avatar.png';
+        avatarPreview.src = 'images/default-avatar.jpg';
+        avatarPreview.dataset.base64 = '';
         removeAvatarBtn.style.display = 'none';
         clearError(avatarInput);
     });
@@ -78,18 +81,31 @@ document.addEventListener('DOMContentLoaded', function() {
         return re.test(email);
     }
 
-    // 顯示錯誤訊息
-    function showError(input, message) {
-        const formGroup = input.closest('.form-group');
-        const errorMessage = formGroup.querySelector('.error-message');
-        errorMessage.textContent = message;
-        formGroup.classList.add('error');
-    }
-
     // 清除錯誤訊息
     function clearError(input) {
-        const formGroup = input.closest('.form-group');
-        formGroup.classList.remove('error');
+        const formGroup = input.closest('.form-group, .terms-checkbox');
+        if (formGroup) {
+            formGroup.classList.remove('error');
+            const errorMessage = formGroup.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.textContent = '';
+            }
+        }
+    }
+
+    // 顯示錯誤訊息
+    function showError(input, message) {
+        const formGroup = input.closest('.form-group, .terms-checkbox');
+        if (formGroup) {
+            const errorMessage = formGroup.querySelector('.error-message');
+            if (!errorMessage) {
+                const newErrorMessage = document.createElement('div');
+                newErrorMessage.className = 'error-message';
+                formGroup.appendChild(newErrorMessage);
+            }
+            formGroup.querySelector('.error-message').textContent = message;
+            formGroup.classList.add('error');
+        }
     }
 
     // 處理登入表單提交
@@ -119,14 +135,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 獲取表單數據
         const email = document.getElementById('email').value.trim();
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
+        const terms = document.getElementById('terms');
 
         // 驗證電子郵件
         if (!validateEmail(email)) {
             showError(document.getElementById('email'), '請輸入有效的電子郵件地址');
+            isValid = false;
+        }
+
+        // 驗證使用者名稱
+        if (username.length < 3) {
+            showError(document.getElementById('username'), '使用者名稱至少需要 3 個字元');
+            isValid = false;
+        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            showError(document.getElementById('username'), '使用者名稱只能包含英文字母、數字和底線');
             isValid = false;
         }
 
@@ -154,9 +181,16 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
 
+        // 驗證服務條款
+        if (!terms.checked) {
+            showError(terms, '請閱讀並同意服務條款和隱私權政策');
+            isValid = false;
+        }
+
         if (isValid) {
             // 更新確認資料頁面的內容
             document.getElementById('confirmEmail').textContent = email;
+            document.getElementById('confirmUsername').textContent = username;
             document.getElementById('confirmName').textContent = name;
             document.getElementById('confirmPhone').textContent = phone;
             
@@ -189,24 +223,22 @@ document.addEventListener('DOMContentLoaded', function() {
     window.submitRegistration = function() {
         // 獲取表單數據
         const email = document.getElementById('email').value.trim();
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
         
-        // 獲取大頭貼，但限制大小
-        let avatarUrl = '';
-        if (avatarInput.files && avatarInput.files[0]) {
-            // 使用一個簡單的標記，而不是發送整個 base64 數據
-            avatarUrl = 'user_uploaded_avatar';
-        }
+        // 獲取圖片的 base64 數據
+        const avatarBase64 = avatarPreview.dataset.base64 || null;
         
         // 準備註冊資料
         const registerData = {
             email: email,
+            username: username,
             password: password,
             name: name,
-            phone: phone,
-            avatarUrl: avatarUrl
+            phone_number: phone,
+            avatar_url: avatarBase64  // 使用完整的 base64 字串
         };
         
         // 顯示載入中狀態
@@ -218,7 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(registerData)
         })
@@ -226,23 +259,27 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('註冊響應:', data);
             
-            if (data.success) {
+            if (data.id) {
                 // 註冊成功
                 console.log('註冊成功');
                 
                 // 儲存用戶資料
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', data.user.id);
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                localStorage.setItem('userId', data.id);
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: data.id,
+                    email: data.email,
+                    name: data.name,
+                    username: data.username
+                }));
                 
                 // 切換到完成步驟
                 goToStep(3);
             } else {
                 // 註冊失敗
-                console.error('註冊失敗:', data.message);
-                alert('註冊失敗: ' + data.message);
+                console.error('註冊失敗:', data.error || '未知錯誤');
+                alert('註冊失敗: ' + (data.error || '未知錯誤'));
                 
                 // 恢復按鈕狀態
                 submitButton.disabled = false;
@@ -250,8 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('註冊請求發生錯誤:', error);
-            alert('系統錯誤，請稍後再試');
+            console.error('註冊錯誤:', error);
+            alert('註冊時發生錯誤，請稍後再試');
             
             // 恢復按鈕狀態
             submitButton.disabled = false;
@@ -262,7 +299,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // 即時驗證輸入
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', function() {
-            clearError(this);
+            if (this.type === 'checkbox') {
+                if (this.checked) {
+                    clearError(this);
+                }
+            } else {
+                clearError(this);
+            }
         });
     });
 });

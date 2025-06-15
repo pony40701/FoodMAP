@@ -1,277 +1,239 @@
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('登入模組已載入');
-    
-    const loginForm = document.getElementById('loginForm');
-    const loginModal = document.getElementById('loginModal');
-    const closeBtn = document.querySelector('.close');
-    const loginBtn = document.querySelector('.btn-login');
-    const loginButton = document.getElementById('loginButton');
-    
-    console.log('登入元素檢查:', { 
-        loginForm: !!loginForm, 
-        loginModal: !!loginModal, 
-        closeBtn: !!closeBtn, 
-        loginBtn: !!loginBtn,
-        loginButton: !!loginButton
-    });
-    
-    // API 基礎 URL - 使用正確的本地伺服器端口 8080
-    const API_BASE_URL = 'http://localhost:8080/api';
-    console.log('API基礎URL設置為:', API_BASE_URL);
+// 登入模組
+console.log('登入模組已載入');
 
-    // 檢查登入狀態並更新按鈕
-    updateLoginStatus();
+// 檢查必要的 DOM 元素
+const loginElements = {
+    loginForm: document.getElementById('loginForm'),
+    loginModal: document.getElementById('loginModal'),
+    closeBtn: document.querySelector('#loginModal .close'),
+    loginBtn: document.querySelector('.btn-login'),
+    loginButton: document.getElementById('loginButton'),
+    loginSection: document.getElementById('loginSection'),
+    userSection: document.getElementById('userSection')
+};
 
-    // 登入按鈕點擊事件 (通過 class 選擇器)
-    if (loginBtn) {
-        console.log('綁定登入按鈕點擊事件 (class)');
-        loginBtn.addEventListener('click', handleLoginButtonClick);
-    } else {
-        console.error('找不到登入按鈕元素 (class)');
-    }
-    
-    // 登入按鈕點擊事件 (通過 id 選擇器)
-    if (loginButton) {
-        console.log('綁定登入按鈕點擊事件 (id)');
-        loginButton.addEventListener('click', handleLoginButtonClick);
-    } else {
-        console.error('找不到登入按鈕元素 (id)');
-    }
-    
-    // 登入按鈕點擊處理函數
-    function handleLoginButtonClick(e) {
-        console.log('登入按鈕被點擊');
-        e.preventDefault();
-        // 只有未登入時才顯示登入彈窗
-        // 已登入時會顯示頭像下拉選單，不需要處理按鈕點擊
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            // 清除任何之前設置的回調函數，避免不必要的跳轉
-            window.onLoginSuccess = null;
-            if (loginModal) {
-                console.log('顯示登入彈窗');
-                loginModal.style.display = 'block';
-            } else {
-                console.error('找不到登入彈窗元素');
-            }
-        } else {
-            window.location.href = 'userCenter.html';
-        }
-    }
-
-    // 關閉按鈕點擊事件
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            console.log('關閉登入彈窗');
-            loginModal.style.display = 'none';
-        });
-    }
-
-    // 點擊模態框外部時關閉
-    window.addEventListener('click', (e) => {
-        if (e.target === loginModal) {
-            console.log('點擊彈窗外部，關閉彈窗');
-            loginModal.style.display = 'none';
-        }
-    });
-
-    // 登入表單提交事件
-    if (loginForm) {
-        console.log('綁定登入表單提交事件');
-        loginForm.addEventListener('submit', function(e) {
-            console.log('登入表單提交');
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            console.log('嘗試登入:', email);
-            
-            // 測試帳號快速登入
-            if (email === "alice@example.com") {
-                apiLogin(email, "hashedpwd1");
-            } else if (email === "bob@example.com") {
-                apiLogin(email, "hashedpwd2");
-            } else {
-                // 一般帳號登入
-                apiLogin(email, password);
-            }
-        });
-    } else {
-        console.error('找不到登入表單元素');
-    }
-    
-    // API 登入功能
-    function apiLogin(email, password) {
-        // 請求資料
-        const loginData = {
-            email: email,
-            password: password
-        };
-        
-        console.log('發送登入請求:', API_BASE_URL + '/auth/login');
-        console.log('請求數據:', JSON.stringify(loginData));
-        
-        // 檢查後端服務是否可用
-        fetch(`${API_BASE_URL}`, {
-            method: 'GET',
-            mode: 'no-cors'
-        })
-        .then(() => {
-            console.log('後端服務可用，繼續登入流程');
-            // 發送 API 請求
-            return fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(loginData)
-            });
-        })
-        .then(response => {
-            console.log('收到回應:', response);
-            console.log('回應狀態:', response.status);
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('帳號或密碼錯誤');
-                }
-                throw new Error('登入失敗');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('登入回應數據:', data);
-            if (data.success) {
-                // 儲存登入狀態
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userEmail', data.user.email);
-                localStorage.setItem('userId', data.user.id);
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
-                
-                // 關閉模態框
-                loginModal.style.display = 'none';
-                
-                // 更新登入狀態
-                updateLoginStatus();
-                
-                // 檢查是否有登入成功後的回調函數
-                if (window.onLoginSuccess) {
-                    window.onLoginSuccess();
-                    // 清除回調函數，避免影響其他登入操作
-                    window.onLoginSuccess = null;
-                    // 顯示登入成功並自動收藏的提示
-                    showToast('登入成功，已自動加入收藏！');
-                } else {
-                    showToast('登入成功！');
-                }
-            } else {
-                showError(data.message || '帳號或密碼錯誤');
-            }
-        })
-        .catch(error => {
-            console.error('登入錯誤:', error);
-            // 嘗試連接失敗時，顯示更詳細的錯誤信息
-            if (error.message === 'Failed to fetch') {
-                showError('無法連接到伺服器，請確認後端服務是否正常運行');
-            } else {
-                showError(error.message || '登入失敗，請稍後再試');
-            }
-        });
-    }
-    
-    // 顯示錯誤訊息
-    function showError(message) {
-        console.error('錯誤:', message);
-        alert(message);
-    }
+console.log('登入元素檢查:', {
+    loginForm: !!loginElements.loginForm,
+    loginModal: !!loginElements.loginModal,
+    closeBtn: !!loginElements.closeBtn,
+    loginBtn: !!loginElements.loginBtn,
+    loginButton: !!loginElements.loginButton,
+    loginSection: !!loginElements.loginSection,
+    userSection: !!loginElements.userSection
 });
 
+// 初始化登入功能
+function initLogin() {
+    console.log('初始化登入功能');
+    
+    // 綁定登入按鈕點擊事件
+    if (loginElements.loginBtn) {
+        loginElements.loginBtn.addEventListener('click', () => {
+            console.log('點擊登入按鈕');
+            if (loginElements.loginModal) {
+                loginElements.loginModal.style.display = 'block';
+            }
+        });
+    }
+
+    // 綁定登入按鈕點擊事件（使用 id）
+    if (loginElements.loginButton) {
+        loginElements.loginButton.addEventListener('click', () => {
+            console.log('點擊登入按鈕（id）');
+            if (loginElements.loginModal) {
+                loginElements.loginModal.style.display = 'block';
+            }
+        });
+    }
+
+    // 綁定關閉按鈕點擊事件
+    if (loginElements.closeBtn) {
+        loginElements.closeBtn.addEventListener('click', () => {
+            console.log('點擊關閉按鈕');
+            if (loginElements.loginModal) {
+                loginElements.loginModal.style.display = 'none';
+            }
+        });
+    }
+
+    // 點擊模態框外部關閉
+    window.addEventListener('click', (event) => {
+        if (event.target === loginElements.loginModal) {
+            loginElements.loginModal.style.display = 'none';
+        }
+    });
+    
+    // 綁定登入表單提交事件
+    if (loginElements.loginForm) {
+        loginElements.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = loginElements.loginForm.querySelector('#email').value;
+            const password = loginElements.loginForm.querySelector('#password').value;
+            
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 儲存認證資訊
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userId', data.id);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    // 儲存用戶資料
+                    const userData = {
+                        id: data.id,
+                        email: data.email,
+                        username: data.username,
+                        fullName: data.fullName,
+                        image_url: data.image_url,
+                        avatar_url: data.avatar_url,
+                        phone: data.phone,
+                        address: data.address
+                    };
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    
+                    // 關閉登入視窗
+                    loginElements.loginModal.style.display = 'none';
+                    
+                    // 顯示成功訊息
+                    window.showToast('登入成功！');
+                    
+                    // 重新載入頁面以更新狀態
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message || '登入失敗');
+                }
+            } catch (error) {
+                console.error('登入失敗:', error);
+                window.showToast(error.message || '登入失敗，請稍後再試');
+            }
+        });
+    }
+}
+
+// 在 DOM 加載完成後初始化
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM 加載完成，初始化登入功能');
+    initLogin();
+});
+
+// 暴露全局登入彈窗函數
+window.showLoginModal = function() {
+    console.log('顯示登入彈窗');
+    if (loginElements.loginModal) {
+        loginElements.loginModal.style.display = 'block';
+    } else {
+        console.error('找不到登入彈窗元素');
+    }
+};
+
 // 更新登入狀態
-function updateLoginStatus() {
+function updateLoginStatus(isLoggedIn) {
+    console.log('更新登入狀態:', isLoggedIn);
+    
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     
-    if (loginSection && userSection) {
-        if (isLoggedIn) {
-            // 已登入：隱藏登入按鈕，顯示會員頭像
-            loginSection.style.display = 'none';
-            userSection.style.display = 'block';
+    if (isLoggedIn) {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        console.log('用戶資訊:', userData);
+        
+        // 隱藏登入按鈕，顯示用戶區域
+        if (loginSection) loginSection.style.display = 'none';
+        if (userSection) {
+            userSection.style.display = 'flex';
             
-            // 更新用戶資訊顯示
-            const userEmail = localStorage.getItem('userEmail');
-            const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-            const userName = currentUser.name || (userEmail ? userEmail.split('@')[0] : '會員');
+            // 更新用戶名稱
+            const userNameElement = document.querySelector('.user-name');
+            if (userNameElement) {
+                userNameElement.textContent = userData.username || userData.fullName || userData.email;
+            }
             
-            // 可以在這裡更新頭像旁的用戶名稱（如果需要的話）
-        } else {
-            // 未登入：顯示登入按鈕，隱藏會員頭像
-            loginSection.style.display = 'block';
-            userSection.style.display = 'none';
-        }
-    } else {
-        // 舊版相容性：如果找不到新的區塊，使用舊的按鈕邏輯
-        const loginBtn = document.querySelector('.btn-login');
-        if (loginBtn) {
-            if (isLoggedIn) {
-                loginBtn.textContent = '會員中心';
-            } else {
-                loginBtn.textContent = '登入';
+            // 更新用戶頭像 - 檢查 image_url 和 avatar_url
+            const userAvatarImg = document.querySelector('.avatar-img');
+            if (userAvatarImg) {
+                const avatarUrl = userData.image_url || userData.avatar_url;
+                console.log('頭像URL:', avatarUrl);
+                
+                if (avatarUrl) {
+                    userAvatarImg.src = avatarUrl;
+                    userAvatarImg.alt = userData.username || '會員頭像';
+                    console.log('設置用戶頭像:', avatarUrl);
+                } else {
+                    console.log('用戶沒有頭像URL');
+                }
             }
         }
+    } else {
+        // 顯示登入按鈕，隱藏用戶區域
+        if (loginSection) loginSection.style.display = 'block';
+        if (userSection) userSection.style.display = 'none';
+        
+        // 清除本地儲存的用戶資訊
+        localStorage.clear();
     }
 }
 
 // 登出功能
-function logout() {
-    console.log('執行登出功能');
-    
-    // 清除收藏狀態
-    if (window.clearFavorites) {
-        window.clearFavorites();
-    }
-    
-    // 清除登入狀態
+window.logout = function() {
+    console.log('執行登出');
+    localStorage.removeItem('user');
     localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userId');
     localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem('userId');
+    updateLoginStatus(false);
+    showMessage('已成功登出', 'success');
     
-    // 清除所有收藏相關的localStorage
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-        if (key.startsWith('favorites_')) {
-            localStorage.removeItem(key);
-        }
-    });
-    
-    // 更新所有收藏按鈕的狀態
-    const favoriteButtons = document.querySelectorAll('.favorite-btn');
-    favoriteButtons.forEach(btn => {
-        btn.classList.remove('active');
-        const icon = btn.querySelector('i');
-        if (icon) {
-            icon.className = 'far fa-heart';
-        }
-    });
-    
-    // 如果有餐廳列表，重新整理顯示
-    if (window.infiniteScroll) {
-        window.infiniteScroll.reset();
-        if (window.currentRestaurants) {
-            window.infiniteScroll.setRestaurants([...window.currentRestaurants]);
-        }
+    // 如果在會員中心，則跳轉到首頁
+    if (window.location.pathname.includes('userCenter.html')) {
+        window.location.href = 'index.html';
     }
+};
+
+// 顯示訊息
+function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
     
-    // 更新登入狀態UI
-    updateLoginStatus();
-    
-    console.log('登出完成，清除了所有登入狀態');
-    return true; // 返回 true 表示登出成功
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
 }
+
+// 檢查是否已登入
+function checkLoginStatus() {
+    console.log('檢查登入狀態');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const user = localStorage.getItem('user');
+    
+    if (isLoggedIn && user) {
+        console.log('用戶已登入');
+        updateLoginStatus(true);
+        
+        // 如果在會員中心頁面且未登入，則跳轉到首頁
+        if (window.location.pathname.includes('userCenter.html') && !isLoggedIn) {
+            window.location.href = 'index.html';
+        }
+    } else {
+        console.log('用戶未登入');
+        updateLoginStatus(false);
+    }
+}
+
+// 頁面載入時檢查登入狀態
+document.addEventListener('DOMContentLoaded', checkLoginStatus);
 
 // 社交媒體登入
 function socialLogin(platform) {

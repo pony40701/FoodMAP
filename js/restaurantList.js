@@ -169,9 +169,9 @@ function clearMarkers() {
 function renderRestaurantCards(restaurants) {
   console.log('開始渲染餐廳卡片，資料：', restaurants);
   
-  const container = document.getElementById('restaurant-cards');
+  const container = document.getElementById('restaurants-container');
   if (!container) {
-    console.error('找不到 restaurant-cards 容器元素');
+    console.error('找不到 restaurants-container 容器元素');
     return;
   }
   
@@ -189,26 +189,30 @@ function renderRestaurantCards(restaurants) {
     try {
       const photoUrl = restaurant.photos && restaurant.photos[0] ? 
         restaurant.photos[0].getUrl() : 
-        'images/default-restaurant.jpg';
+        'images/no-image.jpg';
 
       const card = `
-        <div class="restaurant-card yelp-style" onclick="showRestaurantDetails('${restaurant.place_id}')">
-          <div class="yelp-img-wrap">
-            <img src="${photoUrl}" alt="${restaurant.name}" class="yelp-image" onerror="this.src='images/default-restaurant.jpg'">
+        <div class="restaurant-card" data-place-id="${restaurant.place_id}">
+          <div class="restaurant-image">
+            <img src="${photoUrl}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
+            <button class="favorite-btn" onclick="toggleFavorite('${restaurant.place_id}')">
+              <i class="far fa-heart"></i>
+            </button>
           </div>
-          <div class="yelp-info">
-            <div class="yelp-title-row">
-              <h3 class="yelp-name">${restaurant.name}</h3>
+          <div class="restaurant-info">
+            <h3 class="restaurant-name">${restaurant.name}</h3>
+            <div class="rating-container">
+              <div class="stars">
+                ${getStarRating(restaurant.rating || 0)}
+              </div>
+              <span class="rating-text">${restaurant.rating || '暫無評分'} (${restaurant.user_ratings_total || 0})</span>
             </div>
-            <div class="yelp-rating-row">
-              <div class="stars">評分: ${restaurant.rating || '暫無評分'}</div>
-              <span class="rating-text">${restaurant.user_ratings_total || 0} 則評論</span>
+            <div class="restaurant-tags">
+              ${restaurant.types ? restaurant.types.slice(0, 3).map(type => `<span class="tag">${formatType(type)}</span>`).join('') : ''}
             </div>
-            <div class="yelp-tags-row">
-              ${restaurant.types ? restaurant.types.map(type => `<span class="yelp-tag">${type}</span>`).join('') : ''}
-            </div>
-            <div class="yelp-price-row">
-              <span class="price">${restaurant.price_level ? '￥'.repeat(restaurant.price_level) : '價格未提供'}</span>
+            <div class="restaurant-footer">
+              <span class="price-level">${getPriceLevel(restaurant.price_level)}</span>
+              <span class="distance">${calculateDistance(restaurant.geometry.location)}</span>
             </div>
           </div>
         </div>
@@ -218,6 +222,59 @@ function renderRestaurantCards(restaurants) {
       console.error(`渲染餐廳卡片時發生錯誤，餐廳名稱：${restaurant.name}`, error);
     }
   });
+}
+
+// 格式化餐廳類型
+function formatType(type) {
+  const typeMap = {
+    'restaurant': '餐廳',
+    'food': '美食',
+    'cafe': '咖啡廳',
+    'bar': '酒吧',
+    // 可以根據需要添加更多類型映射
+  };
+  return typeMap[type] || type;
+}
+
+// 獲取星級評分HTML
+function getStarRating(rating) {
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 >= 0.5;
+  let starsHtml = '';
+  
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      starsHtml += '<i class="fas fa-star"></i>';
+    } else if (i === fullStars && halfStar) {
+      starsHtml += '<i class="fas fa-star-half-alt"></i>';
+    } else {
+      starsHtml += '<i class="far fa-star"></i>';
+    }
+  }
+  
+  return starsHtml;
+}
+
+// 獲取價格等級顯示
+function getPriceLevel(level) {
+  if (!level) return '價格未提供';
+  return '￥'.repeat(level);
+}
+
+// 計算與當前位置的距離
+function calculateDistance(location) {
+  if (!currentPosition || !location) return '';
+  
+  const distance = google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(currentPosition),
+    location
+  );
+  
+  if (distance < 1000) {
+    return `${Math.round(distance)}m`;
+  } else {
+    return `${(distance / 1000).toFixed(1)}km`;
+  }
 }
 
 // 顯示餐廳詳細資訊
@@ -294,18 +351,41 @@ function handleSearch() {
 // 初始化事件監聽器
 document.addEventListener('DOMContentLoaded', () => {
   // 搜尋按鈕點擊事件
-  document.querySelector('.search-btn').addEventListener('click', handleSearch);
+  const searchBtn = document.querySelector('.search-btn');
+  if (searchBtn) {
+    searchBtn.addEventListener('click', handleSearch);
+  }
+  
+  // 餐廳卡片點擊事件委派
+  const restaurantsContainer = document.getElementById('restaurants-container');
+  if (restaurantsContainer) {
+    restaurantsContainer.addEventListener('click', (event) => {
+      const card = event.target.closest('.restaurant-card');
+      if (card) {
+        const placeId = card.dataset.placeId;
+        if (placeId) {
+          showRestaurantDetails(placeId);
+        }
+      }
+    });
+  }
   
   // 關閉詳細資訊視窗按鈕點擊事件
-  document.querySelector('.modal-close').addEventListener('click', closeRestaurantModal);
+  const modalClose = document.querySelector('.modal-close');
+  if (modalClose) {
+    modalClose.addEventListener('click', closeRestaurantModal);
+  }
   
   // 排序按鈕點擊事件
-  document.querySelectorAll('.sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const sortType = btn.dataset.sort;
-      sortRestaurants(sortType);
+  const sortBtns = document.querySelectorAll('.sort-btn');
+  if (sortBtns.length > 0) {
+    sortBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sortType = btn.dataset.sort;
+        sortRestaurants(sortType);
+      });
     });
-  });
+  }
 });
 
 // 餐廳排序函數
