@@ -253,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyFilters() {
+        currentFilters.search = searchInput.value;
         allArticles = [];
         hasMore = true;
         foodGrid.innerHTML = '';
