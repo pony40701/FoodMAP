@@ -1,9 +1,10 @@
 package com.example.demo.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.RLeaderRestaurant;
@@ -15,8 +16,8 @@ public class RLeaderRestaurantService {
     @Autowired
     private RLeaderRestaurantRepository repository;
 
-    public List<RLeaderRestaurant> getRestaurants() {
-        return repository.findAll();
+    public Page<RLeaderRestaurant> getRestaurants(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     public Optional<String> getCoverImageUrlById(Integer restaurantId) {

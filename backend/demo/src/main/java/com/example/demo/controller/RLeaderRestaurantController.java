@@ -1,9 +1,10 @@
 package com.example.demo.controller;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +22,8 @@ public class RLeaderRestaurantController {
     private RLeaderRestaurantService service;
 
     @GetMapping("/ranking/restaurants")
-    public ResponseEntity<List<RLeaderRestaurant>> getRestaurantRanking() {
-        List<RLeaderRestaurant> restaurants = service.getRestaurants();
+    public ResponseEntity<Page<RLeaderRestaurant>> getRestaurantRanking(Pageable pageable) {
+        Page<RLeaderRestaurant> restaurants = service.getRestaurants(pageable);
         return ResponseEntity.ok(restaurants);
     }
 

@@ -1,9 +1,10 @@
 package com.example.demo.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.GoogleRestaurant;
@@ -20,9 +21,8 @@ public class LLeaderGoogleRestaurantService {
     @Autowired
     private LLeaderGoogleRestaurantPhotoRepository photoRepository;
 
-    public List<GoogleRestaurant> getGoogleRestaurants() {
-        // 先抓取所有資料，之後可以再加入排序邏輯
-        return repository.findAll();
+    public Page<GoogleRestaurant> getGoogleRestaurants(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     public Optional<String> getPhotoUrlByPlaceId(String placeId) {

@@ -2,6 +2,13 @@ const GOOGLE_API_KEY = ''; // 此處請填入你的 Google API 金鑰
 const ADDRESS = '台中市南屯區公益路二段51號18樓';
 const CORS_PROXY = 'https://corsproxy.io/?';
 
+// 分頁相關變數
+let googleCurrentPage = 0;
+let customCurrentPage = 0;
+let googleIsLastPage = false;
+let customIsLastPage = false;
+const pageSize = 5;
+
 async function getLatLng(address) {
     const url = CORS_PROXY + encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_API_KEY}`);
     const res = await fetch(url);
@@ -159,67 +166,84 @@ function setupFavoriteButtons() {
     });
 }
 
-async function loadGoogleRestaurants(sortType = 'composite') {
+async function loadGoogleRestaurants(page = 0) {
+    if (googleIsLastPage && page > 0) return; // 如果是最後一頁，且不是初次載入，則不執行
+
     const restaurantList = document.querySelector('.restaurant-list');
-    restaurantList.innerHTML = '載入中...';
+    if (page === 0) {
+        restaurantList.innerHTML = ''; // 只有第一頁才清空
+    }
+    
     try {
-        const response = await fetch('http://localhost:8080/api/lleader/ranking/google');
+        const response = await fetch(`http://localhost:8080/api/lleader/ranking/google?page=${page}&size=${pageSize}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        let places = await response.json();
+        const pageData = await response.json();
+        const places = pageData.content;
+        googleIsLastPage = pageData.last;
 
+        // 請注意：此處的排序是針對當前頁面的，並非對所有資料排序。
+        // 若要實現全域排序，需在後端完成。
         places.forEach(place => {
             const rating = place.rating || 0;
             const count = place.reviewCount || 0;
             place.compositeScore = rating * Math.log10(count + 1);
         });
+        
+        // 暫時移除客戶端排序，依賴後端預設排序
+        // ...
 
-        if (sortType === 'weekly') {
-            places.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
-        } else if (sortType === 'new') {
-            places.sort((a, b) => (a.reviewCount || 0) - (b.reviewCount || 0));
-        } else {
-            places.sort((a, b) => b.compositeScore - a.compositeScore);
+        if (page === 0) {
+            window._googlePlaces = [];
         }
+        window._googlePlaces = window._googlePlaces.concat(places);
 
-        window._googlePlaces = places;
-        restaurantList.innerHTML = '';
-        places.slice(0, 5).forEach((place, idx) => {
-            restaurantList.innerHTML += createRestaurantItem(place, idx);
+        places.forEach((place, idx) => {
+            const globalIndex = page * pageSize + idx;
+            restaurantList.innerHTML += createRestaurantItem(place, globalIndex);
         });
+
         setupFavoriteButtons();
+
+        // 在資料載入完成後檢查是否要禁用按鈕
+        if (page >= 2) {
+            googleIsLastPage = true;
+        }
+        updateLoadMoreButton();
     } catch (e) {
-        restaurantList.innerHTML = '載入失敗：' + e.message;
+        restaurantList.innerHTML += '載入失敗：' + e.message;
     }
 }
 
-async function loadCustomRestaurants(sortType = 'composite') {
+async function loadCustomRestaurants(page = 0) {
+    if (customIsLastPage && page > 0) return;
+
     const customList = document.querySelector('.custom-restaurant-list');
-    customList.innerHTML = '載入中...';
+    if (page === 0) {
+        customList.innerHTML = '';
+    }
+
     try {
-        const res = await fetch('http://localhost:8080/api/rleader/ranking/restaurants');
+        const res = await fetch(`http://localhost:8080/api/rleader/ranking/restaurants?page=${page}&size=${pageSize}`);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
-        let data = await res.json();
+        const pageData = await res.json();
+        const data = pageData.content;
+        customIsLastPage = pageData.last;
 
         data.forEach(item => {
             const rating = item.averageRating || 0;
             const count = item.reviewCount || 0;
             item.compositeScore = rating * Math.log10(count + 1);
         });
+        
+        // 暫時移除客戶端排序
+        // ...
 
-        if (sortType === 'weekly') {
-            data.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
-        } else if (sortType === 'new') {
-            data.sort((a, b) => (a.reviewCount || 0) - (b.reviewCount || 0));
-        } else {
-            data.sort((a, b) => b.compositeScore - a.compositeScore);
-        }
-
-        customList.innerHTML = '';
-        data.slice(0, 5).forEach((item, idx) => {
+        data.forEach((item, idx) => {
+            const globalIndex = page * pageSize + idx;
             const place = {
                 restaurantId: item.restaurantId,
                 name: item.name,
@@ -227,11 +251,12 @@ async function loadCustomRestaurants(sortType = 'composite') {
                 reviewCount: item.reviewCount,
                 address: item.address,
             };
-            customList.innerHTML += createRestaurantItem(place, idx, true);
+            customList.innerHTML += createRestaurantItem(place, globalIndex, true);
         });
 
-        // 非同步為右側列表載入圖片
-        document.querySelectorAll('.custom-restaurant-list .restaurant-item').forEach(async (itemElem, idx) => {
+        // 非同步載入圖片邏輯也需調整，以處理附加的元素
+        document.querySelectorAll('.custom-restaurant-list .restaurant-item:not(.processed)').forEach(async (itemElem) => {
+            itemElem.classList.add('processed'); // 標記為已處理
             const restaurantId = itemElem.dataset.restaurantId;
             if (!restaurantId) return;
 
@@ -254,40 +279,64 @@ async function loadCustomRestaurants(sortType = 'composite') {
         });
         
         setupFavoriteButtons();
+
+        // 在資料載入完成後檢查是否要禁用按鈕
+        if (page >= 2) {
+            customIsLastPage = true;
+        }
+        updateLoadMoreButton();
     } catch (e) {
-        customList.innerHTML = '載入失敗：' + e.message;
+        customList.innerHTML += '載入失敗：' + e.message;
+    }
+}
+
+function updateLoadMoreButton() {
+    const loadMoreBtn = document.querySelector('.load-more');
+    if (googleIsLastPage && customIsLastPage) {
+        loadMoreBtn.textContent = '沒有更多了';
+        loadMoreBtn.disabled = true;
+    } else {
+        loadMoreBtn.textContent = '載入更多';
+        loadMoreBtn.disabled = false;
     }
 }
 
 function init() {
-    loadGoogleRestaurants();
-    loadCustomRestaurants();
-    // 載入更多按鈕功能
+    loadGoogleRestaurants(googleCurrentPage);
+    loadCustomRestaurants(customCurrentPage);
+
     const loadMoreBtn = document.querySelector('.load-more');
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', () => {
-            alert('如需載入更多，請升級API串接分頁功能');
+            if (!googleIsLastPage) {
+                googleCurrentPage++;
+                loadGoogleRestaurants(googleCurrentPage);
+            }
+            if (!customIsLastPage) {
+                customCurrentPage++;
+                loadCustomRestaurants(customCurrentPage);
+            }
         });
     }
-    // 過濾按鈕功能
+
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
+            // 注意：目前的排序是基於客戶端的，切換排序會重置分頁
+            googleCurrentPage = 0;
+            customCurrentPage = 0;
+            googleIsLastPage = false;
+            customIsLastPage = false;
+            
             const filterType = button.getAttribute('data-filter');
             filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            if (filterType === 'weekly') {
-                loadGoogleRestaurants('weekly');
-                loadCustomRestaurants('weekly');
-            } else if (filterType === 'new') {
-                loadGoogleRestaurants('new');
-                loadCustomRestaurants('new');
-            } else {
-                loadGoogleRestaurants('composite');
-                loadCustomRestaurants('composite');
-            }
+            
+            // 重新載入時，後端需要支援排序參數，此處暫時只重置並載入第一頁
+            loadGoogleRestaurants(0);
+            loadCustomRestaurants(0);
         });
     });
 }
 
-document.addEventListener('DOMContentLoaded', init); 
+init(); 
