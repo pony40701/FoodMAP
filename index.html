@@ -865,7 +865,7 @@
 </head>
 
 <body>
-    <!-- 登入彈跳視窗 -->
+    <!-- 會員登入彈跳視窗 -->
     <div id="loginModal" class="modal">
         <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
             <!-- 減少結構層級，標題和表單組合在一起 -->
@@ -909,28 +909,29 @@
 
     <!-- 商家登入彈跳視窗 -->
     <div id="restaurantLoginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>商家登入</h2>
-                <span class="close" onclick="closeRestaurantLoginModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="restaurantLoginForm" class="login-form">
-                    <div class="form-group">
-                        <label for="restaurant-email">電子郵件</label>
-                        <input type="email" id="restaurant-email" name="email" required>
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 商家登入標題區域 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">商家登入</h2>
+                <span class="close" onclick="closeRestaurantLoginModal()" style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+                
+                <form id="restaurantLoginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-email" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="restaurant-email" name="email" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <div class="form-group">
-                        <label for="restaurant-password">密碼</label>
-                        <input type="password" id="restaurant-password" name="password" required>
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-password" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="restaurant-password" name="password" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <div class="remember-group">
-                        <input type="checkbox" id="restaurant-remember" name="remember">
-                        <label for="restaurant-remember">記住我</label>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="restaurant-remember" name="remember" style="margin-right: 6px; width: 14px; height: 14px; accent-color: #ff6b1a; cursor: pointer;">
+                        <label for="restaurant-remember" style="font-size: 13px; font-weight: 400; color: #666; cursor: pointer;">記住我</label>
                     </div>
-                    <button type="submit" class="btn-primary">登入</button>
+                    <button type="submit" style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
                 </form>
-                <div class="form-footer">
+                
+                <div style="text-align: center; font-size: 13px; margin-bottom: 15px;">
                     <a href="restaurant-forgot-password.html">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
                 </div>
             </div>
@@ -1387,8 +1388,60 @@
     <script src="js/login.js"></script>
     <script src="js/restaurant-modal.js"></script>
     <script>
-        // 在文檔加載完成後執行
+        // 商家登入彈窗相關函數
+        function openRestaurantLoginModal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('restaurantLoginModal');
+            modal.style.display = 'block';
+        }
+
+        function closeRestaurantLoginModal() {
+            const modal = document.getElementById('restaurantLoginModal');
+            modal.style.display = 'none';
+        }
+
+        // 初始化登入模態框
         document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否需要自動開啟商家登入彈窗
+            if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
+                sessionStorage.removeItem('openRestaurantLogin');
+                openRestaurantLoginModal();
+            }
+
+            // 初始化商家登入模態框
+            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+            if (restaurantLoginModal) {
+                // 防止點擊模態框內容時關閉
+                restaurantLoginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+                
+                // 表單提交事件
+                const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+                if (restaurantLoginForm) {
+                    restaurantLoginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const email = document.getElementById('restaurant-email').value;
+                        const password = document.getElementById('restaurant-password').value;
+                        const remember = document.getElementById('restaurant-remember').checked;
+                        
+                        // 這裡可以添加實際的登入驗證邏輯
+                        console.log('商家登入:', { email, password, remember });
+                        
+                        // 模擬登入成功，跳轉到商家後台
+                        alert('登入成功！');
+                        closeRestaurantLoginModal();
+                        // 跳轉到商家後台主頁
+                        window.location.href = 'restaurant.html';
+                    });
+                }
+            }
+            
             // 獲取登入按鈕和登入模態視窗
             const loginButton = document.getElementById('loginButton');
             const loginModal = document.getElementById('loginModal');
@@ -1410,80 +1463,38 @@
                 if (event.target == loginModal) {
                     loginModal.style.display = 'none';
                 }
+                if (event.target === restaurantLoginModal) {
+                    closeRestaurantLoginModal();
+                }
             });
+            
+            // 會員登入表單提交事件
+            const userLoginForm = document.getElementById('loginForm');
+            if (userLoginForm) {
+                userLoginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // 這裡可以添加實際的登入驗證邏輯
+                    console.log('會員登入:', { email, password });
+                    
+                    // 模擬登入成功
+                    alert('登入成功！');
+                    loginModal.style.display = 'none';
+                    
+                    // 模擬登入成功，顯示會員頭像區域
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('userSection').style.display = 'flex';
+                });
+            }
             
             // 修復登入模態視窗樣式的函數
             function fixLoginModalStyles() {
-                // 獲取模態視窗元素
-                const modalContent = loginModal.querySelector('.modal-content');
-                const modalHeader = loginModal.querySelector('.modal-header');
-                const modalTitle = modalHeader.querySelector('h2');
-                const modalBody = loginModal.querySelector('.modal-body');
-                const closeButton = modalHeader.querySelector('.close');
-                
-                // 應用樣式修復
-                modalContent.style.padding = '0';
-                modalContent.style.maxWidth = '340px';
-                
-                modalHeader.style.padding = '10px 15px 0px';
-                modalHeader.style.marginBottom = '0';
-                modalHeader.style.position = 'relative';
-                modalHeader.style.display = 'block';
-                
-                modalTitle.style.margin = '0';
-                modalTitle.style.padding = '0';
-                modalTitle.style.fontSize = '20px';
-                modalTitle.style.color = '#ff6b1a';
-                modalTitle.style.textAlign = 'center';
-                modalTitle.style.width = '100%';
-                
-                closeButton.style.position = 'absolute';
-                closeButton.style.right = '15px';
-                closeButton.style.top = '10px';
-                closeButton.style.fontSize = '20px';
-                
-                modalBody.style.padding = '10px 15px 15px';
-                
-                // 修復表單元素樣式
-                const form = modalBody.querySelector('.login-form');
-                form.style.marginTop = '0';
-                
-                // 修復所有表單組元素
-                const formGroups = form.querySelectorAll('.form-group');
-                formGroups.forEach(group => {
-                    group.style.marginBottom = '8px';
-                    
-                    const label = group.querySelector('label');
-                    label.style.fontSize = '14px';
-                    label.style.marginBottom = '2px';
-                    label.style.display = 'block';
-                    
-                    const input = group.querySelector('input');
-                    input.style.width = '100%';
-                    input.style.padding = '8px 10px';
-                    input.style.border = '1px solid #ddd';
-                    input.style.borderRadius = '6px';
-                    input.style.fontSize = '14px';
-                    input.style.boxSizing = 'border-box';
-                });
-                
-                // 修復社交登入區域
-                const socialLogin = modalBody.querySelector('.social-login');
-                socialLogin.style.marginTop = '8px';
-                
-                const socialText = socialLogin.querySelector('p');
-                socialText.style.marginBottom = '4px';
-                socialText.style.fontSize = '13px';
-                
-                // 確保社交按鈕顏色
-                const googleBtn = socialLogin.querySelector('.social-btn.google');
-                googleBtn.style.color = '#db4437';
-                
-                const fbBtn = socialLogin.querySelector('.social-btn.facebook');
-                fbBtn.style.color = '#1877f3';
-                
-                const lineBtn = socialLogin.querySelector('.social-btn.line');
-                lineBtn.style.color = '#00c300';
+                // 獲取模態視窗元素 - 所有樣式已通過內聯樣式應用，不需要額外修復
+                console.log('登入視窗已開啟');
             }
         });
     </script>

@@ -1,296 +1,258 @@
-// 示意用的餐廳資料
-const allRestaurants = {
-    all: [
-        {
-            name: "金龍餐廳",
-            rank: 1,
-            rating: 4.5,
-            reviews: 234,
-            tags: ["中式料理", "合菜", "家庭聚餐"],
-            image: "https://picsum.photos/300/200?random=1",
-            address: "台北市中山區中山北路二段",
-            phone: "02-2345-6789",
-            price: "$300-500/人",
-            hours: "11:00-21:00",
-            description: "金龍餐廳以傳統中式料理聞名，主打精緻粵菜及港式點心。餐廳環境優雅，適合商務聚餐及家庭聚會。",
-            features: ["提供包廂", "可預約", "免費WiFi", "停車場"],
-            payment: ["現金", "信用卡", "行動支付"]
-        },
-        {
-            name: "櫻花壽司",
-            rank: 2,
-            rating: 4.8,
-            reviews: 189,
-            tags: ["日本料理", "壽司", "無菜單料理"],
-            image: "https://picsum.photos/300/200?random=2",
-            address: "台北市信義區信義路五段",
-            phone: "02-2765-4321",
-            price: "$500-800/人",
-            hours: "11:30-22:00",
-            description: "櫻花壽司由日本主廚精心料理，提供最新鮮的海鮮食材，每日直送。無菜單料理讓您體驗主廚的創意美食。",
-            features: ["要預約", "免費WiFi", "專屬停車位", "信用卡優惠"],
-            payment: ["現金", "信用卡"]
-        },
-        {
-            name: "香港茶餐廳",
-            rank: 3,
-            rating: 4.3,
-            reviews: 567,
-            tags: ["港式料理", "茶餐廳", "早午餐"],
-            image: "https://picsum.photos/300/200?random=3",
-            address: "台北市大安區忠孝東路四段",
-            phone: "02-2731-5678",
-            price: "$200-300/人",
-            hours: "07:00-22:00",
-            description: "正宗港式茶餐廳，從早餐到宵夜都有供應。招牌菜包括絲襪奶茶、菠蘿包、燒臘飯等港式經典美食。",
-            features: ["不需預約", "免費WiFi", "外送服務"],
-            payment: ["現金", "信用卡", "行動支付"]
-        }
-    ],
-    weekly: [
-        {
-            name: "義大利麵屋",
-            rank: 1,
-            rating: 4.6,
-            reviews: 156,
-            tags: ["義式料理", "pasta", "pizza"],
-            image: "https://picsum.photos/300/200?random=4",
-            address: "台北市中山區林森北路",
-            phone: "02-2542-9876",
-            price: "$350-500/人",
-            hours: "11:30-21:30",
-            description: "道地的義大利料理，主廚曾在義大利米其林餐廳學習。提供多種手工義大利麵和窯烤披薩。",
-            features: ["建議預約", "免費WiFi", "親子友善"],
-            payment: ["現金", "信用卡"]
-        },
-        {
-            name: "韓式烤肉",
-            rank: 2,
-            rating: 4.4,
-            reviews: 289,
-            tags: ["韓式料理", "烤肉", "小菜"],
-            image: "https://picsum.photos/300/200?random=5",
-            address: "台北市松山區市民大道",
-            phone: "02-2756-8765",
-            price: "$450-700/人",
-            hours: "17:00-23:00",
-            description: "正宗韓式烤肉，使用特製醬料醃製的優質肉品，搭配豐富的韓式小菜。提供專業代烤服務。",
-            features: ["提供包廂", "免費停車", "代烤服務"],
-            payment: ["現金", "信用卡", "行動支付"]
-        }
-    ],
-    monthly: [
-        {
-            name: "法式餐廳",
-            rank: 1,
-            rating: 4.9,
-            reviews: 123,
-            tags: ["法式料理", "精緻料理", "約會"],
-            image: "https://picsum.photos/300/200?random=6",
-            address: "台北市大安區敦化南路",
-            phone: "02-2709-8888",
-            price: "$1200-2000/人",
-            hours: "18:00-22:00",
-            description: "米其林星級主廚打造的法式fine dining體驗，每季更換菜單，使用當季最新鮮的食材。",
-            features: ["需預約", "免費代客停車", "浪漫氣氛", "sommelier推薦"],
-            payment: ["現金", "信用卡"]
-        }
-    ],
-    new: [
-        {
-            name: "泰式料理",
-            rank: 1,
-            rating: 4.2,
-            reviews: 45,
-            tags: ["泰式料理", "酸辣", "新開幕"],
-            image: "https://picsum.photos/300/200?random=7",
-            address: "台北市中正區羅斯福路",
-            phone: "02-2369-5432",
-            price: "$300-450/人",
-            hours: "11:00-21:30",
-            description: "新開幕泰式餐廳，主廚來自曼谷，提供最道地的泰國風味。特色料理包括冬陰功湯、青木瓜沙拉等。",
-            features: ["不需預約", "外帶優惠", "免費WiFi"],
-            payment: ["現金", "信用卡", "行動支付"]
-        }
-    ]
-};
+const GOOGLE_API_KEY = ''; // 此處請填入你的 Google API 金鑰
+const ADDRESS = '台中市南屯區公益路二段51號18樓';
+const CORS_PROXY = 'https://corsproxy.io/?';
 
-document.addEventListener('DOMContentLoaded', () => {
-    const restaurantList = document.querySelector('.restaurant-list');
-    if (!restaurantList) {
-        console.warn('找不到餐廳列表容器');
-        return;
+async function getLatLng(address) {
+    const url = CORS_PROXY + encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_API_KEY}`);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'OK') {
+        return data.results[0].geometry.location;
     }
+    throw new Error('找不到地址');
+}
 
-    let currentFilter = 'all';
-    
-    // 載入餐廳列表
-    function createRestaurantItem(restaurant) {
-        return `
-            <div class="restaurant-item">
-                <div class="rank rank-${restaurant.rank}">#${restaurant.rank}</div>
-                <div class="restaurant-image">
-                    <img src="${restaurant.image}" alt="${restaurant.name}">
+async function getNearbyRestaurants(lat, lng) {
+    const url = CORS_PROXY + encodeURIComponent(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1000&type=restaurant&language=zh-TW&key=${GOOGLE_API_KEY}`);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'OK') {
+        return data.results;
+    }
+    throw new Error('找不到附近餐廳');
+}
+
+function createRestaurantItem(place, index, isCustom = false) {
+    let photoUrl = '';
+    if (isCustom) {
+        photoUrl = place.image || 'https://via.placeholder.com/300x200?text=No+Image';
+    } else {
+        photoUrl = place.photos
+            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
+            : 'https://via.placeholder.com/300x200?text=No+Image';
+    }
+    return `
+        <div class="restaurant-item">
+            <div class="rank rank-${index + 1}">#${index + 1}</div>
+            <div class="restaurant-image">
+                <img src="${photoUrl}" alt="${place.name}">
+            </div>
+            <div class="restaurant-info">
+                <h2 class="restaurant-name">${place.name}</h2>
+                <div class="rating">
+                    <span class="stars">★★★★☆</span>
+                    <span class="score">${place.rating || 'N/A'}</span>
+                    <span class="reviews">(${place.user_ratings_total || 0}則評價)</span>
                 </div>
-                <div class="restaurant-info">
-                    <h2 class="restaurant-name">${restaurant.name}</h2>
-                    <div class="rating">
-                        <span class="stars">★★★★☆</span>
-                        <span class="score">${restaurant.rating}</span>
-                        <span class="reviews">(${restaurant.reviews}則評價)</span>
-                    </div>
-                    <div class="tags">
-                        ${restaurant.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    </div>
+                <div class="basic-info">
+                    <div><i class="fas fa-map-marker-alt"></i> ${place.vicinity || place.address || ''}</div>
                 </div>
                 <div class="actions">
                     <button class="favorite-btn">♡</button>
                     <button class="details-btn">查看詳情</button>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
 
-    // 更新餐廳列表
-    function updateRestaurants(filterType) {
-        const restaurants = allRestaurants[filterType];
-        if (!restaurants) {
-            console.warn(`找不到 ${filterType} 類型的餐廳資料`);
-            return;
-        }
-
-        restaurantList.innerHTML = '';
-        restaurants.forEach(restaurant => {
-            restaurantList.innerHTML += createRestaurantItem(restaurant);
-        });
-        setupFavoriteButtons();
-    }
-
-    // 顯示餐廳詳情
-    function showRestaurantDetail(restaurant) {
-        const modal = document.getElementById('restaurantModal');
-        const modalContent = modal.querySelector('.restaurant-detail');
-        
-        modalContent.innerHTML = `
-            <div class="detail-image">
-                <img src="${restaurant.image}" alt="${restaurant.name}">
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="detail-content">
-                <div class="detail-header">
-                    <div class="detail-title">
-                        ${restaurant.name}
-                        <button class="favorite-btn" title="收藏">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="detail-rating">
-                        <div class="score">${restaurant.rating}</div>
-                        <div class="reviews">(${restaurant.reviews}則評論)</div>
-                    </div>
+function showRestaurantDetail(place) {
+    const modal = document.getElementById('restaurantModal');
+    const modalContent = modal.querySelector('.restaurant-detail');
+    const photoUrl = place.photos
+        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
+        : 'https://via.placeholder.com/300x200?text=No+Image';
+    modalContent.innerHTML = `
+        <div class="detail-image">
+            <img src="${photoUrl}" alt="${place.name}">
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="detail-content">
+            <div class="detail-header">
+                <div class="detail-title">
+                    ${place.name}
+                    <button class="favorite-btn" title="收藏">
+                        <i class="far fa-heart"></i>
+                    </button>
                 </div>
-                <div class="detail-info">
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${restaurant.address}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${restaurant.phone}</span>
-                    </div>
-                    <div class="info-item open">
-                        <i class="fas fa-clock"></i>
-                        <span>營業中</span>
-                        <span>${restaurant.hours}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-dollar-sign"></i>
-                        <span>${restaurant.price}</span>
-                    </div>
-                </div>
-                <div class="detail-tags">
-                    ${restaurant.tags.map(tag => `<span class="detail-tag">${tag}</span>`).join('')}
+                <div class="detail-rating">
+                    <div class="score">${place.rating || 'N/A'}</div>
+                    <div class="reviews">(${place.user_ratings_total || 0}則評論)</div>
                 </div>
             </div>
-        `;
-
-        modal.style.display = 'block';
-
-        // 關閉按鈕功能
-        const closeBtn = modal.querySelector('.modal-close');
-        closeBtn.onclick = () => {
+            <div class="detail-info">
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${place.vicinity || ''}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <span>無電話資訊</span>
+                </div>
+                <div class="info-item open">
+                    <i class="fas fa-clock"></i>
+                    <span>營業狀態未知</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>價格資訊無</span>
+                </div>
+            </div>
+            <div class="detail-tags">
+                <span class="detail-tag">${place.types ? place.types.join(', ') : ''}</span>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'block';
+    // 關閉按鈕功能
+    const closeBtn = modal.querySelector('.modal-close');
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+    // 點擊模態框外部關閉
+    window.onclick = (event) => {
+        if (event.target === modal) {
             modal.style.display = 'none';
-        };
+        }
+    };
+    // 收藏按鈕功能
+    const favoriteBtn = modal.querySelector('.favorite-btn');
+    favoriteBtn.onclick = (e) => {
+        e.stopPropagation();
+        favoriteBtn.classList.toggle('active');
+        const icon = favoriteBtn.querySelector('i');
+        icon.classList.toggle('far');
+        icon.classList.toggle('fas');
+    };
+}
 
-        // 點擊模態框外部關閉
-        window.onclick = (event) => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
+function setupFavoriteButtons() {
+    const favoriteButtons = document.querySelectorAll('.favorite-btn');
+    favoriteButtons.forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            btn.classList.toggle('active');
+            btn.innerHTML = btn.classList.contains('active') ? '♥' : '♡';
+        };
+    });
+    // 詳情按鈕
+    const detailButtons = document.querySelectorAll('.details-btn');
+    detailButtons.forEach((btn, idx) => {
+        btn.onclick = () => {
+            const restaurantList = document.querySelectorAll('.restaurant-item');
+            const restaurantItem = btn.closest('.restaurant-item');
+            const index = Array.from(restaurantList).indexOf(restaurantItem);
+            if (window._googlePlaces && window._googlePlaces[index]) {
+                showRestaurantDetail(window._googlePlaces[index]);
             }
         };
+    });
+}
 
-        // 收藏按鈕功能
-        const favoriteBtn = modal.querySelector('.favorite-btn');
-        favoriteBtn.onclick = (e) => {
-            e.stopPropagation();
-            favoriteBtn.classList.toggle('active');
-            const icon = favoriteBtn.querySelector('i');
-            icon.classList.toggle('far');
-            icon.classList.toggle('fas');
-        };
-    }
+async function loadGoogleRestaurants(sortType = 'composite') {
+    const restaurantList = document.querySelector('.restaurant-list');
+    restaurantList.innerHTML = '載入中...';
+    try {
+        const { lat, lng } = await getLatLng(ADDRESS);
+        let places = await getNearbyRestaurants(lat, lng);
 
-    // 設置收藏按鈕功能
-    function setupFavoriteButtons() {
-        const favoriteButtons = document.querySelectorAll('.favorite-btn');
-        favoriteButtons.forEach(btn => {
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                btn.classList.toggle('active');
-                btn.innerHTML = btn.classList.contains('active') ? '♥' : '♡';
-            };
+        // 加入綜合分數：評分 × log10(評價數+1)
+        places.forEach(place => {
+            const rating = place.rating || 0;
+            const count = place.user_ratings_total || 0;
+            place.compositeScore = rating * Math.log10(count + 1);
         });
 
-        // 設置詳情按鈕功能
-        const detailButtons = document.querySelectorAll('.details-btn');
-        detailButtons.forEach(btn => {
-            btn.onclick = () => {
-                const restaurantItem = btn.closest('.restaurant-item');
-                const restaurantIndex = Array.from(restaurantList.children).indexOf(restaurantItem);
-                const restaurant = allRestaurants[currentFilter][restaurantIndex];
-                showRestaurantDetail(restaurant);
+        // 排序
+        if (sortType === 'weekly') {
+            // 本周熱門：依評價數排序（多到少）
+            places.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
+        } else if (sortType === 'new') {
+            // 新店推薦：依評價數排序（少到多）
+            places.sort((a, b) => (a.user_ratings_total || 0) - (b.user_ratings_total || 0));
+        } else {
+            // 綜合分數排序
+            places.sort((a, b) => b.compositeScore - a.compositeScore);
+        }
+
+        window._googlePlaces = places;
+        restaurantList.innerHTML = '';
+        places.slice(0, 5).forEach((place, idx) => {
+            restaurantList.innerHTML += createRestaurantItem(place, idx);
+        });
+        setupFavoriteButtons();
+    } catch (e) {
+        restaurantList.innerHTML = '載入失敗：' + e.message;
+    }
+}
+
+async function loadCustomRestaurants(sortType = 'composite') {
+    const customList = document.querySelector('.custom-restaurant-list');
+    customList.innerHTML = '載入中...';
+    try {
+        const res = await fetch('/api/reviews');
+        let data = await res.json();
+
+        data.forEach(item => {
+            const rating = item.overallScore || 0;
+            const count = item.totalViews || 0;
+            item.compositeScore = rating * Math.log10(count + 1);
+        });
+
+        if (sortType === 'weekly') {
+            data.sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0));
+        } else if (sortType === 'new') {
+            data.sort((a, b) => (a.totalViews || 0) - (b.totalViews || 0));
+        } else {
+            data.sort((a, b) => b.compositeScore - a.compositeScore);
+        }
+
+        customList.innerHTML = '';
+        data.slice(0, 5).forEach((item, idx) => {
+            const place = {
+                name: item.restaurantName,
+                rating: item.overallScore,
+                user_ratings_total: item.totalViews,
+                vicinity: '地址資訊待補',
+                image: item.imageUrl
             };
+            customList.innerHTML += createRestaurantItem(place, idx, true);
+        });
+        setupFavoriteButtons();
+    } catch (e) {
+        customList.innerHTML = '載入失敗：' + e.message;
+    }
+}
+
+function init() {
+    loadGoogleRestaurants();
+    loadCustomRestaurants();
+    // 載入更多按鈕功能
+    const loadMoreBtn = document.querySelector('.load-more');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            alert('如需載入更多，請升級API串接分頁功能');
         });
     }
-
     // 過濾按鈕功能
     const filterButtons = document.querySelectorAll('.filter-btn');
-    if (!filterButtons.length) {
-        console.warn('找不到過濾按鈕');
-        return;
-    }
-
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
             const filterType = button.getAttribute('data-filter');
-            if (!filterType) {
-                console.warn('過濾按鈕缺少 data-filter 屬性');
-                return;
-            }
-
             filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            currentFilter = filterType;
-            updateRestaurants(filterType);
+            if (filterType === 'weekly') {
+                loadGoogleRestaurants('weekly');
+                loadCustomRestaurants('weekly');
+            } else if (filterType === 'new') {
+                loadGoogleRestaurants('new');
+                loadCustomRestaurants('new');
+            } else {
+                loadGoogleRestaurants('composite');
+                loadCustomRestaurants('composite');
+            }
         });
     });
+}
 
-    // 載入更多按鈕功能
-    const loadMoreBtn = document.querySelector('.load-more');
-    loadMoreBtn.addEventListener('click', () => {
-        alert('載入更多餐廳...');
-    });
-
-    // 初始載入全部餐廳
-    updateRestaurants('all');
-}); 
+document.addEventListener('DOMContentLoaded', init); 
