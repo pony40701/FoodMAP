@@ -23,29 +23,39 @@ async function getNearbyRestaurants(lat, lng) {
 }
 
 function createRestaurantItem(place, index, isCustom = false) {
+    // 為每個圖片元素產生一個唯一的 ID
+    const imageId = `restaurant-image-${isCustom ? 'custom' : 'google'}-${index}`;
+
     let photoUrl = '';
     if (isCustom) {
-        photoUrl = place.image || 'https://via.placeholder.com/300x200?text=No+Image';
+        // 右側列表先顯示預設圖片，之後再非同步載入真實圖片
+        photoUrl = 'https://via.placeholder.com/300x200?text=Loading...';
+    } else if (place.photoUrl) {
+        photoUrl = place.photoUrl;
+    } else if (place.photos) {
+        photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`;
     } else {
-        photoUrl = place.photos
-            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
-            : 'https://via.placeholder.com/300x200?text=No+Image';
+        photoUrl = 'https://via.placeholder.com/300x200?text=No+Image';
     }
+
+    const reviewCount = place.reviewCount !== undefined ? place.reviewCount : (place.user_ratings_total || 0);
+    const address = place.address || place.vicinity || '';
+
     return `
-        <div class="restaurant-item">
+        <div class="restaurant-item" data-restaurant-id="${place.restaurantId || ''}">
             <div class="rank rank-${index + 1}">#${index + 1}</div>
             <div class="restaurant-image">
-                <img src="${photoUrl}" alt="${place.name}">
+                <img src="${photoUrl}" alt="${place.name}" id="${imageId}">
             </div>
             <div class="restaurant-info">
                 <h2 class="restaurant-name">${place.name}</h2>
                 <div class="rating">
                     <span class="stars">★★★★☆</span>
-                    <span class="score">${place.rating || 'N/A'}</span>
-                    <span class="reviews">(${place.user_ratings_total || 0}則評價)</span>
+                    <span class="score">${place.rating || place.averageRating || 'N/A'}</span>
+                    <span class="reviews">(${reviewCount}則評價)</span>
                 </div>
                 <div class="basic-info">
-                    <div><i class="fas fa-map-marker-alt"></i> ${place.vicinity || place.address || ''}</div>
+                    <div><i class="fas fa-map-marker-alt"></i> ${address}</div>
                 </div>
                 <div class="actions">
                     <button class="favorite-btn">♡</button>
@@ -153,25 +163,23 @@ async function loadGoogleRestaurants(sortType = 'composite') {
     const restaurantList = document.querySelector('.restaurant-list');
     restaurantList.innerHTML = '載入中...';
     try {
-        const { lat, lng } = await getLatLng(ADDRESS);
-        let places = await getNearbyRestaurants(lat, lng);
+        const response = await fetch('http://localhost:8080/api/lleader/ranking/google');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let places = await response.json();
 
-        // 加入綜合分數：評分 × log10(評價數+1)
         places.forEach(place => {
             const rating = place.rating || 0;
-            const count = place.user_ratings_total || 0;
+            const count = place.reviewCount || 0;
             place.compositeScore = rating * Math.log10(count + 1);
         });
 
-        // 排序
         if (sortType === 'weekly') {
-            // 本周熱門：依評價數排序（多到少）
-            places.sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0));
+            places.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
         } else if (sortType === 'new') {
-            // 新店推薦：依評價數排序（少到多）
-            places.sort((a, b) => (a.user_ratings_total || 0) - (b.user_ratings_total || 0));
+            places.sort((a, b) => (a.reviewCount || 0) - (b.reviewCount || 0));
         } else {
-            // 綜合分數排序
             places.sort((a, b) => b.compositeScore - a.compositeScore);
         }
 
@@ -190,19 +198,22 @@ async function loadCustomRestaurants(sortType = 'composite') {
     const customList = document.querySelector('.custom-restaurant-list');
     customList.innerHTML = '載入中...';
     try {
-        const res = await fetch('/api/reviews');
+        const res = await fetch('http://localhost:8080/api/rleader/ranking/restaurants');
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
         let data = await res.json();
 
         data.forEach(item => {
-            const rating = item.overallScore || 0;
-            const count = item.totalViews || 0;
+            const rating = item.averageRating || 0;
+            const count = item.reviewCount || 0;
             item.compositeScore = rating * Math.log10(count + 1);
         });
 
         if (sortType === 'weekly') {
-            data.sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0));
+            data.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
         } else if (sortType === 'new') {
-            data.sort((a, b) => (a.totalViews || 0) - (b.totalViews || 0));
+            data.sort((a, b) => (a.reviewCount || 0) - (b.reviewCount || 0));
         } else {
             data.sort((a, b) => b.compositeScore - a.compositeScore);
         }
@@ -210,14 +221,38 @@ async function loadCustomRestaurants(sortType = 'composite') {
         customList.innerHTML = '';
         data.slice(0, 5).forEach((item, idx) => {
             const place = {
-                name: item.restaurantName,
-                rating: item.overallScore,
-                user_ratings_total: item.totalViews,
-                vicinity: '地址資訊待補',
-                image: item.imageUrl
+                restaurantId: item.restaurantId,
+                name: item.name,
+                rating: item.averageRating,
+                reviewCount: item.reviewCount,
+                address: item.address,
             };
             customList.innerHTML += createRestaurantItem(place, idx, true);
         });
+
+        // 非同步為右側列表載入圖片
+        document.querySelectorAll('.custom-restaurant-list .restaurant-item').forEach(async (itemElem, idx) => {
+            const restaurantId = itemElem.dataset.restaurantId;
+            if (!restaurantId) return;
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/rleader/ranking/restaurant/photo/${restaurantId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const imgElement = itemElem.querySelector('.restaurant-image img');
+                    if (data.photoUrl) {
+                        imgElement.src = data.photoUrl;
+                    } else {
+                        imgElement.src = 'https://via.placeholder.com/300x200?text=No+Image';
+                    }
+                }
+            } catch (error) {
+                console.error(`Failed to load image for restaurant ${restaurantId}:`, error);
+                const imgElement = itemElem.querySelector('.restaurant-image img');
+                imgElement.src = 'https://via.placeholder.com/300x200?text=Error';
+            }
+        });
+        
         setupFavoriteButtons();
     } catch (e) {
         customList.innerHTML = '載入失敗：' + e.message;
