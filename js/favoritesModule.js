@@ -1,23 +1,55 @@
-// 收藏功能核心模組
+// 收藏功能核心模組 (舊版，保留向後兼容)
 class FavoritesModule {
     constructor() {
         this.favoriteStores = [];
         this.favoriteReviews = [];
         this.map = null;
         this.markers = [];
+        
+        // 初始化時檢查是否有新版收藏系統
+        this.checkNewFavoriteSystem();
+    }
+    
+    // 檢查是否有新版收藏系統
+    checkNewFavoriteSystem() {
+        if (window.favoriteSystem) {
+            console.log('檢測到新版收藏系統，將使用新版系統');
+        } else {
+            console.log('未檢測到新版收藏系統，使用舊版系統');
+        }
     }
 
     // 從 localStorage 獲取收藏數據
     getFavoriteStores() {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return window.favoriteSystem.getFavoriteStores().map(store => store.id || store.place_id);
+        }
         return JSON.parse(localStorage.getItem('favoriteStores')) || [];
     }
 
     getFavoriteReviews() {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return window.favoriteSystem.getFavoriteReviews();
+        }
         return JSON.parse(localStorage.getItem('favoriteReviews')) || [];
     }
 
     // 收藏店家
-    addToFavorites(placeId) {
+    async addToFavorites(placeId, name = '未知餐廳') {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            const storeData = {
+                id: placeId,
+                place_id: placeId,
+                name: name,
+                favoriteTime: new Date().toISOString()
+            };
+            return await window.favoriteSystem.addStore(storeData);
+        }
+        
+        // 舊版邏輯
         let favorites = this.getFavoriteStores();
         if (!favorites.includes(placeId)) {
             favorites.push(placeId);
@@ -28,7 +60,13 @@ class FavoritesModule {
     }
 
     // 取消收藏店家
-    removeFromFavorites(placeId) {
+    async removeFromFavorites(placeId) {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return await window.favoriteSystem.removeStore(placeId);
+        }
+        
+        // 舊版邏輯
         let favorites = this.getFavoriteStores();
         favorites = favorites.filter(id => id !== placeId);
         localStorage.setItem('favoriteStores', JSON.stringify(favorites));
@@ -36,7 +74,13 @@ class FavoritesModule {
     }
 
     // 收藏心得
-    addToFavoriteReviews(review) {
+    async addToFavoriteReviews(review) {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return await window.favoriteSystem.addReview(review);
+        }
+        
+        // 舊版邏輯
         let favorites = this.getFavoriteReviews();
         const exists = favorites.some(fav => fav.id === review.id);
         
@@ -49,7 +93,13 @@ class FavoritesModule {
     }
 
     // 取消收藏心得
-    removeFromFavoriteReviews(reviewId) {
+    async removeFromFavoriteReviews(reviewId) {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return await window.favoriteSystem.removeReview(reviewId);
+        }
+        
+        // 舊版邏輯
         let favorites = this.getFavoriteReviews();
         favorites = favorites.filter(review => review.id !== reviewId);
         localStorage.setItem('favoriteReviews', JSON.stringify(favorites));
@@ -58,10 +108,22 @@ class FavoritesModule {
 
     // 檢查是否已收藏
     isStoreFavorite(placeId) {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return window.favoriteSystem.isStoreFavorited(placeId);
+        }
+        
+        // 舊版邏輯
         return this.getFavoriteStores().includes(placeId);
     }
 
     isReviewFavorite(reviewId) {
+        // 優先使用新版系統
+        if (window.favoriteSystem && window.favoriteSystem.initialized) {
+            return window.favoriteSystem.isReviewFavorited(reviewId);
+        }
+        
+        // 舊版邏輯
         return this.getFavoriteReviews().some(review => review.id === reviewId);
     }
 
@@ -172,6 +234,9 @@ class FavoritesModule {
         }
     }
 }
+
+// 創建全局實例
+window.favoritesModule = new FavoritesModule();
 
 // 導出模組
 export default FavoritesModule; 
