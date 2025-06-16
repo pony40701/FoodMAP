@@ -25,6 +25,7 @@
     <script src="js/favoriteService.js"></script>
     <script src="js/displayRestaurants.js"></script>
     <style>
+        /* 登入視窗樣式 - 極簡版本 */
         .modal {
             display: none;
             position: fixed;
@@ -41,141 +42,115 @@
         .modal-content {
             background-color: #fff;
             margin: 5% auto;
-            border-radius: 16px;
-            padding: 32px 32px 24px 32px;
-            border: 1px solid #ff6b1a;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 15px 15px 20px 15px;
+            border: 1px solid rgba(255, 107, 26, 0.3);
+            width: 90%;
+            max-width: 340px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
             animation: slideIn 0.3s;
-            position: relative;
         }
 
         .modal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
 
         .modal-header h2 {
-            font-size: 28px;
+            font-size: 20px;
             color: #ff6b1a;
             margin: 0;
+            flex-grow: 1;
+            text-align: center;
         }
 
         .close {
             color: #aaa;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
             transition: color 0.2s;
-        }
-
-        .close:hover {
-            color: #ff6b1a;
-        }
-
-        .modal-body {
-            padding: 0;
+            margin-left: auto;
+            position: absolute;
+            right: 15px;
+            top: 12px;
         }
 
         .login-form {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 10px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .form-group label {
-            font-size: 16px;
+            font-size: 14px;
             color: #333;
             font-weight: 600;
         }
 
         .form-group input {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
+            padding: 9px 10px;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
             outline: none;
-            transition: border 0.2s;
-        }
-
-        .form-group input:focus {
-            border: 1.5px solid #ff6b1a;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+            background: #ff6b1a;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 10px 0;
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.3s;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #e55a15 0%, #d4500f 100%);
+            margin-top: 5px;
         }
 
         .form-footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .social-login {
             margin-top: 12px;
             text-align: center;
         }
 
-        .form-footer a {
-            color: #ff6b1a;
-            text-decoration: none;
-            margin: 0 4px;
-            font-size: 15px;
-            transition: color 0.2s;
-        }
-
-        .form-footer a:hover {
-            color: #e55a15;
-        }
-
-        .social-login {
-            margin-top: 18px;
-            text-align: center;
-        }
-
         .social-login p {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #888;
-            font-size: 15px;
-            position: relative;
+            font-size: 13px;
         }
 
         .social-buttons {
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .social-btn {
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 4px;
             border: none;
             border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 15px;
-            font-weight: 600;
+            padding: 6px 0;
+            width: 32%;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             background: #f5f5f5;
-            color: #333;
-            transition: background 0.2s, color 0.2s;
         }
 
         .social-btn.google {
@@ -188,10 +163,6 @@
 
         .social-btn.line {
             color: #00c300;
-        }
-
-        .social-btn:hover {
-            background: #eee;
         }
 
         @keyframes fadeIn {
@@ -213,16 +184,6 @@
             to {
                 transform: translateY(0);
                 opacity: 1;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .modal-content {
-                padding: 18px 6px 12px 6px;
-            }
-
-            .modal-header h2 {
-                font-size: 22px;
             }
         }
 
@@ -830,42 +791,114 @@
             animation: modalFadeIn 0.3s ease;
             z-index: 2201;
         }
+
+        .remember-group {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-group input[type="checkbox"] {
+            margin-right: 6px;
+            width: 14px;
+            height: 14px;
+            accent-color: #ff6b1a;
+            cursor: pointer;
+        }
+
+        .remember-group label {
+            font-size: 13px;
+            font-weight: 400 !important;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .social-btn:hover {
+            background: #eee;
+        }
+
+        /* 登入視窗覆蓋樣式 - 確保內聯樣式優先生效 */
+        #loginModal .modal-content {
+            padding: 0 !important;
+            max-width: 340px !important;
+        }
+
+        #loginModal .modal-header {
+            padding: 10px 15px 5px !important;
+            margin-bottom: 0 !important;
+            position: relative !important;
+            display: block !important;
+            justify-content: unset !important;
+        }
+
+        #loginModal .modal-header h2 {
+            margin: 0 auto !important;
+            font-size: 20px !important;
+            color: #ff6b1a !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+
+        #loginModal .modal-body {
+            padding: 0 15px 15px !important;
+        }
+
+        /* 確保社交按鈕顏色正確顯示 */
+        #loginModal .social-btn.google {
+            color: #db4437 !important;
+        }
+
+        #loginModal .social-btn.facebook {
+            color: #1877f3 !important;
+        }
+
+        #loginModal .social-btn.line {
+            color: #00c300 !important;
+        }
+
+        #loginModal .close {
+            position: absolute !important;
+            right: 15px !important;
+            top: 10px !important;
+        }
     </style>
 </head>
 
 <body>
-    <!-- 登入彈跳視窗 -->
+    <!-- 會員登入彈跳視窗 -->
     <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>登入</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="loginForm" class="login-form">
-                    <div class="form-group">
-                        <label for="email">電子郵件</label>
-                        <input type="email" id="email" name="email" required>
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 減少結構層級，標題和表單組合在一起 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">登入</h2>
+                <span class="close" style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+                
+                <form id="loginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="email" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="email" name="email" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <div class="form-group">
-                        <label for="password">密碼</label>
-                        <input type="password" id="password" name="password" required>
+                    <div style="margin-bottom: 10px;">
+                        <label for="password" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="password" name="password" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <button type="submit" class="btn-primary">登入</button>
+                    <button type="submit" style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
                 </form>
-                <div class="form-footer">
+                
+                <div style="text-align: center; font-size: 13px; margin-bottom: 10px;">
                     <a href="userForgotPassword.html">忘記密碼</a> | <a href="userRegister.html">註冊新帳號</a>
                 </div>
-                <div class="social-login">
-                    <p>或使用以下方式登入</p>
-                    <div class="social-buttons">
-                        <button class="social-btn google" onclick="socialLogin('google')">
+                
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #888; font-size: 13px;">或使用以下方式登入</p>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <button onclick="socialLogin('google')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #db4437;">
                             <i class="fab fa-google"></i> Google
                         </button>
-                        <button class="social-btn facebook" onclick="socialLogin('facebook')">
+                        <button onclick="socialLogin('facebook')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #1877f3;">
                             <i class="fab fa-facebook-f"></i> Facebook
                         </button>
-                        <button class="social-btn line" onclick="socialLogin('line')">
+                        <button onclick="socialLogin('line')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #00c300;">
                             <i class="fab fa-line"></i> Line
                         </button>
                     </div>
@@ -876,30 +909,30 @@
 
     <!-- 商家登入彈跳視窗 -->
     <div id="restaurantLoginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>商家登入</h2>
-                <span class="close" onclick="closeRestaurantLoginModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="restaurantLoginForm" class="login-form">
-                    <div class="form-group">
-                        <label for="restaurant-email">電子郵件</label>
-                        <input type="email" id="restaurant-email" name="email" required>
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 商家登入標題區域 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">商家登入</h2>
+                <span class="close" onclick="closeRestaurantLoginModal()" style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+                
+                <form id="restaurantLoginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-email" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="restaurant-email" name="email" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <div class="form-group">
-                        <label for="restaurant-password">密碼</label>
-                        <input type="password" id="restaurant-password" name="password" required>
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-password" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="restaurant-password" name="password" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-                    <div class="form-group" style="flex-direction: row; align-items: center; margin-top: 8px;">
-                        <input type="checkbox" id="restaurant-remember" name="remember"
-                            style="margin-right: 8px; width: auto;">
-                        <label for="restaurant-remember" style="margin: 0; font-weight: normal;">記住我</label>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="restaurant-remember" name="remember" style="margin-right: 6px; width: 14px; height: 14px; accent-color: #ff6b1a; cursor: pointer;">
+                        <label for="restaurant-remember" style="font-size: 13px; font-weight: 400; color: #666; cursor: pointer;">記住我</label>
                     </div>
-                    <button type="submit" class="btn-primary">登入</button>
+                    <button type="submit" style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
                 </form>
-                <div class="form-footer">
-                    <a href="#">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
+                
+                <div style="text-align: center; font-size: 13px; margin-bottom: 15px;">
+                    <a href="restaurant-forgot-password.html">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
                 </div>
             </div>
         </div>
@@ -1363,13 +1396,11 @@
             }
             const modal = document.getElementById('restaurantLoginModal');
             modal.style.display = 'block';
-            modal.classList.add('show');
         }
 
         function closeRestaurantLoginModal() {
             const modal = document.getElementById('restaurantLoginModal');
             modal.style.display = 'none';
-            modal.classList.remove('show');
         }
 
         // 初始化登入模態框
@@ -1410,13 +1441,61 @@
                     });
                 }
             }
-
-            // 點擊模態框外部關閉
-            window.onclick = function(event) {
+            
+            // 獲取登入按鈕和登入模態視窗
+            const loginButton = document.getElementById('loginButton');
+            const loginModal = document.getElementById('loginModal');
+            const closeBtn = loginModal.querySelector('.close');
+            
+            // 點擊登入按鈕時顯示登入模態視窗，並應用樣式修復
+            loginButton.addEventListener('click', function() {
+                loginModal.style.display = 'block';
+                fixLoginModalStyles();
+            });
+            
+            // 點擊關閉按鈕時關閉登入模態視窗
+            closeBtn.addEventListener('click', function() {
+                loginModal.style.display = 'none';
+            });
+            
+            // 點擊模態視窗外部時關閉模態視窗
+            window.addEventListener('click', function(event) {
+                if (event.target == loginModal) {
+                    loginModal.style.display = 'none';
+                }
                 if (event.target === restaurantLoginModal) {
                     closeRestaurantLoginModal();
                 }
-            };
+            });
+            
+            // 會員登入表單提交事件
+            const userLoginForm = document.getElementById('loginForm');
+            if (userLoginForm) {
+                userLoginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // 這裡可以添加實際的登入驗證邏輯
+                    console.log('會員登入:', { email, password });
+                    
+                    // 模擬登入成功
+                    alert('登入成功！');
+                    loginModal.style.display = 'none';
+                    
+                    // 模擬登入成功，顯示會員頭像區域
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('userSection').style.display = 'flex';
+                });
+            }
+            
+            // 修復登入模態視窗樣式的函數
+            function fixLoginModalStyles() {
+                // 獲取模態視窗元素 - 所有樣式已通過內聯樣式應用，不需要額外修復
+                console.log('登入視窗已開啟');
+            }
         });
     </script>
 </body>
