@@ -19,7 +19,7 @@
 				<p>加入食力派ChowCrew，開啟您的美食事業</p>
 			</div>
 
-			<form class="signup-form" id="restaurant-signup-form">
+			<form class="signup-form" id="restaurant-signup-form" enctype="multipart/form-data">
 				<!-- 基本資料區塊 -->
 				<div class="form-section">
 					<h2>基本資料</h2>
@@ -32,7 +32,7 @@
 									<span>點擊上傳頭像</span>
 								</div>
 							</div>
-							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input">
+							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
 						</div>
 						<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
 					</div>
@@ -41,7 +41,7 @@
 						<label for="restaurant-name">餐廳名稱</label>
 						<div class="input-with-icon">
 							<i class="fas fa-store"></i>
-							<input type="text" id="restaurant-name" name="restaurant-name" placeholder="請輸入餐廳名稱"
+							<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
 								required>
 						</div>
 					</div>
@@ -58,7 +58,7 @@
 						<label for="phone">聯絡電話</label>
 						<div class="input-with-icon">
 							<i class="fas fa-phone"></i>
-							<input type="tel" id="phone" name="phone" placeholder="請輸入聯絡電話" required>
+							<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
 						</div>
 					</div>
 				</div>
@@ -99,14 +99,7 @@
 						<label for="cuisine-type">料理類型</label>
 						<div class="input-with-icon">
 							<i class="fas fa-utensils"></i>
-							<select id="cuisine-type" name="cuisine-type" required>
-								<option value="">請選擇料理類型</option>
-								<option value="chinese">中式料理</option>
-								<option value="japanese">日式料理</option>
-								<option value="western">西式料理</option>
-								<option value="dessert">甜點飲品</option>
-								<option value="other">其他</option>
-							</select>
+							<input type="text" name="cuisineType" placeholder="請輸入料理類型" required />
 						</div>
 					</div>
 
@@ -114,7 +107,7 @@
 						<label for="business-hours">營業時間</label>
 						<div class="input-with-icon">
 							<i class="fas fa-clock"></i>
-							<input type="text" id="business-hours" name="business-hours" placeholder="例：11:00-21:00"
+							<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00"
 								required>
 						</div>
 					</div>
@@ -266,6 +259,65 @@
 			window.location.href = 'index.html';
 		}
 	</script>
+	<script>
+    document.getElementById('merchantForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target;
+
+      const formData = new FormData();
+
+      // 拿 input 欄位值
+      const jsonData = {
+        name: form.name.value,
+        email: form.email.value,
+        password: form.password.value,
+        confirmPassword: form.confirmPassword.value,
+        phoneNumber: form.phoneNumber.value,
+        address: form.address.value,
+        cuisineType: form.cuisineType.value,
+        businessHours: form.businessHours.value,
+        avatarUrl: "",     // 後端處理圖片再設值
+        imageUrls: []      // 同上
+      };
+
+      // 加入 JSON Blob
+      const jsonBlob = new Blob([JSON.stringify(jsonData)], {
+        type: 'application/json'
+      });
+      formData.append("data", jsonBlob);
+
+      // 加入單張頭像圖片
+      const avatarFile = form.avatar.files[0];
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      // 加入多張餐廳圖片
+      const photoFiles = form.photos.files;
+      for (let i = 0; i < photoFiles.length; i++) {
+        formData.append("photos", photoFiles[i]);
+      }
+
+      try {
+        const response = await fetch("http://localhost:8080/api/merchants/register", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          alert("註冊失敗：" + errorText);
+        } else {
+          const result = await response.text();
+          alert("註冊成功：" + result);
+          form.reset(); // 清空表單
+        }
+      } catch (err) {
+        console.error("發生錯誤", err);
+        alert("請求失敗，請檢查後端或網路！");
+      }
+    });
+  </script>
 </body>
 
 </html>
