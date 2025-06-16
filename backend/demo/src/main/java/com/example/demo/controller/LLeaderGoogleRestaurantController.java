@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.entity.GoogleRestaurant;
@@ -23,8 +24,10 @@ public class LLeaderGoogleRestaurantController {
     private LLeaderGoogleRestaurantService service;
 
     @GetMapping("/ranking/google")
-    public ResponseEntity<Page<GoogleRestaurant>> getGoogleRestaurantRanking(Pageable pageable) {
-        Page<GoogleRestaurant> restaurants = service.getGoogleRestaurants(pageable);
+    public ResponseEntity<Page<GoogleRestaurant>> getGoogleRestaurantRanking(
+            @RequestParam(defaultValue = "all") String filter,
+            Pageable pageable) {
+        Page<GoogleRestaurant> restaurants = service.getGoogleRestaurants(filter, pageable);
         return ResponseEntity.ok(restaurants);
     }
 

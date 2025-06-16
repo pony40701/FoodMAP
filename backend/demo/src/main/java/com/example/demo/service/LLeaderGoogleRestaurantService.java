@@ -21,8 +21,16 @@ public class LLeaderGoogleRestaurantService {
     @Autowired
     private LLeaderGoogleRestaurantPhotoRepository photoRepository;
 
-    public Page<GoogleRestaurant> getGoogleRestaurants(Pageable pageable) {
-        return repository.findAll(pageable);
+    public Page<GoogleRestaurant> getGoogleRestaurants(String filter, Pageable pageable) {
+        switch (filter) {
+            case "weekly":
+                return repository.findAllByWeekly(pageable);
+            case "new":
+                return repository.findAllByNew(pageable);
+            case "all":
+            default:
+                return repository.findAllByCompositeScore(pageable);
+        }
     }
 
     public Optional<String> getPhotoUrlByPlaceId(String placeId) {

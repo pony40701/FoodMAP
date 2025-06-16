@@ -16,8 +16,16 @@ public class RLeaderRestaurantService {
     @Autowired
     private RLeaderRestaurantRepository repository;
 
-    public Page<RLeaderRestaurant> getRestaurants(Pageable pageable) {
-        return repository.findAll(pageable);
+    public Page<RLeaderRestaurant> getRestaurants(String filter, Pageable pageable) {
+        switch (filter) {
+            case "weekly":
+                return repository.findAllByWeekly(pageable);
+            case "new":
+                return repository.findAllByNew(pageable);
+            case "all":
+            default:
+                return repository.findAllByCompositeScore(pageable);
+        }
     }
 
     public Optional<String> getCoverImageUrlById(Integer restaurantId) {
