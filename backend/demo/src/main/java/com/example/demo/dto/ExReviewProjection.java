@@ -8,6 +8,7 @@ public interface ExReviewProjection {
     Double getAuthorRating();
     String getReviewTitle();
     String getRestaurantName();
+    String getContentJson();
     Date getReviewDate();
     String getCuisineType();
     Integer getViewCount();

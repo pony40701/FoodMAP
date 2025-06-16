@@ -8,6 +8,7 @@ public class ExReviewDTO {
     private Double authorRating;
     private String reviewTitle;
     private String restaurantName;
+    private String contentJson;
     private Date reviewDate;
     private String cuisineType;
     private Integer viewCount;
@@ -16,12 +17,13 @@ public class ExReviewDTO {
     public ExReviewDTO() {}
 
     public ExReviewDTO(String reviewImage, String authorName, Double authorRating, String reviewTitle,
-                       String restaurantName, Date reviewDate, String cuisineType, Integer viewCount) {
+                       String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount) {
         this.reviewImage = reviewImage;
         this.authorName = authorName;
         this.authorRating = authorRating;
         this.reviewTitle = reviewTitle;
         this.restaurantName = restaurantName;
+        this.contentJson = contentJson;
         this.reviewDate = reviewDate;
         this.cuisineType = cuisineType;
         this.viewCount = viewCount;
@@ -66,6 +68,14 @@ public class ExReviewDTO {
 
     public void setRestaurantName(String restaurantName) {
         this.restaurantName = restaurantName;
+    }
+
+    public String getContentJson() {
+        return contentJson;
+    }
+
+    public void setContentJson(String contentJson) {
+        this.contentJson = contentJson;
     }
 
     public Date getReviewDate() {

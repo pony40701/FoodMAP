@@ -10,8 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.querySelector('.content-search-btn');
     const foodGrid = document.querySelector('.food-grid');
 
-    // State
-    let allArticles = []; // To store all articles fetched from the backend
+    // State for infinite scroll and filtering
+    let allArticles = [];
+    let isLoading = false;
+    let hasMore = true;
+    const TOTAL_ARTICLES_LIMIT = 15;
+    const initialLoadSize = 6;
+    const subsequentLoadSize = 3;
+    let currentFilters = {
+        sort: 'latest',
+        search: '',
+        cuisineTypes: []
+    };
 
     // --- MOCK DATA ---
     const mockArticles = [
@@ -24,35 +34,81 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // --- API Fetching ---
-    async function fetchArticles() {
-        // Now we fetch from the real backend API
+    async function fetchAndRenderArticles(limit, offset, append = false) {
+        if (isLoading || !hasMore) return;
+        isLoading = true;
+
+        const params = new URLSearchParams({
+            limit: limit,
+            offset: offset,
+            sort: currentFilters.sort
+        });
+        if (currentFilters.search) {
+            params.append('search', currentFilters.search);
+        }
+        currentFilters.cuisineTypes.forEach(type => {
+            params.append('cuisineTypes', type);
+        });
+
         try {
-            const response = await fetch('http://localhost:8080/api/ex-reviews');
+            const response = await fetch(`http://localhost:8080/api/ex-reviews?${params.toString()}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            // Map the DTO from backend to the structure our frontend expects
-            allArticles = data.map(dto => ({
-                id: dto.reviewId, // Assuming there will be an ID, let's use a placeholder for now
-                user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' }, // Placeholder avatar
+            
+            if (data.length < limit || (allArticles.length + data.length) >= TOTAL_ARTICLES_LIMIT) {
+                hasMore = false;
+            }
+
+            const newArticles = data.map(dto => ({
+                id: dto.reviewId || `temp-${Math.random()}`,
+                user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' },
                 rating: dto.authorRating,
                 title: dto.reviewTitle,
                 restaurant: dto.restaurantName,
-                imageUrl: dto.reviewImage || '/images/default-food.jpg', // Use a default image if null
-                excerpt: '', // The new API doesn't provide an excerpt, so we leave it empty
-                date: new Date(dto.reviewDate).toISOString().split('T')[0], // Format date to YYYY-MM-DD
+                imageUrl: dto.reviewImage || '/images/default-food.jpg',
+                excerpt: extractExcerpt(dto.contentJson),
+                date: new Date(dto.reviewDate).toISOString().split('T')[0],
                 category: dto.cuisineType,
                 views: dto.viewCount,
-                favorited: false // Default favorite status
+                favorited: false
             }));
-            return allArticles;
+
+            if (append) {
+                allArticles.push(...newArticles);
+                appendArticleCards(newArticles);
+            } else {
+                allArticles = newArticles;
+                renderArticles(allArticles);
+            }
+
         } catch (error) {
             console.error("Could not fetch articles:", error);
-            // Optionally, display an error message to the user on the page
-            foodGrid.innerHTML = '<p>無法載入文章，請稍後再試。</p>';
-            return []; // Return empty array on error
+            if (!append) {
+                foodGrid.innerHTML = '<p>無法載入文章，請稍後再試。</p>';
+            }
+        } finally {
+            isLoading = false;
         }
+    }
+
+    function extractExcerpt(contentJson, maxLength = 50) {
+        if (!contentJson) return '';
+        try {
+            const content = JSON.parse(contentJson);
+            if (content && content.blocks && content.blocks.length > 0) {
+                for (const block of content.blocks) {
+                    if (block.type === 'paragraph' && block.data && block.data.text) {
+                        const text = block.data.text;
+                        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing content_json:', error);
+        }
+        return '';
     }
 
     // --- Rendering ---
@@ -70,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.id = article.id;
         card.dataset.date = article.date;
         card.dataset.views = article.views;
-        card.dataset.category = article.category; // For filtering
+        card.dataset.category = article.category;
 
         card.innerHTML = `
             <div class="food-image">
@@ -105,14 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Add event listener for the favorite button on this specific card
         card.querySelector('.favorite-btn').addEventListener('click', () => {
              const icon = card.querySelector('.favorite-btn i');
              icon.classList.toggle('far');
              icon.classList.toggle('fas');
-             // In a real app, you'd also update the 'favorited' state and send it to the backend.
              const targetArticle = allArticles.find(a => a.id === article.id);
-             if (targetArticle) {
+             if(targetArticle) {
                 targetArticle.favorited = !targetArticle.favorited;
              }
         });
@@ -121,96 +175,94 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderArticles(articles) {
-        foodGrid.innerHTML = ''; // Clear existing cards
-        if (articles.length === 0) {
+        foodGrid.innerHTML = '';
+        if (articles.length === 0 && !isLoading) {
             foodGrid.innerHTML = '<p>找不到相符的文章。</p>';
             return;
         }
+        appendArticleCards(articles);
+    }
+
+    function appendArticleCards(articles) {
         articles.forEach(article => {
             const card = createArticleCard(article);
             foodGrid.appendChild(card);
         });
     }
 
-    // --- Filtering and Sorting ---
-    function filterAndSortArticles() {
-        const activeFilter = document.querySelector('.category-item.active').dataset.filter;
-        const searchKeyword = searchInput.value.toLowerCase();
-        const selectedFoodTypes = Array.from(foodTypeModal.querySelectorAll('input[type="checkbox"]:checked'))
-                                       .map(cb => cb.value.toLowerCase());
-
-        let filteredArticles = [...allArticles];
-
-        // 1. Filter by search keyword
-        if (searchKeyword) {
-            filteredArticles = filteredArticles.filter(article => {
-                return article.title.toLowerCase().includes(searchKeyword) ||
-                       article.excerpt.toLowerCase().includes(searchKeyword) ||
-                       article.restaurant.toLowerCase().includes(searchKeyword);
-            });
+    // --- Event Listeners ---
+    window.addEventListener('scroll', () => {
+        if (isLoading || !hasMore) return;
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+            fetchAndRenderArticles(subsequentLoadSize, allArticles.length, true);
         }
+    });
 
-        // 2. Filter by selected food types
-        if (selectedFoodTypes.length > 0 && !selectedFoodTypes.includes('other')) {
-            filteredArticles = filteredArticles.filter(article => {
-                return selectedFoodTypes.includes(article.category.toLowerCase());
-            });
-        }
+    modalEventListeners();
+    filterEventListeners();
+    searchEventListeners();
 
-        // 3. Sort based on the active filter (latest or popular)
-        if (activeFilter === 'latest') {
-            filteredArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
-        } else if (activeFilter === 'popular') {
-            filteredArticles.sort((a, b) => b.views - a.views);
-        }
-
-        renderArticles(filteredArticles);
+    function modalEventListeners() {
+        foodTypeBtn.addEventListener('click', () => {
+            foodTypeModal.style.display = 'block';
+        });
+        closeModal.addEventListener('click', () => {
+            foodTypeModal.style.display = 'none';
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target === foodTypeModal) {
+                foodTypeModal.style.display = 'none';
+            }
+        });
+        applyBtn.addEventListener('click', () => {
+            currentFilters.cuisineTypes = Array.from(foodTypeModal.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.closest('.checkbox-container').textContent.trim());
+            foodTypeModal.style.display = 'none';
+            applyFilters();
+        });
+        clearBtn.addEventListener('click', () => {
+            foodTypeModal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            currentFilters.cuisineTypes = [];
+            applyFilters();
+        });
     }
 
-    // --- Event Listeners ---
-    // Modal
-    foodTypeBtn.addEventListener('click', () => {
-        foodTypeModal.style.display = 'block';
-    });
-    closeModal.addEventListener('click', () => {
-        foodTypeModal.style.display = 'none';
-    });
-    window.addEventListener('click', (event) => {
-        if (event.target === foodTypeModal) {
-            foodTypeModal.style.display = 'none';
-        }
-    });
-    applyBtn.addEventListener('click', () => {
-        filterAndSortArticles();
-        foodTypeModal.style.display = 'none';
-    });
-    clearBtn.addEventListener('click', () => {
-        foodTypeModal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        filterAndSortArticles();
-    });
-
-    // Filters
-    filterItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelector('.category-item.active').classList.remove('active');
-            item.classList.add('active');
-            filterAndSortArticles();
+    function filterEventListeners() {
+        filterItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector('.category-item.active').classList.remove('active');
+                item.classList.add('active');
+                currentFilters.sort = item.dataset.filter;
+                applyFilters();
+            });
         });
-    });
+    }
+    
+    function searchEventListeners() {
+        searchBtn.addEventListener('click', () => {
+            currentFilters.search = searchInput.value;
+            applyFilters();
+        });
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                currentFilters.search = searchInput.value;
+                applyFilters();
+            }
+        });
+    }
 
-    // Search
-    searchBtn.addEventListener('click', filterAndSortArticles);
-    searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            filterAndSortArticles();
-        }
-    });
+    function applyFilters() {
+        allArticles = [];
+        hasMore = true;
+        foodGrid.innerHTML = '';
+        window.scrollTo(0, 0);
+        fetchAndRenderArticles(initialLoadSize, 0, false);
+    }
 
     // --- Initialization ---
-    async function initializePage() {
-        await fetchArticles();
-        filterAndSortArticles(); // Initial render
+    function initializePage() {
+        fetchAndRenderArticles(initialLoadSize, 0);
     }
 
     initializePage();

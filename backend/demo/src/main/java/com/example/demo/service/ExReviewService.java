@@ -16,8 +16,11 @@ public class ExReviewService {
     @Autowired
     private ExReviewRepository exReviewRepository;
 
-    public List<ExReviewDTO> getLatestReviews() {
-        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews();
+    public List<ExReviewDTO> getLatestReviews(int limit, int offset, String sort, String search, List<String> cuisineTypes) {
+        List<String> effectiveCuisineTypes = (cuisineTypes == null || cuisineTypes.isEmpty()) ? null : cuisineTypes;
+        String effectiveSearch = (search == null || search.trim().isEmpty()) ? null : search;
+
+        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, sort, effectiveSearch, effectiveCuisineTypes);
         return projections.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -30,6 +33,7 @@ public class ExReviewService {
             projection.getAuthorRating(),
             projection.getReviewTitle(),
             projection.getRestaurantName(),
+            projection.getContentJson(),
             projection.getReviewDate(),
             projection.getCuisineType(),
             projection.getViewCount()

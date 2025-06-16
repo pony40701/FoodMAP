@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.dto.ExReviewProjection;
@@ -19,6 +20,7 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
             rr.overall_score AS authorRating,
             r.title AS reviewTitle,
             rest.name AS restaurantName,
+            r.content_json AS contentJson,
             r.created_at AS reviewDate,
             rest.cuisine_type AS cuisineType,
             rs.total_views AS viewCount
@@ -29,9 +31,18 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
         JOIN review_stats rs ON rs.review_id = r.id
         JOIN users u ON r.user_id = u.id
         WHERE r.status = 'published'
-        ORDER BY r.created_at DESC
-        LIMIT 6
+        AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%'))
+        AND (:cuisineTypes IS NULL OR rest.cuisine_type IN (:cuisineTypes))
+        ORDER BY
+            CASE WHEN :sort = 'popular' THEN rs.total_views END DESC,
+            r.created_at DESC
+        LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
-    List<ExReviewProjection> findLatestReviews();
+    List<ExReviewProjection> findLatestReviews(
+            @Param("limit") int limit,
+            @Param("offset") int offset,
+            @Param("sort") String sort,
+            @Param("search") String search,
+            @Param("cuisineTypes") List<String> cuisineTypes);
 
 } 
