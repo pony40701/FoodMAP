@@ -710,6 +710,84 @@ select:focus {
     padding: 0;
 }
 
+/* 收藏頁籤按鈕統一橘色風格 */
+.view-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.view-toggle .toggle-btn {
+    padding: 10px 18px;
+    background-color: #fff;
+    color: #666;
+    border: 2px solid #ff6b1a;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-toggle .toggle-btn i {
+    color: #ff6b1a;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.view-toggle .toggle-btn:hover {
+    background-color: rgba(255, 107, 26, 0.1);
+    color: #ff6b1a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 107, 26, 0.2);
+}
+
+.view-toggle .toggle-btn.active {
+    background-color: #ff6b1a;
+    color: #fff;
+    border-color: #ff6b1a;
+}
+
+.view-toggle .toggle-btn.active i {
+    color: #fff;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 107, 26, 0.2);
+}
+
+.section-header h2 {
+    color: #ff6b1a;
+    font-size: 24px;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .view-toggle {
+        width: 100%;
+    }
+    
+    .view-toggle .toggle-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 10px;
+    }
+}
+
 /* 收藏店家卡片樣式 */
 .store-card {
     position: relative;
@@ -719,11 +797,13 @@ select:focus {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     cursor: pointer;
+    border: 1px solid rgba(255, 107, 26, 0.2);
 }
 
 .store-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(255, 107, 26, 0.15);
+    border-color: #ff6b1a;
 }
 
 .store-card:active {
@@ -814,11 +894,13 @@ select:focus {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     position: relative;
+    border: 1px solid rgba(255, 107, 26, 0.2);
 }
 
 .review-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(255, 107, 26, 0.15);
+    border-color: #ff6b1a;
 }
 
 .review-card .review-header {

@@ -32,6 +32,8 @@ function initLogin() {
             console.log('點擊登入按鈕');
             if (loginElements.loginModal) {
                 loginElements.loginModal.style.display = 'block';
+                // 應用樣式修復
+                fixLoginModalStyles();
             }
         });
     }
@@ -42,6 +44,8 @@ function initLogin() {
             console.log('點擊登入按鈕（id）');
             if (loginElements.loginModal) {
                 loginElements.loginModal.style.display = 'block';
+                // 應用樣式修復
+                fixLoginModalStyles();
             }
         });
     }
@@ -125,6 +129,8 @@ function initLogin() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM 加載完成，初始化登入功能');
     initLogin();
+    // 立即修復樣式
+    fixLoginModalStyles();
 });
 
 // 暴露全局登入彈窗函數
@@ -132,6 +138,8 @@ window.showLoginModal = function() {
     console.log('顯示登入彈窗');
     if (loginElements.loginModal) {
         loginElements.loginModal.style.display = 'block';
+        // 應用樣式修復
+        fixLoginModalStyles();
     } else {
         console.error('找不到登入彈窗元素');
     }
@@ -297,3 +305,105 @@ function showToast(message) {
 // 不要在 index.html 自動跳轉到 userLogin.html
 // 僅在需要登入的頁面（如 userCenter.html）才做強制跳轉
 // 此檔案無需任何自動跳轉邏輯
+
+// 修復登入視窗樣式的函數
+function fixLoginModalStyles() {
+    const loginModal = document.getElementById('loginModal');
+    if (!loginModal) return;
+    
+    console.log('修復登入視窗樣式');
+    
+    const modalContent = loginModal.querySelector('.modal-content');
+    const modalHeader = loginModal.querySelector('.modal-header');
+    const modalTitle = modalHeader.querySelector('h2');
+    const modalBody = loginModal.querySelector('.modal-body');
+    const closeButton = modalHeader.querySelector('.close');
+    const form = loginModal.querySelector('.login-form');
+    
+    // 修復模態框內容
+    if (modalContent) {
+        modalContent.style.padding = '0';
+        modalContent.style.maxWidth = '340px';
+    }
+    
+    // 修復頭部區域
+    if (modalHeader) {
+        modalHeader.style.padding = '10px 15px 0px';
+        modalHeader.style.marginBottom = '0';
+        modalHeader.style.display = 'block';
+        modalHeader.style.position = 'relative';
+        modalHeader.style.textAlign = 'center';
+    }
+    
+    // 修復標題
+    if (modalTitle) {
+        modalTitle.style.margin = '0';
+        modalTitle.style.padding = '0';
+        modalTitle.style.fontSize = '20px';
+        modalTitle.style.color = '#ff6b1a';
+        modalTitle.style.textAlign = 'center';
+    }
+    
+    // 修復關閉按鈕
+    if (closeButton) {
+        closeButton.style.position = 'absolute';
+        closeButton.style.right = '15px';
+        closeButton.style.top = '10px';
+        closeButton.style.fontSize = '20px';
+    }
+    
+    // 修復主體區域
+    if (modalBody) {
+        modalBody.style.padding = '10px 15px 15px';
+    }
+    
+    // 修復表單
+    if (form) {
+        form.style.marginTop = '0';
+        
+        // 修復表單組
+        const formGroups = form.querySelectorAll('.form-group');
+        formGroups.forEach(group => {
+            group.style.marginBottom = '8px';
+            
+            const label = group.querySelector('label');
+            if (label) {
+                label.style.fontSize = '14px';
+                label.style.marginBottom = '2px';
+                label.style.display = 'block';
+            }
+            
+            const input = group.querySelector('input');
+            if (input) {
+                input.style.padding = '8px 10px';
+                input.style.border = '1px solid #ddd';
+                input.style.borderRadius = '6px';
+                input.style.fontSize = '14px';
+                input.style.boxSizing = 'border-box';
+                input.style.width = '100%';
+            }
+        });
+    }
+    
+    // 修復社交登入區域
+    const socialLogin = loginModal.querySelector('.social-login');
+    if (socialLogin) {
+        socialLogin.style.marginTop = '8px';
+        
+        const socialText = socialLogin.querySelector('p');
+        if (socialText) {
+            socialText.style.marginBottom = '3px';
+            socialText.style.fontSize = '13px';
+        }
+        
+        // 確保社交按鈕顏色
+        const googleBtn = socialLogin.querySelector('.social-btn.google');
+        if (googleBtn) googleBtn.style.color = '#db4437';
+        
+        const fbBtn = socialLogin.querySelector('.social-btn.facebook');
+        if (fbBtn) fbBtn.style.color = '#1877f3';
+        
+        const lineBtn = socialLogin.querySelector('.social-btn.line');
+        if (lineBtn) lineBtn.style.color = '#00c300';
+    }
+}
