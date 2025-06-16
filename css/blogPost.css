@@ -319,7 +319,7 @@ body {
     max-width: 1200px;
     margin: 20px auto 0;
     gap: 2rem;
-    padding: 2rem;
+    padding: 1rem; /* 原本是2rem，改小 */
 }
 
 /* 側邊欄樣式 */
@@ -484,8 +484,8 @@ body {
 }
 
 /* 表單樣式 */
-.form-group {
-    margin-bottom: 1.5rem;
+.form-groupblog {
+    margin-bottom: 1.3rem;
 }
 
 input[type="text"] {
@@ -496,6 +496,7 @@ input[type="text"] {
     font-size: 1rem;
     transition: all 0.3s ease;
     background-color: #fff;
+    box-sizing: border-box; /* 新增這一行 */
 }
 
 input[type="text"]:focus {
@@ -1722,3 +1723,4 @@ input[type="text"]::placeholder {
         width: 100%;
         justify-content: space-around;
     }
+}

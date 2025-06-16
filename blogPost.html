@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>撰寫美食心得 - 食力派ChowCrew</title>
-    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/blogPost.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+ 
     <style>
         /* 登入和用戶區塊樣式 */
         .login-section,
@@ -336,7 +336,7 @@
         <aside class="sidebar">
             <div class="user-profile">
                 <div class="profile-image">
-                    <img src="image/default-avatar.png" alt="用戶頭像" id="userAvatar">
+                    <img src="images/foodTypeSecionIcon/icons8-dessert-48.png" alt="用戶頭像" id="userAvatar">
                 </div>
                 <h3 id="userName">用戶名稱</h3>
                 <p id="userBio">美食探索家</p>
@@ -363,14 +363,14 @@
             <section id="write-section" class="content-section active">
                 <h2>撰寫美食心得</h2>
                 <form id="blogPostForm">
-                    <div class="form-group">
+                    <div class="form-groupblog">
                         <input type="text" id="postTitle" placeholder="文章標題" required>
                     </div>
-                    <div class="form-group restaurant-info">
+                    <div class="form-groupblog restaurant-info">
                         <input type="text" id="restaurantName" placeholder="餐廳名稱" required>
                         <input type="text" id="restaurantLocation" placeholder="餐廳地址" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-groupblog">
                         <div class="rating-section">
                             <h3>餐廳評分</h3>
                             <div class="rating-items">
@@ -442,7 +442,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-groupblog">
                         <div class="editor-toolbar">
                             <!-- 字型樣式 -->
                             <div class="toolbar-group">
@@ -538,7 +538,7 @@
                         <div id="editor" class="rich-editor" contenteditable="true" placeholder="分享您的美食體驗..."></div>
                         <input type="file" id="imageUpload" accept="image/*" multiple style="display: none">
                     </div>
-                    <div class="form-group">
+                    <div class="form-groupblog">
                         <input type="text" id="tags" placeholder="新增標籤（用逗號分隔）">
                     </div>
                     <div class="button-group">
@@ -661,35 +661,7 @@
     <!-- 添加必要的 JavaScript 函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <script src="js/login.js"></script>
-    <script src="js/blogPost.js"></script>
-    <script>
-        // 確保頁面載入完成後初始化所有功能
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化編輯器功能
-            initEditor();
-            // 初始化星級評分
-            initRating();
-            // 載入用戶數據
-            loadUserData();
-            // 載入文章列表
-            loadPosts();
-            // 初始化統計圖表
-            initStatsChart();
-            // 初始化字型大小控制
-            initFontSize();
-            // 初始化顏色選擇器
-            initColorPicker();
-            // 初始化導覽列
-            initializeNavbar();
-            // 初始化評分系統
-            initRatingSystem();
-            // 如果當前在草稿箱頁面，載入草稿
-            if (document.getElementById('drafts-section').classList.contains('active')) {
-                loadDrafts();
-            }
-            // 登入狀態管理已移至 login.js
-            // 這裡不需要額外的登入按鈕初始化
-        });
-    </script>
+    <script src="js/blogPost2.js"></script>
+    
 </body>
 </html> 

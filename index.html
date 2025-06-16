@@ -954,7 +954,7 @@
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                    <a href="./blogPost.html" onclick="handleWriteReview()" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
                         <span>寫食評</span>
                     </a>
@@ -1046,69 +1046,75 @@
         <div class="food-types">
             <div class="food-type-item" onclick="window.mapInit.searchByType('中式')">
                 <div class="emoji-circle chinese">
-                    🥢
+                    <img src="images/foodTypeSecionIcon/icons8-dumpling-48.png" alt="中式料理">
                 </div>
                 <span>中式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('美式')">
                 <div class="emoji-circle american">
-                    🍔
+                    <img src="images/foodTypeSecionIcon/icons8-burger-48 (1).png" alt="漢堡">
                 </div>
                 <span>美式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('韓式')">
                 <div class="emoji-circle korean">
-                    🍜
+                    <img src="images/foodTypeSecionIcon/korean2.png" alt="韓式">
                 </div>
                 <span>韓式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('義式')">
                 <div class="emoji-circle italian">
-                    🍕
+                    <img src="images/foodTypeSecionIcon/icons8-pizza-48.png" alt="義式">
                 </div>
                 <span>義式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('法式')">
                 <div class="emoji-circle french">
-                    🥐
+                    <img src="images/foodTypeSecionIcon/icons8-croissant-48.png" alt="法式">
                 </div>
                 <span>法式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('泰式')">
                 <div class="emoji-circle thai">
-                    🍛
+                    <img src="images/foodTypeSecionIcon/icons8-coconut-48.png" alt="泰式">
                 </div>
                 <span>泰式</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('火鍋')">
                 <div class="emoji-circle hotpot">
-                    🍲
+                     <img src="images/foodTypeSecionIcon/icons8-hotpot-48.png" alt="火鍋">
                 </div>
                 <span>火鍋</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('牛排')">
                 <div class="emoji-circle steak">
-                    🥩
+                    <img src="images/foodTypeSecionIcon/icons8-steak-48.png" alt="牛排">
                 </div>
                 <span>牛排</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('燒烤')">
                 <div class="emoji-circle bbq">
-                    🍖
+                    <img src="images/foodTypeSecionIcon/icons8-barbecue-48.png" alt="燒烤">
                 </div>
                 <span>燒烤</span>
             </div>
             <div class="food-type-item" onclick="window.mapInit.searchByType('飲品')">
                 <div class="emoji-circle drinks">
-                    🥤
+                    <img src="images/foodTypeSecionIcon/icons8-drink-48.png" alt="飲品">
                 </div>
                 <span>飲品</span>
             </div>
-            <div class="food-type-item" onclick="window.mapInit.searchByType('異國料理')">
-                <div class="emoji-circle world">
-                    🌎
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '異國料理,印度菜,墨西哥菜,越南菜,中東料理,西班牙菜,葡萄牙菜')">
+                <div class="emoji-circle international">
+                    <img src="images/foodTypeSecionIcon/icons8-globe-48.png" alt="異國料理">
                 </div>
                 <span>異國料理</span>
+            </div>
+            <div class="food-type-item" onclick="window.searchByType('restaurant', '素食,蔬食,全素,蛋奶素,養生,禪食,有機')">
+                <div class="emoji-circle vegetarian">
+                    <img src="images/foodTypeSecionIcon/icons8-vegan-48.png" alt="素食">
+                </div>
+                <span>素食</span>
             </div>
         </div>
     </section>
