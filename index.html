@@ -1354,6 +1354,71 @@
     <script src="js/restaurantList.js"></script>
     <script src="js/login.js"></script>
     <script src="js/restaurant-modal.js"></script>
+    <script>
+        // 商家登入彈窗相關函數
+        function openRestaurantLoginModal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('restaurantLoginModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function closeRestaurantLoginModal() {
+            const modal = document.getElementById('restaurantLoginModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+
+        // 初始化登入模態框
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否需要自動開啟商家登入彈窗
+            if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
+                sessionStorage.removeItem('openRestaurantLogin');
+                openRestaurantLoginModal();
+            }
+
+            // 初始化商家登入模態框
+            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+            if (restaurantLoginModal) {
+                // 防止點擊模態框內容時關閉
+                restaurantLoginModal.querySelector('.modal-content').addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+                
+                // 表單提交事件
+                const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+                if (restaurantLoginForm) {
+                    restaurantLoginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const email = document.getElementById('restaurant-email').value;
+                        const password = document.getElementById('restaurant-password').value;
+                        const remember = document.getElementById('restaurant-remember').checked;
+                        
+                        // 這裡可以添加實際的登入驗證邏輯
+                        console.log('商家登入:', { email, password, remember });
+                        
+                        // 模擬登入成功，跳轉到商家後台
+                        alert('登入成功！');
+                        closeRestaurantLoginModal();
+                        // 跳轉到商家後台主頁
+                        window.location.href = 'restaurant.html';
+                    });
+                }
+            }
+
+            // 點擊模態框外部關閉
+            window.onclick = function(event) {
+                if (event.target === restaurantLoginModal) {
+                    closeRestaurantLoginModal();
+                }
+            };
+        });
+    </script>
 </body>
 
 </html>
