@@ -11,10 +11,10 @@ const config = {
                 count: '/google-restaurants/count'       // 獲取餐廳總數
             },
             favorites: {
-                all: '/favorites',                // 獲取所有收藏
-                add: '/favorites/add',            // 新增收藏
-                remove: '/favorites/remove/',     // 移除收藏 (需要加上 ID)
-                check: '/favorites/check/'        // 檢查是否已收藏 (需要加上 ID)
+                all: '/users/{userId}/favorites/restaurants',            // 獲取用戶收藏餐廳列表
+                add: '/users/{userId}/favorites/restaurants/{placeId}',  // 新增收藏
+                remove: '/users/{userId}/favorites/restaurants/{placeId}', // 移除收藏
+                check: '/users/{userId}/favorites/restaurants/{placeId}'   // 檢查是否已收藏
             }
         }
     },

@@ -1018,21 +1018,23 @@ select:focus {
 /* 載入和無資料狀態樣式 */
 .loading {
     text-align: center;
-    padding: 40px;
+    padding: 30px 0;
     color: #666;
     font-size: 16px;
+    position: relative;
+    min-height: 100px;
 }
 
 .loading::before {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #ff6b1a;
+    content: "";
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ff6b1a;
+    border-top-color: transparent;
     border-radius: 50%;
+    display: block;
+    margin: 0 auto 15px;
     animation: spin 1s linear infinite;
-    margin-right: 10px;
 }
 
 @keyframes spin {
@@ -2025,4 +2027,36 @@ select:focus {
     .restaurant-map-container-new {
         height: 200px;
     }
+}
+
+/* 快取提示樣式 */
+.cache-notice {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ffeeba;
+}
+
+.cache-notice::before {
+    content: "\f071";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 8px;
+}
+
+/* 錯誤提示樣式 */
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 15px 0;
+    border: 1px solid #f5c6cb;
+    text-align: center;
 } 

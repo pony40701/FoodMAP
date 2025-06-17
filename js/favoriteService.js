@@ -121,3 +121,10 @@ class FavoriteServiceLegacy {
 if (!window.favoriteSystem) {
     window.favoriteSystem = new FavoriteServiceLegacy();
 } 
+
+// 使用全域 config.js 裡的設定
+const base = window.API_BASE_URL;
+export async function loadFavorites(userId) {
+  const res = await fetch(`${base}/users/${userId}/favorites`);
+  return res.json();
+} 

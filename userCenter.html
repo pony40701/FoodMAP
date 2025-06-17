@@ -19,11 +19,7 @@
   <script src="js/toast.js"></script>
   <script src="js/login.js"></script>
   <script src="js/loginModal.js"></script>
-  <script src="js/userCenter.js"></script>
   <!-- 核心功能模組 -->
-  <script src="js/favoriteSystem.js"></script>
-  <script src="js/favoriteButton.js"></script>
-  <script src="js/businessHours.js"></script>
   <script src="js/restaurantService.js"></script>
 </head>
 <body>
@@ -303,7 +299,7 @@
           </div>
           <div class="form-group">
             <label>電子郵件</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" readonly>
           </div>
           <div class="form-group">
             <label>目前密碼</label>
@@ -462,6 +458,8 @@
   <script>
     const finalCheck = new Set();
     const finalDuplicates = [];
+    // 確保 processedRestaurants 已正確取得
+    const processedRestaurants = window.favoriteSystem?.favorites || [];
     processedRestaurants.forEach(restaurant => {
         const id = restaurant.place_id || restaurant.id;
         if (finalCheck.has(id)) {
