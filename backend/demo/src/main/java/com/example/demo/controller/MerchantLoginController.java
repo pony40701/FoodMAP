@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,6 @@ public class MerchantLoginController {
         }
 
         // TODO: 可以回傳 token 或簡單訊息
-        return ResponseEntity.ok("登入成功");
+        return ResponseEntity.ok(Map.of("message", "登入成功！"));
     }
 }
