@@ -1,0 +1,194 @@
+/* 餐廳彈窗樣式修復 */
+.restaurant-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 3000;
+    overflow: auto;
+    justify-content: center;
+    align-items: center;
+}
+
+.restaurant-modal.active {
+    display: flex;
+}
+
+.restaurant-modal-content {
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+    margin: 80px auto 0;
+    z-index: 3001;
+}
+
+/* 週營業時間表格樣式修復 */
+.weekly-hours-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 3200;
+    justify-content: center;
+    align-items: center;
+}
+
+.weekly-hours-modal.active {
+    display: flex;
+}
+
+.weekly-hours-modal-content {
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+    margin: 80px auto 0;
+    z-index: 3201;
+}
+
+/* 彈窗動畫效果 */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 確保彈窗內容不會被背景文字覆蓋 */
+.restaurant-modal * {
+    background-color: transparent;
+}
+
+.restaurant-modal-header,
+.restaurant-details,
+.restaurant-main-info,
+.restaurant-info-text,
+.modal-rating,
+.modal-address,
+.modal-hours,
+.restaurant-tags,
+.modal-actions {
+    position: relative;
+    z-index: 3002;
+}
+
+/* 確保收藏按鈕不會被覆蓋 */
+.modal-favorite-btn,
+.modal-direction-btn {
+    position: relative;
+    z-index: 3003;
+}
+
+/* 確保卡片上的收藏按鈕不會覆蓋彈窗 */
+.favorite-btn {
+    z-index: 10 !important; /* 確保不會高於彈窗的 z-index */
+}
+
+/* 查看完整營業時間按鈕樣式 */
+.view-full-hours-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 10px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-full-hours-btn:hover {
+    background-color: #eee;
+    border-color: #ccc;
+}
+
+/* 營業時間彈窗標題和關閉按鈕樣式 */
+.weekly-hours-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.weekly-hours-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.weekly-hours-modal-close {
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.weekly-hours-modal-close:hover {
+    color: #ff6b1a;
+}
+
+.weekly-hours-modal-body {
+    padding: 15px 20px;
+}
+
+/* 營業時間表格樣式 */
+.weekly-hours-table {
+    width: 100%;
+}
+
+.hours-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hours-row:last-child {
+    border-bottom: none;
+}
+
+.hours-row.today {
+    font-weight: bold;
+    color: #ff6b1a;
+}
+
+.day-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.open {
+    background-color: #2ecc71;
+}
+
+.status-dot.closed {
+    background-color: #e74c3c;
+} 

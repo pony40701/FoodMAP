@@ -36,14 +36,24 @@
             <div class="step-content" id="step1">
                 <form id="registerForm">
                     <div class="form-group">
+                        <label for="username">使用者名稱</label>
+                        <input type="text" id="username" name="username" placeholder="請設定您的使用者名稱" required>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
                         <label for="email">電子郵件</label>
-                        <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
+                        <input type="email" id="email" name="email" placeholder="請輸入常用電子郵件" required>
                         <div class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label for="password">密碼</label>
                         <div class="password-input-container">
-                            <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="請設定至少 8 位數密碼" 
+                                   required 
+                                   autocomplete="new-password">
                             <button type="button" class="toggle-password">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -53,7 +63,12 @@
                     <div class="form-group">
                         <label for="confirmPassword">確認密碼</label>
                         <div class="password-input-container">
-                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="請再次輸入密碼" required>
+                            <input type="password" 
+                                   id="confirmPassword" 
+                                   name="confirmPassword" 
+                                   placeholder="請再次輸入密碼" 
+                                   required 
+                                   autocomplete="new-password">
                             <button type="button" class="toggle-password">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -62,16 +77,16 @@
                     </div>
                     <div class="form-group">
                         <label for="name">姓名</label>
-                        <input type="text" id="name" name="name" placeholder="請輸入姓名" required>
+                        <input type="text" id="name" name="name" placeholder="請輸入真實姓名" required>
                         <div class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label for="phone">手機號碼</label>
-                        <input type="tel" id="phone" name="phone" placeholder="請輸入手機號碼" required>
+                        <input type="tel" id="phone" name="phone" placeholder="請輸入手機號碼 (格式：0912345678)" required>
                         <div class="error-message"></div>
                     </div>
                     <div class="form-group">
-                        <label for="avatar">大頭貼</label>
+                        <label for="avatar">個人頭像</label>
                         <div class="avatar-upload-container">
                             <div class="avatar-preview">
                                 <img id="avatarPreview" src="images/default-avatar.png" alt="預覽圖">
@@ -90,7 +105,8 @@
                     </div>
                     <div class="terms-checkbox">
                         <input type="checkbox" id="terms" name="terms" required>
-                        <label for="terms">我已閱讀並同意<a href="termsOfService.html">服務條款</a>和<a href="privacyPolicy.html">隱私權政策</a></label>
+                        <label for="terms">我已閱讀並同意<a href="terms-of-service.html">服務條款</a>和<a href="privacy-policy.html">隱私權政策</a></label>
+                        <div class="error-message"></div>
                     </div>
                     <button type="submit" class="btn-submit">下一步</button>
                 </form>
@@ -103,6 +119,10 @@
                     <div class="data-item">
                         <label>電子郵件：</label>
                         <span id="confirmEmail"></span>
+                    </div>
+                    <div class="data-item">
+                        <label>使用者名稱：</label>
+                        <span id="confirmUsername"></span>
                     </div>
                     <div class="data-item">
                         <label>姓名：</label>
@@ -137,6 +157,10 @@
             <div class="login-link">
                 <p>已經有帳號了？<a href="#" id="showLoginModalLink">立即登入</a></p>
             </div>
+            
+            <div class="database-notice">
+                <p><i class="fas fa-info-circle"></i> 註冊資料將安全地儲存在雲端資料庫中，您可以隨時登入查看和管理您的個人資料。</p>
+            </div>
         </div>
     </div>
 
@@ -151,12 +175,20 @@
                 <form id="loginForm" class="login-form">
                     <div class="form-group">
                         <label for="loginEmail">電子郵件</label>
-                        <input type="email" id="loginEmail" name="email" required>
+                        <input type="email" 
+                               id="loginEmail" 
+                               name="email" 
+                               required 
+                               autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">密碼</label>
                         <div class="password-input-container">
-                            <input type="password" id="loginPassword" name="password" required>
+                            <input type="password" 
+                                   id="loginPassword" 
+                                   name="password" 
+                                   required 
+                                   autocomplete="off">
                             <button type="button" class="toggle-password">
                                 <i class="fas fa-eye"></i>
                             </button>

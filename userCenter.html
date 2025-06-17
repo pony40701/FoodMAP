@@ -12,11 +12,19 @@
   <link rel="stylesheet" href="css/restaurant-card-v3.css">
   <link rel="stylesheet" href="css/favoritesStyle.css">
   <link rel="stylesheet" href="css/business-hours.css">
-  <link rel="stylesheet" href="css/toast.css">
-  <!-- 添加 Google Maps API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places" async defer></script>
+  <link rel="stylesheet" href="css/modal-fix.css">
+  <link rel="stylesheet" href="css/restaurant-modal.css">
   <!-- 添加登入相關功能 -->
+  <script src="js/config.js"></script>
+  <script src="js/toast.js"></script>
   <script src="js/login.js"></script>
+  <script src="js/loginModal.js"></script>
+  <script src="js/userCenter.js"></script>
+  <!-- 核心功能模組 -->
+  <script src="js/favoriteSystem.js"></script>
+  <script src="js/favoriteButton.js"></script>
+  <script src="js/businessHours.js"></script>
+  <script src="js/restaurantService.js"></script>
 </head>
 <body>
   <!-- 導覽列 -->
@@ -30,7 +38,7 @@
         <span>餐廳詳情</span>
       </a>
       <a href="index.html" class="nav-link">回首頁</a>
-      <button class="btn-logout" onclick="logout()">登出</button>
+      <button class="btn-logout" id="logoutBtn">登出</button>
     </div>
   </nav>
 
@@ -40,7 +48,7 @@
     <div class="sidebar">
       <div class="user-info">
         <div class="user-avatar">
-          <i class="fas fa-user-circle"></i>
+          <img src="images/default-avatar.png" alt="會員頭像" class="avatar-img">
         </div>
         <div class="user-name">載入中...</div>
         <div class="user-email">載入中...</div>
@@ -75,7 +83,7 @@
       <!-- 個人資料區塊 -->
       <section id="profile" class="content-section active">
         <h2>個人資料</h2>
-        <form id="profileForm" class="form">
+        <form id="profileForm" class="form" onsubmit="return false;">
           <div class="form-group">
             <label for="name">姓名</label>
             <input type="text" id="name" name="name" required>
@@ -92,7 +100,7 @@
             <label for="address">地址</label>
             <input type="text" id="address" name="address">
           </div>
-          <button type="submit" class="btn-primary">更新資料</button>
+          <button type="button" class="btn-primary update-profile-btn" onclick="updateProfile()">更新資料</button>
         </form>
       </section>
 
@@ -269,25 +277,20 @@
       </section>
 
       <!-- 收藏區塊 -->
-      <section id="favorites" class="content-section">
-        <h2>我的收藏</h2>
-        
-        <div class="favorites-tabs">
-          <button class="tab-btn active" data-tab="stores">收藏店家</button>
-          <button class="tab-btn" data-tab="reviews">收藏心得</button>
-        </div>
-
-        <div class="favorites-content">
-          <!-- 添加收藏店家列表容器 -->
-          <div class="favorites-stores" style="display: grid;">
-            <!-- 收藏店家將由 JavaScript 動態載入 -->
-          </div>
-
-          <!-- 添加收藏心得列表容器 -->
-          <div class="favorites-reviews" style="display: none;">
-            <!-- 收藏心得將由 JavaScript 動態載入 -->
+      <section id="favorites" class="content-section active">
+        <div class="section-header">
+          <h2>我的收藏</h2>
+          <div class="view-toggle">
+            <button class="toggle-btn active" data-view="stores">
+              <i class="fas fa-store"></i>收藏店家
+            </button>
+            <button class="toggle-btn" data-view="reviews">
+              <i class="fas fa-comment"></i>收藏心得
+            </button>
           </div>
         </div>
+        <div class="favorites-stores"></div>
+        <div class="favorites-reviews" style="display: none;"></div>
       </section>
 
       <!-- 設定區塊 -->
@@ -295,102 +298,177 @@
         <h2>帳號設定</h2>
         <form id="settingsForm" class="form">
           <div class="form-group">
-            <label>通知設定</label>
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="orderNotifications" checked>
-                訂單通知
-              </label>
-              <label>
-                <input type="checkbox" id="promotionNotifications" checked>
-                優惠通知
-              </label>
-              <label>
-                <input type="checkbox" id="systemNotifications" checked>
-                系統通知
-              </label>
-            </div>
+            <label>使用者名稱</label>
+            <input type="text" id="username" name="username" required>
           </div>
           <div class="form-group">
-            <label>隱私設定</label>
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="showProfile" checked>
-                公開個人資料
-              </label>
-              <label>
-                <input type="checkbox" id="showReviews" checked>
-                公開評論
-              </label>
-            </div>
+            <label>電子郵件</label>
+            <input type="email" id="email" name="email" required>
           </div>
           <div class="form-group">
-            <label for="currentPassword">目前密碼</label>
+            <label>目前密碼</label>
             <input type="password" id="currentPassword" name="currentPassword">
           </div>
           <div class="form-group">
-            <label for="newPassword">新密碼</label>
+            <label>新密碼</label>
             <input type="password" id="newPassword" name="newPassword">
           </div>
           <div class="form-group">
-            <label for="confirmPassword">確認新密碼</label>
+            <label>確認新密碼</label>
             <input type="password" id="confirmPassword" name="confirmPassword">
           </div>
-          <button type="submit" class="btn-primary">更新設定</button>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="emailNotification" name="emailNotification">
+              接收最新優惠通知
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">儲存變更</button>
         </form>
       </section>
     </div>
   </div>
 
-  <!-- 編輯評論彈窗 -->
-  <div id="editReviewModal" class="modal">
+  </div>
+
+  <!-- 餐廳詳情彈窗 -->
+  <div id="restaurantModal" class="modal">
+    <div class="restaurant-modal-content">
+      <!-- 內容將由 JavaScript 動態添加 -->
+    </div>
+  </div>
+
+  <!-- 營業時間週表彈窗 -->
+  <div id="weeklyHoursModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>編輯評論</h2>
-        <span class="close">&times;</span>
+        <h2>營業時間</h2>
+        <span class="close" onclick="closeWeeklyHoursModal()">&times;</span>
       </div>
-      <div class="modal-body">
-        <form id="editReviewForm" class="form">
-          <div class="form-group">
-            <label for="editStoreName">餐廳名稱</label>
-            <input type="text" id="editStoreName" name="storeName" readonly>
-          </div>
-          <div class="form-group">
-            <label for="editTitle">標題</label>
-            <input type="text" id="editTitle" name="title" required>
-          </div>
-          <div class="form-group">
-            <label>評分</label>
-            <div class="rating">
-              <span class="star" data-rating="1">★</span>
-              <span class="star" data-rating="2">★</span>
-              <span class="star" data-rating="3">★</span>
-              <span class="star" data-rating="4">★</span>
-              <span class="star" data-rating="5">★</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="editContent">內容</label>
-            <textarea id="editContent" name="content" rows="5" required></textarea>
-          </div>
-          <div class="form-group">
-            <label>標籤</label>
-            <div class="tags-input">
-              <input type="text" id="editTagInput" placeholder="輸入標籤後按 Enter">
-              <div id="editTagsList" class="tags-list"></div>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">儲存變更</button>
-        </form>
+      <div class="modal-body" id="weekly-hours-modal-body">
+        <!-- 內容將由 JavaScript 動態添加 -->
       </div>
     </div>
   </div>
 
   <!-- 添加必要的 JavaScript 文件 -->
+  <script src="js/restaurant-modal.js"></script>
   <script src="js/BusinessHours.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/mapInit.js"></script>
-  <script src="js/favorites.js"></script>
+  <script src="js/favoriteSystem.js"></script>
+  <script src="js/favoriteButton.js"></script>
   <script src="js/userCenter.js"></script>
+  
+  <!-- 添加登出功能的腳本 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶是否已登入，如果沒有則跳轉到首頁
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // 綁定登出按鈕事件
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+          console.log('登出按鈕被點擊');
+          // 執行登出功能
+          logout();
+          // 登出後跳轉到首頁
+          window.location.href = 'index.html';
+        });
+      }
+      
+      // 確保 RestaurantModal 已初始化
+      if (typeof RestaurantModal !== 'undefined' && typeof RestaurantModal.init === 'function') {
+        console.log('確保 RestaurantModal 已初始化');
+        RestaurantModal.init();
+      } else if (window.RestaurantModal && typeof window.RestaurantModal.init === 'function') {
+        console.log('確保 window.RestaurantModal 已初始化');
+        window.RestaurantModal.init();
+      }
+    });
+  </script>
+
+  <!-- 餐廳詳細資訊彈窗 - 新版 -->
+  <div id="restaurantModalNew" class="restaurant-modal-new">
+    <div class="restaurant-modal-content-new">
+      <div class="restaurant-modal-header-new">
+        <h2 id="modal-restaurant-name-new">餐廳名稱</h2>
+        <div class="restaurant-modal-close-new">&times;</div>
+      </div>
+      <div class="restaurant-modal-body-new">
+        <div class="restaurant-main-info-new">
+          <div class="restaurant-modal-image-new">
+            <img id="modal-restaurant-img-new" src="" alt="餐廳圖片">
+          </div>
+          <div class="restaurant-info-text-new">
+            <div class="modal-rating-new">
+              <span class="modal-stars-new" id="modal-stars-new">★★★★★</span>
+              <span class="modal-rating-value-new" id="modal-rating-new">4.5</span>
+              <span class="modal-rating-count-new" id="modal-rating-count-new">(123則評論)</span>
+            </div>
+            <div class="modal-address-new">
+              <i class="fas fa-map-marker-alt"></i>
+              <span id="modal-address-new">餐廳地址</span>
+            </div>
+            <div class="modal-hours-new">
+              <div class="modal-status-new" id="modal-status-new">
+                <i class="fas fa-clock"></i>
+                <span class="modal-status-text-new">營業中</span>
+              </div>
+              <div class="modal-today-hours-new" id="modal-today-hours-new">週一 09:00 - 22:00</div>
+              <button class="view-full-hours-btn-new" id="view-full-hours-btn-new">
+                查看完整營業時間
+              </button>
+            </div>
+            <div class="restaurant-tags-new" id="modal-tags-new">
+              <!-- 標籤將由 JavaScript 動態填充 -->
+            </div>
+            <div class="modal-actions-new">
+              <button class="modal-btn-new modal-favorite-btn-new" id="modal-favorite-btn-new">
+                <i class="far fa-heart"></i> 收藏
+              </button>
+              <button class="modal-btn-new modal-direction-btn-new" id="modal-direction-btn-new">
+                <i class="fas fa-directions"></i> 導航
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- 添加位置資訊區塊 -->
+        <div class="restaurant-location-new">
+          <h3>位置資訊</h3>
+          <div class="restaurant-map-container-new">
+            <div id="modal-map-new" style="width: 100%; height: 100%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 營業時間詳細彈窗 - 新版 -->
+  <div id="weeklyHoursModalNew" class="weekly-hours-modal-new">
+    <div class="weekly-hours-modal-content-new">
+      <div class="weekly-hours-modal-header-new">
+        <h3>營業時間</h3>
+        <div class="weekly-hours-modal-close-new">&times;</div>
+      </div>
+      <div class="weekly-hours-modal-body-new" id="weekly-hours-modal-body-new">
+        <!-- 一週的營業時間將由JavaScript動態填充 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const finalCheck = new Set();
+    const finalDuplicates = [];
+    processedRestaurants.forEach(restaurant => {
+        const id = restaurant.place_id || restaurant.id;
+        if (finalCheck.has(id)) {
+            finalDuplicates.push(restaurant);
+        }
+        finalCheck.add(id);
+    });
+  </script>
 </body>
 </html> 

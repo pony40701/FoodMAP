@@ -13,18 +13,17 @@
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="css/favoritesStyle.css">
     <link rel="stylesheet" href="css/restaurant-card-v2.css">
+    <link rel="stylesheet" href="css/restaurant-card-v3.css">
     <link rel="stylesheet" href="css/business-hours.css">
-    <!-- 添加 Google Maps API -->
-    <script>
-        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-        ({
-            key: "AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0",
-            v: "beta",
-            solution: ["places", "routes"],
-            region: "TW",
-            mapId: "DEMO_MAP_ID"
-        });
-    </script>
+    <link rel="stylesheet" href="css/modal-fix.css">
+    <link rel="stylesheet" href="css/restaurant-modal-new.css">
+    <!-- 加載配置和服務-->
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/restaurantService.js"></script>
+    <script src="js/favoriteSystem.js"></script>
+    <script src="js/favoriteService.js"></script>
+    <script src="js/displayRestaurants.js"></script>
     <style>
         .modal {
             display: none;
@@ -227,7 +226,7 @@
             }
         }
 
-        /* 登入和用戶區塊樣式 */
+        /* 登入和用戶區塊樣式*/
         .login-section,
         .user-section {
             display: flex;
@@ -313,7 +312,7 @@
             color: #ff8c42;
         }
 
-        /* 下拉選單分隔線 */
+        /* 下拉選單分隔線*/
         .dropdown-divider {
             height: 1px;
             background: rgba(255, 107, 26, 0.1);
@@ -410,7 +409,7 @@
             color: #ff8c42;
         }
 
-        /* 下箭頭動畫效果 */
+        /* 下箭頭動畫效果*/
         .restaurant-dropdown .nav-link i {
             margin-left: 6px;
             font-size: 12px;
@@ -421,7 +420,7 @@
             transform: rotate(180deg);
         }
 
-        /* 響應式設計 */
+        /* 響應式設置*/
         @media (max-width: 768px) {
             .avatar-dropdown {
                 position: fixed;
@@ -516,7 +515,7 @@
             margin: 0 auto;
         }
 
-        /* 載入中提示樣式 */
+        /* 載入中提示樣式*/
         .loading-message {
             text-align: center;
             padding: 40px;
@@ -530,7 +529,7 @@
             color: #ff6b1a;
         }
 
-        /* 無結果提示樣式 */
+        /* 無結果提示樣式*/
         .no-results {
             text-align: center;
             padding: 40px;
@@ -539,10 +538,6 @@
             grid-column: 1 / -1;
         }
 
-        /* 餐廳卡片樣式 */
-        .restaurant-card v3 {
-            /* ... existing styles ... */
-        }
 
         /* Toast 提示樣式 */
         .toast {
@@ -574,19 +569,23 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.85);
             overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .restaurant-modal-content {
             background-color: #fff;
-            margin: 5% auto;
+            margin: 80px auto;
             padding: 20px;
             border-radius: 12px;
             width: 90%;
             max-width: 800px;
             position: relative;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 2001;
         }
 
         .restaurant-modal-header {
@@ -761,6 +760,76 @@
                 height: 200px;
             }
         }
+
+        /* 收藏按鈕樣式 */
+        .favorite-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #ccc;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            padding: 5px;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.7);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorite-btn:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            color: #ff6b1a;
+        }
+
+        .favorite-btn.active i {
+            animation: heartbeat 0.5s;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* 週營業時間表格樣式*/
+        .weekly-hours-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 2200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .weekly-hours-modal.active {
+            display: flex;
+        }
+
+        .weekly-hours-modal-content {
+            background-color: #fff;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: modalFadeIn 0.3s ease;
+            z-index: 2201;
+        }
     </style>
 </head>
 
@@ -785,7 +854,7 @@
                     <button type="submit" class="btn-primary">登入</button>
                 </form>
                 <div class="form-footer">
-                    <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+                    <a href="userForgotPassword.html">忘記密碼</a> | <a href="userRegister.html">註冊新帳號</a>
                 </div>
                 <div class="social-login">
                     <p>或使用以下方式登入</p>
@@ -830,7 +899,7 @@
                     <button type="submit" class="btn-primary">登入</button>
                 </form>
                 <div class="form-footer">
-                    <a href="#">忘記密碼？</a> | <a href="restaurant-signup.html">商家註冊</a>
+                    <a href="#">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
                 </div>
             </div>
         </div>
@@ -866,19 +935,19 @@
             </a>
 
             <div class="restaurant-dropdown">
-                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <a href="#" class="nav-link dropdown-toggle">排行榜<i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
                     <a href="ranking/ranking.html" class="dropdown-item">
                         <i class="fas fa-trophy"></i>
-                        <span>綜合排行</span>
+                        <span>綜合排行榜</span>
                     </a>
                     <a href="ranking/ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
-                        <span>人氣排行</span>
+                        <span>人氣排行榜</span>
                     </a>
                     <a href="ranking/ranking.html#rating" class="dropdown-item">
                         <i class="fas fa-star"></i>
-                        <span>評分排行</span>
+                        <span>評分排行榜</span>
                     </a>
                 </div>
             </div>
@@ -887,7 +956,7 @@
                 <div class="restaurant-dropdown-content">
                     <a href="./blogPost.html" onclick="handleWriteReview()" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
-                        <span>寫食記</span>
+                        <span>寫食評</span>
                     </a>
                 </div>
             </div>
@@ -904,12 +973,12 @@
                     </a>
                 </div>
             </div>
-            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <!-- 未登入狀態- 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
-                <button class="btn-login">登入</button>
+                <button class="btn-login" id="loginButton">登入</button>
             </div>
 
-            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <!-- 已登入狀態- 顯示會員頭像 -->
             <div id="userSection" class="user-section" style="display: none;">
                 <div class="user-avatar">
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
@@ -943,9 +1012,9 @@
             </div>
         </div>
     </div>
-    <!-- 輪播圖區域 -->
+    <!-- 輪播圖區域-->
     <div class="carousel-container">
-        <!-- Slogan 覆蓋層 -->
+        <!-- Slogan 覆蓋區域-->
         <div class="carousel-slogan">
             <p>發現美食 分享感動</p>
         </div>
@@ -961,7 +1030,7 @@
                 <img src="images/carousel3.jpg" alt="美食圖片3">
             </div>
         </div>
-        <!-- 輪播圖控制按鈕 -->
+        <!-- 輪播圖控制按鈕-->
         <button class="carousel-button prev">&#10094;</button>
         <button class="carousel-button next">&#10095;</button>
         <!-- 輪播圖指示點 -->
@@ -971,7 +1040,7 @@
             <span class="dot"></span>
         </div>
     </div>
-    <!-- 美食類型區塊 -->
+    <!-- 美食類型區域-->
     <section class="food-types-section">
         <h2>美食類型</h2>
         <div class="food-types">
@@ -1050,55 +1119,11 @@
         </div>
     </section>
 
-    <!-- 餐廳資訊區塊 -->
-    <section class="restaurants-section">
-        <h3 id="results-title">推薦餐廳</h3>
-        <div id="restaurants-container" class="restaurants-grid">
-            <!-- 示例餐廳卡片結構 -->
-            <div class="restaurant-card v3">
-                <div class="restaurant-image-wrapper">
-                    <img src="path_to_image.jpg" alt="餐廳圖片" loading="lazy">
-                    <button class="favorite-btn" title="加入收藏">
-                        <i class="far fa-heart"></i>
-                    </button>
-                </div>
-                <div class="restaurant-info">
-                    <div class="restaurant-title-row">
-                        <h3 class="restaurant-name">餐廳名稱</h3>
-                    </div>
-                    <div class="restaurant-rating-row">
-                        <div class="rating-stars">★★★★★</div>
-                        <span class="rating-score">4.8</span>
-                        <span class="rating-count">(6839則評論)</span>
-                    </div>
-                    <div class="restaurant-address-row">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>407台灣台中市西屯朝富路252號1F</span>
-                    </div>
-                    <div class="restaurant-tags-row">
-                        <span class="tag tag-food">
-                            <i class="fas fa-utensils"></i>
-                            餐廳
-                        </span>
-                        <span class="tag tag-bar">
-                            <i class="fas fa-glass-martini-alt"></i>
-                            酒吧
-                        </span>
-                    </div>
-                    <div class="restaurant-status-row">
-                        <span class="status-dot open"></span>
-                        <span class="status-text open">營業中</span>
-                        <span class="status-hours">營業至 22:00</span>
-                    </div>
-                </div>
-            </div>
-            <!-- 載入中提示 -->
-            <div class="loading-message">
-                <i class="fas fa-spinner fa-spin"></i>
-                搜尋中...
-            </div>
-        </div>
-    </section>
+    <!-- 添加結果標題區域 -->
+    <div id="results-title" style="text-align: center; margin: 20px 0; font-size: 24px; color: #333;"></div>
+    
+    <!-- 添加餐廳容器 -->
+    <div id="restaurants-container" class="restaurants-grid"></div>
 
     <!-- 地圖容器 (隱藏，用於初始化) -->
     <div id="map"
@@ -1120,7 +1145,7 @@
                         </div>
                         <div class="restaurant-info-text">
                             <div class="modal-rating">
-                                <span class="modal-stars" id="modal-stars">★★★★★</span>
+                                <span class="modal-stars" id="modal-stars">★★★★</span>
                                 <span class="modal-rating-value" id="modal-rating">4.5</span>
                                 <span class="modal-rating-count" id="modal-rating-count">(123則評論)</span>
                             </div>
@@ -1128,29 +1153,21 @@
                                 <i class="fas fa-map-marker-alt"></i>
                                 <span id="modal-address">餐廳地址</span>
                             </div>
-                            <div class="modal-type">
-                                <span class="modal-type-icon" id="modal-type-icon">🍽️</span>
-                                <span class="modal-type-text" id="modal-type-text">餐廳</span>
-                            </div>
                             <div class="modal-hours">
                                 <div class="modal-status" id="modal-status">
                                     <i class="fas fa-clock"></i>
                                     <span class="modal-status-text">營業中</span>
                                 </div>
-                                <div class="modal-today-hours-container">
-                                    <div class="modal-today-hours" id="modal-today-hours">週一 09:00 - 22:00</div>
-                                    <div class="modal-hours-info-btn" id="modal-hours-info-btn"
-                                        onclick="window.showWeeklyHoursModal()">
-                                        <i class="fas fa-info-circle"></i>
-                                        <span>完整時間</span>
-                                    </div>
-                                </div>
+                                <div class="modal-today-hours" id="modal-today-hours">週一 09:00 - 22:00</div>
+                            </div>
+                            <div class="restaurant-tags" id="modal-tags">
+                                <!-- 標籤將由 JavaScript 動態填充 -->
                             </div>
                             <div class="modal-actions">
                                 <button class="modal-favorite-btn" id="modal-favorite-btn">
-                                    <i class="far fa-star"></i> 收藏
+                                    <i class="far fa-heart"></i> 收藏
                                 </button>
-                                <button class="modal-direction-btn" onclick="openGoogleMaps()">
+                                <button class="modal-direction-btn" id="modal-direction-btn">
                                     <i class="fas fa-directions"></i> 導航
                                 </button>
                             </div>
@@ -1172,9 +1189,78 @@
         <div class="weekly-hours-modal-content">
             <div class="weekly-hours-modal-header">
                 <h3>營業時間</h3>
-                <span class="weekly-hours-modal-close" onclick="window.closeWeeklyHoursModal()">&times;</span>
+                <span class="weekly-hours-modal-close">&times;</span>
             </div>
             <div class="weekly-hours-modal-body" id="weekly-hours-modal-body">
+                <!-- 一週的營業時間將由JavaScript動態填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 餐廳詳細資訊彈窗 - 新版 -->
+    <div id="restaurantModalNew" class="restaurant-modal-new">
+        <div class="restaurant-modal-content-new">
+            <div class="restaurant-modal-header-new">
+                <h2 id="modal-restaurant-name-new">餐廳名稱</h2>
+                <div class="restaurant-modal-close-new">&times;</div>
+            </div>
+            <div class="restaurant-modal-body-new">
+                <div class="restaurant-main-info-new">
+                    <div class="restaurant-modal-image-new">
+                        <img id="modal-restaurant-img-new" src="" alt="餐廳圖片">
+                    </div>
+                    <div class="restaurant-info-text-new">
+                        <div class="modal-rating-new">
+                            <span class="modal-stars-new" id="modal-stars-new">★★★★</span>
+                            <span class="modal-rating-value-new" id="modal-rating-new">4.5</span>
+                            <span class="modal-rating-count-new" id="modal-rating-count-new">(123則評論)</span>
+                        </div>
+                        <div class="modal-address-new">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="modal-address-new">餐廳地址</span>
+                        </div>
+                        <div class="modal-hours-new">
+                            <div class="modal-status-new" id="modal-status-new">
+                                <i class="fas fa-clock"></i>
+                                <span class="modal-status-text-new">營業中</span>
+                            </div>
+                            <div class="modal-today-hours-new" id="modal-today-hours-new">週一 09:00 - 22:00</div>
+                            <button class="view-full-hours-btn-new" id="view-full-hours-btn-new">
+                                查看完整營業時間
+                            </button>
+                        </div>
+                        <div class="restaurant-tags-new" id="modal-tags-new">
+                            <!-- 標籤將由 JavaScript 動態填充 -->
+                        </div>
+                        <div class="modal-actions-new">
+                            <button class="modal-btn-new modal-favorite-btn-new" id="modal-favorite-btn-new">
+                                <i class="far fa-heart"></i> 收藏
+                            </button>
+                            <button class="modal-btn-new modal-direction-btn-new" id="modal-direction-btn-new">
+                                <i class="fas fa-directions"></i> 導航
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 添加位置資訊區域-->
+                <div class="restaurant-location-new">
+                    <h3>位置資訊</h3>
+                    <div class="restaurant-map-container-new">
+                        <div id="modal-map-new" style="width: 100%; height: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 營業時間詳細彈窗 - 新版 -->
+    <div id="weeklyHoursModalNew" class="weekly-hours-modal-new">
+        <div class="weekly-hours-modal-content-new">
+            <div class="weekly-hours-modal-header-new">
+                <h3>營業時間</h3>
+                <div class="weekly-hours-modal-close-new">&times;</div>
+            </div>
+            <div class="weekly-hours-modal-body-new" id="weekly-hours-modal-body-new">
                 <!-- 一週的營業時間將由JavaScript動態填充 -->
             </div>
         </div>
@@ -1216,15 +1302,58 @@
         <div class="footer-bottom">
             <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
         </div>
-    </footer>    <!-- 加入必要的 JavaScript -->
+    </footer>
+
+    <!-- 加入必要JavaScript -->
+    <script>
+        // 等待所有服務初始化完成
+        async function initializeServices() {
+            try {
+                console.log('開始初始化服務...');
+                
+                // 等待餐廳服務初始化
+                if (window.restaurantService) {
+                    console.log('初始化餐廳服務...');
+                    await window.restaurantService.init();
+                }
+                
+                // 等待收藏系統初始化
+                if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
+                    console.log('初始化收藏系統...');
+                    await window.favoriteSystem.initialize();
+                }
+                
+                // 初始化地圖和餐廳數據
+                console.log('初始化地圖...');
+                window.mapInit = new MapInit();
+                await window.mapInit.init();
+                
+                console.log('所有服務初始化完成');
+                
+            } catch (error) {
+                console.error('服務初始化失敗:', error);
+            }
+        }
+        
+        // 當頁面加載完成時執行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('頁面加載完成，開始初始化服務...');
+            initializeServices().then(() => {
+                console.log('頁面初始化完成');
+            }).catch(error => {
+                console.error('頁面初始化失敗:', error);
+            });
+        });
+    </script>
     <script src="js/BusinessHours.js"></script>
     <script src="js/searchService.js"></script>
     <script src="js/infiniteScroll.js"></script>
-    <script src="js/favorites.js"></script>
+    <script src="js/favoriteButton.js"></script>
     <script src="js/main.js"></script>
     <script src="js/mapInit.js"></script>
     <script src="js/restaurantList.js"></script>
     <script src="js/login.js"></script>
+    <script src="js/restaurant-modal.js"></script>
 </body>
 
 </html>
