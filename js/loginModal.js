@@ -75,8 +75,34 @@ window.showLoginModal = function() {
                     // 顯示成功訊息
                     window.showToast('登入成功！');
                     
-                    // 重新載入頁面以更新狀態
-                    window.location.reload();
+                    // 先清空餐廳容器，避免重複顯示
+                    const restaurantsContainer = document.getElementById('restaurants-container');
+                    if (restaurantsContainer) {
+                        restaurantsContainer.innerHTML = '';
+                        console.log('已清空餐廳容器，準備重新載入資料');
+                    }
+                    
+                    // 更新用戶界面狀態
+                    const loginSection = document.getElementById('loginSection');
+                    const userSection = document.getElementById('userSection');
+                    
+                    if (loginSection) loginSection.style.display = 'none';
+                    if (userSection) userSection.style.display = 'flex';
+                    
+                    // 更新用戶頭像
+                    const userAvatarImg = document.querySelector('.avatar-img');
+                    if (userAvatarImg) {
+                        const avatarUrl = userData.image_url || userData.avatar_url;
+                        if (avatarUrl) {
+                            userAvatarImg.src = avatarUrl;
+                        }
+                    }
+                    
+                    // 重新加載餐廳資料
+                    if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+                        console.log('準備重新加載餐廳數據');
+                        window.mapInit.loadRestaurants();
+                    }
                 } else {
                     throw new Error(data.message || '登入失敗');
                 }

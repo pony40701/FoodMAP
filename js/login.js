@@ -106,14 +106,45 @@ function initLogin() {
                     };
                     localStorage.setItem('user', JSON.stringify(userData));
                     
-                    // 關閉登入視窗
-                    loginElements.loginModal.style.display = 'none';
+                    // 隱藏登入按鈕，顯示會員頭像區域
+                    loginElements.loginSection.style.display = 'none';
+                    loginElements.userSection.style.display = 'flex';
+                    
+                    // 更新用戶名稱
+                    const userNameElement = document.querySelector('.user-name');
+                    if (userNameElement) {
+                        userNameElement.textContent = userData.username || userData.fullName || userData.email;
+                    }
+                    
+                    // 更新用戶頭像 - 檢查 image_url 和 avatar_url
+                    const userAvatarImg = document.querySelector('.avatar-img');
+                    if (userAvatarImg) {
+                        const avatarUrl = userData.image_url || userData.avatar_url;
+                        console.log('頭像URL:', avatarUrl);
+                        
+                        if (avatarUrl) {
+                            userAvatarImg.src = avatarUrl;
+                            userAvatarImg.alt = userData.username || '會員頭像';
+                            console.log('設置用戶頭像:', avatarUrl);
+                        } else {
+                            console.log('用戶沒有頭像URL');
+                        }
+                    }
+                    
+                    // 登入成功後僅清空現有餐廳列表，但不重新加載
+                    // 避免重複顯示餐廳卡片
+                    if (window.displayedRestaurants) {
+                        // 重置已顯示餐廳集合
+                        window.displayedRestaurants = new Set();
+                    }
+                    
+                    // 關閉登入彈窗
+                    if (loginElements.loginModal) {
+                        loginElements.loginModal.style.display = 'none';
+                    }
                     
                     // 顯示成功訊息
                     window.showToast('登入成功！');
-                    
-                    // 重新載入頁面以更新狀態
-                    window.location.reload();
                 } else {
                     throw new Error(data.message || '登入失敗');
                 }
@@ -407,3 +438,70 @@ function fixLoginModalStyles() {
         if (lineBtn) lineBtn.style.color = '#00c300';
     }
 }
+
+// 登入成功處理
+function handleLoginSuccess(userData) {
+    console.log('處理登入成功:', userData);
+    
+    // 取得登入相關元素
+    const loginElements = getLoginElements();
+    
+    // 檢查元素是否存在
+    if (!loginElements.loginModal) {
+        console.error('找不到登入模態視窗元素');
+        return;
+    }
+    
+    // 關閉登入模態視窗
+    loginElements.loginModal.style.display = 'none';
+    
+    // 存儲登入狀態到本地儲存
+    updateLoginState(true, userData);
+    
+    // 先清空餐廳容器，避免重複顯示
+    const restaurantsContainer = document.getElementById('restaurants-container');
+    if (restaurantsContainer) {
+        restaurantsContainer.innerHTML = '';
+        console.log('已清空餐廳容器，準備重新載入資料');
+    }
+    
+    // 隱藏登入按鈕，顯示會員頭像區域
+    loginElements.loginSection.style.display = 'none';
+    loginElements.userSection.style.display = 'flex';
+    
+    // 更新用戶名稱
+    const userNameElement = document.querySelector('.user-name');
+    if (userNameElement) {
+        userNameElement.textContent = userData.username || userData.email;
+    }
+    
+    // 更新用戶頭像
+    if (userData.avatar_url || userData.image_url) {
+        const avatarUrl = userData.avatar_url || userData.image_url;
+        const userAvatarImg = document.querySelector('.avatar-img');
+        if (userAvatarImg) {
+            console.log('設置用戶頭像:', avatarUrl);
+            userAvatarImg.src = avatarUrl;
+        }
+    }
+    
+    // 顯示登入成功訊息
+    window.showToast('登入成功！');
+    
+    // 重新加載餐廳數據
+    if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+        console.log('準備重新加載餐廳數據');
+        window.mapInit.loadRestaurants();
+    } else {
+        console.warn('找不到 mapInit.loadRestaurants 方法');
+    }
+}
+
+// 將登入模組掛載到全局 window 物件
+window.login = {
+    // ... existing code ...
+
+    // ... existing code ...
+
+    // ... existing code ...
+};

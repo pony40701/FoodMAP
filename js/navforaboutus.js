@@ -32,8 +32,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function logout() {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userToken');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('user');
+        
+        // 直接更新UI狀態
         checkLoginStatus();
-        window.location.reload();
+        
+        // 清空餐廳容器，避免顯示問題
+        const restaurantsContainer = document.getElementById('restaurants-container');
+        if (restaurantsContainer) {
+            restaurantsContainer.innerHTML = '';
+        }
+        
+        // 重新加載餐廳資料
+        if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+            window.mapInit.loadRestaurants();
+        }
+        
+        // 顯示登出成功提示
+        if (window.showToast) {
+            window.showToast('已成功登出');
+        }
     }
 
     // 登出按鈕點擊事件
@@ -100,5 +120,30 @@ document.addEventListener('DOMContentLoaded', function() {
 window.logout = function() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userToken');
-    window.location.reload();
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('user');
+    
+    // 直接更新UI狀態
+    const loginSection = document.getElementById('loginSection');
+    const userSection = document.getElementById('userSection');
+    
+    if (loginSection) loginSection.style.display = 'block';
+    if (userSection) userSection.style.display = 'none';
+    
+    // 清空餐廳容器，避免顯示問題
+    const restaurantsContainer = document.getElementById('restaurants-container');
+    if (restaurantsContainer) {
+        restaurantsContainer.innerHTML = '';
+    }
+    
+    // 重新加載餐廳資料
+    if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+        window.mapInit.loadRestaurants();
+    }
+    
+    // 顯示登出成功提示
+    if (window.showToast) {
+        window.showToast('已成功登出');
+    }
 }; 

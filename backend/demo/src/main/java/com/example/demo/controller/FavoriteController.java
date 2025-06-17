@@ -3,12 +3,14 @@ package com.example.demo.controller;
 import com.example.demo.entity.Favorite;
 import com.example.demo.entity.FavoriteId;
 import com.example.demo.repository.FavoriteRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.beans.factory.annotation.Autowired; 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,13 +18,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/favorites")
+@RequestMapping("/api/users")
 public class FavoriteController {
 
     @Autowired
     private FavoriteRepository favoriteRepository;
-    
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @GetMapping("/restaurants")
     public ResponseEntity<List<Favorite>> getAllRestaurants() {
@@ -31,207 +34,185 @@ public class FavoriteController {
     }
 
     @GetMapping("/restaurant/{userId}/{targetId}")
-    public ResponseEntity<?> getFavoriteByIds(@PathVariable Long userId, @PathVariable String targetId) {
+    public ResponseEntity<?> getFavoriteByIds(
+            @PathVariable Long userId,
+            @PathVariable String targetId) {
         FavoriteId favoriteId = new FavoriteId(userId, "restaurant", targetId);
         return favoriteRepository.findById(favoriteId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    
-    /**
-     * 按分類獲取餐廳資料
-     */
+
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Favorite>> getRestaurantsByCategory(@PathVariable String category) {
+    public ResponseEntity<List<Favorite>> getRestaurantsByCategory(
+            @PathVariable String category) {
         try {
-            List<Favorite> allRestaurants = favoriteRepository.findAllRestaurants();
-            List<Favorite> filteredRestaurants = allRestaurants.stream()
-                .filter(restaurant -> {
-                    try {
-                        JsonNode restaurantData = objectMapper.readTree(restaurant.getTargetId());
-                        if (restaurantData.has("cuisine_type") && restaurantData.get("cuisine_type").isArray()) {
-                            for (JsonNode type : restaurantData.get("cuisine_type")) {
-                                if (type.asText().equalsIgnoreCase(category)) {
-                                    return true;
-                                }
+            List<Favorite> all = favoriteRepository.findAllRestaurants();
+            List<Favorite> filtered = all.stream().filter(fav -> {
+                try {
+                    JsonNode data = objectMapper.readTree(fav.getTargetId());
+                    if (data.has("cuisine_type") && data.get("cuisine_type").isArray()) {
+                        for (JsonNode t : data.get("cuisine_type")) {
+                            if (t.asText().equalsIgnoreCase(category)) {
+                                return true;
                             }
                         }
-                        return false;
-                    } catch (Exception e) {
-                        return false;
                     }
-                })
-                .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(filteredRestaurants);
+                } catch (Exception ignored) {}
+                return false;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(filtered);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
     }
-    
-    /**
-     * 獲取所有可用的餐廳分類
-     */
+
     @GetMapping("/categories")
     public ResponseEntity<Set<String>> getAllCategories() {
         try {
-            List<Favorite> allRestaurants = favoriteRepository.findAllRestaurants();
-            Set<String> allCategories = new HashSet<>();
-            
-            for (Favorite restaurant : allRestaurants) {
+            List<Favorite> all = favoriteRepository.findAllRestaurants();
+            Set<String> cats = new HashSet<>();
+            all.forEach(fav -> {
                 try {
-                    JsonNode restaurantData = objectMapper.readTree(restaurant.getTargetId());
-                    if (restaurantData.has("cuisine_type") && restaurantData.get("cuisine_type").isArray()) {
-                        for (JsonNode type : restaurantData.get("cuisine_type")) {
-                            allCategories.add(type.asText());
+                    JsonNode data = objectMapper.readTree(fav.getTargetId());
+                    if (data.has("cuisine_type") && data.get("cuisine_type").isArray()) {
+                        for (JsonNode t : data.get("cuisine_type")) {
+                            cats.add(t.asText());
                         }
                     }
-                } catch (Exception e) {
-                    // Skip invalid JSON
-                }
-            }
-            
-            return ResponseEntity.ok(allCategories);
+                } catch (Exception ignored) {}
+            });
+            return ResponseEntity.ok(cats);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
     }
-    
-    /**
-     * 獲取系統狀態資訊
-     */
+
     @GetMapping("/system-status")
     public ResponseEntity<?> getSystemStatus() {
         try {
-            List<Favorite> allRestaurants = favoriteRepository.findAllRestaurants();
-            int totalCount = allRestaurants.size();
-            
-            int categorizedCount = 0;
-            Set<String> availableCategories = new HashSet<>();
-            Map<String, Integer> categoryStats = new HashMap<>();
-            
-            for (Favorite restaurant : allRestaurants) {
+            List<Favorite> all = favoriteRepository.findAllRestaurants();
+            int total = all.size();
+            int catCount = 0;
+            Set<String> cats = new HashSet<>();
+            Map<String,Integer> stats = new HashMap<>();
+
+            for (Favorite fav : all) {
                 try {
-                    JsonNode restaurantData = objectMapper.readTree(restaurant.getTargetId());
-                    if (restaurantData.has("cuisine_type") && restaurantData.get("cuisine_type").isArray()) {
-                        categorizedCount++;
-                        for (JsonNode type : restaurantData.get("cuisine_type")) {
-                            String category = type.asText();
-                            availableCategories.add(category);
-                            categoryStats.put(category, categoryStats.getOrDefault(category, 0) + 1);
+                    JsonNode data = objectMapper.readTree(fav.getTargetId());
+                    if (data.has("cuisine_type") && data.get("cuisine_type").isArray()) {
+                        catCount++;
+                        for (JsonNode t : data.get("cuisine_type")) {
+                            String txt = t.asText();
+                            cats.add(txt);
+                            stats.put(txt, stats.getOrDefault(txt, 0) + 1);
                         }
                     }
-                } catch (Exception e) {
-                    // Skip invalid JSON
-                }
+                } catch (Exception ignored) {}
             }
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("total_restaurants", totalCount);
-            response.put("categorized_restaurants", categorizedCount);
-            response.put("uncategorized_restaurants", totalCount - categorizedCount);
-            response.put("available_categories", availableCategories);
-            response.put("category_statistics", categoryStats);
-            response.put("time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            
-            return ResponseEntity.ok(response);
+
+            Map<String,Object> resp = new LinkedHashMap<>();
+            resp.put("total_restaurants", total);
+            resp.put("categorized_restaurants", catCount);
+            resp.put("uncategorized_restaurants", total - catCount);
+            resp.put("available_categories", cats);
+            resp.put("category_statistics", stats);
+            resp.put("time", LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "獲取系統狀態失敗: " + e.getMessage());
-            return ResponseEntity.status(500).body(error);
+            Map<String,Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "獲取系統狀態失敗: " + e.getMessage());
+            return ResponseEntity.status(500).body(err);
         }
     }
 
-    /**
-     * 新增收藏
-     */
     @PostMapping("")
-    public ResponseEntity<?> addFavorite(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> addFavorite(@RequestBody Map<String,Object> req) {
         try {
-            // 驗證必要欄位
-            if (!request.containsKey("userId") || !request.containsKey("targetId")) {
+            if (!req.containsKey("userId") || !req.containsKey("targetId")) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "缺少必要欄位"
+                   "success", false,
+                   "message", "缺少必要欄位"
                 ));
             }
-
-            Long userId = Long.parseLong(request.get("userId").toString());
-            String targetId = request.get("targetId").toString();
-            
-            // 檢查是否已經收藏
+            Long userId = Long.parseLong(req.get("userId").toString());
+            String targetId = req.get("targetId").toString();
             if (favoriteRepository.existsByUserIdAndTargetId(userId, targetId)) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "已經收藏過此餐廳"
+                   "success", false,
+                   "message", "已經收藏過此餐廳"
                 ));
             }
-
-            // 創建新的收藏記錄
-            Favorite favorite = new Favorite();
-            favorite.setUserId(userId);
-            favorite.setTargetId(targetId);
-            favorite.setTargetType("restaurant");
-            favorite.setFavoritedAt(LocalDateTime.now());
-            
-            // 儲存收藏
-            favoriteRepository.save(favorite);
-
+            Favorite fav = new Favorite();
+            fav.setUserId(userId);
+            fav.setTargetId(targetId);
+            fav.setTargetType("restaurant");
+            fav.setFavoritedAt(LocalDateTime.now());
+            favoriteRepository.save(fav);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "收藏成功"
+               "success", true,
+               "message", "收藏成功"
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "收藏失敗: " + e.getMessage()
+               "success", false,
+               "message", "收藏失敗: " + e.getMessage()
             ));
         }
     }
 
-    /**
-     * 獲取用戶收藏的餐廳列表
-     */
-    @GetMapping("/{userId}/restaurants")
-    public ResponseEntity<?> getUserFavoriteRestaurants(@PathVariable Long userId) {
-        try {
-            List<Favorite> favorites = favoriteRepository.findUserRestaurants(userId);
-            
-            if (favorites.isEmpty()) {
-                return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/{userId}/favorites/restaurants")
+    public ResponseEntity<List<Map<String,Object>>> getUserFavoriteRestaurants(
+            @PathVariable Long userId) {
+        List<String> raw = favoriteRepository.findFavoriteJsonRawByUserId(userId);
+        List<Map<String,Object>> out = raw.stream().map(json -> {
+            try {
+                return objectMapper.readValue(
+                    json, new TypeReference<Map<String,Object>>() {});
+            } catch (Exception e) {
+                throw new RuntimeException("JSON 解析失敗", e);
             }
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(out);
+    }
 
-            return ResponseEntity.ok(favorites.stream()
-                .map(favorite -> Map.of(
-                    "targetId", favorite.getTargetId(),
-                    "favoritedAt", favorite.getFavoritedAt().format(DateTimeFormatter.ISO_DATE_TIME)
-                ))
-                .collect(Collectors.toList()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "獲取收藏列表失敗: " + e.getMessage()
+    @DeleteMapping("/{userId}/favorites/restaurants/{targetId}")
+    @Modifying
+    @Transactional
+    public ResponseEntity<Map<String,Object>> removeFavorite(
+            @PathVariable Long userId,
+            @PathVariable String targetId) {
+        int deleted = favoriteRepository.deleteByUserIdAndTargetId(userId, targetId);
+        if (deleted > 0) {
+            return ResponseEntity.ok(Map.of(
+               "success", true,
+               "message", "取消收藏成功"
+            ));
+        } else {
+            return ResponseEntity.status(404).body(Map.of(
+               "success", false,
+               "message", "尚未收藏此餐廳，無法取消"
             ));
         }
     }
 
-    /**
-     * 刪除收藏
-     */
-    @DeleteMapping("/{userId}/restaurants/{targetId}")
-    public ResponseEntity<?> removeFavorite(@PathVariable Long userId, @PathVariable String targetId) {
-        try {
-            favoriteRepository.deleteByUserIdAndTargetId(userId, targetId);
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "取消收藏成功"
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "取消收藏失敗: " + e.getMessage()
-            ));
+    @PostMapping("/{userId}/favorites/restaurants/{placeId}")
+    public ResponseEntity<Map<String,Object>> addFavorite(
+        @PathVariable Long userId,
+        @PathVariable String placeId
+    ) {
+        if (favoriteRepository.existsByUserIdAndTargetId(userId, placeId)) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("success", false, "message", "已收藏過"));
         }
+        Favorite fav = new Favorite();
+        fav.setUserId(userId);
+        fav.setTargetType("restaurant");
+        fav.setTargetId(placeId);
+        fav.setFavoritedAt(LocalDateTime.now());
+        favoriteRepository.save(fav);
+        return ResponseEntity.ok(Map.of("success", true, "message", "收藏成功"));
     }
 }

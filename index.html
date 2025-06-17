@@ -17,12 +17,14 @@
     <link rel="stylesheet" href="css/business-hours.css">
     <link rel="stylesheet" href="css/modal-fix.css">
     <link rel="stylesheet" href="css/restaurant-modal-new.css">
-    <!-- 加載配置和服務-->
+    <!-- 已存在 config.js，保留即可 -->
     <script src="js/config.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/restaurantService.js"></script>
+    <!-- favoriteSystem 要先載入，才能被下面的模組使用 -->
     <script src="js/favoriteSystem.js"></script>
-    <script src="js/favoriteService.js"></script>
+    <script src="js/favoriteService.js" type="module"></script>
+    <script src="js/favoriteButton.js" type="module"></script>
     <script src="js/displayRestaurants.js"></script>
     <style>
         /* 登入視窗樣式 - 極簡版本 */
@@ -1381,7 +1383,6 @@
     <script src="js/BusinessHours.js"></script>
     <script src="js/searchService.js"></script>
     <script src="js/infiniteScroll.js"></script>
-    <script src="js/favoriteButton.js"></script>
     <script src="js/main.js"></script>
     <script src="js/mapInit.js"></script>
     <script src="js/restaurantList.js"></script>
@@ -1496,13 +1497,33 @@
                     // 這裡可以添加實際的登入驗證邏輯
                     console.log('會員登入:', { email, password });
                     
-                    // 模擬登入成功
+                    // 使用 login.js 中的處理函數
+                    if (window.login && typeof window.login.handleLoginSuccess === 'function') {
+                        window.login.handleLoginSuccess({
+                            email: email,
+                            username: email.split('@')[0], // 簡單處理用戶名
+                            // 其他用戶資料...
+                        });
+                    } else {
+                        // 如果沒有找到 login.js 中的函數，使用原始處理方式
                     alert('登入成功！');
                     loginModal.style.display = 'none';
+                        
+                        // 先清空餐廳容器，避免重複顯示
+                        const restaurantsContainer = document.getElementById('restaurants-container');
+                        if (restaurantsContainer) {
+                            restaurantsContainer.innerHTML = '';
+                        }
                     
                     // 模擬登入成功，顯示會員頭像區域
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('userSection').style.display = 'flex';
+                        
+                        // 重新初始化餐廳列表
+                        if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+                            window.mapInit.loadRestaurants();
+                        }
+                    }
                 });
             }
             

@@ -685,6 +685,94 @@ class MapInit {
         
         return starsHtml;
     }
+
+    async loadRestaurants() {
+        try {
+            console.log('開始載入餐廳資料 - loadRestaurants()');
+            
+            // 首先清空餐廳容器
+            const restaurantsContainer = document.getElementById('restaurants-container');
+            if (restaurantsContainer) {
+                restaurantsContainer.innerHTML = '';
+                console.log('已清空餐廳容器');
+            } else {
+                console.warn('找不到餐廳容器元素');
+                return;
+            }
+            
+            // 顯示載入中訊息
+            restaurantsContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
+            
+            // 獲取餐廳數據
+            console.log('正在從服務獲取餐廳數據...');
+            const restaurants = await this.restaurantService.getRestaurants();
+            console.log(`從服務獲取到 ${restaurants ? restaurants.length : 0} 間餐廳`);
+            
+            // 清空載入中訊息
+            restaurantsContainer.innerHTML = '';
+            
+            // 處理沒有結果的情況
+            if (!restaurants || restaurants.length === 0) {
+                restaurantsContainer.innerHTML = '<div class="no-results">未找到符合條件的餐廳</div>';
+                return;
+            }
+            
+            // 顯示結果標題
+            const titleElement = document.getElementById('results-title');
+            if (titleElement) {
+                titleElement.textContent = `所有餐廳 (${restaurants.length} 間)`;
+            }
+            
+            // 更嚴格的去重邏輯
+            const restaurantIds = new Set();
+            const uniqueRestaurants = [];
+            const duplicates = [];
+            
+            for (const restaurant of restaurants) {
+                const id = restaurant.place_id || restaurant.id;
+                
+                if (!id) {
+                    console.warn('餐廳缺少ID:', restaurant.name);
+                    continue;
+                }
+                
+                if (!restaurantIds.has(id)) {
+                    restaurantIds.add(id);
+                    uniqueRestaurants.push(restaurant);
+                } else {
+                    duplicates.push({id, name: restaurant.name});
+                }
+            }
+            
+            if (duplicates.length > 0) {
+                console.warn(`發現 ${duplicates.length} 個重複餐廳:`, duplicates);
+            }
+            
+            console.log(`去除重複後剩餘 ${uniqueRestaurants.length} 間餐廳（去除 ${restaurants.length - uniqueRestaurants.length} 間）`);
+            
+            // 使用去重後的數據顯示餐廳卡片
+            if (typeof this.displayRestaurantCards === 'function') {
+                this.displayRestaurantCards(uniqueRestaurants);
+            } else {
+                console.log('顯示餐廳卡片...');
+                // 遍歷所有餐廳，創建卡片
+                for (const restaurant of uniqueRestaurants) {
+                    const card = this.createRestaurantCard(restaurant);
+                    restaurantsContainer.appendChild(card);
+                }
+            }
+            
+            console.log('餐廳顯示完成');
+            return uniqueRestaurants;
+        } catch (error) {
+            console.error('載入餐廳失敗:', error);
+            const restaurantsContainer = document.getElementById('restaurants-container');
+            if (restaurantsContainer) {
+                restaurantsContainer.innerHTML = '<div class="no-results">載入餐廳失敗，請稍後再試</div>';
+            }
+            return [];
+        }
+    }
 }
 
 // 初始化及掛載到 window
