@@ -1,5 +1,7 @@
 package com.example.demo.config;
-
+import java.util.List;
+import java.util.Arrays;
+import java.util.Collections; // 如果你也用到了 Collections.emptyList()
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
