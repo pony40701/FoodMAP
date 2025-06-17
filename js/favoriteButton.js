@@ -511,7 +511,7 @@ class FavoriteButton {
       
           const result = await res.json();
           // 假設後端回 { success: true, data: { id: X, place_id: Y, … } }
-          if (result.success) {
+          if (result.success) { 
             // 把剛收藏的餐廳加到本地陣列
             this.localFavorites.push({
               id: result.data.id,        // 後端分配的主鍵
