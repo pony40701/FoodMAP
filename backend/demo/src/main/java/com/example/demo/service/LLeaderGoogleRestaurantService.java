@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.dto.RankingGoogleRestaurantDTO;
 import com.example.demo.entity.GoogleRestaurant;
 import com.example.demo.entity.LLeaderGoogleRestaurantPhoto;
 import com.example.demo.repository.LLeaderGoogleRestaurantPhotoRepository;
@@ -21,16 +22,41 @@ public class LLeaderGoogleRestaurantService {
     @Autowired
     private LLeaderGoogleRestaurantPhotoRepository photoRepository;
 
-    public Page<GoogleRestaurant> getGoogleRestaurants(String filter, Pageable pageable) {
+    public Page<RankingGoogleRestaurantDTO> getGoogleRestaurants(String filter, Pageable pageable) {
+        Page<GoogleRestaurant> restaurantsPage;
         switch (filter) {
             case "weekly":
-                return repository.findAllByWeekly(pageable);
+                restaurantsPage = repository.findAllByWeekly(pageable);
+                break;
             case "new":
-                return repository.findAllByNew(pageable);
+                restaurantsPage = repository.findAllByNew(pageable);
+                break;
             case "all":
             default:
-                return repository.findAllByCompositeScore(pageable);
+                restaurantsPage = repository.findAllByCompositeScore(pageable);
+                break;
         }
+
+        // 遍歷餐廳並設置 photoUrl
+        restaurantsPage.getContent().forEach(restaurant -> {
+            photoRepository.findFirstByPlaceId(restaurant.getPlaceId())
+                    .map(LLeaderGoogleRestaurantPhoto::getPhotoUrl)
+                    .ifPresent(restaurant::setPhotoUrl);
+        });
+
+        // 將 Page<GoogleRestaurant> 轉換為 Page<RankingGoogleRestaurantDTO>
+        return restaurantsPage.map(this::convertToDto);
+    }
+
+    private RankingGoogleRestaurantDTO convertToDto(GoogleRestaurant restaurant) {
+        return new RankingGoogleRestaurantDTO(
+                restaurant.getPlaceId(),
+                restaurant.getName(),
+                restaurant.getAddress(),
+                restaurant.getRating(),
+                restaurant.getReviewCount(),
+                restaurant.getPhotoUrl()
+        );
     }
 
     public Optional<String> getPhotoUrlByPlaceId(String placeId) {

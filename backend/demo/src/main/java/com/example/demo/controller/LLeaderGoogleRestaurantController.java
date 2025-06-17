@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.entity.GoogleRestaurant;
+import com.example.demo.dto.RankingGoogleRestaurantDTO;
 import com.example.demo.service.LLeaderGoogleRestaurantService;
 
 @RestController
@@ -24,10 +24,10 @@ public class LLeaderGoogleRestaurantController {
     private LLeaderGoogleRestaurantService service;
 
     @GetMapping("/ranking/google")
-    public ResponseEntity<Page<GoogleRestaurant>> getGoogleRestaurantRanking(
+    public ResponseEntity<Page<RankingGoogleRestaurantDTO>> getGoogleRestaurantRanking(
             @RequestParam(defaultValue = "all") String filter,
             Pageable pageable) {
-        Page<GoogleRestaurant> restaurants = service.getGoogleRestaurants(filter, pageable);
+        Page<RankingGoogleRestaurantDTO> restaurants = service.getGoogleRestaurants(filter, pageable);
         return ResponseEntity.ok(restaurants);
     }
 
