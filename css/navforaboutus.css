@@ -253,58 +253,180 @@
 
 .dropdown-divider {
     height: 1px;
-    background: rgba(255, 107, 26, 0.1);
+    background-color: rgba(255, 107, 26, 0.1);
     margin: 8px 0;
 }
 
 .logout-item {
-    color: #ff4757 !important;
+    display: flex;
+    align-items: center;
 }
 
 .logout-item:hover {
-    background: rgba(255, 71, 87, 0.1) !important;
-    color: #ff6b81 !important;
+    background-color: #ffe8d9;
+}
+
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: #ff6b1a;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1001;
 }
 
 /* 響應式設計 */
+@media (max-width: 1150px) {
+    .navbar-right {
+        position: absolute;
+        top: 100%; 
+        right: 0;
+        width: 300px;
+        background: #fff;
+        flex-direction: column;
+        align-items: stretch;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 998;
+        border-radius: 0 0 8px 8px;
+        
+        /* New animation-based hiding */
+        max-height: 0;
+        overflow: hidden;
+        padding-top: 0;
+        padding-bottom: 0;
+        transition: max-height 0.3s ease-out, padding-top 0.3s ease-out, padding-bottom 0.3s ease-out;
+    }
+
+    .navbar-right.active {
+        max-height: 100vh; /* A large enough value to show all content */
+        padding: 10px 0;
+    }
+
+    .hamburger {
+        display: block;
+    }
+    
+    .hamburger.active i::before {
+        content: "\\f00d"; /* Font Awesome close icon */
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+
+    .navbar-right .restaurant-dropdown {
+        width: 100%;
+    }
+
+    .navbar-right .nav-link {
+        display: block;
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .navbar .restaurant-dropdown-content {
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        width: 100%;
+        display: none; /* Hide by default */
+        background: #f9f9f9;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition: none;
+    }
+
+    .navbar .restaurant-dropdown:hover .restaurant-dropdown-content {
+       display: block;
+    }
+
+    .navbar-right .restaurant-dropdown .nav-link.dropdown-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .navbar-right .dropdown-item {
+        padding-left: 30px;
+    }
+
+    .user-section {
+        padding: 10px 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+     .user-avatar {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .avatar-dropdown {
+        position: static;
+        box-shadow: none;
+        border: none;
+        display: none;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition: none;
+    }
+
+    .user-avatar:hover .avatar-dropdown {
+        display: block;
+    }
+    
+    #loginSection {
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
+
+    .btn-login {
+        width: auto;
+        margin: 10px 20px;
+        padding: 15px;
+        text-align: center;
+    }
+}
+
 @media (max-width: 768px) {
     .navbar {
-        padding: 0 10px;
+        padding: 0 15px;
     }
 
     .search-section {
-        display: none;
+        display: none !important;
     }
 
     .nav-link {
-        padding: 6px 8px;
-        font-size: 14px;
+        font-size: 16px;
+        padding: 12px 15px;
     }
 
     .avatar-dropdown,
     .restaurant-dropdown-content {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        min-width: unset;
         width: 100%;
-        border-radius: 12px 12px 0 0;
     }
 
     .dropdown-item {
-        padding: 16px;
-        font-size: 16px;
+        font-size: 14px;
+        padding: 10px 15px;
     }
 }
-
 @media (max-width: 480px) {
     .logo-text {
-        font-size: 20px;
+        font-size: 24px;
     }
 
     .navbar-right {
-        gap: 10px;
+        gap: 8px;
     }
 
     .btn-login {

@@ -74,6 +74,11 @@
         .title-section p::after {
             right: -20px;
         }
+
+        .hamburger.active i {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+        }
     </style>
 </head>
 <body>
@@ -184,6 +189,9 @@
                 </div>
             </div>
         </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
 
     <!-- 標題區塊 -->
@@ -223,5 +231,14 @@
     </div>
 
     <script src="./ranking.js"></script>
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+    </script>
 </body>
 </html> 
