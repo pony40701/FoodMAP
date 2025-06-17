@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.entity.RLeaderRestaurant;
+import com.example.demo.dto.RLeaderRankingDTO;
 import com.example.demo.service.RLeaderRestaurantService;
 
 @RestController
@@ -23,10 +23,10 @@ public class RLeaderRestaurantController {
     private RLeaderRestaurantService service;
 
     @GetMapping("/ranking/restaurants")
-    public ResponseEntity<Page<RLeaderRestaurant>> getRestaurantRanking(
+    public ResponseEntity<Page<RLeaderRankingDTO>> getRestaurantRanking(
             @RequestParam(defaultValue = "all") String filter,
             Pageable pageable) {
-        Page<RLeaderRestaurant> restaurants = service.getRestaurants(filter, pageable);
+        Page<RLeaderRankingDTO> restaurants = service.getRestaurants(filter, pageable);
         return ResponseEntity.ok(restaurants);
     }
 
