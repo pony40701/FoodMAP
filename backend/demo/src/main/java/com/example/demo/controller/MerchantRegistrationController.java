@@ -1,12 +1,21 @@
 package com.example.demo.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.service.MerchantRegistrationService;
-import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/merchants")
@@ -22,14 +31,26 @@ public class MerchantRegistrationController {
 
     private final MerchantRegistrationService registrationService;
 
-    @PostMapping("/register")
-public ResponseEntity<?> registerMerchant(@Valid @RequestBody RegisterRequest request) {
-    try {
-        registrationService.registerMerchant(request);
-        return ResponseEntity.ok("註冊成功！");
-    } catch (Exception e) {
-        e.printStackTrace();  // 直接印堆疊到 console
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("註冊失敗: " + e.getMessage());
+@PostMapping("/register")
+public ResponseEntity<String> registerMerchant(
+    @RequestPart("data") RegisterRequest request,
+    @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+    @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+
+    System.out.println("後端接收到照片數量：" + (photos != null ? photos.size() : "null"));
+    
+    if (photos != null) {
+        for (MultipartFile photo : photos) {
+            System.out.println("收到照片：" + photo.getOriginalFilename());
+        }
     }
+
+    registrationService.registerMerchant(
+        request,
+        avatar,
+        photos != null ? photos : new ArrayList<>()
+    );
+
+    return ResponseEntity.ok("註冊成功！");
 }
 }

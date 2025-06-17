@@ -1,5 +1,11 @@
 package com.example.demo.service;
 
+import java.util.List;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.MerchantAccount;
 import com.example.demo.entity.MerchantProfile;
@@ -9,10 +15,8 @@ import com.example.demo.repository.MerchantAccountRepository;
 import com.example.demo.repository.MerchantProfileRepository;
 import com.example.demo.repository.RestaurantPhotoRepository;
 import com.example.demo.repository.RestaurantRepository;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
@@ -23,9 +27,10 @@ public class MerchantRegistrationService {
     private final RestaurantRepository restaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService; // ✅ 你需要建立一個這個來處理圖片儲存（可以存硬碟或雲端）
 
-    public void registerMerchant(RegisterRequest request) {
-        // Create restaurant
+    public void registerMerchant(RegisterRequest request, MultipartFile avatar, List<MultipartFile> photos) {
+        // 儲存餐廳
         Restaurant restaurant = new Restaurant();
         restaurant.setName(request.getName());
         restaurant.setPhoneNumber(request.getPhoneNumber());
@@ -34,7 +39,7 @@ public class MerchantRegistrationService {
         restaurant.setBusinessHours(request.getBusinessHours());
         restaurantRepository.save(restaurant);
 
-        // Create account
+        // 儲存帳號
         MerchantAccount account = new MerchantAccount();
         account.setEmail(request.getEmail());
         account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -42,16 +47,23 @@ public class MerchantRegistrationService {
         account.setRestaurant(restaurant);
         merchantAccountRepository.save(account);
 
-        // Create profile
+        // 儲存頭像檔案，並取得 URL
+        String avatarUrl = fileStorageService.storeFile(avatar);
+
+        // 儲存商家資料
         MerchantProfile profile = new MerchantProfile();
-        profile.setMerchantAccount(account); // 假設有 @MapsId 映射
-        profile.setAvatarUrl(request.getImageUrls().get(0));
+        profile.setMerchantAccount(account); // 假設有 @MapsId
+        profile.setAvatarUrl(avatarUrl);
         merchantProfileRepository.save(profile);
 
-        // Create restaurant photo
-        RestaurantPhoto photo = new RestaurantPhoto();
-        photo.setRestaurant(restaurant);
-        photo.setImageUrl(request.getImageUrls().get(0));
-        restaurantPhotoRepository.save(photo);
+        // 儲存餐廳照片（多張）
+        for (MultipartFile photo : photos) {
+            String imageUrl = fileStorageService.storeFile(photo);
+
+            RestaurantPhoto restaurantPhoto = new RestaurantPhoto();
+            restaurantPhoto.setRestaurant(restaurant);
+            restaurantPhoto.setImageUrl(imageUrl);
+            restaurantPhotoRepository.save(restaurantPhoto);
+        }
     }
 }
