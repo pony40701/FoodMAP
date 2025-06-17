@@ -211,49 +211,49 @@ body {
     margin-right: 3px;
 }
 
-.actions {
+.restaurant-info .actions {
     display: flex;
-    flex-direction: row;
+    justify-content: flex-end;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    position: static;
-    margin-left: 0;
-    margin-top: 12px;
+    padding: 10px 0 0 0;
+    gap: 10px;
 }
 
-.favorite-btn {
-    order: 1;
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    color: #666;
+.restaurant-item .details-btn,
+.restaurant-item .favorite-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background-color: #fff;
+    color: #333;
     cursor: pointer;
-    transition: color 0.3s;
-    padding: 5px;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.favorite-btn.active {
-    color: #ff6b1a;
-}
-
-.details-btn {
-    order: 2;
-    background: none;
-    border: 1px solid #ff6b1a;
-    color: #ff6b1a;
-    padding: 5px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-    white-space: nowrap;
-    margin-top: 0;
-}
-
-.details-btn:hover {
+.restaurant-item .details-btn:hover,
+.restaurant-item .favorite-btn:hover {
     background-color: #ff6b1a;
-    color: white;
+    color: #fff;
+    border-color: #ff6b1a;
+}
+
+.restaurant-item .favorite-btn .fa-heart {
+    color: #ff6b1a;
+    transition: color 0.2s ease;
+}
+
+.restaurant-item .favorite-btn:hover .fa-heart,
+.restaurant-item .favorite-btn.favorited .fa-heart {
+    color: #fff;
+}
+
+.restaurant-item .favorite-btn.favorited {
+    background-color: #ff6b1a;
+    color: #fff;
 }
 
 .load-more {

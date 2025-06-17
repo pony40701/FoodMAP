@@ -74,13 +74,18 @@
         .title-section p::after {
             right: -20px;
         }
+
+        .hamburger.active i {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+        }
     </style>
 </head>
 <body>
     <!-- 導航欄 -->
     <div class="navbar">
         <div class="navbar-left">
-            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+            <a href="../index.html" class="logo-text">食力派ChowCrew</a>
         </div>
         <div class="search-section">
             <div class="search-bar">
@@ -184,6 +189,9 @@
                 </div>
             </div>
         </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
 
     <!-- 標題區塊 -->
@@ -222,6 +230,15 @@
         </div>
     </div>
 
-    <script src="ranking.js"></script>
+    <script src="./ranking.js"></script>
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+    </script>
 </body>
 </html> 

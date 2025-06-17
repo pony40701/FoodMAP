@@ -22,8 +22,12 @@ public class GoogleRestaurant {
     @Column(name = "review_count")
     private Integer reviewCount;
 
+    @Column(name = "photo_url")
     private String photoUrl;
-    
+
+    @Column(name = "description")
+    private String description;
+
     // 保留原有的 lat/lng 欄位，同時添加 latitude/longitude 以保持兼容性
     private Double lat;
     private Double lng;
@@ -40,9 +44,6 @@ public class GoogleRestaurant {
     @Column(name = "types")
     private String types;
     
-    @Column(name = "description")
-    private String description;
-
     // 新增綜合評分欄位，但不儲存到資料庫
     @Transient
     private Double compositeScore;
