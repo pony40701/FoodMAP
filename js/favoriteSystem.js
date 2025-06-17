@@ -1,5 +1,5 @@
 // 使用全域 config.js 裡的設定
-const base = window.API_BASE_URL;
+const base = window.API_BASE_URL || 'http://localhost:8080/api';
 
 // 收藏系統核心模組
 class FavoriteSystem {
@@ -266,7 +266,154 @@ class FavoriteSystem {
         }
     }
 
-    // ... (其餘方法保持不變)
+    // 檢查餐廳是否已被收藏
+    async isStoreFavorited(storeId) {
+        if (!this.initialized) {
+            await this.initialize();
+        }
+        
+        if (!storeId) {
+            console.error('檢查收藏狀態失敗: 缺少餐廳ID');
+            return false;
+        }
+        
+        // 在內部存儲數組中檢查餐廳是否已被收藏
+        const found = this.stores.some(store => {
+            return store.id === storeId || store.place_id === storeId;
+        });
+        
+        console.log(`檢查餐廳收藏狀態 (ID: ${storeId}): ${found}`);
+        return found;
+    }
+
+    // 觸發收藏變更事件
+    triggerFavoritesChangedEvent() {
+        console.log('觸發收藏變更事件');
+        const event = new CustomEvent('favoritesChanged', {
+            detail: {
+                time: new Date(),
+                stores: this.stores.length,
+                reviews: this.reviews.length
+            }
+        });
+        document.dispatchEvent(event);
+    }
+
+    // 獲取收藏的餐廳列表
+    getFavoriteStores() {
+        console.log('獲取收藏餐廳列表，數量:', this.stores.length);
+        return this.stores;
+    }
+    
+    // 獲取收藏的評論列表
+    getFavoriteReviews() {
+        console.log('獲取收藏評論列表，數量:', this.reviews.length);
+        return this.reviews;
+    }
+    
+    // 根據ID獲取餐廳詳情
+    async getRestaurantById(restaurantId) {
+        console.log(`根據ID獲取餐廳詳情: ${restaurantId}`);
+        
+        if (!restaurantId) {
+            console.error('獲取餐廳詳情失敗: 缺少餐廳ID');
+            return null;
+        }
+        
+        // 先從本地收藏列表中查找
+        const localRestaurant = this.stores.find(store => 
+            store.id === restaurantId || 
+            store.place_id === restaurantId
+        );
+        
+        if (localRestaurant) {
+            console.log('從本地收藏列表找到餐廳:', localRestaurant);
+            
+            // 嘗試從API獲取更完整的資料
+            try {
+                console.log(`從API獲取餐廳詳情以補充本地資料: ${restaurantId}`);
+                const response = await fetch(`${this.apiBaseUrl}/restaurants/${restaurantId}`);
+                
+                if (response.ok) {
+                    const apiData = await response.json();
+                    console.log('成功從API獲取餐廳詳情:', apiData);
+                    
+                    // 合併API數據和本地數據，API數據優先
+                    const mergedData = { ...localRestaurant, ...apiData };
+                    
+                    // 確保有位置數據
+                    if (!mergedData.geometry && (mergedData.lat || mergedData.latitude)) {
+                        mergedData.geometry = {
+                            location: {
+                                lat: mergedData.lat || mergedData.latitude,
+                                lng: mergedData.lng || mergedData.longitude
+                            }
+                        };
+                    }
+                    
+                    return mergedData;
+                }
+            } catch (error) {
+                console.warn('從API獲取補充資料失敗，使用本地資料:', error);
+            }
+            
+            // 如果API獲取失敗，確保本地數據有位置信息
+            if (localRestaurant.lat || localRestaurant.latitude) {
+                localRestaurant.geometry = {
+                    location: {
+                        lat: localRestaurant.lat || localRestaurant.latitude,
+                        lng: localRestaurant.lng || localRestaurant.longitude
+                    }
+                };
+            }
+            
+            return localRestaurant;
+        }
+        
+        // 如果本地找不到，嘗試從API獲取
+        try {
+            console.log(`從API獲取餐廳詳情: ${restaurantId}`);
+            const response = await fetch(`${this.apiBaseUrl}/restaurants/${restaurantId}`);
+            
+            if (!response.ok) {
+                throw new Error(`API請求失敗: ${response.status}`);
+            }
+            
+            const restaurantData = await response.json();
+            console.log('成功從API獲取餐廳詳情:', restaurantData);
+            
+            // 確保有位置數據
+            if (!restaurantData.geometry && (restaurantData.lat || restaurantData.latitude)) {
+                restaurantData.geometry = {
+                    location: {
+                        lat: restaurantData.lat || restaurantData.latitude,
+                        lng: restaurantData.lng || restaurantData.longitude
+                    }
+                };
+            }
+            
+            return restaurantData;
+        } catch (error) {
+            console.error('從API獲取餐廳詳情失敗:', error);
+            return null;
+        }
+    }
+    
+    // 清除所有收藏
+    clearAllFavorites() {
+        console.log('清除所有收藏數據');
+        this.stores = [];
+        this.reviews = [];
+        
+        // 清除本地存儲
+        localStorage.removeItem('favoriteStores');
+        localStorage.removeItem('favoriteReviews');
+        
+        // 觸發收藏變更事件
+        this.triggerFavoritesChangedEvent();
+        
+        return true;
+    }
 }
 
 // 創建全局單例

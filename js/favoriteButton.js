@@ -1,5 +1,5 @@
 // 收藏按鈕處理模組
-const API_BASE_URL = window.API_BASE_URL;
+// 請確保 config.js 已在 HTML 中先引入
 
 class FavoriteButton {
     constructor() {
@@ -306,18 +306,22 @@ class FavoriteButton {
             const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
             console.log('當前收藏狀態:', isFavorited);
             
+            let success = false;
+            
             if (!isFavorited) {
                 // 獲取店家資訊
-                const name = button.getAttribute('data-name') || '未知餐廳';
+                const name = button ? button.getAttribute('data-name') : '未知餐廳';
                 
                 // 嘗試獲取商家圖片
                 let photos = null;
-                const restCard = button.closest('.restaurant-card') || button.closest('.store-card');
-                if (restCard) {
-                    const imgElement = restCard.querySelector('img');
-                    if (imgElement && imgElement.src) {
-                        photos = imgElement.src;
-                        console.log(`找到商家圖片: ${photos}`);
+                if (button) {
+                    const restCard = button.closest('.restaurant-card') || button.closest('.store-card');
+                    if (restCard) {
+                        const imgElement = restCard.querySelector('img');
+                        if (imgElement && imgElement.src) {
+                            photos = imgElement.src;
+                            console.log(`找到商家圖片: ${photos}`);
+                        }
                     }
                 }
 
@@ -338,33 +342,37 @@ class FavoriteButton {
                 console.log('準備添加收藏:', storeData);
                 
                 // 更新前端收藏系統
-                const success = await window.favoriteSystem.addStore(storeData);
+                success = await window.favoriteSystem.addStore(storeData);
                 if (success) {
                     this.showToast('已加入收藏');
                     // 更新按鈕狀態
-                    this.updateButtonUI(button, true);
-                    
-                    // 立即將該餐廳卡片移到最前面
-                    this.moveCardToFront(button);
+                    if (button) {
+                        this.updateButtonUI(button, true);
+                        // 立即將該餐廳卡片移到最前面
+                        this.moveCardToFront(button);
+                    }
                 } else {
                     this.showToast('加入收藏失敗，請稍後再試');
-                    return;
                 }
             } else {
                 // 移除收藏
-                const success = await window.favoriteSystem.removeStore(placeId);
+                success = await window.favoriteSystem.removeStore(placeId);
                 if (success) {
                     this.showToast('已取消收藏');
                     // 更新按鈕狀態
-                    this.updateButtonUI(button, false);
+                    if (button) {
+                        this.updateButtonUI(button, false);
+                    }
                 } else {
                     this.showToast('取消收藏失敗，請稍後再試');
-                    return;
                 }
             }
 
-            // 更新所有相同 ID 的按鈕
-            await this.updateAllButtonsWithSameId(placeId);
+            // 如果操作成功，更新所有相同 ID 的按鈕
+            if (success) {
+                console.log('操作成功，更新所有相同 ID 的按鈕');
+                await this.updateAllButtonsWithSameId(placeId);
+            }
 
             // 如果在收藏頁面，重新載入內容
             if (window.location.pathname.includes('userCenter.html')) {
@@ -372,9 +380,12 @@ class FavoriteButton {
                     await window.favoriteUI.loadContent();
                 }
             }
+            
+            return success;
         } catch (error) {
             console.error('切換收藏狀態失敗:', error);
             this.showToast('操作失敗，請稍後再試');
+            return false;
         }
     }
 
@@ -531,5 +542,42 @@ class FavoriteButton {
           console.error('addToFavorites 錯誤：', err);
           alert(err.message || '網路異常，請稍後再試');
         }
-      }
+    }
+    
+    // 顯示 Toast 提示訊息
+    showToast(message) {
+        // 如果已經定義了全局 showToast 函數，則使用它
+        if (window.showToast && typeof window.showToast === 'function') {
+            window.showToast(message);
+            return;
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        toast.offsetHeight;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
 }
+
+// 創建全局單例
+window.favoriteButton = new FavoriteButton();
+
+// 在 DOMContentLoaded 事件中初始化收藏按鈕
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        if (!window.favoriteButton.initialized) {
+            await window.favoriteButton.initialize();
+            console.log('收藏按鈕初始化完成');
+        }
+    } catch (error) {
+        console.error('收藏按鈕初始化失敗:', error);
+    }
+});

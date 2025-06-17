@@ -2,6 +2,8 @@
 class RestaurantCard {
     constructor() {
         this.favoriteStores = JSON.parse(localStorage.getItem('favoriteStores')) || [];
+        // 確保 API_BASE_URL 存在，若不存在則使用預設值
+        this.baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
     }
 
     // 顯示餐廳列表
@@ -40,118 +42,73 @@ class RestaurantCard {
 
     // 創建餐廳卡片
     createRestaurantCard(place) {
-        // 使用 place_id 作為備選 ID
-        const restaurantId = place.id || place.place_id;
+        // 確保評分和評論數有默認值
+        const rating = place.averageRating || place.rating || 0;
+        const reviewCount = place.reviewCount || place.user_ratings_total || 0;
         
-        // 檢查圖片 URL
-        const imageUrl = place.photos ? 
-            (Array.isArray(place.photos) ? place.photos[0].getUrl() : place.photos) : 
-            'images/no-image.jpg';
+        // 營業時間處理
+        let businessHoursText = '暫無營業時間資料';
+        let isOpen = false;
         
-        // 計算評分
-        const rating = place.rating || 0;
+        if (place.opening_hours) {
+            isOpen = place.opening_hours.open_now || false;
+            
+            // 如果有 weekday_text，獲取今日營業時間
+            if (place.opening_hours.weekday_text && Array.isArray(place.opening_hours.weekday_text)) {
+                const today = new Date().getDay(); // 0-6，0代表星期日
+                const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
+                
+                if (place.opening_hours.weekday_text[index]) {
+                    const todayText = place.opening_hours.weekday_text[index];
+                    // 直接從完整的營業時間文字中提取時間部分
+                    const timeMatch = todayText.match(/:\s*(.+)$/);
+                    businessHoursText = timeMatch ? timeMatch[1].trim() : '暫無營業時間資料';
+                }
+            } else if (place.businessHours && Array.isArray(place.businessHours)) {
+                businessHoursText = place.businessHours[0] || '暫無營業時間資料';
+            }
+        }
         
-        // 檢查是否已收藏
-        const isFavorited = window.favoriteSystem && restaurantId && 
-            window.favoriteSystem.isStoreFavorited(restaurantId);
+        // 創建卡片元素
+        const card = document.createElement('div');
+        card.className = 'restaurant-card';
         
-        // 創建餐廳卡片的 HTML
-        const html = `
-            <div class="restaurant-card">
-                <div class="restaurant-image">
-                    <img src="${imageUrl}" alt="${place.name}" onerror="this.src='images/no-image.jpg'">
+        // 設置卡片內容
+        card.innerHTML = `
+            <div class="card-image">
+                <img src="${place.photo || 'images/default-restaurant.jpg'}" alt="${place.name}" onerror="this.src='images/default-restaurant.jpg'">
+                <div class="card-rating">
+                    <span class="rating-stars">${this.generateRatingStars(rating)}</span>
+                    <span class="rating-value">${rating.toFixed(1)}</span>
+                    <span class="rating-count">(${reviewCount})</span>
                 </div>
-                <div class="restaurant-info">
-                    <div class="restaurant-header">
-                        <h3>${place.name}</h3>
-                        <button class="favorite-btn ${isFavorited ? 'active' : ''}" 
-                                data-place-id="${restaurantId || ''}" 
-                                data-name="${place.name}">
-                            <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="restaurant-rating">
-                        <span class="stars">${this.generateRatingStars(rating)}</span>
-                        <span class="rating-value">${rating.toFixed(1)}</span>
-                        <span class="review-count">(${place.user_ratings_total || 0})</span>
-                    </div>
-                    <div class="restaurant-address">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${place.vicinity || place.formatted_address}</span>
-                    </div>
+            </div>
+            <div class="card-content">
+                <h3 class="card-title">${place.name}</h3>
+                <p class="card-address">${place.address || place.vicinity || '暫無地址資料'}</p>
+                <div class="card-hours">
+                    <span class="hours-icon ${isOpen ? 'open' : 'closed'}"></span>
+                    <span class="hours-text">${isOpen ? '營業中' : '休息中'}</span>
+                    <span class="hours-details">${businessHoursText}</span>
+                </div>
+                <div class="card-tags">
+                    ${place.types ? `<span class="tag">${place.types}</span>` : ''}
                 </div>
             </div>
         `;
-
-        const card = document.createElement('div');
-        card.className = 'restaurant-card-wrapper';
-        card.innerHTML = html;
-
-        // 綁定收藏按鈕點擊事件
-        const favoriteBtn = card.querySelector('.favorite-btn');
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const placeId = favoriteBtn.getAttribute('data-place-id');
-                const name = favoriteBtn.getAttribute('data-name');
-
-                if (!placeId) {
-                    console.error('找不到餐廳ID');
-                    return;
-                }
-
-                // 檢查收藏系統是否已初始化
-                if (!window.favoriteSystem) {
-                    console.error('收藏系統未初始化');
-                    showToast('收藏系統初始化失敗，請重新整理頁面');
-                    return;
-                }
-
-                // 檢查是否已收藏
-                const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
-                
-                try {
-                    if (isFavorited) {
-                        // 如果已收藏，則移除收藏
-                        await window.favoriteSystem.removeStore(placeId);
-                        favoriteBtn.querySelector('i').classList.replace('fas', 'far');
-                        favoriteBtn.classList.remove('active');
-                        showToast('已取消收藏');
-                    } else {
-                        // 如果未收藏，則添加收藏
-                        // 嘗試獲取圖片
-                        let photos = null;
-                        const imgElement = card.querySelector('.restaurant-image img');
-                        if (imgElement && imgElement.src) {
-                            photos = imgElement.src;
-                            console.log(`找到餐廳圖片: ${photos}`);
-                        }
-
-                        // 儲存完整的餐廳資訊
-                        const storeData = {
-                            id: placeId,
-                            place_id: placeId,
-                            name: name,
-                            photos: photos,
-                            address: place.vicinity || place.formatted_address,
-                            rating: place.rating || 0,
-                            user_ratings_total: place.user_ratings_total || 0,
-                            favoriteTime: new Date().toISOString()
-                        };
-                        await window.favoriteSystem.addStore(storeData);
-                        favoriteBtn.querySelector('i').classList.replace('far', 'fas');
-                        favoriteBtn.classList.add('active');
-                        showToast('已加入收藏');
-                    }
-                } catch (error) {
-                    console.error('收藏操作失敗:', error);
-                    showToast('收藏操作失敗，請稍後再試');
-                }
-            });
-        }
-
+        
+        // 添加點擊事件
+        card.addEventListener('click', () => {
+            console.log('點擊餐廳卡片:', place);
+            // 如果有 RestaurantModal 模組，使用它顯示詳情
+            if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
+                window.RestaurantModal.showRestaurantDetail(place);
+            } else {
+                // 否則直接跳轉到詳情頁
+                window.location.href = `restaurant-detail.html?id=${place.place_id || place.id}`;
+            }
+        });
+        
         return card;
     }
 
