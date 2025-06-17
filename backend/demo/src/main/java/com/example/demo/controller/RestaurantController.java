@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.RestaurantListDTO;
@@ -27,7 +28,7 @@ public GoogleRestaurant getRestaurantByPlaceId(@PathVariable String placeId) {
 	return restaurantService.getRestaurantByPlaceId(placeId);
 }
 @GetMapping("/list")
-public List<RestaurantListDTO> getRestaurantList(){
-	return restaurantService.getRestaurantList();
+public List<RestaurantListDTO> getRestaurantList(@RequestParam(required = false) String sort){
+	return restaurantService.getRestaurantList(sort);
 }
 }

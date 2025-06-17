@@ -291,8 +291,18 @@ document.addEventListener('DOMContentLoaded', function() {
       // 獲取排序類型
       currentSortType = this.dataset.sort;
       
-      // 執行排序和篩選
-      filterRestaurants();
+      // 根據排序類型呼叫後端 API
+      let sortParam = null;
+      if (currentSortType === 'rating') {
+        sortParam = 'ratingDesc';
+      } else if (currentSortType === 'rating-count') {
+        sortParam = 'reviewCountDesc';
+      } else if (currentSortType === 'newest') {
+        sortParam = 'createdAtDesc';
+      }
+      
+      // 呼叫後端 API 獲取排序後的資料
+      fetchRestaurants(sortParam);
     });
   });
 
@@ -1001,8 +1011,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ... existing code ...
 
 // 取代假資料，直接 fetch 後台 API
-function fetchRestaurants() {
-    fetch('http://localhost:8080/api/restaurants/list')
+function fetchRestaurants(sortType = null) {
+    let url = 'http://localhost:8080/api/restaurants/list';
+    if (sortType) {
+        url += `?sort=${sortType}`;
+    }
+    
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
