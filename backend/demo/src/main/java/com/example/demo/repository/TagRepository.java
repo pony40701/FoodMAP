@@ -1,6 +1,6 @@
-package com.example.foodmap.repository;
+package com.example.demo.repository;
 
-import com.example.foodmap.entity.Tag;
+import com.example.demo.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

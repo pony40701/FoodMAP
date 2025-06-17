@@ -1,11 +1,11 @@
-package com.example.foodmap.controller;
+package com.example.demo.controller;
 
-import com.example.foodmap.dto.ReviewRequestDto;
-import com.example.foodmap.dto.ReviewStatsDto;
-import com.example.foodmap.dto.ReviewStatsDetailDto;
-import com.example.foodmap.dto.UserReviewStatsDto;
-import com.example.foodmap.entity.Review;
-import com.example.foodmap.service.ReviewService;
+import com.example.demo.dto.ReviewRequestDto;
+import com.example.demo.dto.ReviewStatsDto;
+import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.dto.UserReviewStatsDto;
+import com.example.demo.entity.Review;
+import com.example.demo.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.example.foodmap.dto;
+package com.example.demo.dto;
 
 import lombok.Data;
 import lombok.AllArgsConstructor;

@@ -1,7 +1,7 @@
-package com.example.foodmap.repository;
+package com.example.demo.repository;
 
-import com.example.foodmap.entity.ReviewTag;
-import com.example.foodmap.entity.ReviewTagId;
+import com.example.demo.entity.ReviewTag;
+import com.example.demo.entity.ReviewTagId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

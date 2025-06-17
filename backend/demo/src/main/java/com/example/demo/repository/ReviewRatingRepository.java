@@ -1,6 +1,6 @@
-package com.example.foodmap.repository;
+package com.example.demo.repository;
 
-import com.example.foodmap.entity.ReviewRating;
+import com.example.demo.entity.ReviewRating;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 

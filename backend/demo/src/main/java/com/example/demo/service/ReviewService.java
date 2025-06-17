@@ -1,11 +1,11 @@
-package com.example.foodmap.service;
+package com.example.demo.service;
 
-import com.example.foodmap.dto.ReviewRequestDto;
-import com.example.foodmap.dto.ReviewStatsDto;
-import com.example.foodmap.dto.UserReviewStatsDto;
-import com.example.foodmap.dto.ReviewStatsDetailDto;
-import com.example.foodmap.entity.*;
-import com.example.foodmap.repository.*;
+import com.example.demo.dto.ReviewRequestDto;
+import com.example.demo.dto.ReviewStatsDto;
+import com.example.demo.dto.UserReviewStatsDto;
+import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.entity.*;
+import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
