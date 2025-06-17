@@ -13,8 +13,8 @@ import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
 import com.example.demo.repository.MerchantAccountRepository;
 import com.example.demo.repository.MerchantProfileRepository;
+import com.example.demo.repository.LocalRestaurantRepository;
 import com.example.demo.repository.RestaurantPhotoRepository;
-import com.example.demo.repository.RestaurantRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +24,7 @@ public class MerchantRegistrationService {
 
     private final MerchantAccountRepository merchantAccountRepository;
     private final MerchantProfileRepository merchantProfileRepository;
-    private final RestaurantRepository restaurantRepository;
+    private final LocalRestaurantRepository localRestaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService; // ✅ 你需要建立一個這個來處理圖片儲存（可以存硬碟或雲端）
@@ -37,7 +37,7 @@ public class MerchantRegistrationService {
         restaurant.setAddress(request.getAddress());
         restaurant.setCuisineType(request.getCuisineType());
         restaurant.setBusinessHours(request.getBusinessHours());
-        restaurantRepository.save(restaurant);
+        localRestaurantRepository.save(restaurant);
 
         // 儲存帳號
         MerchantAccount account = new MerchantAccount();
