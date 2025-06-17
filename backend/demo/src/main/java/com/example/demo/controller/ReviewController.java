@@ -68,6 +68,13 @@ public class ReviewController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/Draft/{reviewId}")
+    public ResponseEntity<Void> deleteDraftReview(@PathVariable Integer reviewId) {
+        log.info("刪除草稿：reviewId={}", reviewId);
+        reviewService.deleteDraftReview(reviewId);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/published/{publishedId}/edit-as-draft")
     public ResponseEntity<Integer> editAsNewDraft(
             @PathVariable Integer publishedId,

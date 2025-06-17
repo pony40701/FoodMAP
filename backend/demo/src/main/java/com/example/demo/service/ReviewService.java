@@ -360,6 +360,24 @@ public class ReviewService {
         log.info("刪除已發布文章：reviewId={}", reviewId);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void deleteDraftReview(Integer reviewId) {
+        Review review = reviewRepository.findById(reviewId.intValue())
+                .orElseThrow(() -> new RuntimeException("草稿不存在"));
+
+        if (!"draft".equals(review.getStatus())) {
+            throw new RuntimeException("只能刪除草稿");
+        }
+
+        // 刪除相關資料
+        reviewTagRepository.deleteByReviewId(reviewId.intValue());
+        reviewPhotoRepository.deleteByReviewId(reviewId.intValue());
+        reviewRatingRepository.deleteById(reviewId.intValue());
+        reviewRepository.deleteById(reviewId.intValue());
+        
+        log.info("刪除草稿：reviewId={}", reviewId);
+    }
+
     // 編輯已發布文章 - 模式1：儲存為新草稿
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer editAsNewDraft(Integer publishedId, ReviewRequestDto dto, boolean deletePublished) {
