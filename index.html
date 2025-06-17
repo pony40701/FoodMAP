@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>美食地圖FoodMAP</title>
     <!-- 防止 favicon.ico 404 錯誤 -->
-    <link rel="icon" href="data:,">    <link rel="stylesheet" href="css/food-categories.css">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/food-categories.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="ranking/ranking.css">
     <link rel="stylesheet" href="css/food-types.css">
@@ -1050,6 +1052,9 @@
                 </div>
             </div>
         </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
     <!-- 輪播圖區域-->
     <div class="carousel-container">
@@ -1536,6 +1541,21 @@
                 // 獲取模態視窗元素 - 所有樣式已通過內聯樣式應用，不需要額外修復
                 console.log('登入視窗已開啟');
             }
+        });
+    </script>
+    <script src="js/userRegister.js" type="module"></script>
+    <script src="js/userForgotPassword.js"></script>
+    <script src="js/restaurant-revenue.js"></script>
+
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
         });
     </script>
 </body>

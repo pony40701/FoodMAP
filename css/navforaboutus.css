@@ -307,12 +307,6 @@
         display: block;
     }
     
-    .hamburger.active i::before {
-        content: "\\f00d"; /* Font Awesome close icon */
-        font-family: "Font Awesome 6 Free";
-        font-weight: 900;
-    }
-
     .navbar-right .restaurant-dropdown {
         width: 100%;
     }
