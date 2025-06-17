@@ -549,9 +549,9 @@ public class ReviewService {
             });
         
         // 獲取用戶總覽數據
-        Integer userTotalViews = reviewStatsRepository.sumTotalViewsByUserId(review.getUser().getId());
-        Integer userTotalFavorites = reviewStatsRepository.sumTotalFavoritesByUserId(review.getUser().getId());
-        Integer userTotalReviews = reviewStatsRepository.countByUserId(review.getUser().getId());
+        Integer userTotalViews = reviewStatsRepository.sumTotalViewsByUserId(review.getUser().getId().intValue());
+        Integer userTotalFavorites = reviewStatsRepository.sumTotalFavoritesByUserId(review.getUser().getId().intValue());
+        Integer userTotalReviews = reviewStatsRepository.countByUserId(review.getUser().getId().intValue());
         
         // 構建返回數據
         ReviewStatsDetailDto dto = new ReviewStatsDetailDto();
