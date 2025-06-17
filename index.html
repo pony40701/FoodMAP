@@ -1423,7 +1423,7 @@
                 // 表單提交事件
                 const restaurantLoginForm = document.getElementById('restaurantLoginForm');
                 if (restaurantLoginForm) {
-                    restaurantLoginForm.addEventListener('submit', function(e) {
+                    restaurantLoginForm.addEventListener('submit', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -1431,14 +1431,28 @@
                         const password = document.getElementById('restaurant-password').value;
                         const remember = document.getElementById('restaurant-remember').checked;
                         
-                        // 這裡可以添加實際的登入驗證邏輯
-                        console.log('商家登入:', { email, password, remember });
-                        
-                        // 模擬登入成功，跳轉到商家後台
-                        alert('登入成功！');
-                        closeRestaurantLoginModal();
-                        // 跳轉到商家後台主頁
-                        window.location.href = 'restaurant.html';
+                        try {
+                            const response = await fetch("http://localhost:8080/api/merchants/login", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ email, password })
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                alert("登入成功！歡迎回來～");
+                                closeRestaurantLoginModal();
+                                window.location.href = 'restaurant.html';
+                            } else {
+                                const errorText = await response.text();
+                                alert("登入失敗：" + errorText);
+                            }
+                        } catch (error) {
+                            console.error("登入失敗", error);
+                            alert("登入失敗：" + error.message);
+                        }
                     });
                 }
             }
