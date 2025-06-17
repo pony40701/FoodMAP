@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const customRestaurantList = document.querySelector('.custom-restaurant-list');
     const loadMoreButton = document.querySelector('.load-more');
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const MAX_ITEMS = 15;
 
     let googleCurrentPage = 0;
     let customCurrentPage = 0;
@@ -56,8 +57,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const existingItems = googleRestaurantList.querySelectorAll('.restaurant-item').length;
         const fragment = document.createDocumentFragment();
-        restaurants.forEach((restaurant, index) => {
+
+        for (const [index, restaurant] of restaurants.entries()) {
+            if (existingItems + index >= MAX_ITEMS) {
+                break; 
+            }
             const rank = googleCurrentPage * pageSize + index + 1;
             const restaurantItem = document.createElement('div');
             restaurantItem.className = 'restaurant-item';
@@ -76,14 +82,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
-                </div>
-                <div class="actions">
-                     <button class="details-btn" data-id="${restaurant.placeId}">查看詳情</button>
+                    <div class="actions">
+                         <button class="favorite-btn" data-id="${restaurant.placeId}"><i class="far fa-heart"></i> 收藏</button>
+                         <button class="details-btn" data-id="${restaurant.placeId}">查看詳情</button>
+                    </div>
                 </div>
             `;
             fragment.appendChild(restaurantItem);
-        });
+        }
         googleRestaurantList.appendChild(fragment);
+
+        if (googleRestaurantList.querySelectorAll('.restaurant-item').length >= MAX_ITEMS) {
+            loadMoreButton.style.display = 'none';
+        }
     }
 
     function renderCustomRestaurants(restaurants) {
@@ -92,8 +103,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const existingItems = customRestaurantList.querySelectorAll('.restaurant-item').length;
         const fragment = document.createDocumentFragment();
-        restaurants.forEach((restaurant, index) => {
+
+        for (const [index, restaurant] of restaurants.entries()) {
+            if (existingItems + index >= MAX_ITEMS) {
+                break;
+            }
             const rank = customCurrentPage * pageSize + index + 1;
             const restaurantItem = document.createElement('div');
             restaurantItem.className = 'restaurant-item';
@@ -116,14 +132,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
-                </div>
-                <div class="actions">
-                     <button class="details-btn" data-id="${restaurant.id}">查看詳情</button>
+                    <div class="actions">
+                         <button class="favorite-btn" data-id="${restaurant.restaurantId}"><i class="far fa-heart"></i> 收藏</button>
+                         <button class="details-btn" data-id="${restaurant.restaurantId}">查看詳情</button>
+                    </div>
                 </div>
             `;
             fragment.appendChild(restaurantItem);
-        });
+        }
         customRestaurantList.appendChild(fragment);
+
+        if (customRestaurantList.querySelectorAll('.restaurant-item').length >= MAX_ITEMS) {
+            loadMoreButton.style.display = 'none';
+        }
     }
     
     async function resetAndLoad() {
