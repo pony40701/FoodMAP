@@ -32,12 +32,17 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
         JOIN users u ON r.user_id = u.id
         WHERE r.status = 'published'
         AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%'))
-        ORDER BY r.created_at DESC
+        AND (:cuisineTypes IS NULL OR rest.cuisine_type IN (:cuisineTypes))
+        ORDER BY
+            CASE WHEN :sort = 'popular' THEN rs.total_views END DESC,
+            r.created_at DESC
         LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
     List<ExReviewProjection> findLatestReviews(
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("search") String search);
+            @Param("sort") String sort,
+            @Param("search") String search,
+            @Param("cuisineTypes") List<String> cuisineTypes);
 
 } 
