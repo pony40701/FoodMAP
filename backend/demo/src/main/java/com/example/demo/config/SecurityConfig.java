@@ -1,8 +1,5 @@
 package com.example.demo.config;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +21,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/rleader/**").permitAll()
                 .requestMatchers("/**").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 .anyRequest().authenticated()
             );
         
