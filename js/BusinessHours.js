@@ -209,4 +209,8 @@ class BusinessHours {
 }
 
 // 創建全局實例
-window.businessHours = new BusinessHours(); 
+window.businessHours = new BusinessHours();
+
+document.addEventListener('DOMContentLoaded', () => {
+  // ... existing code ...
+}); 

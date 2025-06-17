@@ -1,5 +1,5 @@
 // 餐廳服務模組 - 僅支援後端 API
-const API_BASE_URL = 'http://localhost:8080/api';
+// 請確保 config.js 已在 HTML 中先引入
 
 class RestaurantService {
     constructor() {
@@ -12,6 +12,12 @@ class RestaurantService {
         
         this.initialized = false;
         console.log('餐廳服務已創建，準備初始化');
+        
+        // 確保 API_BASE_URL 存在，若不存在則使用預設值
+        this.baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+        
+        // 初始化餐廳詳情緩存
+        this.restaurantCache = {};
     }
     
     // 初始化方法
@@ -35,10 +41,10 @@ class RestaurantService {
     async preloadRestaurantData() {
         try {
             if (!window.config || !window.config.api) {
-                throw new Error('API 配置未找到');
+                console.warn('API 配置未找到，使用預設值');
             }
             
-            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.all}`;
+            const apiUrl = `${this.baseUrl}${window.config?.api?.endpoints?.restaurants?.all || '/google-restaurants/all'}`;
             console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
@@ -101,11 +107,7 @@ class RestaurantService {
         }
         
         try {
-            if (!window.config || !window.config.api) {
-                throw new Error('API 配置未找到');
-            }
-            
-            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.all}`;
+            const apiUrl = `${this.baseUrl}${window.config?.api?.endpoints?.restaurants?.all || '/google-restaurants/all'}`;
             console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
@@ -139,47 +141,62 @@ class RestaurantService {
     
     // 獲取餐廳詳情
     async getRestaurantDetails(placeId) {
-        console.log(`獲取餐廳詳情: ${placeId}`);
-        
-        if (!placeId) {
-            throw new Error('未提供餐廳ID');
-        }
-        
-        // 優先使用已載入的資料
-        if (this.dataLoaded && this.apiData.length > 0) {
-            const restaurant = this.apiData.find(r => r.place_id === placeId || r.id === placeId);
-            if (restaurant) return restaurant;
-        }
-        
         try {
-            if (!window.config || !window.config.api) {
-                throw new Error('API 配置未找到');
+            // 確保 API_BASE_URL 存在，若不存在則使用預設值
+            const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+            
+            // 從緩存中獲取數據
+            if (this.restaurantCache[placeId]) {
+                console.log(`從緩存獲取餐廳詳情: ${placeId}`);
+                return this.restaurantCache[placeId];
             }
             
-            const apiUrl = `${window.config.api.baseUrl}${window.config.api.endpoints.restaurants.byId}${placeId}`;
-            console.log(`從 API 獲取餐廳詳情: ${apiUrl}`);
-            
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-            
+            // 從 API 獲取數據
+            console.log(`從 API 獲取餐廳詳情: ${placeId}`);
+            const response = await fetch(`${baseUrl}/google-restaurants/${placeId}`);
             if (!response.ok) {
-                throw new Error(`API 回應錯誤: ${response.status}`);
+                throw new Error(`獲取餐廳詳情失敗: ${response.status}`);
             }
             
-            const data = await response.json();
-            if (data) {
-                console.log(`成功從 API 載入餐廳詳情`);
-                return data;
-            } else {
-                throw new Error('餐廳詳情資料為空');
+            const restaurant = await response.json();
+            
+            // 從 json_raw 解析數據
+            if (restaurant.json_raw) {
+                try {
+                    const jsonData = JSON.parse(restaurant.json_raw);
+                    
+                    // 從 JSON 數據中提取評分、評論數
+                    if (jsonData.rating) {
+                        restaurant.rating = jsonData.rating;
+                        restaurant.averageRating = jsonData.rating;
+                    }
+                    if (jsonData.user_ratings_total) {
+                        restaurant.reviewCount = jsonData.user_ratings_total;
+                        restaurant.user_ratings_total = jsonData.user_ratings_total;
+                    }
+                    
+                    // 提取營業時間
+                    if (jsonData.opening_hours && jsonData.opening_hours.weekday_text) {
+                        restaurant.businessHours = jsonData.opening_hours.weekday_text;
+                        restaurant.opening_hours = jsonData.opening_hours;
+                    }
+                    
+                    console.log('從 json_raw 解析的數據:', {
+                        rating: restaurant.rating,
+                        reviewCount: restaurant.reviewCount,
+                        businessHours: restaurant.businessHours ? '已提取' : '無數據'
+                    });
+                } catch (error) {
+                    console.error('解析 json_raw 失敗:', error);
+                }
             }
+            
+            // 保存到緩存
+            this.restaurantCache[placeId] = restaurant;
+            
+            return restaurant;
         } catch (error) {
-            console.error('從 API 載入餐廳詳情失敗:', error);
+            console.error(`獲取餐廳詳情失敗: ${error}`);
             throw error;
         }
     }

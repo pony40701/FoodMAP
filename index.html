@@ -17,14 +17,15 @@
     <link rel="stylesheet" href="css/business-hours.css">
     <link rel="stylesheet" href="css/modal-fix.css">
     <link rel="stylesheet" href="css/restaurant-modal-new.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <!-- 已存在 config.js，保留即可 -->
     <script src="js/config.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/restaurantService.js"></script>
     <!-- favoriteSystem 要先載入，才能被下面的模組使用 -->
     <script src="js/favoriteSystem.js"></script>
-    <script src="js/favoriteService.js" type="module"></script>
-    <script src="js/favoriteButton.js" type="module"></script>
+    <script src="js/favoriteService.js"></script>
+    <script src="js/favoriteButton.js"></script>
     <script src="js/displayRestaurants.js"></script>
     <style>
         /* 登入視窗樣式 - 極簡版本 */
@@ -1384,6 +1385,8 @@
             });
         });
     </script>
+    <!-- 先引入 config.js 設置 API_BASE_URL -->
+    <script src="js/config.js"></script>
     <script src="js/BusinessHours.js"></script>
     <script src="js/searchService.js"></script>
     <script src="js/infiniteScroll.js"></script>
@@ -1538,6 +1541,7 @@
             }
         });
     </script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </body>
 
 </html>
