@@ -23,7 +23,7 @@ public class LLeaderGoogleRestaurantService {
     private LLeaderGoogleRestaurantPhotoRepository photoRepository;
 
     public Page<RankingGoogleRestaurantDTO> getGoogleRestaurants(String filter, Pageable pageable) {
-        Page<GoogleRestaurant> restaurantsPage;
+        Page<RankingGoogleRestaurantDTO> restaurantsPage;
         switch (filter) {
             case "weekly":
                 restaurantsPage = repository.findAllByWeekly(pageable);
@@ -37,26 +37,8 @@ public class LLeaderGoogleRestaurantService {
                 break;
         }
 
-        // 遍歷餐廳並設置 photoUrl
-        restaurantsPage.getContent().forEach(restaurant -> {
-            photoRepository.findFirstByPlaceId(restaurant.getPlaceId())
-                    .map(LLeaderGoogleRestaurantPhoto::getPhotoUrl)
-                    .ifPresent(restaurant::setPhotoUrl);
-        });
-
-        // 將 Page<GoogleRestaurant> 轉換為 Page<RankingGoogleRestaurantDTO>
-        return restaurantsPage.map(this::convertToDto);
-    }
-
-    private RankingGoogleRestaurantDTO convertToDto(GoogleRestaurant restaurant) {
-        return new RankingGoogleRestaurantDTO(
-                restaurant.getPlaceId(),
-                restaurant.getName(),
-                restaurant.getAddress(),
-                restaurant.getRating(),
-                restaurant.getReviewCount(),
-                restaurant.getPhotoUrl()
-        );
+        // 因為 Repository 已直接返回 DTO，所以不再需要手動轉換和額外的照片查詢
+        return restaurantsPage;
     }
 
     public Optional<String> getPhotoUrlByPlaceId(String placeId) {
