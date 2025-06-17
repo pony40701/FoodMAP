@@ -1,0 +1,228 @@
+/* 餐廳卡片 v3 樣式 - 用於會員中心頁面 */
+.restaurant-card.v3 {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    margin-bottom: 20px;
+    height: 100%;
+}
+
+.restaurant-card.v3:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.restaurant-image-wrapper.v3 {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.restaurant-image-wrapper.v3 img,
+.restaurant-image.v3 {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.restaurant-card.v3:hover .restaurant-image-wrapper.v3 img,
+.restaurant-card.v3:hover .restaurant-image.v3 {
+    transform: scale(1.05);
+}
+
+.restaurant-info.v3 {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.restaurant-title-row.v3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    width: 100%;
+    position: relative;
+}
+
+.restaurant-name.v3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    line-height: 1.3;
+    flex-grow: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 40px; /* 為收藏按鈕預留空間 */
+}
+
+.favorite-btn.v3 {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.favorite-btn.v3:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.favorite-btn.v3 i {
+    font-size: 18px;
+    color: #ff6b1a;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn.v3:hover i {
+    color: #ff8c42;
+    transform: scale(1.1);
+}
+
+.favorite-btn.v3.active {
+    background: #ff6b1a;
+}
+
+.favorite-btn.v3.active i {
+    color: white;
+}
+
+.restaurant-rating-row.v3 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.rating-stars.v3 {
+    color: #ffc107;
+    font-size: 16px;
+    margin-right: 8px;
+}
+
+.rating-score.v3 {
+    font-weight: 600;
+    color: #333;
+    margin-right: 4px;
+}
+
+.rating-count.v3 {
+    color: #777;
+    font-size: 14px;
+}
+
+.restaurant-address-row.v3 {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    color: #555;
+    font-size: 14px;
+}
+
+.restaurant-address-row.v3 i {
+    margin-right: 8px;
+    margin-top: 3px;
+    color: #777;
+}
+
+.address-text.v3 {
+    line-height: 1.4;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.restaurant-tags-row.v3 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.tag.v3 {
+    background-color: #f0f0f0;
+    color: #555;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.restaurant-status-row.v3 {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    font-size: 14px;
+}
+
+.status-dot.v3 {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.v3.open {
+    background-color: #4caf50;
+}
+
+.status-dot.v3.closed {
+    background-color: #f44336;
+}
+
+.status-text.v3 {
+    font-weight: 500;
+    margin-right: 12px;
+}
+
+.status-text.v3.open {
+    color: #4caf50;
+}
+
+.status-text.v3.closed {
+    color: #f44336;
+}
+
+.status-hours.v3 {
+    color: #777;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .restaurant-image-wrapper.v3 {
+        height: 150px;
+    }
+    
+    .restaurant-name.v3 {
+        font-size: 16px;
+    }
+    
+    .restaurant-info.v3 {
+        padding: 12px;
+    }
+} 

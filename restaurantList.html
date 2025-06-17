@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>餐廳列表 - 食力派ChowCrew</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/restaurantList.css" />
+  </head>
+  <body>
+    <!--only complete this page's search cuz no idea with others page-->
+    <!-- 導覽列（header） -->
+    <nav class="navbar">
+      <div class="navbar-left">
+        <a href="./index.html"><div class="logo-text">食力派ChowCrew</div></a>
+      </div>
+      <div class="search-section">
+        <div class="search-bar">
+          <div class="input-container">
+            <span class="input-icon">🍽️</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="搜尋美食..."
+              id="food-search"
+            />
+          </div>
+          <div class="search-divider"></div>
+          <div class="input-container">
+            <span class="input-icon">📍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="地點..."
+              id="location-search"
+            />
+          </div>
+          <button class="search-btn">
+            <img
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDMTUuOTcgMiAyMCA2LjAzIDIwIDExQzIwIDEzLjEyIDE5LjMzIDE1LjA3IDE4LjE5IDE2LjU5TDIyIDIwLjQxTDIwLjQxIDIyTDE2LjU5IDE4LjE5QzE1LjA3IDE5LjMzIDEzLjEyIDIwIDExIDIwQzYuMDMgMjAgMiAxNS45NyAyIDExQzIgNi4wMyA2LjAzIDIgMTEgMlpNMTEgNEM3LjEzIDQgNCA3LjEzIDQgMTFDNCAxNC44NyA3LjEzIDE4IDExIDE4QzE0Ljg3IDE4IDE4IDE0Ljg3IDE4IDExQzE4IDcuMTMgMTQuODcgNCAxMSA0WiIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo="
+              alt="搜尋"
+            />
+          </button>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <a href="restaurantList.html" class="nav-link">
+          <i class="fas fa-utensils"></i>
+          <span>餐廳詳情</span>
+        </a>
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="ranking/ranking.html" class="dropdown-item">
+              <i class="fas fa-trophy"></i>
+              <span>綜合排行</span>
+            </a>
+            <a href="ranking/ranking.html#popular" class="dropdown-item">
+              <i class="fas fa-fire"></i>
+              <span>人氣排行</span>
+            </a>
+            <a href="ranking/ranking.html#rating" class="dropdown-item">
+              <i class="fas fa-star"></i>
+              <span>評分排行</span>
+            </a>
+          </div>
+        </div>
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+              <i class="fas fa-pen-alt"></i>
+              <span>寫食記</span>
+            </a>
+            <a href="experienceList.html" class="dropdown-item">
+              <i class="fas fa-book-open"></i>
+              <span>瀏覽心得</span>
+            </a>
+          </div>
+        </div>
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="./restaurant-signup.html" class="dropdown-item">
+              <i class="fas fa-store"></i>
+              <span>商家註冊</span>
+            </a>
+            <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+              <i class="fas fa-sign-in-alt"></i>
+              <span>商家登入</span>
+            </a>
+          </div>
+        </div>
+        <!-- 未登入狀態 - 顯示登入按鈕 -->
+        <div id="loginSection" class="login-section">
+          <button class="btn-login">登入</button>
+        </div>
+        
+        <!-- 已登入狀態 - 顯示會員頭像 -->
+        <div id="userSection" class="user-section" style="display: none;">
+          <div class="user-avatar">
+            <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+            <div class="avatar-dropdown">
+              <a href="usercenter.html" class="dropdown-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>會員中心</span>
+              </a>
+              <a href="usercenter.html#favorites" class="dropdown-item">
+                <i class="fas fa-heart"></i>
+                <span>我的收藏</span>
+              </a>
+              <a href="usercenter.html#reviews" class="dropdown-item">
+                <i class="fas fa-star"></i>
+                <span>我的評論</span>
+              </a>
+              <a href="usercenter.html#orders" class="dropdown-item">
+                <i class="fas fa-history"></i>
+                <span>瀏覽紀錄</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>登出</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <main>
+      <!-- 篩選條件列 -->
+      <div class="filter-bar">
+        <div class="sort-options">
+          <button class="sort-btn" data-sort="rating">評分最高</button>
+          <button class="sort-btn" data-sort="rating-count">評論數最多</button>
+          <button class="sort-btn" data-sort="newest">最新商家</button>
+          <button class="sort-btn" data-sort="distance">鄰近餐廳</button>
+        </div>
+        <div class="dropdown-type">
+          <button class="type-dropdown-trigger">所有類型 ▼</button>
+          <div class="type-dropdown-menu">
+            <div class="tag-grid">
+              <div class="tag-header">
+                <h4>選擇餐廳類型</h4>
+              </div>
+              <div class="tag-row">
+                <div class="tag-option" data-type="all">
+                  <span>全部餐廳</span>
+                </div>
+              </div>
+              <!-- 其他標籤將由 JavaScript 動態生成 -->
+            </div>
+            <div class="tag-actions">
+              <button class="apply-tags">套用篩選</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 假資料商家卡片區塊（Yelp Sponsored Results 風格） -->
+      <!-- 由 JS 動態渲染多筆卡片，分頁按鈕區塊如下 -->
+      <div class="list-layout">
+        <section class="restaurant-list-section">
+          <div id="restaurant-cards"></div>
+          <div class="pagination"></div>
+        </section>
+        <aside class="map-placeholder">
+          <div id="map" style="width: 100%; height: 100%; border-radius: 12px;"></div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- 彈出視窗 -->
+    <div id="restaurant-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+      <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
+        <button class="modal-close" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+        <div id="modal-content-container">
+          <!-- 內容將由 JavaScript 動態填充 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <h4>關於我們</h4>
+          <p>
+            食力派ChowCrew致力於提供最優質的美食推薦與評論平台，讓您輕鬆發現身邊的美味。
+          </p>
+          <div class="footer-links">
+            <a href="#">服務條款</a>
+            <a href="#">隱私政策</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>快速連結</h4>
+          <div class="footer-links">
+            <a href="#">商家註冊</a>
+            <a href="#">排行榜</a>
+            <a href="#">寫評論</a>
+            <a href="#">幫助中心</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>聯絡我們</h4>
+          <p>📧 support@chowcrew.com</p>
+          <p>📞 02-1234-5678</p>
+          <div class="social-icons">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+      </div>
+    </footer>
+    
+    <!-- 登入模態框 -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>登入</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm" class="login-form">
+            <div class="form-group">
+              <label for="email">電子郵件</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="password">密碼</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+          </div>
+          <div class="social-login">
+            <p>或使用以下方式登入</p>
+            <div class="social-buttons">
+              <button class="social-btn google" onclick="socialLogin('google')">
+                <i class="fab fa-google"></i> Google
+              </button>
+              <button class="social-btn facebook" onclick="socialLogin('facebook')">
+                <i class="fab fa-facebook-f"></i> Facebook
+              </button>
+              <button class="social-btn line" onclick="socialLogin('line')">
+                <i class="fab fa-line"></i> Line
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商家登入模態框 -->
+    <div id="restaurantLoginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>商家登入</h2>
+          <span class="close" onclick="closeRestaurantLoginModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="restaurantLoginForm" class="login-form">
+            <div class="form-group">
+              <label for="restaurant-email">電子郵件</label>
+              <input type="email" id="restaurant-email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="restaurant-password">密碼</label>
+              <input type="password" id="restaurant-password" name="password" required>
+            </div>
+            <div class="form-group" style="flex-direction: row; align-items: center; margin-top: 8px;">
+              <input type="checkbox" id="restaurant-remember" name="remember" style="margin-right: 8px; width: auto;">
+              <label for="restaurant-remember" style="margin: 0; font-weight: normal;">記住我</label>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="#">忘記密碼？</a> | <a href="restaurant-signup.html">商家註冊</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="JS/restaurantList.js"></script>
+    <script src="js/login.js"></script>
+    <script>
+      // 處理寫食記按鈕點擊
+      function handleWriteReview() {
+        // 檢查是否已登入
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        
+        if (!isLoggedIn) {
+          // 顯示請先登入的 alert 訊息
+          alert('請先登入會員');
+          // 顯示登入彈跳視窗
+          document.getElementById('loginModal').style.display = 'block';
+          // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
+          window.onLoginSuccess = function() {
+            window.location.href = 'blogPost.html';
+          };
+        } else {
+          // 已登入，直接跳轉到寫食記頁面
+          window.location.href = 'blogPost.html';
+        }
+      }
+
+      // 商家登入彈窗相關函數
+      function openRestaurantLoginModal() {
+        document.getElementById('restaurantLoginModal').style.display = 'block';
+      }
+
+      function closeRestaurantLoginModal() {
+        document.getElementById('restaurantLoginModal').style.display = 'none';
+      }
+
+      // 初始化登入模態框
+      document.addEventListener('DOMContentLoaded', function() {
+        // 檢查是否需要自動開啟商家登入彈窗
+        if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
+          sessionStorage.removeItem('openRestaurantLogin');
+          openRestaurantLoginModal();
+        }
+
+        const loginModal = document.getElementById('loginModal');
+        if (loginModal) {
+          // 關閉按鈕事件
+          const closeBtn = loginModal.querySelector('.close');
+          if (closeBtn) {
+            closeBtn.onclick = function() {
+              loginModal.style.display = 'none';
+            };
+          }
+        }
+
+        // 初始化商家登入模態框
+        const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+        if (restaurantLoginModal) {
+          // 關閉按鈕事件已在 HTML 中設置 onclick
+          
+          // 表單提交事件
+          const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+          if (restaurantLoginForm) {
+            restaurantLoginForm.addEventListener('submit', function(e) {
+              e.preventDefault();
+              
+              const email = document.getElementById('restaurant-email').value;
+              const password = document.getElementById('restaurant-password').value;
+              const remember = document.getElementById('restaurant-remember').checked;
+              
+              // 這裡可以添加實際的登入驗證邏輯
+              console.log('商家登入:', { email, password, remember });
+              
+              // 模擬登入成功，跳轉到商家後台
+              alert('登入成功！');
+              closeRestaurantLoginModal();
+              // 跳轉到商家後台主頁
+              window.location.href = 'restaurant.html';
+            });
+          }
+        }
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+          if (event.target === loginModal) {
+            loginModal.style.display = 'none';
+          }
+          if (event.target === restaurantLoginModal) {
+            closeRestaurantLoginModal();
+          }
+        };
+      });
+    </script>
+    <!-- 加入 Google Maps API -->
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6_6-dHTpnaLn6NKtn6OhmCFUqf1B4YN4&callback=initMap">
+    </script>
+  </body>
+</html> 

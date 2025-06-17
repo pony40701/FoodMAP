@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>完整菜單 - 食力派ChowCrew</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/restaurantList.css" />
+    <link rel="stylesheet" href="css/menuDetail.css" />
+    <style>
+      .menu-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 20px;
+      }
+      .menu-item-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .menu-item-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .menu-item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 導覽列（header） -->
+    <nav class="navbar">
+      <div class="navbar-left">
+        <div class="logo-text">食力派ChowCrew</div>
+      </div>
+      <div class="search-section">
+        <div class="search-bar">
+          <div class="input-container">
+            <span class="input-icon">🍽️</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="搜尋美食..."
+              id="food-search"
+            />
+          </div>
+          <div class="search-divider"></div>
+          <div class="input-container">
+            <span class="input-icon">📍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="地點..."
+              id="location-search"
+            />
+          </div>
+          <button class="search-btn">
+            <img
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExIDJDMTUuOTcgMiAyMCA2LjAzIDIwIDExQzIwIDEzLjEyIDE5LjMzIDE1LjA3IDE4LjE5IDE2LjU5TDIyIDIwLjQxTDIwLjQxIDIyTDE2LjU5IDE4LjE5QzE1LjA3IDE5LjMzIDEzLjEyIDIwIDExIDIwQzYuMDMgMjAgMiAxNS45NyAyIDExQzIgNi4wMyA2LjAzIDIgMTEgMlpNMTEgNEM3LjEzIDQgNCA3LjEzIDQgMTFDNCAxNC44NyA3LjEzIDE4IDExIDE4QzE0Ljg3IDE4IDE4IDE0Ljg3IDE4IDExQzE4IDcuMTMgMTQuODcgNCAxMSA0WiIgZmlsbD0iY3VycmVudENvbG9yIi8+Cjwvc3ZnPgo="
+              alt="搜尋"
+            />
+          </button>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="ranking/ranking.html" class="dropdown-item">
+              <i class="fas fa-trophy"></i>
+              <span>綜合排行</span>
+            </a>
+            <a href="ranking/ranking.html#popular" class="dropdown-item">
+              <i class="fas fa-fire"></i>
+              <span>人氣排行</span>
+            </a>
+            <a href="ranking/ranking.html#rating" class="dropdown-item">
+              <i class="fas fa-star"></i>
+              <span>評分排行</span>
+            </a>
+          </div>
+        </div>
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+              <i class="fas fa-pen-alt"></i>
+              <span>寫食記</span>
+            </a>
+          </div>
+        </div>
+        <div class="restaurant-dropdown">
+          <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+          <div class="restaurant-dropdown-content">
+            <a href="./restaurant-signup.html" class="dropdown-item">
+              <i class="fas fa-store"></i>
+              <span>商家註冊</span>
+            </a>
+            <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+              <i class="fas fa-sign-in-alt"></i>
+              <span>商家登入</span>
+            </a>
+          </div>
+        </div>
+        <!-- 未登入狀態 - 顯示登入按鈕 -->
+        <div id="loginSection" class="login-section">
+          <button class="btn-login">登入</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 麵包屑導航 -->
+    <div class="breadcrumb-container">
+      <div class="breadcrumb">
+        <a href="#" id="restaurant-link" class="breadcrumb-link">餐廳列表</a>
+        <span class="breadcrumb-separator">></span>
+        <span class="breadcrumb-current">完整菜單</span>
+      </div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <main>
+      <!-- 這裡將放置完整菜單內容 -->
+      <div class="menu-page-container">
+        <h1 class="menu-restaurant-name" id="menuRestaurantName">完整菜單</h1>
+        
+        <div class="menu-items">
+          <!-- 菜單項目將由商家上傳 -->
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">招牌牛肉麵</h3>
+                <p class="menu-item-description">使用特選牛腱肉，搭配手工拉麵，湯頭濃郁</p>
+              </div>
+              <div class="menu-item-price">NT$ 180</div>
+            </div>
+            <div class="menu-item-image" data-food-type="beef-noodle"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">紅燒排骨飯</h3>
+                <p class="menu-item-description">嚴選豬肋排，搭配特製醬汁，附贈時令蔬菜</p>
+              </div>
+              <div class="menu-item-price">NT$ 150</div>
+            </div>
+            <div class="menu-item-image" data-food-type="pork-rib-rice"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">黃金炸雞排</h3>
+                <p class="menu-item-description">外酥內嫩，搭配特製胡椒鹽，附贈飲料</p>
+              </div>
+              <div class="menu-item-price">NT$ 120</div>
+            </div>
+            <div class="menu-item-image" data-food-type="fried-chicken"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">鮮蝦炒飯</h3>
+                <p class="menu-item-description">使用新鮮蝦仁，搭配蛋炒飯，香氣四溢</p>
+              </div>
+              <div class="menu-item-price">NT$ 160</div>
+            </div>
+            <div class="menu-item-image" data-food-type="shrimp-fried-rice"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">台式滷肉飯</h3>
+                <p class="menu-item-description">傳統台式風味，肥瘦適中，搭配滷蛋</p>
+              </div>
+              <div class="menu-item-price">NT$ 80</div>
+            </div>
+            <div class="menu-item-image" data-food-type="lu-rou-fan"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">珍珠奶茶</h3>
+                <p class="menu-item-description">使用台灣茶葉，搭配手工珍珠</p>
+              </div>
+              <div class="menu-item-price">NT$ 60</div>
+            </div>
+            <div class="menu-item-image" data-food-type="bubble-tea"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">檸檬紅茶</h3>
+                <p class="menu-item-description">新鮮檸檬片，搭配紅茶</p>
+              </div>
+              <div class="menu-item-price">NT$ 50</div>
+            </div>
+            <div class="menu-item-image" data-food-type="lemon-tea"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">水果茶</h3>
+                <p class="menu-item-description">使用當季新鮮水果，清爽解膩</p>
+              </div>
+              <div class="menu-item-price">NT$ 70</div>
+            </div>
+            <div class="menu-item-image" data-food-type="fruit-tea"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <h4>關於我們</h4>
+          <p>
+            食力派ChowCrew致力於提供最優質的美食推薦與評論平台，讓您輕鬆發現身邊的美味。
+          </p>
+          <div class="footer-links">
+            <a href="#">服務條款</a>
+            <a href="#">隱私政策</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>快速連結</h4>
+          <div class="footer-links">
+            <a href="#">商家註冊</a>
+            <a href="#">排行榜</a>
+            <a href="#">寫評論</a>
+            <a href="#">幫助中心</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>聯絡我們</h4>
+          <p>📧 support@chowcrew.com</p>
+          <p>📞 02-1234-5678</p>
+          <div class="social-icons">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+      </div>
+    </footer>
+
+    <!-- 登入模態框 -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>登入</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm" class="login-form">
+            <div class="form-group">
+              <label for="email">電子郵件</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="password">密碼</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+          </div>
+          <div class="social-login">
+            <p>或使用以下方式登入</p>
+            <div class="social-buttons">
+              <button class="social-btn google" onclick="socialLogin('google')">
+                <i class="fab fa-google"></i> Google
+              </button>
+              <button class="social-btn facebook" onclick="socialLogin('facebook')">
+                <i class="fab fa-facebook-f"></i> Facebook
+              </button>
+              <button class="social-btn line" onclick="socialLogin('line')">
+                <i class="fab fa-line"></i> Line
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商家登入模態框 -->
+    <div id="restaurantLoginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>商家登入</h2>
+          <span class="close" onclick="closeRestaurantLoginModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="restaurantLoginForm" class="login-form">
+            <div class="form-group">
+              <label for="restaurant-email">電子郵件</label>
+              <input type="email" id="restaurant-email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="restaurant-password">密碼</label>
+              <input type="password" id="restaurant-password" name="password" required>
+            </div>
+            <div class="form-group" style="flex-direction: row; align-items: center; margin-top: 8px;">
+              <input type="checkbox" id="restaurant-remember" name="remember" style="margin-right: 8px; width: auto;">
+              <label for="restaurant-remember" style="margin: 0; font-weight: normal;">記住我</label>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="#">忘記密碼？</a> | <a href="restaurant-signup.html">商家註冊</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="JS/menuDetail.js"></script>
+    <script src="js/login.js"></script>
+    <script>
+      // 處理寫食記按鈕點擊
+      function handleWriteReview() {
+        // 檢查是否已登入
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        
+        if (!isLoggedIn) {
+          // 顯示請先登入的 alert 訊息
+          alert('請先登入會員');
+          // 顯示登入彈跳視窗
+          document.getElementById('loginModal').style.display = 'block';
+          // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
+          window.onLoginSuccess = function() {
+            window.location.href = 'blogPost.html';
+          };
+        } else {
+          // 已登入，直接跳轉到寫食記頁面
+          window.location.href = 'blogPost.html';
+        }
+      }
+
+      // 商家登入彈窗相關函數
+      function openRestaurantLoginModal() {
+        document.getElementById('restaurantLoginModal').style.display = 'block';
+      }
+
+      function closeRestaurantLoginModal() {
+        document.getElementById('restaurantLoginModal').style.display = 'none';
+      }
+
+      // 初始化登入模態框
+      document.addEventListener('DOMContentLoaded', function() {
+        // 檢查是否需要自動開啟商家登入彈窗
+        if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
+          sessionStorage.removeItem('openRestaurantLogin');
+          openRestaurantLoginModal();
+        }
+
+        const loginModal = document.getElementById('loginModal');
+        if (loginModal) {
+          // 關閉按鈕事件
+          const closeBtn = loginModal.querySelector('.close');
+          if (closeBtn) {
+            closeBtn.onclick = function() {
+              loginModal.style.display = 'none';
+            };
+          }
+        }
+
+        // 初始化商家登入模態框
+        const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+        if (restaurantLoginModal) {
+          // 關閉按鈕事件已在 HTML 中設置 onclick
+          
+          // 表單提交事件
+          const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+          if (restaurantLoginForm) {
+            restaurantLoginForm.addEventListener('submit', function(e) {
+              e.preventDefault();
+              
+              const email = document.getElementById('restaurant-email').value;
+              const password = document.getElementById('restaurant-password').value;
+              const remember = document.getElementById('restaurant-remember').checked;
+              
+              // 這裡可以添加實際的登入驗證邏輯
+              console.log('商家登入:', { email, password, remember });
+              
+              // 模擬登入成功，跳轉到商家後台
+              alert('登入成功！');
+              closeRestaurantLoginModal();
+              // 跳轉到商家後台主頁
+              window.location.href = 'restaurant.html';
+            });
+          }
+        }
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+          if (event.target === loginModal) {
+            loginModal.style.display = 'none';
+          }
+          if (event.target === restaurantLoginModal) {
+            closeRestaurantLoginModal();
+          }
+        };
+
+        // 從 URL 獲取餐廳資料
+        const urlParams = new URLSearchParams(window.location.search);
+        const restaurantData = urlParams.get('data');
+        
+        if (restaurantData) {
+          try {
+            const data = JSON.parse(decodeURIComponent(restaurantData));
+            
+            // 更新餐廳名稱
+            const menuRestaurantName = document.getElementById('menuRestaurantName');
+            const restaurantLink = document.getElementById('restaurant-link');
+            
+            if (menuRestaurantName && data.name) {
+              menuRestaurantName.textContent = `${data.name} 完整菜單`;
+            }
+            
+            if (restaurantLink && data.name) {
+              restaurantLink.textContent = data.name;
+              // 設置返回連結
+              const encodedData = encodeURIComponent(JSON.stringify(data));
+              restaurantLink.href = `restaurantListDetail.html?data=${encodedData}`;
+            }
+          } catch (error) {
+            console.error('解析餐廳資料失敗:', error);
+          }
+        }
+      });
+    </script>
+  </body>
+</html> 

@@ -1,0 +1,1423 @@
+/* 導航欄樣式 */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(51, 51, 51, 0.85); /* 加深背景色 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    z-index: 1000;
+    position: fixed;
+    top: 27px;
+    left: 22px;
+    right: 22px;
+    margin: 0;
+}
+
+/* ========== Logo區域 V1 ========== */
+.navbar-left .logo-text {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ff6b1a;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 8px rgba(255, 107, 26, 0.5));
+    padding: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.search-section {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 20px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: 25px;
+    padding: 5px 15px;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.input-icon {
+    margin-right: 10px;
+    color: #666;
+}
+
+.search-input {
+    border: none;
+    background: none;
+    padding: 8px;
+    width: 100%;
+    font-size: 1em;
+}
+
+.search-input:focus {
+    outline: none;
+}
+
+.search-divider {
+    width: 1px;
+    height: 25px;
+    background: #ddd;
+    margin: 0 15px;
+}
+
+/*搜尋按鈕*/
+.search-btn {
+    background: #ff6b1a;
+    border: none;
+    border-radius: 24px;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn:hover {
+    background: #e55a15;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(229, 90, 21, 0.3);
+}
+
+.search-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #ff6b1a;
+    font-weight: 600;
+    font-size: 22px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-link:hover {
+    background: rgba(255, 107, 26, 0.1);
+    color: #ff8c42;
+    transform: translateY(-1px);
+}
+
+.nav-link i {
+    font-size: 20px;
+}
+
+.navbar-right .restaurant-dropdown .nav-link.dropdown-toggle {
+    font-size: 22px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background: #fff;
+    min-width: 150px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    padding: 10px 0;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 8px 15px;
+    color: #333;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+.btn-login {
+    background: #e55a15;
+    color: white;
+    font-size: 22px;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* 輪播圖樣式 */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    margin-bottom: 40px;
+}
+
+.carousel-slogan {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.carousel-slogan p {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.carousel-wrapper {
+    display: flex;
+    width: 300%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+    width: 33.333%;
+    height: 100%;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.5);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #333;
+    z-index: 2;
+}
+
+.carousel-button.prev {
+    left: 20px;
+}
+
+.carousel-button.next {
+    right: 20px;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+}
+
+.dot.active {
+    background: white;
+}
+
+/* 食物分類區塊樣式 */
+.food-section {
+    padding: 20px 0;
+    background-color: #fff;
+    margin-top: 20px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.food-categories {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.category-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.3s ease;
+}
+
+.category-item:hover {
+    transform: translateY(-5px);
+}
+
+.category-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease;
+}
+
+.category-circle img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.category-name {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.category-item.active .category-circle {
+    background-color: #ffebee;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* 熱門美食類型樣式 */
+.food-types-section {
+    margin-bottom: 40px;
+}
+
+.food-types-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.food-types {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.food-type-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #555;
+    transition: transform 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+    width: 80px;
+    min-width: 80px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.emoji-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffeadb, #ffe0c7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.emoji-circle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent 50%);
+    pointer-events: none;
+}
+
+/* 各種美食類型的專屬顏色主題 */
+.emoji-circle.chinese {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-color: #e57373;
+}
+
+.emoji-circle.bbq {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border-color: #ffb74d;
+}
+
+.emoji-circle.hotpot {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    border-color: #f06292;
+}
+
+.emoji-circle.japanese {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    border-color: #81c784;
+}
+
+.emoji-circle.american {
+    background: linear-gradient(135deg, #fff8e1, #ffecb3);
+    border-color: #ffd54f;
+}
+
+.emoji-circle.italian {
+    background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+    border-color: #4fc3f7;
+}
+
+.emoji-circle.steak {
+    background: linear-gradient(135deg, #efebe9, #d7ccc8);
+    border-color: #a1887f;
+}
+
+.emoji-circle.vegetarian {
+    background: linear-gradient(135deg, #f1f8e9, #dcedc8);
+    border-color: #aed581;
+}
+
+.emoji-circle.dessert {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    border-color: #f48fb1;
+}
+
+/* Hover 效果 */
+.food-type-item:hover {
+    transform: translateY(-8px);
+    color: #333;
+}
+
+.food-type-item:hover .emoji-circle {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    border-width: 4px;
+}
+
+.food-type-item:hover .emoji-circle.chinese {
+    box-shadow: 0 8px 25px rgba(229, 115, 115, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.bbq {
+    box-shadow: 0 8px 25px rgba(255, 183, 77, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.hotpot {
+    box-shadow: 0 8px 25px rgba(240, 98, 146, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.japanese {
+    box-shadow: 0 8px 25px rgba(129, 199, 132, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.american {
+    box-shadow: 0 8px 25px rgba(255, 213, 79, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.italian {
+    box-shadow: 0 8px 25px rgba(79, 195, 247, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.steak {
+    box-shadow: 0 8px 25px rgba(161, 136, 127, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.vegetarian {
+    box-shadow: 0 8px 25px rgba(174, 213, 129, 0.5);
+}
+
+.food-type-item:hover .emoji-circle.dessert {
+    box-shadow: 0 8px 25px rgba(244, 143, 177, 0.5);
+}
+
+.food-type-item span {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    word-break: keep-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.food-type-item:hover span {
+    color: #333;
+    font-weight: 700;
+}
+
+/* 響應式設計 - 美食類型ICON */
+@media (max-width: 768px) {
+    .food-types {
+        gap: 16px;
+        padding: 0 16px;
+    }
+    
+    .food-type-item {
+        width: 70px;
+        min-width: 70px;
+    }
+    
+    .emoji-circle {
+        width: 70px;
+        height: 70px;
+        font-size: 30px;
+    }
+    
+    .food-type-item span {
+        font-size: 13px;
+        max-width: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .food-types {
+        gap: 12px;
+        padding: 0 12px;
+    }
+    
+    .food-type-item {
+        width: 65px;
+        min-width: 65px;
+    }
+    
+    .emoji-circle {
+        width: 65px;
+        height: 65px;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .food-type-item span {
+        font-size: 12px;
+        max-width: 65px;
+    }
+    
+    .food-type-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .food-type-item:hover .emoji-circle {
+        transform: scale(1.05);
+    }
+}
+
+/* 餐廳資訊區塊樣式 */
+.restaurants-section {
+    margin-bottom: 40px;
+    padding: 0 20px;
+}
+
+.restaurants-section h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+/* 已徹底移除 .restaurant-card、.favorite-btn、.tag、.restaurants-grid 相關樣式，請用 restaurant-card-v2.css 控制卡片 */
+
+/* 地圖樣式 */
+#map {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 新增消息樣式 */
+.loading-message, .error-message {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 1.1em;
+    grid-column: 1 / -1;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.loading-message {
+    color: #007bff;
+    background: #f8f9fa;
+    border: 2px dashed #007bff;
+}
+
+.error-message {
+    color: #dc3545;
+    background: #fff5f5;
+    border: 2px dashed #dc3545;
+}
+
+/* 載入更多提示的樣式 */
+.loading-more {
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+    color: #666;
+}
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 16px;
+}
+
+.loading-spinner i {
+    color: #ff6b1a;
+}
+
+/* RWD 設置 */
+@media (max-width: 1200px) {
+    .restaurant-card {
+        height: 440px;
+    }
+
+    .restaurant-card img {
+        height: 180px;
+    }
+
+    .card-info {
+        padding: 14px;
+        height: 260px;
+        gap: 8px;
+    }
+
+    .restaurant-name {
+        font-size: 1em;
+    }
+
+    .rating-stars .stars {
+        font-size: 13px;
+    }
+
+    .rating-value {
+        font-size: 13px;
+    }
+
+    .rating-count {
+        font-size: 11px;
+    }
+
+    .address-text {
+        font-size: 12px;
+    }
+
+    .type-text {
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+
+    .status-text,
+    .today-hours {
+        font-size: 11px;
+    }
+
+    .card-actions {
+        top: 10px;
+        right: 10px;
+    }
+
+    .favorite-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .favorite-btn i {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .restaurant-card {
+        height: 420px;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .restaurant-card img {
+        height: 160px;
+    }
+
+    .card-info {
+        padding: 12px;
+        height: 260px;
+        gap: 6px;
+    }
+
+    .restaurant-name {
+        font-size: 0.95em;
+    }
+
+    .restaurant-rating {
+        margin: 2px 0;
+    }
+
+    .rating-stars .stars {
+        font-size: 12px;
+    }
+
+    .rating-value {
+        font-size: 12px;
+    }
+
+    .rating-count {
+        font-size: 10px;
+    }
+
+    .restaurant-address,
+    .restaurant-type,
+    .restaurant-hours {
+        margin: 2px 0;
+    }
+
+    .restaurant-address i {
+        font-size: 12px;
+    }
+
+    .address-text {
+        font-size: 11px;
+    }
+
+    .type-icon {
+        font-size: 14px;
+    }
+
+    .type-text {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    .status-indicator i {
+        font-size: 10px;
+    }
+
+    .status-text {
+        font-size: 10px;
+    }
+
+    .today-hours {
+        font-size: 10px;
+    }
+
+    .card-actions {
+        top: 8px;
+        right: 8px;
+    }
+
+    .favorite-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .favorite-btn i {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .restaurants-section {
+        padding: 0 10px;
+    }
+
+    .restaurants-section h3 {
+        font-size: 1.8em;
+    }
+
+    .restaurant-card {
+        height: 400px;
+        margin: 0 auto;
+    }
+
+    .restaurant-card img {
+        height: 150px;
+    }
+
+    .card-info {
+        padding: 10px;
+        height: 240px;
+        gap: 5px;
+    }
+
+    .loading-message, .error-message {
+        font-size: 14px;
+        padding: 15px;
+        margin: 10px;
+    }
+}
+
+/* 其他餐廳樣式 - 不影響主要卡片 */
+
+/* 地圖樣式 */
+#map {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 新增消息樣式 */
+.loading-message, .error-message, .no-results {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin: 20px 0;
+    border: 2px dashed #dee2e6;
+    color: #6c757d;
+    font-size: 16px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-weight: 500;
+}
+
+.loading-message {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-color: #2196f3;
+    color: #1976d2;
+    animation: pulse 2s infinite;
+}
+
+.loading-message::before {
+    content: "🔄";
+    font-size: 32px;
+    animation: spin 2s linear infinite;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.error-message::before {
+    content: "❌";
+    font-size: 32px;
+}
+
+.no-results {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffeaa7 100%);
+    border-color: #ff9800;
+    color: #f57c00;
+}
+
+.no-results::before {
+    content: "🔍";
+    font-size: 32px;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 確保餐廳容器載入狀態樣式 */
+
+/* 特別針對訊息元素確保可見性 */
+.restaurants-grid .loading-message,
+.restaurants-grid .error-message,
+.restaurants-grid .no-results {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+/* 餐廳詳細資訊彈窗樣式 */
+.restaurant-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.restaurant-modal-content {
+    background-color: #fff;
+    margin: 2% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.restaurant-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, #ff6b1a, #ff8c42);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.restaurant-modal-header h2 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.restaurant-modal-close {
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.3s ease;
+}
+
+.restaurant-modal-close:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+.restaurant-modal-body {
+    padding: 24px;
+}
+
+.restaurant-main-info {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.restaurant-modal-image {
+    flex: 0 0 300px;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.restaurant-info-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-stars {
+    color: #ffc107;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+.modal-rating-value {
+    font-weight: bold;
+    font-size: 18px;
+    color: #333;
+}
+
+.modal-rating-count {
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-address {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 15px;
+}
+
+.modal-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+}
+
+.modal-status.open {
+    color: #2ecc71;
+}
+
+.modal-status.closed {
+    color: #e74c3c;
+}
+
+.modal-today-hours {
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.modal-favorite-btn,
+.modal-direction-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.modal-favorite-btn {
+    background-color: #fff;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+.modal-favorite-btn:hover {
+    background-color: #ff6b6b;
+    color: #fff;
+}
+
+.modal-favorite-btn.active {
+    background-color: #ff6b6b;
+    color: #fff;
+}
+
+.modal-direction-btn {
+    background-color: #ff6b1a;
+    color: #fff;
+}
+
+.modal-direction-btn:hover {
+    background-color: #e55a15;
+}
+
+.restaurant-map-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #eee;
+}
+
+.restaurant-map-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.restaurant-map-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+#modal-map {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 營業時間信息按鈕樣式 */
+.modal-today-hours-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 20px;
+    gap: 12px;
+}
+
+.modal-hours-info-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 8px;
+    background: rgba(255, 107, 26, 0.08);
+    border: 1px solid rgba(255, 107, 26, 0.2);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    user-select: none;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.modal-hours-info-btn:hover {
+    background: rgba(255, 107, 26, 0.15);
+    border-color: rgba(255, 107, 26, 0.4);
+    transform: translateY(-1px);
+}
+
+.modal-hours-info-btn i {
+    color: #ff6b1a;
+    font-size: 10px;
+    transition: all 0.3s ease;
+}
+
+.modal-hours-info-btn:hover i {
+    transform: scale(1.1);
+}
+
+.modal-hours-info-btn span {
+    color: #ff6b1a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* 營業時間詳細彈窗樣式 */
+.weekly-hours-modal {
+    display: none;
+    position: fixed;
+    z-index: 2100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s ease;
+}
+
+.weekly-hours-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    border-radius: 16px;
+    padding: 0;
+    border: none;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: slideInScale 0.3s ease;
+    position: relative;
+}
+
+.weekly-hours-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+    border-radius: 16px 16px 0 0;
+    color: white;
+}
+
+.weekly-hours-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.weekly-hours-modal-close {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.weekly-hours-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.weekly-hours-modal-body {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* 彈窗內的營業時間表格樣式 */
+.weekly-hours-table {
+    width: 100%;
+}
+
+.weekly-hours-header {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 16px;
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.hours-day {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.hours-day:hover {
+    background: rgba(255, 107, 26, 0.05);
+}
+
+.hours-day:last-child {
+    border-bottom: none;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #333;
+    min-width: 60px;
+    font-size: 15px;
+}
+
+.day-name.today {
+    color: #ff6b1a;
+    position: relative;
+    font-weight: 700;
+}
+
+.day-name.today::after {
+    content: ' (今天)';
+    font-size: 12px;
+    color: #ff6b1a;
+    font-weight: normal;
+    background: rgba(255, 107, 26, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.day-hours {
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.day-hours.closed {
+    color: #F44336;
+    font-weight: 600;
+}
+
+.day-hours.open {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+/* 彈窗動畫 */
+@keyframes slideInScale {
+    from {
+        transform: scale(0.7) translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.weekly-hours-header {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.hours-day {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.hours-day:last-child {
+    border-bottom: none;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #333;
+    min-width: 60px;
+}
+
+.day-name.today {
+    color: #ff6b1a;
+    position: relative;
+}
+
+.day-name.today::after {
+    content: ' (今天)';
+    font-size: 12px;
+    color: #ff6b1a;
+    font-weight: normal;
+}
+
+.day-hours {
+    color: #666;
+    font-size: 14px;
+}
+
+.day-hours.closed {
+    color: #F44336;
+    font-weight: 600;
+}
+
+.day-hours.open {
+    color: #4CAF50;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .modal-today-hours-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .modal-hours-info-btn {
+        padding: 3px 6px;
+        align-self: flex-end;
+    }
+    
+    .modal-hours-info-btn span {
+        font-size: 11px;
+    }
+    
+    .modal-hours-info-btn i {
+        font-size: 9px;
+    }
+    
+    .weekly-hours-modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+    
+    .weekly-hours-modal-header {
+        padding: 16px 20px 12px 20px;
+    }
+    
+    .weekly-hours-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .weekly-hours-modal-body {
+        padding: 20px;
+    }
+    
+    .hours-day {
+        padding: 10px 12px;
+    }
+    
+    .day-name {
+        min-width: 50px;
+        font-size: 14px;
+    }
+    
+    .day-hours {
+        font-size: 13px;
+    }
+    
+    .day-name.today::after {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+}

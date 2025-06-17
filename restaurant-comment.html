@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>店家評論 - 食力派ChowCrew</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+	<link rel="stylesheet" href="css/restaurant-comment.css" />
+</head>
+
+<body>
+	<!-- 導覽列 -->
+	<nav class="navbar">
+		<div class="navbar-left">
+			<a href="index.html" class="logo-text">食力派ChowCrew</a>
+		</div>
+		<div class="navbar-right">
+			<div class="user-avatar">
+				<img src="images/TEST.jpg" alt="商家頭像" class="avatar-img">
+				<div class="avatar-dropdown">
+					<a href="restaurant.html" class="dropdown-item">
+						<i class="fas fa-store"></i>
+						<span>商家資料</span>
+					</a>
+					<a href="restaurant-menu.html" class="dropdown-item">
+						<i class="fas fa-utensils"></i>
+						<span>菜單管理</span>
+					</a>
+					<a href="restaurant-comment.html" class="dropdown-item">
+						<i class="fas fa-comments"></i>
+						<span>店家評論</span>
+					</a>
+					<div class="dropdown-divider"></div>
+					<a href="index.html" class="dropdown-item logout-item">
+						<i class="fas fa-sign-out-alt"></i>
+						<span>登出</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	<!-- 主要內容區域 -->
+	<div class="content-section">
+		<div class="dashboard-container">
+			<!-- 左側選單 -->
+			<div class="sidebar">
+				<a href="restaurant.html" class="menu-item">
+					<i class="fas fa-store"></i>
+					<span>商家資料</span>
+				</a>
+				<a href="restaurant-menu.html" class="menu-item">
+					<i class="fas fa-utensils"></i>
+					<span>菜單管理</span>
+				</a>
+				<a href="restaurant-comment.html" class="menu-item active">
+					<i class="fas fa-comments"></i>
+					<span>店家評論</span>
+				</a>
+			</div>
+
+			<!-- 主要內容區 -->
+			<div class="main-content">
+				<div class="content-header">
+					<h1>店家評論</h1>
+					<div class="comment-filters">
+						<select id="rating-filter" class="filter-select">
+							<option value="all">所有評分</option>
+							<option value="5">5星</option>
+							<option value="4">4星以上</option>
+							<option value="3">3星以上</option>
+							<option value="2">2星以上</option>
+							<option value="1">1星以上</option>
+						</select>
+						<select id="time-filter" class="filter-select">
+							<option value="all">所有時間</option>
+							<option value="week">最近一週</option>
+							<option value="month">最近一個月</option>
+							<option value="year">最近一年</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="comments-container">
+					<!-- 評論項目 -->
+					<div class="comment-item">
+						<div class="comment-header">
+							<div class="user-info">
+								<img src="images/TEST.jpg" alt="用戶頭像" class="user-avatar">
+								<div class="user-details">
+									<h3 class="user-name">王小明</h3>
+									<div class="rating">
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<span class="rating-number">5.0</span>
+									</div>
+								</div>
+							</div>
+							<div class="comment-date">2024/03/15 14:30</div>
+						</div>
+						<div class="comment-content">
+							<p>食物非常美味，服務態度也很好，環境整潔舒適。下次一定會再來！</p>
+						</div>
+						<div class="comment-actions">
+							<button class="reply-button" onclick="showReplyForm(this)">
+								<i class="fas fa-reply"></i>
+								回覆評論
+							</button>
+						</div>
+						<!-- 回覆表單 -->
+						<div class="reply-form" style="display: none;">
+							<textarea placeholder="請輸入回覆內容..." class="reply-textarea"></textarea>
+							<div class="reply-buttons">
+								<button class="cancel-reply" onclick="hideReplyForm(this)">取消</button>
+								<button class="submit-reply" onclick="submitReply(this)">送出回覆</button>
+							</div>
+						</div>
+						<!-- 回覆內容 -->
+						<div class="reply-content">
+							<div class="reply-item">
+								<div class="reply-header">
+																	<div class="restaurant-info">
+									<img src="images/TEST.jpg" alt="商家頭像" class="restaurant-avatar">
+									<span class="restaurant-name">美味餐廳</span>
+								</div>
+									<div class="reply-date">2024/03/15 15:00</div>
+								</div>
+								<div class="reply-text">
+									非常感謝您的支持與肯定！我們會繼續保持品質，期待您的再次光臨！
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 更多評論項目 -->
+					<div class="comment-item">
+						<div class="comment-header">
+							<div class="user-info">
+								<img src="images/TEST.jpg" alt="用戶頭像" class="user-avatar">
+								<div class="user-details">
+									<h3 class="user-name">李小華</h3>
+									<div class="rating">
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="fas fa-star"></i>
+										<i class="far fa-star"></i>
+										<span class="rating-number">4.0</span>
+									</div>
+								</div>
+							</div>
+							<div class="comment-date">2024/03/14 18:45</div>
+						</div>
+						<div class="comment-content">
+							<p>餐點品質不錯，但等待時間稍長，建議可以改善出餐速度。</p>
+						</div>
+						<div class="comment-actions">
+							<button class="reply-button" onclick="showReplyForm(this)">
+								<i class="fas fa-reply"></i>
+								回覆評論
+							</button>
+						</div>
+						<!-- 回覆表單 -->
+						<div class="reply-form" style="display: none;">
+							<textarea placeholder="請輸入回覆內容..." class="reply-textarea"></textarea>
+							<div class="reply-buttons">
+								<button class="cancel-reply" onclick="hideReplyForm(this)">取消</button>
+								<button class="submit-reply" onclick="submitReply(this)">送出回覆</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 分頁控制 -->
+				<div class="pagination">
+					<button class="page-button" disabled>
+						<i class="fas fa-chevron-left"></i>
+					</button>
+					<button class="page-button active">1</button>
+					<button class="page-button">2</button>
+					<button class="page-button">3</button>
+					<button class="page-button">
+						<i class="fas fa-chevron-right"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="js/restaurant-comment.js"></script>
+</body>
+
+</html>

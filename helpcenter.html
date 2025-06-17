@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幫助中心 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <style>
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 移除任何可能覆蓋 navforaboutus.css 的導航欄樣式 */
+
+        .help-hero {
+            background: linear-gradient(135deg, rgba(255, 107, 26, 0.95) 0%, rgba(255, 140, 66, 0.95) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 100px; /* 為固定導航欄留出空間 */
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .hero-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .help-section {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .help-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .help-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            color: #ff6b1a;
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 2px solid rgba(255, 107, 26, 0.1);
+            padding-bottom: 0.6rem;
+        }
+
+        .card-title i {
+            font-size: 1.2rem;
+        }
+
+        .help-content h3 {
+            color: #444;
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        .help-content p {
+            color: #666;
+            margin-bottom: 0.6rem;
+            padding-left: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .contact-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.8rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 1.5rem auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .contact-title {
+            color: #ff6b1a;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .contact-text {
+            margin-bottom: 1rem;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #ff6b1a;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .contact-link:hover {
+            background: #ff8c42;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            .help-section {
+                padding: 0 15px;
+            }
+            .card-title {
+                font-size: 1.3rem;
+            }
+            .help-content h3 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+     <!-- 導航欄 -->
+     <div class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="input-container">
+                    <span class="input-icon">🍴</span>
+                    <input class="search-input" placeholder="找美食" />
+                </div>
+
+                <div class="search-divider"></div>
+                <div class="input-container">
+                    <span class="input-icon">📍</span>
+                    <input class="search-input" placeholder="選擇地點" />
+                </div>
+                <!-- 搜尋按鈕 -->
+                <button class="search-btn">
+                    <img src="/images/search.png" alt="search" width="26" height="26" />
+                </button>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <a href="restaurantList.html" class="nav-link">
+                <i class="fas fa-utensils"></i>
+                <span>餐廳詳情</span>
+            </a>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking/ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="./restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 幫助中心內容 -->
+    <section class="help-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">幫助中心</h1>
+            <p class="hero-text">歡迎來到食力派ChowCrew的幫助中心！</p>
+            <p class="hero-text">我們致力於為您提供最完整的美食評論與搜尋服務。</p>
+        </div>
+    </section>
+
+    <div class="help-section">
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-user-circle"></i>帳號與註冊</h2>
+            <div class="help-content">
+                <h3>如何註冊帳號？</h3>
+                <p>您可以點擊首頁右上角的「註冊」按鈕，填寫基本資料完成註冊。</p>
+                <h3>忘記密碼怎麼辦？</h3>
+                <p>請使用「忘記密碼」功能，輸入註冊的電子郵件，我們會寄送重設密碼的連結給您。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-search"></i>搜尋與瀏覽</h2>
+            <div class="help-content">
+                <h3>如何搜尋餐廳或美食？</h3>
+                <p>在首頁搜尋欄輸入關鍵字，您可以依地區、類別篩選結果。</p>
+                <h3>如何查看餐廳詳細資訊？</h3>
+                <p>點擊搜尋結果中的餐廳名稱，即可查看評論、評分與詳細介紹。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-star"></i>評論與收藏</h2>
+            <div class="help-content">
+                <h3>如何撰寫評論？</h3>
+                <p>登入後，進入餐廳頁面，點擊「寫心得」即可分享您的用餐心得。</p>
+                <h3>如何收藏喜歡的餐廳或評論？</h3>
+                <p>在餐廳或評論旁點擊「收藏」圖示，即可加入您的收藏清單。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-store"></i>商家功能</h2>
+            <div class="help-content">
+                <h3>商家如何註冊與管理餐廳？</h3>
+                <p>商家可透過專屬入口註冊帳號，並管理自己的餐廳資訊與回覆評論。</p>
+                <h3>如何更改菜單？</h3>
+                <p>登入商家後台，進入菜單管理頁面，新增或編輯菜單資訊。</p>
+            </div>
+        </div>
+
+        <div class="help-card">
+            <h2 class="card-title"><i class="fas fa-shield-alt"></i>隱私與安全</h2>
+            <div class="help-content">
+                <h3>我的資料安全嗎？</h3>
+                <p>我們重視您的隱私，採用多重安全措施保護您的個人資料。</p>
+                <h3>如何修改個人資料？</h3>
+                <p>登入後，進入「個人設定」頁面即可修改。</p>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2 class="contact-title">聯絡我們</h2>
+            <p class="contact-text">想聊聊美食、分享心得，或有任何建議，隨時來信：</p>
+            <a href="mailto:service@chowcrew.com" class="contact-link">
+                <i class="fas fa-envelope"></i>
+                service@chowcrew.com
+            </a>
+        </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫評論</a>
+                    <a href="helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+</body>
+</html>

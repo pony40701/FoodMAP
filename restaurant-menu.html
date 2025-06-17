@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>菜單管理 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/restaurant-menu.css" />
+    <style>
+        .menu-item-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .current-image img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="navbar-right">
+            <div class="user-avatar">
+                <img src="images/TEST.jpg" alt="商家頭像" class="avatar-img">
+                <div class="avatar-dropdown">
+                    <a href="restaurant.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家資料</span>
+                    </a>
+                    <a href="restaurant-menu.html" class="dropdown-item">
+                        <i class="fas fa-utensils"></i>
+                        <span>菜單管理</span>
+                    </a>
+                    <a href="restaurant-comment.html" class="dropdown-item">
+                        <i class="fas fa-comments"></i>
+                        <span>店家評論</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="index.html" class="dropdown-item logout-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>登出</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <div class="content-section">
+        <div class="dashboard-container">
+            <!-- 左側選單 -->
+            <div class="sidebar">
+                <a href="restaurant.html" class="menu-item">
+                    <i class="fas fa-store"></i>
+                    <span>商家資料</span>
+                </a>
+                <a href="restaurant-menu.html" class="menu-item active">
+                    <i class="fas fa-utensils"></i>
+                    <span>菜單管理</span>
+                </a>
+                <a href="restaurant-comment.html" class="menu-item">
+                    <i class="fas fa-comments"></i>
+                    <span>店家評論</span>
+                </a>
+            </div>
+
+            <!-- 主要內容區 -->
+            <div class="main-content">
+                <div class="content-header">
+                    <h1>菜單管理</h1>
+                    <button class="add-revenue-btn" onclick="showAddMenuItemModal()">
+                        <i class="fas fa-plus"></i>
+                        新增菜品
+                    </button>
+                </div>
+
+                <!-- 菜單項目表格 -->
+                <div class="revenue-table">
+                    <div class="table-header">
+                        <h2>菜品列表</h2>
+                        <div class="table-filters">
+                            <input type="text" id="search-filter" class="search-filter" placeholder="搜尋菜品...">
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>圖片</th>
+                                    <th>品名</th>
+                                    <th>描述</th>
+                                    <th>金額</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><img src="images/pig.jpg" alt="招牌牛肉麵" class="menu-item-img"></td>
+                                    <td>招牌牛肉麵</td>
+                                    <td>特製湯頭，搭配新鮮牛肉</td>
+                                    <td>$180</td>
+                                    <td>
+                                        <button class="action-btn edit" onclick="editMenuItem(1)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" onclick="deleteMenuItem(1)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/編輯菜品彈窗 -->
+    <div class="modal" id="addMenuItemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增菜品</h2>
+                <button class="close-btn" onclick="hideAddMenuItemModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addMenuItemForm">
+                    <input type="hidden" id="item-id">
+                    <div class="form-group">
+                        <label>菜品名稱</label>
+                        <input type="text" id="item-name" placeholder="請輸入菜品名稱" required>
+                    </div>
+                    <div class="form-group">
+                        <label>價格</label>
+                        <input type="text" id="item-price" placeholder="請輸入價格" required>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea id="item-description" placeholder="請輸入菜品描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>圖片</label>
+                        <input type="file" id="item-image" accept="image/*">
+                        <div id="current-image" class="current-image"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" onclick="hideAddMenuItemModal()">取消</button>
+                <button class="submit-btn" onclick="submitMenuItem()">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/restaurant-menu.js"></script>
+</body>
+
+</html> 

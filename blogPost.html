@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>撰寫美食心得 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/blogPost.css">
+ 
+    <style>
+        /* 登入和用戶區塊樣式 */
+        .login-section,
+        .user-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 會員頭像樣式 */
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: visible;
+            cursor: pointer;
+            border: 2px solid #ff6b1a;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1001;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 107, 26, 0.4);
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        /* 頭像下拉選單樣式 */
+        .avatar-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 107, 26, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1002;
+        }
+        
+        .user-avatar:hover .avatar-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .avatar-dropdown .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #ff6b1a;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 107, 26, 0.1);
+            white-space: nowrap;
+        }
+        
+        .avatar-dropdown .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .avatar-dropdown .dropdown-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .avatar-dropdown .dropdown-item:hover {
+            background: rgba(255, 107, 26, 0.1);
+            color: #ff8c42;
+        }
+        
+        /* 下拉選單分隔線 */
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 107, 26, 0.1);
+            margin: 8px 0;
+        }
+        
+        /* 登出選項樣式 */
+        .logout-item {
+            color: #ff4757 !important;
+        }
+        
+        .logout-item:hover {
+            background: rgba(255, 71, 87, 0.1) !important;
+            color: #ff6b81 !important;
+        }
+        
+        .logout-item i {
+            color: inherit;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .avatar-dropdown {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 12px 12px 0 0;
+                transform: translateY(100%);
+            }
+            
+            .user-avatar:hover .avatar-dropdown {
+                transform: translateY(0);
+            }
+            
+            .avatar-dropdown .dropdown-item {
+                padding: 16px;
+                font-size: 18px;
+            }
+            
+            .avatar-dropdown .dropdown-item i {
+                font-size: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .avatar-dropdown .dropdown-item {
+                padding: 14px;
+                font-size: 16px;
+            }
+            
+            .avatar-dropdown .dropdown-item i {
+                font-size: 18px;
+            }
+        }
+        
+        /* 登入模態框樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            border-radius: 16px;
+            padding: 32px 32px 24px 32px;
+            border: 1px solid #ff6b1a;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .modal-header h2 {
+            font-size: 28px;
+            color: #ff6b1a;
+            margin: 0;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close:hover {
+            color: #ff6b1a;
+        }
+        .modal-body {
+            padding: 0;
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-group label {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+        .form-group input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .form-group input:focus {
+            border: 1.5px solid #ff6b1a;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 0;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.3s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #e55a15 0%, #d4500f 100%);
+        }
+        .form-footer {
+            margin-top: 12px;
+            text-align: center;
+        }
+        .form-footer a {
+            color: #ff6b1a;
+            text-decoration: none;
+            margin: 0 4px;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .form-footer a:hover {
+            color: #e55a15;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .modal-content { padding: 18px 6px 12px 6px; }
+            .modal-header h2 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        
+        <div class="navbar-right">
+            <a href="restaurantList.html" class="nav-link">
+                <i class="fas fa-utensils"></i>
+                <span>餐廳詳情</span>
+            </a>
+            <a href="ranking/ranking.html" class="nav-link">排行榜</a>
+            <a href="#" class="nav-link active">寫評論</a>
+            
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#profile" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>個人資料</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <a href="usercenter.html#settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>帳號設定</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <div class="content-container">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="profile-image">
+                    <img src="images/foodTypeSecionIcon/icons8-dessert-48.png" alt="用戶頭像" id="userAvatar">
+                </div>
+                <h3 id="userName">用戶名稱</h3>
+                <p id="userBio">美食探索家</p>
+            </div>
+            <nav class="blog-nav">
+                <a href="#" class="blog-nav-item active" onclick="showSection('write')">
+                    <i class="fas fa-pen"></i> 撰寫新文章
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('drafts')">
+                    <i class="fas fa-file"></i> 草稿箱
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('published')">
+                    <i class="fas fa-book"></i> 已發布文章
+                </a>
+                <a href="#" class="blog-nav-item" onclick="showSection('stats')">
+                    <i class="fas fa-chart-bar"></i> 文章數據
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主要編輯區域 -->
+        <main class="main-content">
+            <!-- 撰寫新文章區域 -->
+            <section id="write-section" class="content-section active">
+                <h2>撰寫美食心得</h2>
+                <form id="blogPostForm">
+                    <div class="form-groupblog">
+                        <input type="text" id="postTitle" placeholder="文章標題" required>
+                    </div>
+                    <div class="form-groupblog restaurant-info">
+                        <input type="text" id="restaurantName" placeholder="餐廳名稱" required>
+                        <input type="text" id="restaurantLocation" placeholder="餐廳地址" required>
+                    </div>
+                    <div class="form-groupblog">
+                        <div class="rating-section">
+                            <h3>餐廳評分</h3>
+                            <div class="rating-items">
+                                <div class="rating-item">
+                                    <span class="rating-label">用餐環境</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="environment">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">服務品質</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="service">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">餐點美味</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="taste">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="rating-item">
+                                    <span class="rating-label">價格合理</span>
+                                    <div class="stars-container">
+                                        <div class="stars" data-category="price">
+                                            <i class="fas fa-star" data-rating="1"></i>
+                                            <i class="fas fa-star" data-rating="2"></i>
+                                            <i class="fas fa-star" data-rating="3"></i>
+                                            <i class="fas fa-star" data-rating="4"></i>
+                                            <i class="fas fa-star" data-rating="5"></i>
+                                        </div>
+                                        <span class="rating-value">0.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overall-rating">
+                                <span class="overall-rating-label">總評分</span>
+                                <div class="overall-rating-value">
+                                    <div class="stars">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="rating-value">0.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-groupblog">
+                        <div class="editor-toolbar">
+                            <!-- 字型樣式 -->
+                            <div class="toolbar-group">
+                                <div class="font-size-control">
+                                    <select id="fontSize" onchange="setFontSize(this.value)">
+                                        <option value="12">12</option>
+                                        <option value="14">14</option>
+                                        <option value="16" selected>16</option>
+                                        <option value="18">18</option>
+                                        <option value="20">20</option>
+                                        <option value="24">24</option>
+                                        <option value="28">28</option>
+                                        <option value="32">32</option>
+                                        <option value="36">36</option>
+                                        <option value="48">48</option>
+                                        <option value="72">72</option>
+                                    </select>
+                                </div>
+                                <div class="color-picker">
+                                    <button type="button" class="current-color" onclick="toggleColorPalette()" title="文字顏色">
+                                        <span class="color-preview" style="background-color: #000000"></span>
+                                    </button>
+                                    <div class="color-palette" style="display: none;">
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#000000" style="background-color: #000000"></button>
+                                            <button type="button" class="color-option" data-color="#434343" style="background-color: #434343"></button>
+                                            <button type="button" class="color-option" data-color="#666666" style="background-color: #666666"></button>
+                                            <button type="button" class="color-option" data-color="#999999" style="background-color: #999999"></button>
+                                            <button type="button" class="color-option" data-color="#b7b7b7" style="background-color: #b7b7b7"></button>
+                                            <button type="button" class="color-option" data-color="#cccccc" style="background-color: #cccccc"></button>
+                                            <button type="button" class="color-option" data-color="#d9d9d9" style="background-color: #d9d9d9"></button>
+                                            <button type="button" class="color-option" data-color="#ffffff" style="background-color: #ffffff"></button>
+                                        </div>
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#980000" style="background-color: #980000"></button>
+                                            <button type="button" class="color-option" data-color="#ff0000" style="background-color: #ff0000"></button>
+                                            <button type="button" class="color-option" data-color="#ff9900" style="background-color: #ff9900"></button>
+                                            <button type="button" class="color-option" data-color="#ffff00" style="background-color: #ffff00"></button>
+                                            <button type="button" class="color-option" data-color="#00ff00" style="background-color: #00ff00"></button>
+                                            <button type="button" class="color-option" data-color="#00ffff" style="background-color: #00ffff"></button>
+                                            <button type="button" class="color-option" data-color="#4a86e8" style="background-color: #4a86e8"></button>
+                                            <button type="button" class="color-option" data-color="#0000ff" style="background-color: #0000ff"></button>
+                                        </div>
+                                        <div class="color-row">
+                                            <button type="button" class="color-option" data-color="#9900ff" style="background-color: #9900ff"></button>
+                                            <button type="button" class="color-option" data-color="#ff00ff" style="background-color: #ff00ff"></button>
+                                            <button type="button" class="color-option" data-color="#ff99cc" style="background-color: #ff99cc"></button>
+                                            <button type="button" class="color-option" data-color="#99cc00" style="background-color: #99cc00"></button>
+                                            <button type="button" class="color-option" data-color="#009900" style="background-color: #009900"></button>
+                                            <button type="button" class="color-option" data-color="#006600" style="background-color: #006600"></button>
+                                            <button type="button" class="color-option" data-color="#00008b" style="background-color: #00008b"></button>
+                                            <button type="button" class="color-option" data-color="#000033" style="background-color: #000033"></button>
+                                        </div>
+                                        <div class="custom-color">
+                                            <label for="customColor">自訂顏色：</label>
+                                            <input type="color" id="customColor" value="#000000">
+                                            <button class="confirm-color-btn">確認</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 文字樣式 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="formatText('bold')" title="粗體 (Ctrl+B)">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" onclick="formatText('italic')" title="斜體 (Ctrl+I)">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" onclick="formatText('underline')" title="底線 (Ctrl+U)">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                            </div>
+                            <!-- 對齊方式 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="formatText('justifyLeft')" title="靠左對齊">
+                                    <i class="fas fa-align-left"></i>
+                                </button>
+                                <button type="button" onclick="formatText('justifyCenter')" title="置中對齊">
+                                    <i class="fas fa-align-center"></i>
+                                </button>
+                                <button type="button" onclick="formatText('justifyRight')" title="靠右對齊">
+                                    <i class="fas fa-align-right"></i>
+                                </button>
+                            </div>
+                            <!-- 圖片插入 -->
+                            <div class="toolbar-group">
+                                <button type="button" onclick="insertImage()" title="插入圖片">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="editor" class="rich-editor" contenteditable="true" placeholder="分享您的美食體驗..."></div>
+                        <input type="file" id="imageUpload" accept="image/*" multiple style="display: none">
+                    </div>
+                    <div class="form-groupblog">
+                        <input type="text" id="tags" placeholder="新增標籤（用逗號分隔）">
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn-save-draft">儲存草稿</button>
+                        <button type="submit" class="btn-publish">發布文章</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- 草稿箱區域 -->
+            <section id="drafts-section" class="content-section">
+                <h2>草稿箱</h2>
+                <div class="posts-list" id="draftsList"></div>
+            </section>
+
+            <!-- 已發布文章區域 -->
+            <section id="published-section" class="content-section">
+                <h2>已發布文章</h2>
+                <div class="posts-list" id="publishedList"></div>
+            </section>
+
+            <!-- 文章數據區域 -->
+            <section id="stats-section" class="content-section">
+                <h2>文章數據</h2>
+                <div class="stats-container">
+                    <div class="stats-card">
+                        <h3>總觀看次數</h3>
+                        <p id="totalViews">0</p>
+                    </div>
+                    <div class="stats-card">
+                        <h3>總讚數</h3>
+                        <p id="totalLikes">0</p>
+                    </div>
+                </div>
+
+                <!-- 排行榜區域 -->
+                <div class="rankings-container">
+                    <div class="rankings-header">
+                        <h3>熱門文章排行</h3>
+                        <div class="rankings-tabs">
+                            <button class="ranking-tab active" data-type="views">最多觀看</button>
+                            <button class="ranking-tab" data-type="likes">最多讚數</button>
+                        </div>
+                    </div>
+                    
+                    <div id="viewsRanking" class="ranking-list active"></div>
+                    <div id="likesRanking" class="ranking-list"></div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+     <!-- 頁尾 -->
+     <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫評論</a>
+                    <a href="helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <!-- 登入彈跳視窗 -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>登入</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm" class="login-form">
+            <div class="form-group">
+              <label for="email">電子郵件</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="password">密碼</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">登入</button>
+          </form>
+          <div class="form-footer">
+            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加必要的 JavaScript 函式庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/blogPost2.js"></script>
+    
+</body>
+</html> 

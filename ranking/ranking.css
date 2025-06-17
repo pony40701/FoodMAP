@@ -1,0 +1,475 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft JhengHei', sans-serif;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.header p {
+    color: #666;
+    font-size: 1.2em;
+}
+
+/* 過濾器樣式 */
+.filter-section {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 12px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 30px;
+    background-color: white;
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    border-color: #ff6b1a;
+    color: #ff6b1a;
+}
+
+.filter-btn.active {
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
+    color: white;
+}
+
+/* 餐廳列表樣式 */
+.restaurant-list {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.restaurant-item {
+    display: flex;
+    align-items: center;
+    padding: 18px 16px;
+    border-bottom: 1px solid #eee;
+    min-width: 0;
+    max-width: 1980px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.restaurant-item:hover {
+    background-color: #f8f8f8;
+}
+
+.restaurant-item:last-child {
+    border-bottom: none;
+}
+
+.rank {
+    font-size: 2em;
+    font-weight: bold;
+    width: 50px;
+    text-align: center;
+}
+
+.rank-1 { color: #ffd700; }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+
+.restaurant-image {
+    width: 180px;
+    height: 120px;
+    margin: 0 28px 0 0;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.restaurant-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-fav {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(255,255,255,0.85);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.3em;
+    color: #ff6b1a;
+    cursor: pointer;
+    padding: 2px 7px 2px 7px;
+    z-index: 2;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: background 0.2s;
+}
+
+.image-fav.active {
+    color: #e53935;
+    background: #fff3;
+}
+
+.image-fav:hover {
+    background: #ffe0c2;
+}
+
+.restaurant-info {
+    flex: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: auto;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.restaurant-name {
+    font-size: 1.18em;
+    font-weight: bold;
+    margin-bottom: 0;
+    color: #333;
+    white-space: nowrap;
+    margin-right: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 98%;
+}
+
+.rating {
+    color: #666;
+    margin-bottom: 0;
+    white-space: nowrap;
+    font-size: 1.05em;
+}
+
+.stars {
+    color: #ffd700;
+    margin-right: 5px;
+}
+
+.tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.tag {
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
+
+.basic-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    font-size: 1.03em;
+    color: #555;
+    overflow: hidden;
+}
+
+.basic-info i {
+    margin-right: 3px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: static;
+    margin-left: 0;
+    margin-top: 12px;
+}
+
+.favorite-btn {
+    order: 1;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 5px;
+}
+
+.favorite-btn.active {
+    color: #ff6b1a;
+}
+
+.details-btn {
+    order: 2;
+    background: none;
+    border: 1px solid #ff6b1a;
+    color: #ff6b1a;
+    padding: 5px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s;
+    white-space: nowrap;
+    margin-top: 0;
+}
+
+.details-btn:hover {
+    background-color: #ff6b1a;
+    color: white;
+}
+
+.load-more {
+    display: block;
+    width: 200px;
+    margin: 30px auto;
+    padding: 15px;
+    background-color: #ff6b1a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.load-more:hover {
+    background-color: #ff8c42;
+}
+
+/* 模態框樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    margin: 50px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-size: 24px;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 2;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.restaurant-detail {
+    width: 100%;
+}
+
+.detail-image {
+    width: 100%;
+    height: 250px;
+    position: relative;
+}
+
+.detail-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-content {
+    padding: 20px;
+}
+
+.detail-header {
+    margin-bottom: 15px;
+}
+
+.detail-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.detail-title .favorite-btn {
+    color: #ff6b1a;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.detail-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+}
+
+.detail-rating .score {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff6b1a;
+}
+
+.detail-info {
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.info-item i {
+    width: 20px;
+    color: #ff6b1a;
+}
+
+.info-item.open {
+    color: #4CAF50;
+}
+
+.detail-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.detail-tag {
+    background: #f5f5f5;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    color: #666;
+}
+
+@media (max-width: 900px) {
+    .google-list, .custom-list {
+        max-width: 100%;
+    }
+    .restaurant-item {
+        position: static;
+    }
+    .restaurant-image {
+        width: 100%;
+        height: 160px;
+        margin: 10px 0 0 0;
+    }
+    .actions {
+        position: static;
+        align-items: flex-start;
+        margin-left: 0;
+        right: auto;
+        bottom: auto;
+    }
+}
+
+/* 兩欄排版 */
+.container.two-columns {
+    display: flex;
+    gap: 24px;
+}
+.column {
+    flex: 1;
+    min-width: 0;
+}
+.google-list, .custom-list {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 16px 0 24px 0;
+    max-width: 2000px;
+    margin: 0 auto;
+}
+@media (max-width: 900px) {
+    .container.two-columns {
+        flex-direction: column;
+    }
+}
+
+.list-title {
+    text-align: center;
+    font-size: 1.35em;
+    font-weight: bold;
+    margin-bottom: 18px;
+    color: #ff6b1a;
+}
+
+.custom-list {
+    background: #ffe3c2;
+    border: 2px solid #ffb26b;
+    box-shadow: 0 2px 8px rgba(255, 107, 26, 0.10);
+}
+
+.logo-text {
+    text-decoration: none !important;
+    color: #ff6b1a;
+    cursor: pointer;
+}
+.logo-text:hover {
+    color: #ff8c42;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+} 

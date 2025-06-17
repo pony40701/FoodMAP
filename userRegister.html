@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員註冊 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="css/userRegister.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="register-box">
+            <div class="register-header">
+                <h1>會員註冊</h1>
+                <p>歡迎加入食力派ChowCrew，請填寫以下資料</p>
+            </div>
+
+            <!-- 步驟指示器 -->
+            <div class="step-indicator">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">基本資料</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">確認資料</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">完成</div>
+                </div>
+            </div>
+
+            <!-- 步驟內容 -->
+            <div class="step-content" id="step1">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="username">使用者名稱</label>
+                        <input type="text" id="username" name="username" placeholder="請設定您的使用者名稱" required>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">電子郵件</label>
+                        <input type="email" id="email" name="email" placeholder="請輸入常用電子郵件" required>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密碼</label>
+                        <div class="password-input-container">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="請設定至少 8 位數密碼" 
+                                   required 
+                                   autocomplete="new-password">
+                            <button type="button" class="toggle-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">確認密碼</label>
+                        <div class="password-input-container">
+                            <input type="password" 
+                                   id="confirmPassword" 
+                                   name="confirmPassword" 
+                                   placeholder="請再次輸入密碼" 
+                                   required 
+                                   autocomplete="new-password">
+                            <button type="button" class="toggle-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">姓名</label>
+                        <input type="text" id="name" name="name" placeholder="請輸入真實姓名" required>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">手機號碼</label>
+                        <input type="tel" id="phone" name="phone" placeholder="請輸入手機號碼 (格式：0912345678)" required>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="avatar">個人頭像</label>
+                        <div class="avatar-upload-container">
+                            <div class="avatar-preview">
+                                <img id="avatarPreview" src="images/default-avatar.png" alt="預覽圖">
+                            </div>
+                            <div class="avatar-upload-buttons">
+                                <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;">
+                                <button type="button" class="btn-upload" onclick="document.getElementById('avatar').click()">
+                                    <i class="fas fa-upload"></i> 上傳照片
+                                </button>
+                                <button type="button" class="btn-remove" id="removeAvatar" style="display: none;">
+                                    <i class="fas fa-trash"></i> 移除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">我已閱讀並同意<a href="terms-of-service.html">服務條款</a>和<a href="privacy-policy.html">隱私權政策</a></label>
+                        <div class="error-message"></div>
+                    </div>
+                    <button type="submit" class="btn-submit">下一步</button>
+                </form>
+            </div>
+
+            <!-- 確認資料步驟 -->
+            <div class="step-content" id="step2" style="display: none;">
+                <div class="confirmation-data">
+                    <h2>請確認您的資料</h2>
+                    <div class="data-item">
+                        <label>電子郵件：</label>
+                        <span id="confirmEmail"></span>
+                    </div>
+                    <div class="data-item">
+                        <label>使用者名稱：</label>
+                        <span id="confirmUsername"></span>
+                    </div>
+                    <div class="data-item">
+                        <label>姓名：</label>
+                        <span id="confirmName"></span>
+                    </div>
+                    <div class="data-item">
+                        <label>手機號碼：</label>
+                        <span id="confirmPhone"></span>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn-back" onclick="prevStep()">返回修改</button>
+                    <button type="button" class="btn-submit" onclick="submitRegistration()">確認註冊</button>
+                </div>
+            </div>
+
+            <!-- 完成步驟 -->
+            <div class="step-content" id="step3" style="display: none;">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h2>註冊成功</h2>
+                    <p>恭喜您成功註冊食力派ChowCrew會員</p>
+                    <p>我們已發送驗證信到您的電子郵件</p>
+                    <p class="login-reminder">請登入以開始使用您的帳號</p>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn-submit" onclick="window.location.href='index.html'">前往首頁</button>
+                    <button type="button" class="btn-secondary" id="showLoginModalBtn">立即登入</button>
+                </div>
+            </div>
+
+            <div class="login-link">
+                <p>已經有帳號了？<a href="#" id="showLoginModalLink">立即登入</a></p>
+            </div>
+            
+            <div class="database-notice">
+                <p><i class="fas fa-info-circle"></i> 註冊資料將安全地儲存在雲端資料庫中，您可以隨時登入查看和管理您的個人資料。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登入彈跳視窗 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>登入</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="loginEmail">電子郵件</label>
+                        <input type="email" 
+                               id="loginEmail" 
+                               name="email" 
+                               required 
+                               autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">密碼</label>
+                        <div class="password-input-container">
+                            <input type="password" 
+                                   id="loginPassword" 
+                                   name="password" 
+                                   required 
+                                   autocomplete="off">
+                            <button type="button" class="toggle-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">登入</button>
+                </form>
+                <div class="form-footer">
+                    <a href="userForgotPassword.html">忘記密碼？</a>
+                </div>
+                <div class="social-login">
+                    <p>或使用以下方式登入</p>
+                    <div class="social-buttons">
+                        <button class="social-btn google" onclick="socialLogin('google')">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button class="social-btn facebook" onclick="socialLogin('facebook')">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </button>
+                        <button class="social-btn line" onclick="socialLogin('line')">
+                            <i class="fab fa-line"></i> Line
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 獲取所有登入按鈕
+        const loginModalBtns = document.querySelectorAll('#showLoginModalBtn, #showLoginModalLink');
+        const loginModal = document.getElementById('loginModal');
+        
+        // 為所有登入按鈕添加點擊事件
+        loginModalBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginModal.style.display = 'block';
+            });
+        });
+    });
+    </script>
+    <script src="js/userRegister.js"></script>
+</body>
+</html> 

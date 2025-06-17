@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隱私政策 - 食力派ChowCrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/footer.css">
+
+    <style>
+        .privacy-hero {
+            background: linear-gradient(135deg, rgba(255, 107, 26, 0.9) 0%, rgba(255, 140, 66, 0.9) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 80px;
+        }
+
+        .privacy-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .privacy-hero p {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .privacy-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .privacy-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .privacy-section h2 {
+            color: #ff6b1a;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .privacy-section h2 i {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .privacy-content {
+            color: #444;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .privacy-content p {
+            margin-bottom: 0.8rem;
+        }
+
+        .privacy-content ul {
+            list-style: none;
+            padding-left: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .privacy-content li {
+            position: relative;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+        }
+
+        .privacy-content li::before {
+            content: '•';
+            color: #ff6b1a;
+            position: absolute;
+            left: 0;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, rgba(255, 107, 26, 0.1) 0%, rgba(255, 140, 66, 0.05) 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .contact-section h2 {
+            color: #ff6b1a;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-section p {
+            margin-bottom: 1rem;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #ff6b1a;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+
+        .contact-link:hover {
+            background: #ff8c42;
+        }
+
+        @media (max-width: 768px) {
+            .privacy-hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .privacy-section {
+                padding: 1.2rem;
+            }
+
+            .privacy-section h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* 回到頂部按鈕樣式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #ff6b1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background: #ff8c42;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(255, 107, 26, 0.3);
+        }
+
+        .back-to-top i {
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 導覽列 -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="input-container">
+                    <span class="input-icon">🍴</span>
+                    <input class="search-input" placeholder="找美食" />
+                </div>
+
+                <div class="search-divider"></div>
+                <div class="input-container">
+                    <span class="input-icon">📍</span>
+                    <input class="search-input" placeholder="選擇地點" />
+                </div>
+                <!-- 搜尋按鈕 -->
+                <button class="search-btn">
+                    <img src="/images/search.png" alt="search" width="26" height="26" />
+                </button>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <a href="restaurantList.html" class="nav-link">
+                <i class="fas fa-utensils"></i>
+                <span>餐廳詳情</span>
+            </a>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking/ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="./restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
+            <!-- 未登入狀態 - 顯示登入按鈕 -->
+            <div id="loginSection" class="login-section">
+                <button class="btn-login">登入</button>
+            </div>
+            
+            <!-- 已登入狀態 - 顯示會員頭像 -->
+            <div id="userSection" class="user-section" style="display: none;">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="usercenter.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
+                            <i class="fas fa-heart"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="usercenter.html#reviews" class="dropdown-item">
+                            <i class="fas fa-star"></i>
+                            <span>我的評論</span>
+                        </a>
+                        <a href="usercenter.html#orders" class="dropdown-item">
+                            <i class="fas fa-history"></i>
+                            <span>瀏覽紀錄</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <section class="privacy-hero">
+        <h1>隱私政策</h1>
+        <p>歡迎來到「食力派ChowCrew」美食評論網站！我們非常重視你的隱私權。</p>
+        <p>這份隱私政策會告訴你，我們如何收集、使用和保護你的個人資料，請你輕鬆閱讀。</p>
+    </section>
+
+    <div class="privacy-container">
+        <div class="privacy-section">
+            <h2><i class="fas fa-shield-alt"></i> 隱私權保護的適用範圍</h2>
+            <div class="privacy-content">
+                <p>這份隱私政策適用於你在「食力派ChowCrew」網站上的所有活動，包括註冊、搜尋美食、發表評論、收藏餐廳等。但如果你點擊外部連結到其他網站，請記得這些網站有各自的隱私政策，與我們無關。</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2><i class="fas fa-database"></i> 我們收集哪些資料？</h2>
+            <div class="privacy-content">
+                <p>當你註冊帳號、發表評論、使用聯絡我們等功能時，我們會請你提供必要的個人資料，例如姓名、電子郵件、聯絡方式等。如果你只是瀏覽網站，我們的伺服器也會自動記錄你的 IP
+                    位址、瀏覽器類型、使用時間等資訊，這些資料會用來優化網站服務，不會對外公開。</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2><i class="fas fa-lock"></i> 資料的用途與保護</h2>
+            <div class="privacy-content">
+                <p>你提供的資料只會用在網站服務範圍內，例如註冊帳號、寄送通知、回覆你的問題等。</p>
+                <p>除非經過你的同意，我們不會把你的資料用在其他用途。</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2><i class="fas fa-edit"></i> 資料的查詢與刪除</h2>
+            <div class="privacy-content">
+                <p>你可以隨時要求查詢、更正或刪除你的個人資料，只要透過網站上的「聯絡我們」或寄信到 service@chowcrew.com，我們會盡快處理你的請求。</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2><i class="fas fa-file-alt"></i> 隱私政策的修改</h2>
+            <div class="privacy-content">
+                <p>我們會根據需求隨時更新這份隱私政策，如果有重大變更，會公布在網站上，請你記得回來看看。</p>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2>聯絡我們</h2>
+            <p>如果你對隱私政策有任何疑問，歡迎聯絡我們：</p>
+            <a href="mailto:service@chowcrew.com" class="contact-link">
+                <i class="fas fa-envelope"></i>
+                service@chowcrew.com
+            </a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫評論</a>
+                    <a href="/helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
+    <!-- 回到頂部按鈕 -->
+    <a href="#" class="back-to-top" id="backToTop" aria-label="回到頂部">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+
+    <script src="/js/navforaboutus.js"></script>
+    <script>
+        // 回到頂部按鈕功能
+        const backToTop = document.getElementById('backToTop');
+        
+        // 監聽滾動事件
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 520) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        // 點擊事件 - 平滑滾動到頂部
+        backToTop.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+
+</html> 
