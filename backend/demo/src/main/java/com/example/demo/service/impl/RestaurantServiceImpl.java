@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.RestaurantListDTO;
@@ -62,6 +64,35 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurants.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<RestaurantListDTO> getRestaurants(Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage = googleRestaurantRepository.findAll(pageable);
+        return restaurantPage.map(this::convertToDTO);
+    }
+
+    @Override
+    public Page<RestaurantListDTO> getRestaurantsBySort(String sortBy, Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage;
+        
+        switch (sortBy) {
+            case "averageRating":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByRatingDesc(pageable);
+                break;
+            case "reviewCount":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByReviewCountDesc(pageable);
+                break;
+            case "createdAt":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByCreatedAtDesc(pageable);
+                break;
+            default:
+                // 預設使用一般分頁查詢
+                restaurantPage = googleRestaurantRepository.findAll(pageable);
+                break;
+        }
+        
+        return restaurantPage.map(this::convertToDTO);
     }
 
     private RestaurantListDTO convertToDTO(GoogleRestaurant restaurant) {

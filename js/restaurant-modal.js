@@ -266,7 +266,11 @@ const RestaurantModal = (function() {
                 let lat = null;
                 let lng = null;
                 
-                if (restaurant.location) {
+                // 優先使用後端返回的座標數據
+                if (restaurant.latitude && restaurant.longitude) {
+                    lat = Number(restaurant.latitude);
+                    lng = Number(restaurant.longitude);
+                } else if (restaurant.location) {
                     lat = restaurant.location.lat;
                     lng = restaurant.location.lng;
                 } else if (restaurant.geometry && restaurant.geometry.location) {
@@ -277,7 +281,7 @@ const RestaurantModal = (function() {
                     lng = restaurant.lng;
                 }
                 
-                if (lat && lng) {
+                if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
                     const location = { lat, lng };
                     initModalMap(location, restaurant.name);
                 } else {
@@ -292,58 +296,58 @@ const RestaurantModal = (function() {
     }
     
     // 初始化彈窗地圖
-    async function initModalMap(location, restaurantName) {
+    function initModalMap(location, restaurantName) {
         if (!elements.mapContainer) return;
         
         try {
-            // 導入 Google Maps 庫
-            const { Map } = await google.maps.importLibrary("maps");
-            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+            // 清除現有地圖
+            if (modalMap) {
+                modalMap.remove();
+            }
             
-            // 創建地圖
-            modalMap = new Map(elements.mapContainer, {
-                center: location,
-                zoom: 16,
-                mapId: 'MODAL_MAP_ID',
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                zoomControl: true,
-                zoomControlOptions: {
-                    position: google.maps.ControlPosition.RIGHT_BOTTOM
-                }
+            // 創建 Leaflet 地圖
+            modalMap = L.map(elements.mapContainer).setView([location.lat, location.lng], 16);
+            
+            // 添加 OpenStreetMap 圖層
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(modalMap);
+            
+            // 創建自定義圖標
+            const customIcon = L.divIcon({
+                className: 'restaurant-marker-modal',
+                html: `
+                    <div style="
+                        background-color: #FF6B1A;
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50% 50% 50% 0;
+                        transform: rotate(-45deg);
+                        position: relative;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%) rotate(45deg);
+                            font-size: 12px;
+                        ">🍽️</div>
+                    </div>
+                `,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24]
             });
             
             // 創建標記
-            const markerContent = document.createElement('div');
-            markerContent.style.cssText = `
-                background-color: #FF6B1A;
-                width: 24px;
-                height: 24px;
-                border-radius: 50% 50% 50% 0;
-                transform: rotate(-45deg);
-                position: relative;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            `;
+            modalMarker = L.marker([location.lat, location.lng], { icon: customIcon }).addTo(modalMap);
             
-            const icon = document.createElement('div');
-            icon.innerHTML = '🍽️';
-            icon.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(45deg);
-                font-size: 12px;
-            `;
-            
-            markerContent.appendChild(icon);
-            
-            modalMarker = new AdvancedMarkerElement({
-                map: modalMap,
-                position: location,
-                title: restaurantName,
-                content: markerContent
-            });
+            // 添加彈出視窗
+            modalMarker.bindPopup(`<b>${restaurantName}</b>`);
             
             console.log('地圖初始化成功');
         } catch (error) {
@@ -360,7 +364,7 @@ const RestaurantModal = (function() {
         
         // 清除地圖資源
         if (modalMap) {
-            // 不需要特別清除，Google Maps API 會自動處理
+            modalMap.remove();
             modalMap = null;
             modalMarker = null;
         }
