@@ -17,10 +17,10 @@ public class ExReviewService {
     private ExReviewRepository exReviewRepository;
 
     public List<ExReviewDTO> getLatestReviews(int limit, int offset, String sort, String search, List<String> cuisineTypes) {
-        List<String> effectiveCuisineTypes = (cuisineTypes == null || cuisineTypes.isEmpty()) ? null : cuisineTypes;
+        //  暫時忽略 sort 和 cuisineTypes，專注於讓查詢成功
         String effectiveSearch = (search == null || search.trim().isEmpty()) ? null : search;
 
-        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, sort, effectiveSearch, effectiveCuisineTypes);
+        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, effectiveSearch);
         return projections.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());

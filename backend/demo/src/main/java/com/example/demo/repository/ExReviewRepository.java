@@ -22,27 +22,22 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
             rest.name AS restaurantName,
             r.content_json AS contentJson,
             r.created_at AS reviewDate,
-            rest.types AS cuisineType,
+            rest.cuisine_type AS cuisineType,
             rs.total_views AS viewCount
         FROM reviews r
-        JOIN google_restaurants rest ON r.restaurant_place_id = rest.place_id
+        JOIN restaurants rest ON r.restaurant_id = rest.id
         JOIN review_ratings rr ON rr.review_id = r.id
         JOIN review_photos rp ON rp.review_id = r.id
         JOIN review_stats rs ON rs.review_id = r.id
         JOIN users u ON r.user_id = u.id
         WHERE r.status = 'published'
         AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%'))
-        AND (:cuisineTypes IS NULL OR rest.types IN (:cuisineTypes))
-        ORDER BY
-            CASE WHEN :sort = 'popular' THEN rs.total_views END DESC,
-            r.created_at DESC
+        ORDER BY r.created_at DESC
         LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
     List<ExReviewProjection> findLatestReviews(
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("sort") String sort,
-            @Param("search") String search,
-            @Param("cuisineTypes") List<String> cuisineTypes);
+            @Param("search") String search);
 
 } 
