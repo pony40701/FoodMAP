@@ -41,6 +41,29 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<RestaurantListDTO> getRestaurantList(String sort) {
+        List<GoogleRestaurant> restaurants;
+        
+        if ("ratingDesc".equals(sort)) {
+            // 按評分降冪排序（由高到低）
+            restaurants = googleRestaurantRepository.findAllByOrderByRatingDesc();
+        } else if ("reviewCountDesc".equals(sort)) {
+            // 按評論數降冪排序（由多到少）
+            restaurants = googleRestaurantRepository.findAllByOrderByReviewCountDesc();
+        } else if ("createdAtDesc".equals(sort)) {
+            // 按創建時間降冪排序（由新到舊）
+            restaurants = googleRestaurantRepository.findAllByOrderByCreatedAtDesc();
+        } else {
+            // 預設排序或未知排序參數，使用原本的查詢
+            restaurants = googleRestaurantRepository.findAll();
+        }
+        
+        return restaurants.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private RestaurantListDTO convertToDTO(GoogleRestaurant restaurant) {
         // 查詢第一張圖片
         String base64Photo = null;

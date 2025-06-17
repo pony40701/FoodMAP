@@ -9,4 +9,5 @@ public interface RestaurantService {
     List<GoogleRestaurant> getAllRestaurants();
     GoogleRestaurant getRestaurantByPlaceId(String placeId);
     List<RestaurantListDTO> getRestaurantList();
+    List<RestaurantListDTO> getRestaurantList(String sort);
 }
