@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.RestaurantListDTO;
@@ -39,6 +41,58 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurants.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<RestaurantListDTO> getRestaurantList(String sort) {
+        List<GoogleRestaurant> restaurants;
+        
+        if ("ratingDesc".equals(sort)) {
+            // 按評分降冪排序（由高到低）
+            restaurants = googleRestaurantRepository.findAllByOrderByRatingDesc();
+        } else if ("reviewCountDesc".equals(sort)) {
+            // 按評論數降冪排序（由多到少）
+            restaurants = googleRestaurantRepository.findAllByOrderByReviewCountDesc();
+        } else if ("createdAtDesc".equals(sort)) {
+            // 按創建時間降冪排序（由新到舊）
+            restaurants = googleRestaurantRepository.findAllByOrderByCreatedAtDesc();
+        } else {
+            // 預設排序或未知排序參數，使用原本的查詢
+            restaurants = googleRestaurantRepository.findAll();
+        }
+        
+        return restaurants.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<RestaurantListDTO> getRestaurants(Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage = googleRestaurantRepository.findAll(pageable);
+        return restaurantPage.map(this::convertToDTO);
+    }
+
+    @Override
+    public Page<RestaurantListDTO> getRestaurantsBySort(String sortBy, Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage;
+        
+        switch (sortBy) {
+            case "averageRating":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByRatingDesc(pageable);
+                break;
+            case "reviewCount":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByReviewCountDesc(pageable);
+                break;
+            case "createdAt":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByCreatedAtDesc(pageable);
+                break;
+            default:
+                // 預設使用一般分頁查詢
+                restaurantPage = googleRestaurantRepository.findAll(pageable);
+                break;
+        }
+        
+        return restaurantPage.map(this::convertToDTO);
     }
 
     private RestaurantListDTO convertToDTO(GoogleRestaurant restaurant) {

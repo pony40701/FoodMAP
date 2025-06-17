@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet 地圖測試</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <style>
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-info {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Leaflet 地圖測試</h1>
+        <div class="test-info">
+            <h3>測試說明：</h3>
+            <p>此頁面用於測試 Leaflet.js 地圖功能是否正常工作。</p>
+            <p>地圖中心設為台北101，並會從後端 API 獲取餐廳數據並在地圖上顯示標記。</p>
+        </div>
+        <div id="map"></div>
+        <div id="status" style="margin-top: 20px; padding: 10px; background: #e8f5e8; border-radius: 4px;"></div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    
+    <script>
+        // 初始化地圖
+        const map = L.map('map').setView([25.0330, 121.5654], 13);
+        
+        // 添加 OpenStreetMap 圖層
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // 測試標記
+        const testMarker = L.marker([25.0330, 121.5654]).addTo(map);
+        testMarker.bindPopup('<b>台北101</b><br>測試標記').openPopup();
+        
+        // 從後端獲取餐廳數據
+        fetch('http://localhost:8080/api/restaurants/sort?sortBy=reviewCount&page=0&size=10')
+            .then(response => response.json())
+            .then(data => {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `<strong>成功獲取 ${data.content.length} 間餐廳數據</strong>`;
+                
+                // 在地圖上添加餐廳標記
+                data.content.forEach(restaurant => {
+                    if (restaurant.latitude && restaurant.longitude) {
+                        const lat = Number(restaurant.latitude);
+                        const lng = Number(restaurant.longitude);
+                        
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            // 創建自定義圖標
+                            const customIcon = L.divIcon({
+                                className: 'restaurant-marker',
+                                html: `
+                                    <div style="
+                                        background-color: #FF6B1A;
+                                        width: 24px;
+                                        height: 24px;
+                                        border-radius: 50% 50% 50% 0;
+                                        transform: rotate(-45deg);
+                                        position: relative;
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    ">
+                                        <div style="
+                                            position: absolute;
+                                            top: 50%;
+                                            left: 50%;
+                                            transform: translate(-50%, -50%) rotate(45deg);
+                                            font-size: 12px;
+                                        ">🍽️</div>
+                                    </div>
+                                `,
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 24],
+                                popupAnchor: [0, -24]
+                            });
+                            
+                            // 創建標記
+                            const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                            
+                            // 添加彈出視窗
+                            const popupContent = `
+                                <div style="padding: 8px; min-width: 200px;">
+                                    <h3 style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${restaurant.name}</h3>
+                                    <p style="margin: 0; color: #666; font-size: 12px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
+                                    <p style="margin: 4px 0; color: #666; font-size: 12px;">${restaurant.address}</p>
+                                </div>
+                            `;
+                            
+                            marker.bindPopup(popupContent);
+                        }
+                    }
+                });
+                
+                statusDiv.innerHTML += `<br>已在地圖上添加 ${data.content.filter(r => r.latitude && r.longitude).length} 個餐廳標記`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = `<strong style="color: red;">錯誤：${error.message}</strong>`;
+            });
+    </script>
+</body>
+</html> 

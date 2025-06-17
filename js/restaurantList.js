@@ -1,151 +1,125 @@
 // 全域變數
 let currentDisplayedRestaurants = [];
-let map;
-let markers = [];
+let map; // Leaflet 地圖實例
+let markers = []; // Leaflet 標記陣列
 let userLocation = null;
 let currentSelectedTag = null;
 let currentSortType = null;
+let currentPage = 0; // 分頁變數，預設為 0
+let pageSize = 10; // 每頁顯示 10 筆
+let totalPages = 0; // 總頁數
+let totalElements = 0; // 總筆數
 
-// 初始化地圖
+// 分頁狀態
+let currentSort = null; // 添加排序狀態變量
+
+// 隨機打亂陣列的函數
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// 初始化 Leaflet 地圖
 function initMap() {
-  // 設定台北市中心為預設位置
-  const taipei = { lat: 25.0330, lng: 121.5654 };
+  // 設定台北101為預設中心位置
+  const taipei101 = { lat: 25.0330, lng: 121.5654 };
   
-  // 創建地圖實例
-  map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 13,
-    center: taipei,
-    mapTypeControl: false, // 隱藏地圖類型控制項
-    styles: [
-      {
-        "featureType": "all",
-        "elementType": "geometry",
-        "stylers": [{"color": "#f5f5f5"}]
-      },
-      {
-        "featureType": "water",
-        "elementType": "geometry",
-        "stylers": [{"color": "#e9e9e9"}, {"lightness": 17}]
-      },
-      {
-        "featureType": "poi",
-        "elementType": "geometry",
-        "stylers": [{"color": "#eeeeee"}]
-      },
-      {
-        "featureType": "road",
-        "elementType": "geometry",
-        "stylers": [{"color": "#ffffff"}]
-      }
-    ]
-  });
-
-  // 如果有餐廳資料，可以在地圖上添加標記
-  // 這裡可以根據實際餐廳資料來添加標記
-  // 例如：
-  // restaurants.forEach(restaurant => {
-  //   new google.maps.Marker({
-  //     position: { lat: restaurant.lat, lng: restaurant.lng },
-  //     map: map,
-  //     title: restaurant.name
-  //   });
-  // });
+  // 創建 Leaflet 地圖實例
+  map = L.map('map').setView([taipei101.lat, taipei101.lng], 13);
+  
+  // 添加 OpenStreetMap 圖層
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
   // 初始載入地圖標記
   updateMapMarkers(currentDisplayedRestaurants);
 }
 
 // 更新地圖標記
-async function updateMapMarkers(restaurants) {
+function updateMapMarkers(restaurants) {
     // 清除現有標記
-    markers.forEach(marker => marker.setMap(null));
+    markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
-    // 創建一個全局的 InfoWindow 實例
-    const infoWindow = new google.maps.InfoWindow();
-
-    try {
-        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-
-        // 添加新標記
-        for (const restaurant of restaurants) {
-            if (!restaurant.latitude || !restaurant.longitude) {
-                console.warn(`Restaurant ${restaurant.name} has invalid coordinates`);
-                continue;
-            }
-
-            // 確保經緯度是數字
-            const lat = Number(restaurant.latitude);
-            const lng = Number(restaurant.longitude);
-
-            if (isNaN(lat) || isNaN(lng)) {
-                console.warn(`Restaurant ${restaurant.name} has invalid coordinate types`);
-                continue;
-            }
-
-            const position = new google.maps.LatLng(lat, lng);
-
-            const markerContent = document.createElement('div');
-            markerContent.className = 'restaurant-pin';
-            markerContent.style.cssText = `
-                background-color: #FF6B1A;
-                width: 24px;
-                height: 24px;
-                border-radius: 50% 50% 50% 0;
-                transform: rotate(-45deg);
-                position: relative;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            `;
-
-            const icon = document.createElement('div');
-            icon.innerHTML = '🍽️';
-            icon.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(45deg);
-                font-size: 12px;
-            `;
-
-            markerContent.appendChild(icon);
-
-            const marker = new AdvancedMarkerElement({
-                map: map,
-                position: position,
-                title: restaurant.name,
-                content: markerContent
-            });
-
-            // 添加點擊事件監聽器
-            marker.addListener("click", () => {
-                infoWindow.close();
-                
-                const infoContent = document.createElement('div');
-                infoContent.style.padding = '8px';
-                infoContent.style.cursor = 'pointer';
-                infoContent.innerHTML = `
-                    <div style="padding: 8px;">
-                        <h3 style="margin: 0 0 8px 0; color: #333;">${restaurant.name}</h3>
-                        <p style="margin: 0; color: #666;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
-                        <p style="margin: 4px 0; color: #666;">${restaurant.types}</p>
-                        <div style="margin-top: 8px; color: #d32323; font-size: 13px;">
-                            點擊查看詳細資訊 →
-                        </div>
-                    </div>
-                `;
-
-                infoContent.addEventListener('click', () => {
-                    showRestaurantDetail(restaurant.placeId);
-                });
-                
-                infoWindow.setContent(infoContent);
-                infoWindow.open(map, marker);
-            });
-
-            markers.push(marker);
+    // 添加新標記
+    for (const restaurant of restaurants) {
+        if (!restaurant.latitude || !restaurant.longitude) {
+            console.warn(`Restaurant ${restaurant.name} has invalid coordinates`);
+            continue;
         }
-    } catch (error) {
-        console.error('Error creating markers:', error);
+
+        // 確保經緯度是數字
+        const lat = Number(restaurant.latitude);
+        const lng = Number(restaurant.longitude);
+
+        if (isNaN(lat) || isNaN(lng)) {
+            console.warn(`Restaurant ${restaurant.name} has invalid coordinate types`);
+            continue;
+        }
+
+        // 創建自定義圖標
+        const customIcon = L.divIcon({
+            className: 'restaurant-marker',
+            html: `
+                <div style="
+                    background-color: #FF6B1A;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    position: relative;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%) rotate(45deg);
+                        font-size: 12px;
+                    ">🍽️</div>
+                </div>
+            `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24],
+            popupAnchor: [0, -24]
+        });
+
+        // 創建標記
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+
+        // 添加彈出視窗
+        const popupContent = `
+            <div style="padding: 8px; min-width: 200px;">
+                <h3 style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${restaurant.name}</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
+                <p style="margin: 4px 0; color: #666; font-size: 12px;">${restaurant.types || ''}</p>
+                <div style="margin-top: 8px; color: #d32323; font-size: 11px; cursor: pointer;">
+                    點擊查看詳細資訊 →
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+
+        // 添加點擊事件
+        marker.on('click', function() {
+            // 傳遞完整的餐廳對象
+            if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
+                window.RestaurantModal.showRestaurantDetail(restaurant);
+            } else {
+                // 如果 RestaurantModal 不可用，使用備用方案
+                showRestaurantModal(restaurant);
+            }
+        });
+
+        markers.push(marker);
     }
 }
 
@@ -291,8 +265,21 @@ document.addEventListener('DOMContentLoaded', function() {
       // 獲取排序類型
       currentSortType = this.dataset.sort;
       
-      // 執行排序和篩選
-      filterRestaurants();
+      // 根據排序類型呼叫後端 API
+      let sortParam = null;
+      if (currentSortType === 'rating') {
+        sortParam = 'ratingDesc';
+      } else if (currentSortType === 'rating-count') {
+        sortParam = 'reviewCountDesc';
+      } else if (currentSortType === 'newest') {
+        sortParam = 'createdAtDesc';
+      }
+      
+      // 重置分頁到第一頁並呼叫後端 API
+      currentPage = 0;
+      fetchRestaurants(sortParam, currentPage);
+      // 滾動到頁面頂部
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 
@@ -364,25 +351,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// 分頁狀態
-let currentPage = 1;
-const pageSize = 10;
-let currentSort = null; // 添加排序狀態變量
-
-// 隨機打亂陣列的函數
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
 // renderCards function is used for initial load
 function renderCards(page = 1) {
   currentPage = page;
-  // On initial load, shuffle the restaurant data
-  currentDisplayedRestaurants = shuffleArray([...currentDisplayedRestaurants]);
+  // 移除隨機打亂，保持後端的排序結果
+  // currentDisplayedRestaurants = shuffleArray([...currentDisplayedRestaurants]);
   
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
@@ -784,7 +757,7 @@ function renderFilteredCards(pageData, totalCount) {
   `;
 
   // 更新分頁
-  renderPagination(totalCount);
+  renderPaginationControls();
 
   // 為每個愛心按鈕添加點擊事件監聽器
   document.querySelectorAll('.favorite-btn').forEach(button => {
@@ -863,66 +836,19 @@ function handleSearch() {
   updateMapMarkers(currentDisplayedRestaurants);
 }
 
-// 初始化
-document.addEventListener("DOMContentLoaded", () => {
-  console.log('DOM Content Loaded');
-
-  // 初始化地圖
-  if (typeof google !== 'undefined' && google.maps) {
+// 當頁面載入完成時初始化
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('頁面載入完成，開始獲取餐廳資料');
+    fetchRestaurants(null, 0);  // 使用分頁參數獲取第一頁資料
+    
+    // 初始化地圖
     initMap();
-  }
-  
-  // 初始化下拉選單
-  updateDropdownMenu();
-  
-  // 渲染初始餐廳列表
-  renderCards(1);
-  
-  // 初始化搜尋按鈕功能
-  const searchButton = document.querySelector('.search-btn');
-  console.log('Search button element:', searchButton);
-  
-  if (searchButton) {
-    searchButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      console.log('Search button clicked');
-      handleSearch();
-    });
-  } else {
-    console.error('Search button not found!');
-  }
-  
-  // 為搜尋輸入框添加 Enter 鍵事件
-  const foodSearchInput = document.getElementById('food-search');
-  const locationSearchInput = document.getElementById('location-search');
-  
-  console.log('Search input elements:', { foodSearchInput, locationSearchInput });
-  
-  if (foodSearchInput) {
-    foodSearchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        console.log('Enter pressed in food search');
-        handleSearch();
-      }
-    });
-  } else {
-    console.error('Food search input not found!');
-  }
-  
-  if (locationSearchInput) {
-    locationSearchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        console.log('Enter pressed in location search');
-        handleSearch();
-      }
-    });
-  } else {
-    console.error('Location search input not found!');
-  }
-
-  // ... rest of the initialization code ...
+    
+    // 初始化其他UI元素
+    initSearchButton();
+    initSearchInputs();
+    initDropdowns();
+    initTags();
 });
 
 // ... existing code ...
@@ -1001,8 +927,38 @@ document.addEventListener('DOMContentLoaded', () => {
 // ... existing code ...
 
 // 取代假資料，直接 fetch 後台 API
-function fetchRestaurants() {
-    fetch('http://localhost:8080/api/restaurants/list')
+function fetchRestaurants(sortType = null, page = 0) {
+    let url = 'http://localhost:8080/api/restaurants';
+    const params = new URLSearchParams();
+    
+    // 添加分頁參數
+    params.append('page', page);
+    params.append('size', pageSize);
+    
+    // 如果有排序參數，使用新的分頁排序 API
+    if (sortType) {
+        url = 'http://localhost:8080/api/restaurants/sort';
+        // 將排序類型轉換為後端期望的參數名稱
+        let sortBy = '';
+        switch (sortType) {
+            case 'ratingDesc':
+                sortBy = 'averageRating';
+                break;
+            case 'reviewCountDesc':
+                sortBy = 'reviewCount';
+                break;
+            case 'createdAtDesc':
+                sortBy = 'createdAt';
+                break;
+            default:
+                sortBy = 'averageRating'; // 預設值
+        }
+        params.append('sortBy', sortBy);
+    }
+    
+    url += '?' + params.toString();
+    
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -1012,8 +968,25 @@ function fetchRestaurants() {
         .then(data => {
             console.log('Received restaurant data:', data); // 添加日誌
             
+            let restaurants = [];
+            
+            // 檢查是否為分頁資料
+            if (data.content && Array.isArray(data.content)) {
+                // 分頁資料
+                restaurants = data.content;
+                totalPages = data.totalPages;
+                totalElements = data.totalElements;
+                currentPage = data.number;
+            } else if (Array.isArray(data)) {
+                // 非分頁資料（舊的排序查詢）
+                restaurants = data;
+                totalPages = Math.ceil(restaurants.length / pageSize);
+                totalElements = restaurants.length;
+                currentPage = 0;
+            }
+            
             // 確保資料格式正確
-            const formattedData = data.map(restaurant => ({
+            const formattedData = restaurants.map(restaurant => ({
                 ...restaurant,
                 // 確保 createdAt 是字串格式
                 createdAt: restaurant.createdAt ? new Date(restaurant.createdAt).toISOString() : null,
@@ -1032,6 +1005,8 @@ function fetchRestaurants() {
             renderRestaurants(formattedData);
             // 更新地圖標記
             updateMapMarkers(formattedData);
+            // 渲染分頁控制
+            renderPaginationControls();
         })
         .catch(error => {
             console.error('Error fetching restaurants:', error);
@@ -1079,14 +1054,18 @@ function renderRestaurants(restaurants) {
 
         // 添加點擊事件處理
         card.addEventListener('click', () => {
-            showRestaurantDetail(restaurant.placeId);
+            // 傳遞完整的餐廳對象
+            if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
+                window.RestaurantModal.showRestaurantDetail(restaurant);
+            } else {
+                // 如果 RestaurantModal 不可用，使用備用方案
+                showRestaurantModal(restaurant);
+            }
         });
 
         container.appendChild(card);
     });
 }
-
-fetchRestaurants();
 
 // 添加 generateStars 函數
 function generateStars(rating) {
@@ -1111,22 +1090,67 @@ function generateStars(rating) {
     return stars;
 }
 
-// 當頁面載入完成時初始化
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('頁面載入完成，開始獲取餐廳資料');
-    fetchRestaurants();  // 添加這行來獲取餐廳資料
+// 渲染分頁控制
+function renderPaginationControls() {
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
     
-    // 初始化地圖
-    initMap();
+    let html = '';
     
-    // 初始化其他UI元素
-    initSearchButton();
-    initSearchInputs();
-    initDropdowns();
-    initTags();
-});
-
-// ... existing code ...
-
-// 移除這行，因為我們已經在 DOMContentLoaded 中調用了
-// fetchRestaurants();
+    // 顯示分頁資訊
+    html += `<div class="pagination-info">第 ${currentPage + 1} 頁，共 ${totalPages} 頁 (${totalElements} 筆資料)</div>`;
+    
+    // 上一頁按鈕
+    const prevDisabled = currentPage <= 0;
+    html += `<button class="pagination-btn prev-btn" ${prevDisabled ? 'disabled' : ''}>上一頁</button>`;
+    
+    // 下一頁按鈕
+    const nextDisabled = currentPage >= totalPages - 1;
+    html += `<button class="pagination-btn next-btn" ${nextDisabled ? 'disabled' : ''}>下一頁</button>`;
+    
+    paginationContainer.innerHTML = html;
+    
+    // 綁定按鈕事件
+    const prevBtn = paginationContainer.querySelector('.prev-btn');
+    const nextBtn = paginationContainer.querySelector('.next-btn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                // 將前端排序類型轉換為後端參數
+                let sortParam = null;
+                if (currentSortType === 'rating') {
+                    sortParam = 'ratingDesc';
+                } else if (currentSortType === 'rating-count') {
+                    sortParam = 'reviewCountDesc';
+                } else if (currentSortType === 'newest') {
+                    sortParam = 'createdAtDesc';
+                }
+                fetchRestaurants(sortParam, currentPage);
+                // 滾動到頁面頂部
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                // 將前端排序類型轉換為後端參數
+                let sortParam = null;
+                if (currentSortType === 'rating') {
+                    sortParam = 'ratingDesc';
+                } else if (currentSortType === 'rating-count') {
+                    sortParam = 'reviewCountDesc';
+                } else if (currentSortType === 'newest') {
+                    sortParam = 'createdAtDesc';
+                }
+                fetchRestaurants(sortParam, currentPage);
+                // 滾動到頁面頂部
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+}
