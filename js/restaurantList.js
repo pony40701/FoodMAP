@@ -1051,14 +1051,11 @@ function renderRestaurants(restaurants) {
         const card = document.createElement('div');
         card.className = 'restaurant-card yelp-style';
         
-        // 修正圖片路徑：如 photoUrl 以 /api/restaurant-images/ 開頭，補上 http://localhost:8080
-        let photoUrl = restaurant.photoUrl || '';
-        if (photoUrl.startsWith('/api/restaurant-images/')) {
-            photoUrl = 'http://localhost:8080' + photoUrl;
-        }
+        // 圖片來源改為 google_restaurant_photos 的 API
+        let photoUrl = `http://localhost:8080/api/restaurant-images/${restaurant.placeId || restaurant.place_id}/raw`;
         card.innerHTML = `
             <div class="yelp-img-wrap">
-                <img class="yelp-image" src="${photoUrl}" alt="${restaurant.name}">
+                <img class="yelp-image" src="${photoUrl}" alt="${restaurant.name}" onerror="this.src='images/default-restaurant.jpg'">
             </div>
             <div class="yelp-info">
                 <div class="yelp-title-row">
