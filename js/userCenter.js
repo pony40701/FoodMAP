@@ -7,7 +7,13 @@ const USER_API_PATH = '/users';
 
 // 構建餐廳圖片URL的函數
 function buildRestaurantPhotoUrl(placeId) {
-    return `${API_BASE_URL}${PHOTOS_API_PATH}/${placeId}/first`;
+    if (!placeId) return 'images/default-restaurant.jpg';
+    
+    // 確保 API_BASE_URL 存在
+    const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+    
+    // 直接返回圖片 URL
+    return `${baseUrl}/restaurant-images/${placeId}/raw`;
 }
 
 // 移除臨時模擬登入資料
@@ -106,7 +112,19 @@ const mockNotifications = [
 function getFavoriteStores() {
     // 使用新的收藏系統
     if (window.favoriteSystem && window.favoriteSystem.initialized) {
-        return window.favoriteSystem.getFavoriteStores();
+        try {
+            // 檢查 getFavoriteStores 方法是否存在
+            if (typeof window.favoriteSystem.getFavoriteStores === 'function') {
+                return window.favoriteSystem.getFavoriteStores();
+            } else {
+                // 如果方法不存在，直接使用 stores 數組
+                console.warn('favoriteSystem.getFavoriteStores 方法不存在，直接使用 stores 數組');
+                return window.favoriteSystem.stores || [];
+            }
+        } catch (error) {
+            console.error('從 favoriteSystem 獲取收藏餐廳時出錯:', error);
+            return [];
+        }
     }
     
     // 如果收藏系統未初始化，從本地存儲中獲取
@@ -123,7 +141,19 @@ function getFavoriteStores() {
 function getFavoriteReviews() {
     // 使用新的收藏系統
     if (window.favoriteSystem && window.favoriteSystem.initialized) {
-        return window.favoriteSystem.getFavoriteReviews();
+        try {
+            // 檢查 getFavoriteReviews 方法是否存在
+            if (typeof window.favoriteSystem.getFavoriteReviews === 'function') {
+                return window.favoriteSystem.getFavoriteReviews();
+            } else {
+                // 如果方法不存在，直接使用 reviews 數組
+                console.warn('favoriteSystem.getFavoriteReviews 方法不存在，直接使用 reviews 數組');
+                return window.favoriteSystem.reviews || [];
+            }
+        } catch (error) {
+            console.error('從 favoriteSystem 獲取收藏評論時出錯:', error);
+            return [];
+        }
     }
     
     // 如果收藏系統未初始化，從本地存儲中獲取
@@ -383,7 +413,7 @@ async function loadFavorites(type = 'stores') {
 
 // 渲染收藏店家列表
 async function renderFavoriteStores(stores) {
-    console.log('渲染收藏店家列表，數據:', stores);
+    console.log('開始渲染收藏店家', stores);
     const storesContainer = document.querySelector('.favorites-stores');
     
     if (!storesContainer) {
@@ -391,82 +421,193 @@ async function renderFavoriteStores(stores) {
         return;
     }
     
-    if (!stores || stores.length === 0) {
-        console.log('沒有收藏店家數據，顯示空狀態');
-        storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
-        return;
-    }
-    
-    // 只顯示有效的收藏店家
-    const validStores = stores.filter(store => store && (store.place_id || store.id || store.target_id));
-    console.log('有效店家數量:', validStores.length);
+    // 過濾出有效的店家數據
+    const validStores = stores.filter(store => {
+        const restaurant = store.restaurant || store;
+        return restaurant && (restaurant.place_id || restaurant.id || store.target_id || store.place_id || store.id);
+    });
     
     if (validStores.length === 0) {
-        storesContainer.innerHTML = '<div class="no-data">還沒有收藏任何店家</div>';
+        storesContainer.innerHTML = `
+            <div class="no-data">
+                <i class="far fa-frown"></i>
+                <p>您還沒有收藏任何餐廳</p>
+                <a href="restaurantList.html" class="btn-primary">去探索美食</a>
+            </div>
+        `;
         return;
     }
     
-    // 使用餐廳卡片樣式顯示收藏餐廳
-    storesContainer.innerHTML = validStores.map(store => {
-        // 處理資料結構，支援多種可能的API回傳格式
-        const restaurant = store.restaurant || store;
-        const placeId = restaurant.place_id || restaurant.id || store.target_id || store.place_id || store.id;
-        const name = restaurant.name || '未知餐廳';
-        const rating = restaurant.rating || 0;
-        const reviewCount = restaurant.user_ratings_total || restaurant.review_count || 0;
-        const address = restaurant.formatted_address || restaurant.vicinity || restaurant.address || '地址不詳';
-        
-        // 使用新的圖片URL構建函數
-        let photoUrl = buildRestaurantPhotoUrl(placeId);
-        
-        // 如果有photo_url直接使用
-        if (restaurant.photo_url) {
-            photoUrl = restaurant.photo_url;
-        } else if (restaurant.photos && Array.isArray(restaurant.photos) && restaurant.photos.length > 0) {
-            const photo = restaurant.photos[0];
-            if (typeof photo === 'string') {
-                photoUrl = photo;
-            } else if (photo && typeof photo === 'object') {
-                photoUrl = photo.url || photo.photo_url || photoUrl;
+    // 清空容器，準備重新渲染
+    storesContainer.innerHTML = '';
+    
+    // 創建店家卡片容器
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'restaurants-grid';
+    
+    // 使用內聯樣式確保網格布局正確顯示
+    cardsContainer.style.display = 'grid';
+    cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+    cardsContainer.style.gap = '24px';
+    cardsContainer.style.width = '100%';
+    
+    storesContainer.appendChild(cardsContainer);
+    
+    // 處理並顯示每一家店家
+    for (const store of validStores) {
+        try {
+            // 處理資料結構，支援多種可能的API回傳格式
+            const restaurant = store.restaurant || store;
+            const placeId = restaurant.place_id || restaurant.id || store.target_id || store.place_id || store.id;
+            
+            if (!placeId) {
+                console.warn('跳過無效店家數據:', store);
+                continue;
             }
-        }
-        
-        console.log(`餐廳 ${name} (${placeId}) 的圖片URL:`, photoUrl);
-        
-        // 生成評分星星
-        const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
-        
-        return `
-        <div class="restaurant-card" data-id="${placeId}">
-            <div class="card-image">
-                <img src="${photoUrl}" alt="${name}" 
-                     onerror="this.onerror=null; this.src='images/default-restaurant.jpg';">
-                <button class="favorite-btn active" data-place-id="${placeId}" data-name="${name}">
+            
+            const name = restaurant.name || '未知餐廳';
+            const rating = parseFloat(restaurant.rating) || parseFloat(restaurant.average_rating) || 0;
+            const reviewCount = restaurant.user_ratings_total || restaurant.review_count || restaurant.reviewCount || 0;
+            const address = restaurant.formatted_address || restaurant.vicinity || restaurant.address || '地址不詳';
+            
+            // 使用統一的圖片URL構建函數
+            const imageUrl = buildRestaurantPhotoUrl(placeId);
+            console.log('餐廳圖片URL:', imageUrl, '餐廳ID:', placeId);
+            
+            // 營業時間判斷
+            let isOpen = false;
+            let todayHours = '';
+            
+            if (restaurant.opening_hours) {
+                // 如果opening_hours是字符串形式的JSON，先解析它
+                if (typeof restaurant.opening_hours === 'string') {
+                    try {
+                        restaurant.opening_hours = JSON.parse(restaurant.opening_hours);
+                    } catch (error) {
+                        console.warn('解析營業時間JSON失敗:', error);
+                    }
+                }
+                
+                if (restaurant.opening_hours.weekday_text) {
+                    // 獲取今日營業時間文字
+                    const today = new Date().getDay();
+                    const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引
+                    
+                    if (restaurant.opening_hours.weekday_text[index]) {
+                        const todayText = restaurant.opening_hours.weekday_text[index];
+                        // 直接從完整的營業時間文字中提取時間部分
+                        const timeMatch = todayText.match(/:\s*(.+)$/);
+                        const timeStr = timeMatch ? timeMatch[1].trim() : null;
+                        
+                        if (timeStr) {
+                            isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
+                                window.businessHours.isOpenFromText(timeStr) : 
+                                restaurant.opening_hours.open_now;
+                                
+                            const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][today];
+                            todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${timeStr}</span>`;
+                        }
+                    }
+                } else if (restaurant.opening_hours.periods) {
+                    // 如果有 periods 資料，使用它來判斷
+                    const now = new Date();
+                    const day = now.getDay();
+                    const period = restaurant.opening_hours.periods.find(p => p.open.day === day);
+                    if (period) {
+                        const openTime = `${period.open.hours}:${period.open.minutes || '00'}`;
+                        const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
+                        isOpen = window.businessHours && window.businessHours.isOpenNow ? 
+                            window.businessHours.isOpenNow(openTime, closeTime) : false;
+                        todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${openTime}-${closeTime}</span>`;
+                    }
+                } else if (restaurant.opening_hours.open_now !== undefined) {
+                    // 如果只有 open_now 屬性
+                    isOpen = restaurant.opening_hours.open_now;
+                }
+            } else if (restaurant.business_hours) {
+                // 嘗試使用 business_hours 欄位
+                try {
+                    const businessHours = typeof restaurant.business_hours === 'string' ? 
+                        JSON.parse(restaurant.business_hours) : restaurant.business_hours;
+                    
+                    const today = new Date().getDay();
+                    const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today];
+                    const todayBusiness = businessHours[dayKey];
+                    
+                    if (todayBusiness) {
+                        isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
+                            window.businessHours.isOpenFromText(todayBusiness) : false;
+                        todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${todayBusiness}</span>`;
+                    }
+                } catch (error) {
+                    console.warn('解析 business_hours 失敗:', error);
+                }
+            }
+            
+            // 創建卡片元素
+            const card = document.createElement('div');
+            card.className = 'restaurant-card v3';
+            card.setAttribute('data-id', placeId);
+            
+            // 卡片內容模板
+            card.innerHTML = `
+                <div class="restaurant-image-wrapper v3">
+                    <img src="${imageUrl}" alt="${name}" onerror="this.style.display='none'; var err = document.createElement('div'); err.className='image-error-message'; err.textContent='圖片載入失敗'; err.style.textAlign='center'; err.style.padding='20px'; err.style.color='#999'; this.parentNode.appendChild(err);">
+                </div>
+                <button class="favorite-btn v3 active" title="取消收藏" data-place-id="${placeId}" data-name="${name.replace(/"/g, '&quot;')}">
                     <i class="fas fa-heart"></i>
                 </button>
-            </div>
-            <div class="card-content">
-                <h3 class="card-title">${name}</h3>
-                <div class="card-rating">
-                    <span class="stars">${stars}</span>
-                    <span class="rating-value">${rating.toFixed(1)}</span>
-                    <span class="reviews-count">(${reviewCount})</span>
-                </div>
-                <div class="card-address">
-                    <i class="fas fa-map-marker-alt"></i> ${address}
-                </div>
-                <div class="card-actions">
-                    <button class="btn-view" onclick="viewRestaurant('${placeId}')">
-                        <i class="fas fa-eye"></i> 查看
-                    </button>
-                    <button class="btn-remove" onclick="removeFavorite('${placeId}')">
-                        <i class="fas fa-trash"></i> 移除
-                    </button>
-                </div>
-            </div>
-        </div>
-        `;
-    }).join('');
+                <div class="restaurant-info v3">
+                    <div class="restaurant-title-row v3">
+                        <h3 class="restaurant-name v3" title="${name}">${name}</h3>
+                    </div>
+                    <div class="restaurant-rating-row v3">
+                        <span class="rating-stars v3">${generateStars(rating)}</span>
+                        <span class="rating-score v3">${rating ? rating.toFixed(1) : 'N/A'}</span>
+                        <span class="rating-count v3">(${reviewCount}則評論)</span>
+                    </div>
+                    <div class="restaurant-address-row v3">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="address-text v3" title="${address}">${address}</span>
+                    </div>
+                    <div class="restaurant-status-row v3">
+                        <span class="status-dot v3 ${isOpen ? 'open' : 'closed'}"></span>
+                        <span class="status-text v3 ${isOpen ? 'open' : 'closed'}">${isOpen ? '營業中' : '休息中'}</span>
+                        ${todayHours}
+                    </div>
+                </div>`;
+            
+            // 添加點擊事件，點擊卡片跳轉到餐廳詳情
+            card.addEventListener('click', (e) => {
+                // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
+                if (e.target.closest('.favorite-btn')) {
+                    e.stopPropagation();
+                    return;
+                }
+                console.log('卡片被點擊，placeId:', placeId);
+                viewRestaurant(placeId);
+            });
+            
+            // 綁定收藏按鈕點擊事件
+            const favoriteBtn = card.querySelector('.favorite-btn');
+            if (favoriteBtn) {
+                favoriteBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // 顯示確認對話框
+                    if (confirm('確定要取消收藏這家餐廳嗎？')) {
+                        await removeFavorite(placeId);
+                    }
+                });
+            }
+            
+            // 將卡片添加到容器中
+            cardsContainer.appendChild(card);
+        } catch (error) {
+            console.error(`渲染餐廳卡片失敗:`, error);
+        }
+    }
     
     console.log('收藏店家渲染完成');
 }
@@ -874,127 +1015,91 @@ async function removeFavoriteReview(reviewId) {
     }
 }
 
-// 查看店家詳情
-function viewRestaurant(placeId) {
-    console.log('viewRestaurant 函數被調用，placeId:', placeId);
+// 查看餐廳詳情
+async function viewRestaurant(restaurantId) {
+    console.log('查看餐廳詳情:', restaurantId);
     
-    // 檢查 RestaurantModal 模組的可用性
-    if (window.RestaurantModal) {
-        console.log('RestaurantModal 模組存在');
-    } else {
-        console.warn('RestaurantModal 模組不存在，嘗試重新初始化');
-        // 嘗試重新初始化 RestaurantModal
-        if (typeof RestaurantModal !== 'undefined') {
-            console.log('直接初始化 RestaurantModal');
-            RestaurantModal.init();
-            window.RestaurantModal = RestaurantModal;
-        }
-    }
-    
-    // 從收藏列表中找到對應的餐廳數據
-    let restaurant = null;
-    
-    // 優先從 favoriteSystem 獲取
-    if (window.favoriteSystem && window.favoriteSystem.initialized) {
-        const stores = window.favoriteSystem.getFavoriteStores();
-        if (Array.isArray(stores)) {
-            restaurant = stores.find(store => {
-                const storeId = store.place_id || store.id || (store.restaurant && (store.restaurant.place_id || store.restaurant.id)) || store.target_id;
-                return storeId === placeId;
-            });
-            console.log('從 favoriteSystem 獲取餐廳數據:', restaurant);
-        }
-    }
-    
-    // 如果沒找到，嘗試從 localStorage 獲取
-    if (!restaurant) {
-        try {
-            const stores = JSON.parse(localStorage.getItem('favoriteStores') || '[]');
-            if (Array.isArray(stores)) {
-                restaurant = stores.find(store => {
-                    const storeId = store.place_id || store.id || (store.restaurant && (store.restaurant.place_id || store.restaurant.id)) || store.target_id;
-                    return storeId === placeId;
-                });
-                console.log('從 localStorage 獲取餐廳數據:', restaurant);
-            }
-        } catch (e) {
-            console.error('解析 localStorage 收藏數據時出錯:', e);
-        }
-    }
-    
-    if (restaurant) {
-        console.log('顯示餐廳詳情:', restaurant);
+    try {
+        // 優先從 API 獲取最新的餐廳詳情
+        const apiBaseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+        const apiUrl = `${apiBaseUrl}/restaurants/${restaurantId}`;
         
-        // 檢查 RestaurantModal 模組是否可用
-        if (window.RestaurantModal) {
-            console.log('RestaurantModal 模組存在');
+        console.log('從 API 獲取餐廳詳情:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+            // 如果 API 請求成功，使用 API 返回的數據
+            const restaurantData = await response.json();
+            console.log('成功從 API 獲取餐廳詳情:', restaurantData);
             
-            // 確保 RestaurantModal 已初始化
-            if (typeof window.RestaurantModal.init === 'function') {
-                console.log('初始化 RestaurantModal 模組');
-                window.RestaurantModal.init();
+            // 確保有位置數據
+            if (!restaurantData.geometry && (restaurantData.lat || restaurantData.latitude)) {
+                restaurantData.geometry = {
+                    location: {
+                        lat: restaurantData.lat || restaurantData.latitude,
+                        lng: restaurantData.lng || restaurantData.longitude
+                    }
+                };
             }
             
-            // 使用 RestaurantModal 顯示餐廳詳情
-            if (typeof window.RestaurantModal.showRestaurantDetail === 'function') {
-                console.log('使用 RestaurantModal 顯示餐廳詳情');
-                try {
-                    window.RestaurantModal.showRestaurantDetail(restaurant);
-                    console.log('RestaurantModal.showRestaurantDetail 調用成功');
-                    return;
-                } catch (error) {
-                    console.error('RestaurantModal.showRestaurantDetail 調用失敗:', error);
+            // 保留原始圖片資訊
+            if (!restaurantData.photos && restaurantData.photo_url) {
+                restaurantData.photos = [restaurantData.photo_url];
+            }
+            
+            // 顯示餐廳詳情
+            if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
+                window.RestaurantModal.showRestaurantDetail(restaurantData);
+            } else {
+                console.error('RestaurantModal 未初始化');
+                showToast('無法顯示餐廳詳情，請重新整理頁面');
+            }
+        } else {
+            // 如果 API 請求失敗，嘗試使用本地數據
+            console.warn('API 請求失敗，使用本地數據:', response.status);
+            
+            // 從收藏系統中獲取餐廳數據
+            if (window.favoriteSystem && typeof window.favoriteSystem.getRestaurantById === 'function') {
+                const localRestaurant = await window.favoriteSystem.getRestaurantById(restaurantId);
+                
+                if (localRestaurant) {
+                    console.log('使用本地餐廳數據:', localRestaurant);
+                    
+                    // 確保有位置數據
+                    if (!localRestaurant.geometry && (localRestaurant.lat || localRestaurant.latitude)) {
+                        localRestaurant.geometry = {
+                            location: {
+                                lat: localRestaurant.lat || localRestaurant.latitude,
+                                lng: localRestaurant.lng || localRestaurant.longitude
+                            }
+                        };
+                    }
+                    
+                    // 保留原始圖片資訊
+                    if (!localRestaurant.photos && localRestaurant.photo_url) {
+                        localRestaurant.photos = [localRestaurant.photo_url];
+                    }
+                    
+                    // 顯示餐廳詳情
+                    if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
+                        window.RestaurantModal.showRestaurantDetail(localRestaurant);
+                    } else {
+                        console.error('RestaurantModal 未初始化');
+                        showToast('無法顯示餐廳詳情，請重新整理頁面');
+                    }
+                } else {
+                    console.error('找不到餐廳數據:', restaurantId);
+                    showToast('找不到餐廳資訊');
                 }
             } else {
-                console.error('RestaurantModal.showRestaurantDetail 方法不存在');
+                console.error('favoriteSystem 未初始化');
+                showToast('系統錯誤，請重新整理頁面');
             }
-        } else {
-            console.error('RestaurantModal 模組不存在');
         }
-        
-        // 如果 RestaurantModal 不可用，嘗試使用 mapInit
-        if (window.mapInit && typeof window.mapInit.showRestaurantDetail === 'function') {
-            console.log('使用 mapInit 顯示餐廳詳情');
-            try {
-                window.mapInit.showRestaurantDetail(restaurant);
-                console.log('mapInit.showRestaurantDetail 調用成功');
-                return;
-            } catch (error) {
-                console.error('mapInit.showRestaurantDetail 調用失敗:', error);
-            }
-        } else {
-            console.error('mapInit.showRestaurantDetail 方法不存在');
-        }
-        
-        // 如果以上方法都不可用，使用備用方案
-        console.log('使用備用方案顯示餐廳詳情');
-        showRestaurantDetailFallback(restaurant);
-    } else {
-        console.error('找不到指定ID的餐廳數據:', placeId);
-        
-        // 如果找不到餐廳數據，嘗試直接從API獲取
-        try {
-            fetch(`${API_BASE_URL}${RESTAURANT_API_PATH}/${placeId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`API請求失敗: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('從API獲取餐廳數據:', data);
-                    showRestaurantDetailFallback(data);
-                })
-                .catch(error => {
-                    console.error('從API獲取餐廳數據失敗:', error);
-                    // 最後才退回到原始跳轉方式
-                    window.location.href = `storeDetail.html?place_id=${placeId}`;
-                });
-        } catch (error) {
-            console.error('獲取餐廳數據時出錯:', error);
-            // 如果找不到餐廳數據，退回到原來的跳轉方式
-            window.location.href = `storeDetail.html?place_id=${placeId}`;
-        }
+    } catch (error) {
+        console.error('顯示餐廳詳情時出錯:', error);
+        showToast('顯示餐廳詳情時出錯');
     }
 }
 
@@ -1005,14 +1110,17 @@ function showRestaurantDetailFallback(restaurant) {
     // 從不同可能的數據結構中提取餐廳信息
     const restaurantData = restaurant.restaurant || restaurant;
     const restaurantName = restaurantData.name || '未知餐廳';
-    const rating = restaurantData.rating || 0;
-    const ratingCount = restaurantData.user_ratings_total || restaurantData.review_count || 0;
+    const rating = parseFloat(restaurantData.rating) || parseFloat(restaurantData.average_rating) || 0;
+    const ratingCount = restaurantData.user_ratings_total || restaurantData.review_count || restaurant.reviewCount || 0;
     const address = restaurantData.formatted_address || restaurantData.vicinity || restaurantData.address || '地址不詳';
     const isOpen = restaurantData.opening_hours?.open_now || restaurantData.isOpen || false;
     const placeId = restaurantData.place_id || restaurantData.id || restaurant.target_id || restaurant.id;
     
+    // 確保 API_BASE_URL 存在
+    const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+    
     // 使用新的圖片URL構建函數
-    let photoUrl = buildRestaurantPhotoUrl(placeId);
+    let photoUrl = `${baseUrl}/restaurant-images/${placeId}/raw`;
     
     // 如果有photo_url直接使用
     if (restaurantData.photo_url) {
@@ -1048,108 +1156,152 @@ function showRestaurantDetailFallback(restaurant) {
         if (imageElement) {
             imageElement.src = photoUrl;
             imageElement.alt = restaurantName;
-            imageElement.onerror = function() { 
-                this.onerror = null; 
-                this.src = 'images/default-restaurant.jpg'; 
+            imageElement.onerror = function() {
+                this.src = 'images/no-image.jpg';
             };
         }
         
-        // 處理評分
+        if (starsElement) starsElement.textContent = generateStars(rating);
         if (ratingElement) ratingElement.textContent = rating.toFixed(1);
         if (ratingCountElement) ratingCountElement.textContent = `(${ratingCount}則評論)`;
-        if (starsElement) starsElement.textContent = generateStars(rating);
-        
-        // 處理地址
         if (addressElement) addressElement.textContent = address;
         
-        // 處理營業狀態
-        if (statusElement) statusElement.className = `modal-status-new ${isOpen ? 'open' : 'closed'}`;
-        if (statusTextElement) statusTextElement.textContent = isOpen ? '營業中' : '休息中';
+        if (statusElement && statusTextElement) {
+            if (isOpen) {
+                statusElement.classList.add('open');
+                statusElement.classList.remove('closed');
+                statusTextElement.textContent = '營業中';
+            } else {
+                statusElement.classList.add('closed');
+                statusElement.classList.remove('open');
+                statusTextElement.textContent = '休息中';
+            }
+        }
+        
+        // 檢查是否有營業時間
+        const todayHoursElement = document.getElementById('modal-today-hours-new');
+        if (todayHoursElement) {
+            if (restaurantData.opening_hours && restaurantData.opening_hours.weekday_text) {
+                const today = new Date().getDay();
+                const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引
+                if (restaurantData.opening_hours.weekday_text[index]) {
+                    todayHoursElement.textContent = restaurantData.opening_hours.weekday_text[index].split(': ')[1] || '未提供營業時間';
+                } else {
+                    todayHoursElement.textContent = '未提供營業時間';
+                }
+            } else {
+                todayHoursElement.textContent = '未提供營業時間';
+            }
+        }
+        
+        // 處理收藏按鈕
+        const favoriteBtn = document.getElementById('modal-favorite-btn-new');
+        if (favoriteBtn) {
+            // 檢查是否已收藏
+            const isFavorite = true; // 在收藏列表中顯示的餐廳，必然是已收藏的
+            
+            // 更新收藏按鈕狀態
+            if (isFavorite) {
+                favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
+                favoriteBtn.classList.add('active');
+            } else {
+                favoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
+                favoriteBtn.classList.remove('active');
+            }
+            
+            // 綁定收藏按鈕點擊事件
+            favoriteBtn.onclick = function() {
+                if (isFavorite) {
+                    // 如果已收藏，則取消收藏
+                    if (confirm('確定要取消收藏這家餐廳嗎？')) {
+                        removeFavorite(placeId);
+                        closeModal();
+                    }
+                }
+            };
+        }
+        
+        // 處理導航按鈕
+        const directionBtn = document.getElementById('modal-direction-btn-new');
+        if (directionBtn) {
+            directionBtn.onclick = function() {
+                openGoogleMaps(address);
+            };
+        }
         
         // 顯示彈窗
         newModal.classList.add('active');
-        console.log('新版彈窗已顯示');
         
-        // 綁定關閉按鈕事件
+        // 綁定關閉按鈕
         const closeBtn = document.querySelector('.restaurant-modal-close-new');
         if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                newModal.classList.remove('active');
-            });
-        }
-        
-        return;
-    }
-    
-    // 使用原始的彈窗邏輯
-    const modal = document.getElementById('restaurantModal');
-    const modalContent = modal ? modal.querySelector('.restaurant-modal-content') : null;
-    
-    console.log('彈窗元素:', modal);
-    console.log('彈窗內容元素:', modalContent);
-    
-    if (modal && modalContent) {
-        // 生成餐廳詳情內容
-        modalContent.innerHTML = `
-            <div class="restaurant-modal-header">
-                <h2>${restaurantName}</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="restaurant-main-info">
-                <img src="${photoUrl}" 
-                     alt="${restaurantName}" 
-                     class="restaurant-modal-image" 
-                     onerror="this.onerror=null; this.src='images/default-restaurant.jpg';">
-                <div class="restaurant-details">
-                    <div class="modal-rating">
-                        <span class="modal-stars">${generateStars(rating)}</span>
-                        <span>${rating.toFixed(1)}</span>
-                        <span class="modal-rating-count">(${ratingCount} 則評論)</span>
-                    </div>
-                    <div class="modal-address">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${address}</span>
-                    </div>
-                    <div class="modal-status">
-                        <i class="fas fa-clock"></i>
-                        <span class="modal-status-text">${isOpen ? '營業中' : '休息中'}</span>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="favorite-btn active" data-place-id="${placeId}" data-name="${restaurantName}">
-                            <i class="fas fa-heart"></i> 已收藏
-                        </button>
-                        <button class="modal-direction-btn" onclick="openGoogleMaps('${address}')">
-                            <i class="fas fa-directions"></i> 路線
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // 顯示彈窗
-        modal.style.display = 'flex';
-        console.log('舊版彈窗已顯示');
-        
-        // 綁定關閉按鈕事件
-        const closeBtn = modalContent.querySelector('.close-modal');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                console.log('關閉按鈕被點擊');
-                modal.style.display = 'none';
-            });
+            closeBtn.onclick = closeModal;
         }
         
         // 點擊彈窗外部關閉
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                console.log('點擊彈窗外部');
-                modal.style.display = 'none';
+        newModal.onclick = function(e) {
+            if (e.target === newModal) {
+                closeModal();
             }
-        });
+        };
     } else {
-        console.error('找不到餐廳詳情彈窗元素');
-        // 如果找不到彈窗元素，退回到原來的跳轉方式
-        window.location.href = `storeDetail.html?place_id=${placeId}`;
+        console.log('找不到新版彈窗元素，嘗試使用舊版彈窗');
+        
+        // 使用舊版彈窗
+        const oldModal = document.getElementById('restaurantModal');
+        if (oldModal) {
+            // 填充舊版彈窗內容
+            const nameElement = document.getElementById('modal-restaurant-name');
+            if (nameElement) nameElement.textContent = restaurantName;
+            
+            const modalImg = document.getElementById('modal-restaurant-img');
+            if (modalImg) {
+                modalImg.src = photoUrl;
+                modalImg.alt = restaurantName;
+                modalImg.onerror = function() {
+                    this.src = 'images/no-image.jpg';
+                };
+            }
+            
+            const starsElement = document.getElementById('modal-stars');
+            if (starsElement) starsElement.textContent = generateStars(rating);
+            
+            const ratingElement = document.getElementById('modal-rating');
+            if (ratingElement) ratingElement.textContent = rating.toFixed(1);
+            
+            const ratingCountElement = document.getElementById('modal-rating-count');
+            if (ratingCountElement) ratingCountElement.textContent = `(${ratingCount}則評論)`;
+            
+            const addressElement = document.getElementById('modal-address');
+            if (addressElement) addressElement.textContent = address;
+            
+            // 顯示彈窗
+            oldModal.style.display = 'block';
+            
+            // 綁定關閉按鈕
+            const closeBtn = document.querySelector('.restaurant-modal-close');
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    oldModal.style.display = 'none';
+                };
+            }
+            
+            // 點擊彈窗外部關閉
+            window.onclick = function(e) {
+                if (e.target === oldModal) {
+                    oldModal.style.display = 'none';
+                }
+            };
+        } else {
+            console.error('找不到任何可用的彈窗元素');
+            showToast('無法顯示餐廳詳情，請稍後再試');
+        }
+    }
+    
+    function closeModal() {
+        if (newModal) {
+            newModal.classList.remove('active');
+        }
     }
 }
 
@@ -2224,7 +2376,7 @@ function setupEventListeners() {
             // switchSection 會由 hashchange 事件觸發
         });
     });
-
+    
     // 個人資料表單提交 (修改為按鈕點擊事件)
     const updateProfileBtn = document.querySelector('.update-profile-btn');
     if (updateProfileBtn) {
@@ -2246,17 +2398,21 @@ function setupEventListeners() {
     if (reviewRating) { // 添加檢查確保元素存在
          reviewRating.addEventListener('change', function() {
              loadReviews(this.value);
-         });
+        });
     }
-
+    
     // 通知篩選 (保持原狀)
     document.querySelectorAll('#notifications .filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const type = this.getAttribute('data-type');
             filterNotifications(type);
+            
+            // 更新活動狀態
+            document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
         });
     });
-
+    
     // 收藏標籤切換
     document.querySelectorAll('.view-toggle .toggle-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -2268,7 +2424,7 @@ function setupEventListeners() {
             const favoritesReviews = document.querySelector('.favorites-reviews');
             
             if (view === 'stores') {
-                favoritesStores.style.display = 'grid';
+                favoritesStores.style.display = 'block';
                 favoritesReviews.style.display = 'none';
                 loadFavorites('stores');
             } else if (view === 'reviews') {
@@ -2278,7 +2434,7 @@ function setupEventListeners() {
             }
         });
     });
-
+        
     // 設定表單提交 (保持原狀)
     const settingsForm = document.getElementById('settingsForm');
      if (settingsForm) { // 添加檢查確保元素存在
@@ -2286,10 +2442,7 @@ function setupEventListeners() {
              e.preventDefault();
              updateSettings();
          });
-     }
-
-    // 編輯評論相關事件監聽器 (保持原狀)
-    // ... existing code ...
+    }
 }
 
 // 切換區塊

@@ -928,7 +928,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 取代假資料，直接 fetch 後台 API
 function fetchRestaurants(sortType = null, page = 0) {
-    let url = 'http://localhost:8080/api/restaurants';
+    // 確保 API_BASE_URL 存在，若不存在則使用預設值
+    const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+    let url = baseUrl + '/restaurants';
     const params = new URLSearchParams();
     
     // 添加分頁參數
@@ -937,7 +939,7 @@ function fetchRestaurants(sortType = null, page = 0) {
     
     // 如果有排序參數，使用新的分頁排序 API
     if (sortType) {
-        url = 'http://localhost:8080/api/restaurants/sort';
+        url = baseUrl + '/restaurants/sort';
         // 將排序類型轉換為後端期望的參數名稱
         let sortBy = '';
         switch (sortType) {
@@ -957,6 +959,7 @@ function fetchRestaurants(sortType = null, page = 0) {
     }
     
     url += '?' + params.toString();
+    console.log('發送 API 請求到:', url);
     
     fetch(url)
         .then(response => {
@@ -1022,12 +1025,68 @@ function renderRestaurants(restaurants) {
     if (!container) return;
     container.innerHTML = '';
     
+    // 確保 API_BASE_URL 存在，若不存在則使用預設值
+    const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+    
     restaurants.forEach(restaurant => {
+        // 從 json_raw 解析數據
+        if (restaurant.json_raw) {
+            try {
+                const jsonData = JSON.parse(restaurant.json_raw);
+                console.log('成功解析 json_raw 數據:', restaurant.name, jsonData);
+                
+                // 從 JSON 數據中提取評分、評論數
+                if (jsonData.rating) {
+                    restaurant.averageRating = jsonData.rating;
+                    restaurant.rating = jsonData.rating;
+                }
+                if (jsonData.user_ratings_total) {
+                    restaurant.reviewCount = jsonData.user_ratings_total;
+                    restaurant.user_ratings_total = jsonData.user_ratings_total;
+                }
+                
+                // 提取營業時間
+                if (jsonData.opening_hours && jsonData.opening_hours.weekday_text) {
+                    restaurant.businessHours = jsonData.opening_hours.weekday_text;
+                    restaurant.opening_hours = jsonData.opening_hours;
+                }
+            } catch (error) {
+                console.error('解析 json_raw 失敗:', error);
+            }
+        }
+        
         const card = document.createElement('div');
         card.className = 'restaurant-card yelp-style';
         
+        // 確保評分和評論數有默認值，但優先使用從 json_raw 解析出來的數據
+        const rating = restaurant.averageRating || restaurant.rating || 0;
+        const reviewCount = restaurant.reviewCount || restaurant.user_ratings_total || 0;
+        
+        // 營業時間處理
+        let businessHoursText = '暫無營業時間資料';
+        let isOpen = false;
+        
+        if (restaurant.opening_hours) {
+            isOpen = restaurant.opening_hours.open_now || false;
+            
+            // 如果有 weekday_text，獲取今日營業時間
+            if (restaurant.opening_hours.weekday_text && Array.isArray(restaurant.opening_hours.weekday_text)) {
+                const today = new Date().getDay(); // 0-6，0代表星期日
+                const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
+                
+                if (restaurant.opening_hours.weekday_text[index]) {
+                    const todayText = restaurant.opening_hours.weekday_text[index];
+                    // 直接從完整的營業時間文字中提取時間部分
+                    const timeMatch = todayText.match(/:\s*(.+)$/);
+                    businessHoursText = timeMatch ? timeMatch[1].trim() : '暫無營業時間資料';
+                }
+            } else if (restaurant.businessHours && Array.isArray(restaurant.businessHours)) {
+                businessHoursText = restaurant.businessHours[0] || '暫無營業時間資料';
+            }
+        }
+        
         // 圖片來源改為 google_restaurant_photos 的 API
-        let photoUrl = `http://localhost:8080/api/restaurant-images/${restaurant.placeId || restaurant.place_id}/raw`;
+        let photoUrl = baseUrl + '/restaurant-images/' + (restaurant.placeId || restaurant.place_id) + '/raw';
         card.innerHTML = `
             <div class="yelp-img-wrap">
                 <img class="yelp-image" src="${photoUrl}" alt="${restaurant.name}" onerror="this.src='images/default-restaurant.jpg'">
@@ -1037,14 +1096,19 @@ function renderRestaurants(restaurants) {
                     <h3 class="yelp-name">${restaurant.name}</h3>
                 </div>
                 <div class="yelp-rating-row">
-                    <div class="stars">${generateStars(restaurant.averageRating)}</div>
-                    <span class="rating-text">${restaurant.averageRating ? restaurant.averageRating.toFixed(1) : 'N/A'} (${restaurant.reviewCount || 0} 則評論)</span>
+                    <div class="stars">${generateStars(rating)}</div>
+                    <span class="rating-text">${rating ? rating.toFixed(1) : 'N/A'} (${reviewCount || 0} 則評論)</span>
                 </div>
                 <div class="yelp-tags-row">
                     ${restaurant.types ? `<span class="yelp-tag">${restaurant.types}</span>` : ''}
                 </div>
                 <div class="yelp-price-row">
                     <span class="address">${restaurant.address || ''}</span>
+                </div>
+                <div class="yelp-hours-row">
+                    <span class="hours-icon ${isOpen ? 'open' : 'closed'}"></span>
+                    <span class="hours-text">${isOpen ? '營業中' : '休息中'}</span>
+                    <span class="hours-details">${businessHoursText}</span>
                 </div>
                 <div class="yelp-review-row">
                     <p class="review-text">${restaurant.description || ''}</p>
