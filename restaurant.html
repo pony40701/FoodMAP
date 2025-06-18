@@ -70,21 +70,33 @@
 					<div class="info-section">
 						<div class="section-header">
 							<h2>基本資料</h2>
-							<button type="button" class="edit-button" onclick="toggleEditMode('basic-info')">
-								<i class="fas fa-edit"></i>
-								編輯資料
-							</button>
+							<div class="button-group">
+								<button type="button" class="edit-button" onclick="toggleEditMode('basic-info')">
+									<i class="fas fa-edit"></i>
+									編輯資料
+								</button>
+								<div class="action-buttons" style="display: none;">
+									<button type="button" class="cancel-button" onclick="cancelEdit('basic-info')">
+										<i class="fas fa-times"></i>
+										取消
+									</button>
+									<button type="button" class="save-button" onclick="saveChanges('basic-info')">
+										<i class="fas fa-save"></i>
+										確認
+									</button>
+								</div>
+							</div>
 						</div>
 						<div class="info-grid" id="basic-info">
 							<div class="info-item avatar-item">
 								<label>商家頭像</label>
 								<div class="avatar-container">
 									<img src="images/default-avatar.png" alt="商家頭像" class="profile-avatar">
-									<div class="avatar-overlay">
+									<div class="avatar-overlay edit-mode">
 										<i class="fas fa-camera"></i>
 										<span>更換頭像</span>
 									</div>
-									<input type="file" id="avatar-upload" accept="image/*" class="avatar-input">
+									<input type="file" id="avatar-upload" accept="image/*" class="avatar-input edit-mode">
 								</div>
 							</div>
 							<div class="info-item">
@@ -113,10 +125,22 @@
 					<div class="info-section">
 						<div class="section-header">
 							<h2>營業資訊</h2>
-							<button type="button" class="edit-button" onclick="toggleEditMode('business-info')">
-								<i class="fas fa-edit"></i>
-								編輯資料
-							</button>
+							<div class="button-group">
+								<button type="button" class="edit-button" onclick="toggleEditMode('business-info')">
+									<i class="fas fa-edit"></i>
+									編輯資料
+								</button>
+								<div class="action-buttons" style="display: none;">
+									<button type="button" class="cancel-button" onclick="cancelEdit('business-info')">
+										<i class="fas fa-times"></i>
+										取消
+									</button>
+									<button type="button" class="save-button" onclick="saveChanges('business-info')">
+										<i class="fas fa-save"></i>
+										確認
+									</button>
+								</div>
+							</div>
 						</div>
 						<div class="info-grid" id="business-info">
 							<div class="info-item">
@@ -147,10 +171,22 @@
 					<div class="info-section">
 						<div class="section-header">
 							<h2>餐廳簡介</h2>
-							<button type="button" class="edit-button" onclick="toggleEditMode('description-info')">
-								<i class="fas fa-edit"></i>
-								編輯資料
-							</button>
+							<div class="button-group">
+								<button type="button" class="edit-button" onclick="toggleEditMode('description-info')">
+									<i class="fas fa-edit"></i>
+									編輯資料
+								</button>
+								<div class="action-buttons" style="display: none;">
+									<button type="button" class="cancel-button" onclick="cancelEdit('description-info')">
+										<i class="fas fa-times"></i>
+										取消
+									</button>
+									<button type="button" class="save-button" onclick="saveChanges('description-info')">
+										<i class="fas fa-save"></i>
+										確認
+									</button>
+								</div>
+							</div>
 						</div>
 						<div class="info-content" id="description-info">
 							<p class="view-mode"></p>
@@ -161,10 +197,22 @@
 					<div class="info-section">
 						<div class="section-header">
 							<h2>餐廳照片</h2>
-							<button type="button" class="edit-button" onclick="toggleEditMode('photo-info')">
-								<i class="fas fa-edit"></i>
-								編輯資料
-							</button>
+							<div class="button-group">
+								<button type="button" class="edit-button" onclick="toggleEditMode('photo-info')">
+									<i class="fas fa-edit"></i>
+									編輯資料
+								</button>
+								<div class="action-buttons" style="display: none;">
+									<button type="button" class="cancel-button" onclick="cancelEdit('photo-info')">
+										<i class="fas fa-times"></i>
+										取消
+									</button>
+									<button type="button" class="save-button" onclick="saveChanges('photo-info')">
+										<i class="fas fa-save"></i>
+										確認
+									</button>
+								</div>
+							</div>
 						</div>
 						<div class="photo-gallery" id="photo-info">
 							<div class="photo-grid">
@@ -321,6 +369,58 @@
 
 		.add-photo:hover .add-photo-content {
 			color: #4CAF50;
+		}
+
+		.button-group {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
+
+		.action-buttons {
+			display: flex;
+			gap: 10px;
+		}
+
+		.edit-button,
+		.cancel-button,
+		.save-button {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 8px 16px;
+			border-radius: 4px;
+			cursor: pointer;
+			border: none;
+			color: white;
+		}
+
+		.edit-button {
+			background-color: #4CAF50;
+		}
+
+		.cancel-button {
+			background-color: #f44336;
+		}
+
+		.save-button {
+			background-color: #2196F3;
+		}
+
+		.edit-button:hover {
+			background-color: #45a049;
+		}
+
+		.cancel-button:hover {
+			background-color: #da190b;
+		}
+
+		.save-button:hover {
+			background-color: #0b7dda;
+		}
+
+		.button-group i {
+			margin-right: 4px;
 		}
 	</style>
 

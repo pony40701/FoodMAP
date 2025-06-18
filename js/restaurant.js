@@ -431,161 +431,221 @@ function updateField(section, labelText, value) {
     }
 }
 
-// 編輯模式切換功能
+// 切換編輯模式
 function toggleEditMode(sectionId) {
     const section = document.getElementById(sectionId);
-    const parentSection = section.closest('.info-section');
+    const isEditing = !section.classList.contains('editing');
     
-    // 如果其他區塊正在編輯，先取消它們的編輯狀態
-    document.querySelectorAll('.info-section.editing').forEach(section => {
-        if (section !== parentSection) {
-            section.classList.remove('editing');
-        }
-    });
+    // 如果要進入編輯模式，先檢查其他區段是否正在編輯
+    if (isEditing) {
+        const editingSections = document.querySelectorAll('.info-section .info-grid.editing, .info-section .info-content.editing, .info-section .photo-gallery.editing');
+        editingSections.forEach(editingSection => {
+            if (editingSection.id !== sectionId) {
+                cancelEdit(editingSection.id);
+            }
+        });
+    }
 
-    // 切換當前區塊的編輯狀態
-    parentSection.classList.toggle('editing');
-
-    // 如果進入編輯模式，添加取消和確認按鈕
-    if (parentSection.classList.contains('editing')) {
-        const editButtons = document.createElement('div');
-        editButtons.className = 'edit-buttons';
-        editButtons.innerHTML = `
-            <button type="button" class="cancel-button" onclick="cancelEdit('${sectionId}')">
-                <i class="fas fa-times"></i>
-                取消
-            </button>
-            <button type="button" class="save-button" onclick="saveEdit('${sectionId}')">
-                <i class="fas fa-save"></i>
-                確認
-            </button>
-        `;
-        parentSection.appendChild(editButtons);
-
-        // 如果是照片區塊，啟用照片上傳功能
-        if (sectionId === 'photo-info') {
-            enablePhotoUpload();
+    // 更新編輯狀態
+    section.classList.toggle('editing', isEditing);
+    
+    // 獲取按鈕元素
+    const buttonGroup = section.closest('.info-section').querySelector('.button-group');
+    const editButton = buttonGroup.querySelector('.edit-button');
+    const actionButtons = buttonGroup.querySelector('.action-buttons');
+    
+    // 更新按鈕顯示狀態
+    if (isEditing) {
+        editButton.style.display = 'none';
+        actionButtons.style.display = 'flex';
+        
+        // 儲存原始值，用於取消時還原
+        const inputs = section.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.dataset.originalValue = input.value;
+        });
+        
+        // 如果是頭像，儲存原始圖片路徑
+        const avatar = section.querySelector('.profile-avatar');
+        if (avatar) {
+            avatar.dataset.originalSrc = avatar.src;
         }
     } else {
-        // 如果退出編輯模式，移除取消和確認按鈕
-        const editButtons = parentSection.querySelector('.edit-buttons');
-        if (editButtons) {
-            editButtons.remove();
-        }
+        editButton.style.display = 'flex';
+        actionButtons.style.display = 'none';
     }
+    
+    // 切換輸入欄位的顯示/隱藏
+    const viewElements = section.querySelectorAll('.view-mode');
+    const editElements = section.querySelectorAll('.edit-mode');
+    
+    viewElements.forEach(el => el.style.display = isEditing ? 'none' : 'block');
+    editElements.forEach(el => el.style.display = isEditing ? 'block' : 'none');
 }
 
 // 取消編輯
 function cancelEdit(sectionId) {
     const section = document.getElementById(sectionId);
-    const parentSection = section.closest('.info-section');
     
-    // 重置所有輸入欄位的值
-    const inputs = parentSection.querySelectorAll('.edit-mode');
+    // 還原所有輸入欄位的值
+    const inputs = section.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
-        if (input.tagName === 'SELECT') {
-            input.selectedIndex = 0;
-        } else {
-            input.value = input.defaultValue;
+        if (input.dataset.originalValue) {
+            input.value = input.dataset.originalValue;
         }
     });
-
-    // 退出編輯模式
-    parentSection.classList.remove('editing');
-    const editButtons = parentSection.querySelector('.edit-buttons');
-    if (editButtons) {
-        editButtons.remove();
-    }
-}
-
-// 儲存編輯
-function saveEdit(sectionId) {
-    const section = document.getElementById(sectionId);
-    const parentSection = section.closest('.info-section');
     
-    // 更新顯示的資料
-    parentSection.querySelectorAll('.view-mode').forEach((element) => {
-        const input = element.nextElementSibling;
-        if (input) {
-            element.textContent = input.value;
-        }
-    });
-
-    // 退出編輯模式
-    parentSection.classList.remove('editing');
-    const editButtons = parentSection.querySelector('.edit-buttons');
-    if (editButtons) {
-        editButtons.remove();
+    // 還原頭像
+    const avatar = section.querySelector('.profile-avatar');
+    if (avatar && avatar.dataset.originalSrc) {
+        avatar.src = avatar.dataset.originalSrc;
+        // 同時更新導覽列的頭像
+        document.querySelector('.avatar-img').src = avatar.dataset.originalSrc;
     }
-
-    // 這裡可以添加儲存到後端的程式碼
-    console.log('儲存區塊：', sectionId);
+    
+    // 清除檔案輸入
+    const fileInputs = section.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.value = '';
+    });
+    
+    // 退出編輯模式
+    toggleEditMode(sectionId);
 }
 
-// 啟用照片上傳功能
-function enablePhotoUpload() {
-    const addPhotoButton = document.querySelector('.add-photo');
-    const photoUpload = document.getElementById('photo-upload');
-    const photoGrid = document.querySelector('.photo-grid');
+// 儲存變更
+async function saveChanges(sectionId) {
+    try {
+        let success = false;
+        
+        switch(sectionId) {
+            case 'basic-info':
+                success = await saveBasicInfo();
+                break;
+            case 'business-info':
+                success = await saveBusinessInfo();
+                break;
+            case 'description-info':
+                success = await saveDescription();
+                break;
+            case 'photo-info':
+                success = await savePhotos();
+                break;
+        }
+        
+        if (success) {
+            // 如果儲存成功，退出編輯模式
+            toggleEditMode(sectionId);
+        }
+    } catch (error) {
+        console.error('儲存變更時發生錯誤:', error);
+        alert('儲存失敗，請稍後再試。');
+    }
+}
 
-    if (addPhotoButton && photoUpload) {
-        // 點擊新增照片按鈕時觸發檔案選擇
-        addPhotoButton.onclick = function() {
-            photoUpload.click();
-        };
-
-        // 處理照片上傳
-        photoUpload.onchange = function(e) {
-            const files = e.target.files;
-            for (let file of files) {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const photoItem = document.createElement('div');
-                        photoItem.className = 'photo-item';
-                        photoItem.innerHTML = `
-                            <img src="${e.target.result}" alt="餐廳照片">
-                            <div class="photo-overlay">
-                                <button class="delete-photo"><i class="fas fa-trash"></i></button>
-                            </div>
-                        `;
-                        // 將新照片插入到新增按鈕之前
-                        photoGrid.insertBefore(photoItem, photoGrid.lastElementChild);
-                    };
-                    reader.readAsDataURL(file);
+// 儲存基本資料
+async function saveBasicInfo() {
+    try {
+        const formData = new FormData();
+        
+        // 獲取基本資料
+        const section = document.getElementById('basic-info');
+        const inputs = section.querySelectorAll('.info-item');
+        
+        // 使用標籤文字來識別正確的輸入框
+        inputs.forEach(item => {
+            const label = item.querySelector('label');
+            const input = item.querySelector('.edit-mode');
+            
+            if (label && input) {
+                switch(label.textContent) {
+                    case '餐廳名稱':
+                        formData.append('name', input.value);
+                        break;
+                    case '電子郵件':
+                        formData.append('email', input.value);
+                        break;
+                    case '聯絡電話':
+                        formData.append('phoneNumber', input.value);
+                        break;
+                    case '營業地址':
+                        formData.append('address', input.value);
+                        break;
                 }
             }
-            // 清空 input 值，這樣可以重複選擇相同的檔案
-            this.value = '';
-        };
-    }
-
-    // 處理照片刪除
-    photoGrid.onclick = function(e) {
-        if (e.target.closest('.delete-photo')) {
-            const photoItem = e.target.closest('.photo-item');
-            if (photoItem && !photoItem.classList.contains('add-photo')) {
-                photoItem.remove();
-            }
+        });
+        
+        // 獲取頭像檔案
+        const avatarInput = document.getElementById('avatar-upload');
+        if (avatarInput.files.length > 0) {
+            formData.append('avatar', avatarInput.files[0]);
         }
-    };
+        
+        const token = localStorage.getItem('merchantToken');
+        const response = await fetch('http://localhost:8080/api/merchants/restaurant/basic-info', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // 獲取更新後的資料
+        const updatedData = await response.json();
+        
+        // 更新頭像（如果有新的頭像URL）
+        if (updatedData.avatarUrl) {
+            updateAvatars(updatedData.avatarUrl);
+        }
+        
+        // 更新基本資料欄位
+        const basicInfoSection = document.getElementById('basic-info');
+        if (basicInfoSection) {
+            updateField(basicInfoSection, "餐廳名稱", updatedData.name);
+            updateField(basicInfoSection, "電子郵件", updatedData.email);
+            updateField(basicInfoSection, "聯絡電話", updatedData.phoneNumber);
+            updateField(basicInfoSection, "營業地址", updatedData.address);
+        }
+        
+        alert('基本資料更新成功！');
+        return true;
+        
+    } catch (error) {
+        console.error('更新基本資料時發生錯誤:', error);
+        alert('更新基本資料失敗，請稍後再試。');
+        return false;
+    }
 }
 
-// 當檔案上傳成功時的處理函數
-function handleFileUploadSuccess(file, uploadedUrl) {
-    const photoGrid = document.querySelector('.photo-grid');
-    const addPhotoButton = photoGrid.querySelector('.add-photo');
-    
-    // 直接使用返回的完整路徑
-    console.log("上傳成功，URL:", uploadedUrl);
-
-    const photoItem = document.createElement('div');
-    photoItem.className = 'photo-item';
-    photoItem.innerHTML = `
-        <img src="${uploadedUrl}" alt="餐廳照片">
-        <div class="photo-overlay">
-            <button class="delete-photo"><i class="fas fa-trash"></i></button>
-        </div>
-    `;
-    photoGrid.insertBefore(photoItem, addPhotoButton);
+// 其他區段的儲存函數將在之後實作
+async function saveBusinessInfo() {
+    // TODO: 實作營業資訊的儲存邏輯
+    return false;
 }
+
+async function saveDescription() {
+    // TODO: 實作餐廳簡介的儲存邏輯
+    return false;
+}
+
+async function savePhotos() {
+    // TODO: 實作餐廳照片的儲存邏輯
+    return false;
+}
+
+// 處理頭像上傳預覽
+document.getElementById('avatar-upload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('.profile-avatar').src = e.target.result;
+            document.querySelector('.avatar-img').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
