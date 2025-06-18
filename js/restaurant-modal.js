@@ -19,491 +19,414 @@ const RestaurantModal = (function() {
     
     // 初始化
     function init() {
-        // 獲取DOM元素
-        elements = {
-            modal: document.getElementById('restaurantModalNew'),
-            name: document.getElementById('modal-restaurant-name-new'),
-            image: document.getElementById('modal-restaurant-img-new'),
-            stars: document.getElementById('modal-stars-new'),
-            rating: document.getElementById('modal-rating-new'),
-            ratingCount: document.getElementById('modal-rating-count-new'),
-            address: document.getElementById('modal-address-new'),
-            status: document.getElementById('modal-status-new'),
-            statusText: document.querySelector('#modal-status-new .modal-status-text-new'),
-            todayHours: document.getElementById('modal-today-hours-new'),
-            viewHoursBtn: document.getElementById('view-full-hours-btn-new'),
-            tags: document.getElementById('modal-tags-new'),
-            favoriteBtn: document.getElementById('modal-favorite-btn-new'),
-            directionBtn: document.getElementById('modal-direction-btn-new'),
-            closeBtn: document.querySelector('.restaurant-modal-close-new'),
-            mapContainer: document.getElementById('modal-map-new'),
+        try {
+            // 獲取DOM元素
+            elements = {
+                modal: document.getElementById('restaurantModalNew'),
+                name: document.getElementById('modal-restaurant-name-new'),
+                image: document.getElementById('modal-restaurant-img-new'),
+                stars: document.getElementById('modal-stars-new'),
+                rating: document.getElementById('modal-rating-new'),
+                ratingCount: document.getElementById('modal-rating-count-new'),
+                address: document.getElementById('modal-address-new'),
+                status: document.getElementById('modal-status-new'),
+                statusText: document.querySelector('#modal-status-new .modal-status-text-new'),
+                todayHours: document.getElementById('modal-today-hours-new'),
+                viewHoursBtn: document.getElementById('view-full-hours-btn-new'),
+                tags: document.getElementById('modal-tags-new'),
+                favoriteBtn: document.getElementById('modal-favorite-btn-new'),
+                directionBtn: document.getElementById('modal-direction-btn-new'),
+                closeBtn: document.querySelector('.restaurant-modal-close-new'),
+                mapContainer: document.getElementById('modal-map-new'),
+                
+                hoursModal: document.getElementById('weeklyHoursModalNew'),
+                hoursModalBody: document.getElementById('weekly-hours-modal-body-new'),
+                hoursModalCloseBtn: document.querySelector('.weekly-hours-modal-close-new')
+            };
             
-            hoursModal: document.getElementById('weeklyHoursModalNew'),
-            hoursModalBody: document.getElementById('weekly-hours-modal-body-new'),
-            hoursModalCloseBtn: document.querySelector('.weekly-hours-modal-close-new')
-        };
-        
-        console.log('餐廳彈窗DOM元素:', elements);
-        
-        // 檢查關鍵元素是否存在，如果不存在則顯示警告
-        const requiredElements = ['modal', 'name', 'image', 'stars', 'rating', 'ratingCount', 'address', 'status', 'statusText', 'todayHours', 'viewHoursBtn'];
-        const missingElements = requiredElements.filter(key => !elements[key]);
-        
-        if (missingElements.length > 0) {
-            console.error('缺少必要DOM元素:', missingElements);
-            alert('頁面缺少必要元素，餐廳詳情功能可能無法正常工作。請重新整理頁面後再試。');
-        }
-        
-        // 綁定事件
-        if (elements.closeBtn) {
-            elements.closeBtn.addEventListener('click', closeModal);
-        }
-        
-        if (elements.modal) {
-            elements.modal.addEventListener('click', function(e) {
-                if (e.target === elements.modal) {
-                    closeModal();
-                }
-            });
-        }
-        
-        if (elements.viewHoursBtn) {
-            elements.viewHoursBtn.addEventListener('click', showWeeklyHours);
-        }
-        
-        if (elements.hoursModalCloseBtn) {
-            elements.hoursModalCloseBtn.addEventListener('click', closeWeeklyHoursModal);
-        }
-        
-        if (elements.hoursModal) {
-            elements.hoursModal.addEventListener('click', function(e) {
-                if (e.target === elements.hoursModal) {
-                    closeWeeklyHoursModal();
-                }
-            });
-        }
-        
-        if (elements.favoriteBtn) {
-            elements.favoriteBtn.addEventListener('click', toggleFavorite);
-        }
-        
-        if (elements.directionBtn) {
-            elements.directionBtn.addEventListener('click', openDirections);
-        }
-        
-        // 監聽 ESC 鍵
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (elements.hoursModal && elements.hoursModal.classList.contains('active')) {
-                    closeWeeklyHoursModal();
-                } else if (elements.modal && elements.modal.classList.contains('active')) {
-                    closeModal();
-                }
+            console.log('餐廳彈窗DOM元素:', elements);
+            
+            // 檢查關鍵元素是否存在，如果不存在則顯示警告
+            const requiredElements = ['modal', 'name', 'image', 'stars', 'rating', 'ratingCount', 'address', 'status', 'statusText', 'todayHours', 'viewHoursBtn'];
+            const missingElements = requiredElements.filter(key => !elements[key]);
+            
+            if (missingElements.length > 0) {
+                console.error('缺少必要DOM元素:', missingElements);
+                alert('頁面缺少必要元素，餐廳詳情功能可能無法正常工作。請重新整理頁面後再試。');
             }
-        });
-        
-        // 將模組掛載到全局對象
-        window.RestaurantModal = {
-            init: init,
-            showRestaurantDetail: showRestaurantDetail,
-            closeModal: closeModal,
-            showWeeklyHours: showWeeklyHours,
-            closeWeeklyHoursModal: closeWeeklyHoursModal
-        };
-        
-        console.log('餐廳彈窗模組初始化完成，已掛載到 window.RestaurantModal');
+            
+            // 綁定事件
+            if (elements.closeBtn) {
+                elements.closeBtn.addEventListener('click', closeModal);
+            }
+            
+            if (elements.modal) {
+                elements.modal.addEventListener('click', function(e) {
+                    if (e.target === elements.modal) {
+                        closeModal();
+                    }
+                });
+            }
+            
+            if (elements.viewHoursBtn) {
+                elements.viewHoursBtn.addEventListener('click', showWeeklyHours);
+            }
+            
+            if (elements.hoursModalCloseBtn) {
+                elements.hoursModalCloseBtn.addEventListener('click', closeWeeklyHoursModal);
+            }
+            
+            if (elements.hoursModal) {
+                elements.hoursModal.addEventListener('click', function(e) {
+                    if (e.target === elements.hoursModal) {
+                        closeWeeklyHoursModal();
+                    }
+                });
+            }
+            
+            if (elements.favoriteBtn) {
+                elements.favoriteBtn.addEventListener('click', toggleFavorite);
+            }
+            
+            if (elements.directionBtn) {
+                elements.directionBtn.addEventListener('click', openDirections);
+            }
+            
+            // 監聽 ESC 鍵
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (elements.hoursModal && elements.hoursModal.classList.contains('active')) {
+                        closeWeeklyHoursModal();
+                    } else if (elements.modal && elements.modal.classList.contains('active')) {
+                        closeModal();
+                    }
+                }
+            });
+            
+            // 將模組掛載到全局對象
+            window.RestaurantModal = {
+                init: init,
+                showRestaurantDetail: showRestaurantDetail,
+                closeModal: closeModal,
+                showWeeklyHours: showWeeklyHours,
+                closeWeeklyHoursModal: closeWeeklyHoursModal
+            };
+            
+            console.log('餐廳彈窗模組初始化完成，已掛載到 window.RestaurantModal');
+        } catch (error) {
+            console.error('餐廳彈窗初始化出錯:', error);
+            alert('初始化餐廳詳情功能時出現錯誤，請重新整理頁面後再試。');
+        }
     }
     
     // 顯示餐廳詳情
     async function showRestaurantDetail(restaurant) {
-        if (!restaurant) {
-            console.error('餐廳數據為空');
-            return;
-        }
-        
-        console.log('顯示餐廳詳情:', restaurant);
-        
-        // 確保DOM元素已初始化
-        if (!elements.modal) {
-            console.log('DOM元素未初始化，重新獲取');
-            init();
-        }
-        
-        // 保存當前餐廳數據
-        currentRestaurant = restaurant;
-        
-        // 嘗試從 json_raw 解析數據
-        if (restaurant.json_raw) {
-            try {
-                const jsonData = JSON.parse(restaurant.json_raw);
-                console.log('成功解析 json_raw 數據:', jsonData);
-                
-                // 更新評分、評論數
-                if (jsonData.rating) {
-                    restaurant.rating = jsonData.rating;
-                    restaurant.average_rating = jsonData.rating;
+        try {
+            if (!restaurant) {
+                console.error('餐廳數據為空');
+                return;
+            }
+            
+            console.log('顯示餐廳詳情:', restaurant);
+            
+            // 確保DOM元素已初始化
+            if (!elements.modal) {
+                console.log('DOM元素未初始化，重新獲取');
+                init();
+            }
+            
+            if (!elements.modal) {
+                console.error('初始化後仍無法獲取Modal元素');
+                return;
+            }
+            
+            // 保存當前餐廳數據
+            currentRestaurant = restaurant;
+            
+            // 嘗試從 json_raw 解析數據
+            if (restaurant.json_raw) {
+                try {
+                    const jsonData = JSON.parse(restaurant.json_raw);
+                    console.log('成功解析 json_raw 數據:', jsonData);
+                    
+                    // 更新評分、評論數
+                    if (jsonData.rating) {
+                        restaurant.rating = jsonData.rating;
+                        restaurant.average_rating = jsonData.rating;
+                    }
+                    if (jsonData.user_ratings_total) {
+                        restaurant.user_ratings_total = jsonData.user_ratings_total;
+                        restaurant.review_count = jsonData.user_ratings_total;
+                        restaurant.reviewCount = jsonData.user_ratings_total;
+                    }
+                    
+                    // 更新營業時間
+                    if (jsonData.opening_hours) {
+                        restaurant.opening_hours = jsonData.opening_hours;
+                        if (jsonData.opening_hours.weekday_text) {
+                            restaurant.business_hours = jsonData.opening_hours.weekday_text;
+                        }
+                    }
+                    
+                    // 更新位置信息
+                    if (jsonData.geometry && jsonData.geometry.location) {
+                        restaurant.geometry = jsonData.geometry;
+                        restaurant.lat = jsonData.geometry.location.lat;
+                        restaurant.lng = jsonData.geometry.location.lng;
+                    }
+                } catch (error) {
+                    console.error('解析 json_raw 失敗:', error);
                 }
-                if (jsonData.user_ratings_total) {
-                    restaurant.user_ratings_total = jsonData.user_ratings_total;
-                    restaurant.review_count = jsonData.user_ratings_total;
-                    restaurant.reviewCount = jsonData.user_ratings_total;
+            }
+            
+            // 確保有餐廳ID
+            if (!restaurant.place_id && !restaurant.id && restaurant.name) {
+                restaurant.id = 'temp-id-' + Date.now();
+                console.log('生成臨時 ID:', restaurant.id);
+            }
+            
+            const restaurantId = restaurant.place_id || restaurant.id;
+            
+            // 設置餐廳名稱
+            if (elements.name) elements.name.textContent = restaurant.name || '暫無資料';
+            
+            // 處理圖片URL - 使用與商家卡片相同的方式
+            let photoUrl = '';
+            
+            // 優先使用restaurant中已存在的圖片URL
+            if (restaurant.photo) {
+                photoUrl = restaurant.photo;
+                console.log('使用餐廳對象中的photo屬性:', photoUrl);
+            } else if (restaurant.photos && restaurant.photos.length > 0) {
+                // 檢查photos是否是URL數組或對象數組
+                if (typeof restaurant.photos[0] === 'string') {
+                    photoUrl = restaurant.photos[0];
+                } else if (restaurant.photos[0].getUrl) {
+                    photoUrl = restaurant.photos[0].getUrl();
+                } else if (restaurant.photos[0].url) {
+                    photoUrl = restaurant.photos[0].url;
                 }
+                console.log('使用餐廳對象中的photos陣列:', photoUrl);
+            } else if (restaurant.image_url) {
+                photoUrl = restaurant.image_url;
+                console.log('使用餐廳對象中的image_url屬性:', photoUrl);
+            } else if (restaurantId) {
+                // 如果沒有直接的圖片URL，從後端API獲取
+                photoUrl = `${baseUrl}/restaurant-images/${restaurantId}/raw`;
+                console.log('從後端API獲取圖片:', photoUrl);
+            }
+            
+            // 設置圖片
+            if (elements.image) {
+                console.log('設置餐廳圖片:', photoUrl);
+                // 清除舊的錯誤處理
+                elements.image.onerror = null;
+                // 顯示圖片元素
+                elements.image.style.display = 'block';
                 
-                // 更新營業時間
-                if (jsonData.opening_hours) {
-                    restaurant.opening_hours = jsonData.opening_hours;
-                    if (jsonData.opening_hours.weekday_text) {
-                        restaurant.business_hours = jsonData.opening_hours.weekday_text;
+                // 清除可能存在的錯誤提示
+                const imgContainer = elements.image.parentElement;
+                if (imgContainer) {
+                    const existingError = imgContainer.querySelector('.image-error-message');
+                    if (existingError) {
+                        imgContainer.removeChild(existingError);
                     }
                 }
                 
-                // 更新位置信息
-                if (jsonData.geometry && jsonData.geometry.location) {
-                    restaurant.geometry = jsonData.geometry;
-                    restaurant.lat = jsonData.geometry.location.lat;
-                    restaurant.lng = jsonData.geometry.location.lng;
+                // 設置新圖片
+                elements.image.src = photoUrl;
+                elements.image.alt = restaurant.name || '餐廳圖片';
+                
+                // 設置錯誤處理
+                elements.image.onerror = function() {
+                    console.log('圖片載入失敗，使用預設圖片');
+                    this.src = 'images/default-restaurant.jpg';
+                    this.onerror = null; // 防止循環錯誤
+                };
+            }
+            
+            // 設置評分
+            const rating = parseFloat(restaurant.rating) || parseFloat(restaurant.average_rating) || 0;
+            if (elements.rating) elements.rating.textContent = rating.toFixed(1) || '暫無資料';
+            if (elements.ratingCount) {
+                const reviewCount = restaurant.user_ratings_total || restaurant.review_count || restaurant.reviewCount || 0;
+                elements.ratingCount.textContent = `(${reviewCount}則評論)`;
+                
+                // 調試信息
+                console.log('評分數據:', {
+                    restaurantName: restaurant.name,
+                    rating: rating,
+                    originalRating: restaurant.rating,
+                    averageRating: restaurant.average_rating,
+                    reviewCount: reviewCount,
+                    originalReviewCount: restaurant.user_ratings_total,
+                    alternativeReviewCount: restaurant.review_count
+                });
+            }
+            
+            // 生成星星評分
+            if (elements.stars) {
+                elements.stars.textContent = generateStars(rating);
+            }
+            
+            // 設置地址
+            if (elements.address) elements.address.textContent = restaurant.address || restaurant.vicinity || '暫無資料';
+            
+            // 設置營業狀態
+            const opening_hours = getOpeningHoursFromJsonRaw(restaurant);
+            const isOpen = isRestaurantOpenNow(opening_hours);
+            const todayHoursText = getTodayHours(opening_hours);
+            const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const today = new Date().getDay();
+            const todayName = dayNames[today];
+            
+            // 更新營業狀態
+            if (elements.status) {
+                elements.status.className = `modal-status-new ${isOpen ? 'open' : 'closed'}`;
+            }
+            if (elements.statusText) {
+                elements.statusText.textContent = isOpen ? '營業中' : '休息中';
+            }
+            
+            // 顯示今日營業時間
+            if (elements.todayHours) {
+                let finalDisplayText = todayHoursText === '未提供營業時間' ? todayHoursText : `${todayName} ${todayHoursText}`;
+                elements.todayHours.textContent = finalDisplayText;
+                elements.todayHours.style.display = 'block';
+                elements.todayHours.style.visibility = 'visible';
+                elements.todayHours.style.opacity = '1';
+            }
+            
+            // 顯示完整營業時間按鈕
+            const weeklyHours = getWeeklyHours(opening_hours);
+            if (elements.viewHoursBtn) {
+                elements.viewHoursBtn.style.display = (weeklyHours && Array.isArray(weeklyHours) && weeklyHours.length > 0) ? 'block' : 'none';
+                elements.viewHoursBtn.style.margin = '12px 0 0 0';
+                elements.viewHoursBtn.style.textAlign = 'left';
+                elements.viewHoursBtn.style.float = 'left';
+                elements.viewHoursBtn.style.clear = 'both';
+                // 自動插入 CSS
+                if (!document.getElementById('view-hours-btn-left-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'view-hours-btn-left-style';
+                    style.textContent = `
+                    #view-full-hours-btn-new {
+                        float: left !important;
+                        margin-left: 0 !important;
+                        margin-top: 12px !important;
+                        margin-bottom: 0 !important;
+                        text-align: left !important;
+                    }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+            
+            // 設置收藏按鈕狀態
+            let isFavorite = false;
+            if (window.favoriteSystem && window.favoriteSystem.initialized) {
+                isFavorite = await window.favoriteSystem.isStoreFavorited(restaurantId);
+            }
+            
+            console.log('設置彈窗收藏按鈕初始狀態，餐廳ID:', restaurantId, '，收藏狀態:', isFavorite);
+            
+            if (elements.favoriteBtn) {
+                if (isFavorite) {
+                    elements.favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
+                    elements.favoriteBtn.classList.add('active');
+                } else {
+                    elements.favoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
+                    elements.favoriteBtn.classList.remove('active');
+                }
+            }
+            
+            // 顯示彈窗
+            elements.modal.classList.add('active');
+            console.log('彈窗已顯示');
+            console.log('營業時間檢查 - 當前週營業時間數據:', weeklyHoursData);
+            console.log('營業時間檢查 - 營業時間設置:', {
+                isOpen: isOpen,
+                todayHoursText: todayHoursText,
+                statusElement: elements.status,
+                statusTextElement: elements.statusText,
+                todayHoursElement: elements.todayHours
+            });
+            
+            // 初始化地圖
+            try {
+                // 準備位置數據
+                let location = null;
+                
+                // 嘗試從各種可能的位置獲取經緯度
+                if (restaurant.geometry && restaurant.geometry.location) {
+                    location = restaurant.geometry.location;
+                } else if (restaurant.lat !== undefined && restaurant.lng !== undefined) {
+                    location = { lat: restaurant.lat, lng: restaurant.lng };
+                } else if (restaurant.latitude !== undefined && restaurant.longitude !== undefined) {
+                    location = { lat: restaurant.latitude, lng: restaurant.longitude };
+                } else if (restaurant.location) {
+                    if (typeof restaurant.location === 'string') {
+                        try {
+                            const locationObj = JSON.parse(restaurant.location);
+                            if (locationObj.lat !== undefined && locationObj.lng !== undefined) {
+                                location = locationObj;
+                            }
+                        } catch (e) {
+                            console.warn('解析位置字符串失敗:', e);
+                        }
+                    } else if (typeof restaurant.location === 'object') {
+                        location = restaurant.location;
+                    }
+                }
+                
+                if (location && (location.lat !== undefined || location.latitude !== undefined)) {
+                    console.log('初始化地圖，位置數據:', location);
+                    initModalMap(location, restaurant.name);
+                } else {
+                    console.warn('餐廳缺少位置數據，無法顯示地圖');
+                    
+                    // 隱藏地圖區域
+                    const locationSection = elements.mapContainer.closest('.restaurant-location-new');
+                    if (locationSection) {
+                        locationSection.style.display = 'none';
+                    }
                 }
             } catch (error) {
-                console.error('解析 json_raw 失敗:', error);
+                console.error('初始化地圖時出錯:', error);
             }
-        }
-        
-        // 確保有餐廳ID
-        if (!restaurant.place_id && !restaurant.id && restaurant.name) {
-            restaurant.id = 'temp-id-' + Date.now();
-            console.log('生成臨時 ID:', restaurant.id);
-        }
-        
-        const restaurantId = restaurant.place_id || restaurant.id;
-        
-        // 設置餐廳名稱
-        if (elements.name) elements.name.textContent = restaurant.name || '暫無資料';
-        
-        // 處理圖片URL - 使用與商家卡片相同的方式
-        let photoUrl = '';
-        
-        // 優先使用restaurant中已存在的圖片URL
-        if (restaurant.photo) {
-            photoUrl = restaurant.photo;
-            console.log('使用餐廳對象中的photo屬性:', photoUrl);
-        } else if (restaurant.photos && restaurant.photos.length > 0) {
-            // 檢查photos是否是URL數組或對象數組
-            if (typeof restaurant.photos[0] === 'string') {
-                photoUrl = restaurant.photos[0];
-            } else if (restaurant.photos[0].getUrl) {
-                photoUrl = restaurant.photos[0].getUrl();
-            } else if (restaurant.photos[0].url) {
-                photoUrl = restaurant.photos[0].url;
-            }
-            console.log('使用餐廳對象中的photos陣列:', photoUrl);
-        } else if (restaurant.image_url) {
-            photoUrl = restaurant.image_url;
-            console.log('使用餐廳對象中的image_url屬性:', photoUrl);
-        } else if (restaurantId) {
-            // 如果沒有直接的圖片URL，從後端API獲取
-            photoUrl = `${baseUrl}/restaurant-images/${restaurantId}/raw`;
-            console.log('從後端API獲取圖片:', photoUrl);
-        }
-        
-        // 設置圖片
-        if (elements.image) {
-            console.log('設置餐廳圖片:', photoUrl);
-            // 清除舊的錯誤處理
-            elements.image.onerror = null;
-            // 顯示圖片元素
-            elements.image.style.display = 'block';
-            
-            // 清除可能存在的錯誤提示
-            const imgContainer = elements.image.parentElement;
-            if (imgContainer) {
-                const existingError = imgContainer.querySelector('.image-error-message');
-                if (existingError) {
-                    imgContainer.removeChild(existingError);
-                }
-            }
-            
-            // 設置新圖片
-            elements.image.src = photoUrl;
-            elements.image.alt = restaurant.name || '餐廳圖片';
-            
-            // 設置錯誤處理
-            elements.image.onerror = function() {
-                console.log('圖片載入失敗，使用預設圖片');
-                this.src = 'images/default-restaurant.jpg';
-                this.onerror = null; // 防止循環錯誤
-            };
-        }
-        
-        // 設置評分
-        const rating = parseFloat(restaurant.rating) || parseFloat(restaurant.average_rating) || 0;
-        if (elements.rating) elements.rating.textContent = rating.toFixed(1) || '暫無資料';
-        if (elements.ratingCount) {
-            const reviewCount = restaurant.user_ratings_total || restaurant.review_count || restaurant.reviewCount || 0;
-            elements.ratingCount.textContent = `(${reviewCount}則評論)`;
-            
-            // 調試信息
-            console.log('評分數據:', {
-                restaurantName: restaurant.name,
-                rating: rating,
-                originalRating: restaurant.rating,
-                averageRating: restaurant.average_rating,
-                reviewCount: reviewCount,
-                originalReviewCount: restaurant.user_ratings_total,
-                alternativeReviewCount: restaurant.review_count
-            });
-        }
-        
-        // 生成星星評分
-        if (elements.stars) {
-            elements.stars.textContent = generateStars(rating);
-        }
-        
-        // 設置地址
-        if (elements.address) elements.address.textContent = restaurant.address || restaurant.vicinity || '暫無資料';
-        
-        // 設置營業狀態
-        let isOpen = false;
-        let todayHoursText = '';
-        
-        // 獲取今天是星期幾
-        const today = new Date().getDay(); // 0-6，0代表星期日
-        const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-        const todayName = dayNames[today];
-        
-        if (restaurant.opening_hours) {
-            // 如果opening_hours是字符串形式的JSON，先解析它
-            if (typeof restaurant.opening_hours === 'string') {
-                try {
-                    restaurant.opening_hours = JSON.parse(restaurant.opening_hours);
-                    console.log('已解析營業時間JSON字符串:', restaurant.opening_hours);
-                } catch (error) {
-                    console.warn('解析營業時間JSON失敗:', error);
-                }
-            }
-            
-            // 準備營業時間數據
-            prepareWeeklyHoursData(restaurant.opening_hours);
-            
-            if (restaurant.opening_hours.weekday_text) {
-                // 使用 BusinessHours 類獲取今日營業時間
-                if (window.businessHours) {
-                    todayHoursText = window.businessHours.getTodayHours(restaurant.opening_hours.weekday_text);
-                    if (todayHoursText) {
-                        isOpen = window.businessHours.isOpenFromText(todayHoursText);
-                    }
-                } else {
-                    // 舊的方式：獲取今日營業時間文字
-                    const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
-                    
-                    if (restaurant.opening_hours.weekday_text[index]) {
-                        const todayText = restaurant.opening_hours.weekday_text[index];
-                        // 直接從完整的營業時間文字中提取時間部分
-                        const timeMatch = todayText.match(/:\s*(.+)$/);
-                        const timeStr = timeMatch ? timeMatch[1].trim() : null;
-                        
-                        if (timeStr) {
-                            // 移除可能存在的秒數
-                            const timeStrWithoutSeconds = timeStr.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-                            
-                            isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                                window.businessHours.isOpenFromText(timeStrWithoutSeconds) : 
-                                restaurant.opening_hours.open_now;
-                            todayHoursText = timeStrWithoutSeconds;
-                        }
-                    }
-                }
-                
-                console.log('營業時間判斷:', {
-                    restaurantName: restaurant.name,
-                    todayHoursText: todayHoursText,
-                    isOpen: isOpen,
-                    currentTime: new Date().toLocaleTimeString()
-                });
-            } else if (restaurant.opening_hours.periods) {
-                // 如果有 periods 資料，使用它來判斷
-                const now = new Date();
-                const day = now.getDay();
-                const period = restaurant.opening_hours.periods.find(p => p.open.day === day);
-                if (period) {
-                    const openTime = `${period.open.hours}:${period.open.minutes || '00'}`;
-                    const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
-                    isOpen = window.businessHours && window.businessHours.isOpenNow ? 
-                        window.businessHours.isOpenNow(openTime, closeTime) : false;
-                    todayHoursText = `${openTime} - ${closeTime}`;
-                }
-            } else if (restaurant.opening_hours.open_now !== undefined) {
-                // 如果只有 open_now 屬性
-                isOpen = restaurant.opening_hours.open_now;
-            } else if (restaurant.business_hours) {
-                // 嘗試使用 business_hours 欄位
-                try {
-                    const businessHours = typeof restaurant.business_hours === 'string' ? 
-                        JSON.parse(restaurant.business_hours) : restaurant.business_hours;
-                    
-                    const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today];
-                    const todayBusiness = businessHours[dayKey];
-                    
-                    if (todayBusiness) {
-                        isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                            window.businessHours.isOpenFromText(todayBusiness) : false;
-                        todayHoursText = todayBusiness;
-                    }
-                } catch (error) {
-                    console.warn('解析 business_hours 失敗:', error);
-                }
-            }
-        }
-        
-        // 更新營業狀態
-        if (elements.status) {
-            elements.status.className = `modal-status-new ${isOpen ? 'open' : 'closed'}`;
-        }
-        if (elements.statusText) {
-            elements.statusText.textContent = isOpen ? '營業中' : '休息中';
-        }
-        
-        // 更新今日營業時間
-        if (elements.todayHours) {
-            // 格式化營業時間文字，確保時間範圍格式一致 (09:00 - 18:00)
-            let formattedHoursText = todayHoursText;
-            if (todayHoursText) {
-                console.log('格式化前的營業時間:', todayHoursText);
-                
-                // 移除所有秒數，包括多個時間段的情況
-                formattedHoursText = todayHoursText.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-                
-                // 處理逗號分隔的多時段情況
-                formattedHoursText = formattedHoursText.split(',').map(segment => {
-                    return segment.trim().replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-                }).join(', ');
-                
-                // 處理沒有冒號的數字 (如 "9-18" 或 "週三12")，確保添加分鐘
-                formattedHoursText = formattedHoursText.replace(/(\d+)(?!\:)(?=\s*[-–~]|$)/g, '$1:00');
-                
-                // 特別處理"週三12"這種情況
-                formattedHoursText = formattedHoursText.replace(/(週[一二三四五六日])\s*(\d+)(?!:)/g, '$1 $2:00');
-                
-                // 處理可能的不同格式，統一為「09:00 - 18:00」格式
-                formattedHoursText = formattedHoursText
-                    .replace(/(\d+):(\d+)\s*[-–~]\s*(\d+):(\d+)/g, '$1:$2 - $3:$4')  // 有冒號的時間
-                    .replace(/(\d+)[-–~](\d+)/g, '$1:00 - $2:00')  // 沒有冒號的時間
-                    .replace(/–/g, ' - ')  // 其他可能的破折號
-                    .replace(/-/g, ' - ');  // 統一短破折號
-                
-                console.log('第一階段格式化後:', formattedHoursText);
-            }
-            
-            // 添加星期幾的標示，確保星期和時間之間有一個空格
-            const displayText = formattedHoursText ? `${todayName} ${formattedHoursText}` : '未提供營業時間';
-            
-            // 確保顯示格式為「週三 09:00 - 18:00」
-            let finalDisplayText = displayText;
-            
-            // 修正「週三09:00」格式為「週三 09:00」
-            finalDisplayText = finalDisplayText.replace(/(週[一二三四五六日])(\d+)/g, '$1 $2');
-            
-            // 修正數字與冒號間的問題（例如「09 :00」變為「09:00」）
-            finalDisplayText = finalDisplayText.replace(/(\d+)\s+:(\d+)/g, '$1:$2');
-            
-            // 修正「9:00」變為「09:00」，確保小時是兩位數
-            finalDisplayText = finalDisplayText.replace(/(週[一二三四五六日]\s+)(\d):(\d+)/g, function(match, prefix, hour, minute) {
-                return prefix + (hour.length === 1 ? '0' : '') + hour + ':' + minute;
-            });
-            
-            // 將後半部分的時間也格式化為兩位數（例如「09:00 - 9:00」變為「09:00 - 09:00」）
-            finalDisplayText = finalDisplayText.replace(/(\d+:\d+)\s+-\s+(\d):(\d+)/g, function(match, firstTime, hour, minute) {
-                return firstTime + ' - ' + (hour.length === 1 ? '0' : '') + hour + ':' + minute;
-            });
-            
-            console.log('營業時間格式化:', { 
-                original: todayHoursText, 
-                formatted: formattedHoursText,
-                withDay: displayText,
-                final: finalDisplayText
-            });
-            
-            elements.todayHours.textContent = finalDisplayText;
-            
-            // 確保營業時間元素可見
-            elements.todayHours.style.display = 'block';
-            elements.todayHours.style.visibility = 'visible';
-            elements.todayHours.style.opacity = '1';
-        }
-        
-        // 顯示完整營業時間按鈕
-        if (elements.viewHoursBtn) {
-            elements.viewHoursBtn.style.display = weeklyHoursData && weeklyHoursData.length > 0 ? 'block' : 'none';
-        }
-        
-        // 設置收藏按鈕狀態
-        const isFavorite = window.favoriteSystem && window.favoriteSystem.initialized ? 
-            window.favoriteSystem.isStoreFavorited(restaurantId) : false;
-        
-        console.log('設置彈窗收藏按鈕初始狀態，餐廳ID:', restaurantId, '，收藏狀態:', isFavorite);
-        
-        if (elements.favoriteBtn) {
-            if (isFavorite) {
-                elements.favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
-                elements.favoriteBtn.classList.add('active');
-            } else {
-                elements.favoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
-                elements.favoriteBtn.classList.remove('active');
-            }
-        }
-        
-        // 顯示彈窗
-        elements.modal.classList.add('active');
-        console.log('彈窗已顯示');
-        console.log('營業時間檢查 - 當前週營業時間數據:', weeklyHoursData);
-        console.log('營業時間檢查 - 營業時間設置:', {
-            isOpen: isOpen,
-            todayHoursText: todayHoursText,
-            statusElement: elements.status,
-            statusTextElement: elements.statusText,
-            todayHoursElement: elements.todayHours
-        });
-        
-        // 初始化地圖
-        try {
-            // 準備位置數據
-            let location = null;
-            
-            // 嘗試從各種可能的位置獲取經緯度
-            if (restaurant.geometry && restaurant.geometry.location) {
-                location = restaurant.geometry.location;
-            } else if (restaurant.lat !== undefined && restaurant.lng !== undefined) {
-                location = { lat: restaurant.lat, lng: restaurant.lng };
-            } else if (restaurant.latitude !== undefined && restaurant.longitude !== undefined) {
-                location = { lat: restaurant.latitude, lng: restaurant.longitude };
-            } else if (restaurant.location) {
-                if (typeof restaurant.location === 'string') {
-                    try {
-                        const locationObj = JSON.parse(restaurant.location);
-                        if (locationObj.lat !== undefined && locationObj.lng !== undefined) {
-                            location = locationObj;
-                        }
-                    } catch (e) {
-                        console.warn('解析位置字符串失敗:', e);
-                    }
-                } else if (typeof restaurant.location === 'object') {
-                    location = restaurant.location;
-                }
-            }
-            
-            if (location && (location.lat !== undefined || location.latitude !== undefined)) {
-                console.log('初始化地圖，位置數據:', location);
-                initModalMap(location, restaurant.name);
-            } else {
-                console.warn('餐廳缺少位置數據，無法顯示地圖');
-                
-                // 隱藏地圖區域
-                const locationSection = elements.mapContainer.closest('.restaurant-location-new');
-                if (locationSection) {
-                    locationSection.style.display = 'none';
+
+            // 在 showRestaurantDetail 內，主畫面今日營業狀態與營業時間美化排版：
+            if (elements.status && elements.todayHours) {
+                // 產生狀態圓點
+                const statusDot = `<span class="modal-status-dot ${isOpen ? 'open' : 'closed'}"></span>`;
+                // 狀態文字
+                const statusText = `<span class="modal-status-text">${isOpen ? '營業中' : '休息中'}</span>`;
+                // 今日營業時間
+                const todayHoursHtml = `<span class="modal-today-hours">${todayHoursText === '未提供營業時間' ? todayHoursText : todayName + ' ' + todayHoursText}</span>`;
+                // 組合
+                const statusRow = `<div class="modal-status-row">${statusDot}${statusText}${todayHoursHtml}</div>`;
+                // 插入到狀態區塊
+                elements.status.innerHTML = statusRow;
+                // 隱藏原本 todayHours
+                elements.todayHours.style.display = 'none';
+                // 自動插入 CSS
+                if (!document.getElementById('modal-status-row-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'modal-status-row-style';
+                    style.textContent = `
+                    .modal-status-row { display: flex; align-items: center; justify-content: space-between; background: #f8f8f8; border-radius: 6px; padding: 8px 14px; margin-bottom: 10px; font-size: 16px; }
+                    .modal-status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+                    .modal-status-dot.open { background: #4caf50; }
+                    .modal-status-dot.closed { background: #f44336; }
+                    .modal-status-text { font-weight: bold; margin-right: 8px; }
+                    .modal-today-hours { color: #888; font-size: 15px; font-weight: normal; margin-left: auto; }
+                    `;
+                    document.head.appendChild(style);
                 }
             }
         } catch (error) {
-            console.error('初始化地圖時出錯:', error);
+            console.error('顯示餐廳詳情時出錯:', error);
+            alert('加載餐廳詳情時出現錯誤，請重新整理頁面後再試。');
         }
     }
     
@@ -608,142 +531,15 @@ const RestaurantModal = (function() {
         }
     }
     
-    // 準備週營業時間數據
-    function prepareWeeklyHoursData(openingHours) {
-        console.log('準備週營業時間數據，輸入:', openingHours);
-        
-        if (!openingHours) {
-            console.log('沒有營業時間數據，檢查currentRestaurant是否有json_raw');
-            
-            // 嘗試從currentRestaurant的json_raw中獲取營業時間數據
-            if (currentRestaurant && currentRestaurant.json_raw) {
-                try {
-                    const jsonData = JSON.parse(currentRestaurant.json_raw);
-                    console.log('從json_raw解析數據:', jsonData);
-                    
-                    if (jsonData.opening_hours) {
-                        console.log('從json_raw中找到營業時間數據:', jsonData.opening_hours);
-                        openingHours = jsonData.opening_hours;
-                    } else {
-                        console.log('json_raw中沒有營業時間數據');
-                        weeklyHoursData = null;
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('解析json_raw失敗:', error);
-                    weeklyHoursData = null;
-                    return;
-                }
-            } else {
-                console.log('沒有json_raw數據');
-                weeklyHoursData = null;
-                return;
-            }
-        }
-        
-        // 如果已經有 weekday_text 數組，直接使用
-        if (openingHours.weekday_text && Array.isArray(openingHours.weekday_text)) {
-            console.log('使用現有的 weekday_text 數據:', openingHours.weekday_text);
-            weeklyHoursData = openingHours.weekday_text;
-            return;
-        }
-        
-        // 嘗試從 periods 構建 weekday_text
-        if (openingHours.periods && Array.isArray(openingHours.periods)) {
-            try {
-                const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                const weekdayText = [];
-                
-                for (let i = 0; i < 7; i++) {
-                    const googleDay = i === 6 ? 0 : i + 1; // 轉換為 Google API 格式 (0=週日, 1=週一)
-                    const period = openingHours.periods.find(p => p.open && p.open.day === googleDay);
-                    
-                    if (period && period.open && period.close) {
-                        const openHours = period.open.hours.toString().padStart(2, '0');
-                        const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
-                        const closeHours = period.close.hours.toString().padStart(2, '0');
-                        const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
-                        
-                        const openTime = `${openHours}:${openMinutes}`;
-                        const closeTime = `${closeHours}:${closeMinutes}`;
-                        weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
-                    } else {
-                        weekdayText.push(`${dayNames[i]}: 休息`);
-                    }
-                }
-                
-                console.log('成功從 periods 構建營業時間:', weekdayText);
-                weeklyHoursData = weekdayText;
-                return;
-            } catch (error) {
-                console.warn('從 periods 構建營業時間失敗:', error);
-            }
-        }
-        
-        // 嘗試從 business_hours 構建 weekday_text
-        if (openingHours.business_hours || (currentRestaurant && currentRestaurant.business_hours)) {
-            try {
-                const businessHours = openingHours.business_hours || (currentRestaurant && currentRestaurant.business_hours);
-                let businessHoursObj;
-                
-                if (typeof businessHours === 'string') {
-                    try {
-                        businessHoursObj = JSON.parse(businessHours);
-                    } catch (e) {
-                        console.warn('解析營業時間字符串失敗:', e);
-                        businessHoursObj = null;
-                    }
-                } else if (typeof businessHours === 'object') {
-                    businessHoursObj = businessHours;
-                }
-                
-                if (businessHoursObj) {
-                    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-                    const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                    const weekdayText = [];
-                    
-                    for (let i = 0; i < 7; i++) {
-                        const dayHours = businessHoursObj[dayKeys[i]];
-                        weekdayText.push(`${dayNames[i]}: ${dayHours || '休息'}`);
-                    }
-                    
-                    console.log('從 business_hours 構建的營業時間:', weekdayText);
-                    weeklyHoursData = weekdayText;
-                    return;
-                }
-            } catch (error) {
-                console.warn('從 business_hours 構建營業時間失敗:', error);
-            }
-        }
-        
-        // 如果沒有找到任何營業時間數據，建立模擬數據用於測試
-        console.warn('無法獲取有效的營業時間數據，創建模擬數據');
-        const mockWeekdayText = [
-            '週一: 11:00 - 21:00',
-            '週二: 11:00 - 21:00',
-            '週三: 11:00 - 21:00',
-            '週四: 11:00 - 21:00',
-            '週五: 11:00 - 22:00',
-            '週六: 10:00 - 22:00',
-            '週日: 10:00 - 21:00'
-        ];
-        weeklyHoursData = mockWeekdayText;
-        console.log('使用模擬營業時間數據:', mockWeekdayText);
-    }
-    
     // 顯示週營業時間彈窗
     function showWeeklyHours() {
         if (!elements.hoursModal || !elements.hoursModalBody) return;
-        
-        // 清空原有內容
         elements.hoursModalBody.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> 載入營業時間中...</div>';
-        
-        // 顯示彈窗
         elements.hoursModal.classList.add('active');
-        
-        // 如果有營業時間數據，顯示
-        if (weeklyHoursData) {
-            displayWeeklyHours(weeklyHoursData);
+        const opening_hours = getOpeningHoursFromJsonRaw(currentRestaurant);
+        const weeklyHours = getWeeklyHours(opening_hours);
+        if (weeklyHours && Array.isArray(weeklyHours) && weeklyHours.length === 7) {
+            displayWeeklyHours(weeklyHours);
         } else {
             elements.hoursModalBody.innerHTML = '<div class="error-message">無法獲取營業時間，請稍後再試</div>';
         }
@@ -757,119 +553,27 @@ const RestaurantModal = (function() {
     }
     
     // 顯示一週營業時間
-    function displayWeeklyHours(weekdayText) {
-        if (!elements.hoursModalBody || !weekdayText || !Array.isArray(weekdayText)) return;
-        
-        // 獲取今天是星期幾
+    function displayWeeklyHours(weeklyHours) {
+        if (!elements.hoursModalBody || !weeklyHours || !Array.isArray(weeklyHours)) return;
         const today = new Date().getDay();
-        // 轉換為 weekday_text 的索引 (0=週一, 1=週二, ..., 6=週日)
-        const todayIndex = today === 0 ? 6 : today - 1;
-        
-        console.log('營業時間表顯示 - 原始數據:', weekdayText);
-        
-        // 創建營業時間表格
+        const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
         let html = '<h3 class="weekly-hours-modal-title-new">';
-        
-        // 如果有餐廳名稱，顯示在標題中
         if (currentRestaurant && currentRestaurant.name) {
             html += `${currentRestaurant.name} - `;
         }
-        
         html += '營業時間</h3>';
         html += '<div class="weekly-hours-table-new">';
-        
-        // 遍歷每一天的營業時間
-        weekdayText.forEach((dayText, index) => {
-            // 分割日期和時間
-            const parts = dayText.split(': ');
-            const day = parts[0];
-            let hours = parts[1] || '休息';
-            
-            console.log(`處理 ${day} 的營業時間:`, hours);
-            
-            // 格式化時間範圍，保持一致格式
-            if (hours !== '休息') {
-                // 先移除可能存在的秒數
-                hours = hours.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-                
-                // 處理逗號分隔的多時段情況
-                hours = hours.split(',').map(segment => {
-                    return segment.trim().replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-                }).join(', ');
-                
-                // 先檢查是否包含冒號，如果沒有則添加
-                hours = hours.replace(/(\d+)(?!\:)(?=\s*[-–~]|$)/g, '$1:00');
-                
-                // 格式化時間範圍
-                hours = hours
-                    .replace(/(\d+):(\d+)\s*[-–~]\s*(\d+):(\d+)/g, '$1:$2 - $3:$4')  // 有冒號的時間
-                    .replace(/(\d+)[-–~](\d+)/g, '$1:00 - $2:00')  // 沒有冒號的時間
-                    .replace(/–/g, ' - ')  // 其他可能的破折號
-                    .replace(/-/g, ' - ');  // 統一短破折號
-                
-                // 將單位數時間轉為兩位數 (9:00 → 09:00)
-                hours = hours.replace(/(\D|^)(\d):(\d+)/g, function(match, prefix, hour, minute) {
-                    return prefix + '0' + hour + ':' + minute;
-                });
-                
-                console.log(`${day} 格式化後:`, hours);
-            }
-            
-            // 判斷是否為今天
-            const isToday = index === todayIndex;
-            
-            // 判斷是否營業中
-            let statusIcon = '';
-            let statusText = '';
-            
-            if (isToday) {
-                const isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                    window.businessHours.isOpenFromText(hours) : false;
-                
-                statusIcon = isOpen ? 
-                    '<span class="status-dot-new open" title="營業中"></span>' : 
-                    '<span class="status-dot-new closed" title="休息中"></span>';
-                
-                statusText = isOpen ? 
-                    '<span class="status-text open">(營業中)</span>' : 
-                    '<span class="status-text closed">(休息中)</span>';
-            }
-            
-            // 添加表格行，將 day 加粗顯示
+        for (let i = 0; i < 7; i++) {
+            const isToday = i === today;
             html += `
                 <div class="hours-row-new ${isToday ? 'today' : ''}">
-                    <div class="day-name-new"><strong>${day}</strong> ${statusIcon} ${isToday ? statusText : ''}</div>
-                    <div class="day-hours-new">${hours}</div>
+                    <div class="day-name-new"><strong>${dayNames[i]}</strong> ${isToday ? '<span class="status-text today">(今天)</span>' : ''}</div>
+                    <div class="day-hours-new">${weeklyHours[i]}</div>
                 </div>
             `;
-        });
-        
+        }
         html += '</div>';
         elements.hoursModalBody.innerHTML = html;
-        
-        // 添加額外的 CSS 樣式
-        const style = document.createElement('style');
-        style.textContent = `
-            .status-text {
-                font-size: 12px;
-                margin-left: 4px;
-            }
-            .status-text.open {
-                color: #4caf50;
-            }
-            .status-text.closed {
-                color: #f44336;
-            }
-            .hours-row-new.today {
-                background-color: rgba(255, 107, 26, 0.1);
-                font-weight: bold;
-            }
-            .hours-row-new {
-                padding: 8px 12px;
-                border-bottom: 1px solid #eee;
-            }
-        `;
-        elements.hoursModalBody.appendChild(style);
     }
     
     // 切換收藏狀態
@@ -989,6 +693,94 @@ const RestaurantModal = (function() {
                 document.body.removeChild(toast);
             }, 300);
         }, 3000);
+    }
+    
+    // 取得今日所有時段
+    function getTodayHours(opening_hours) {
+        const today = new Date().getDay(); // 0=週日
+        if (opening_hours && Array.isArray(opening_hours.periods)) {
+            const periods = opening_hours.periods.filter(p => p.open && p.open.day === today);
+            if (periods.length > 0) {
+                return periods.map(period => {
+                    const open = parseTimeString(period.open.time);
+                    const close = parseTimeString(period.close.time);
+                    return `${open} - ${close}`;
+                }).join(', ');
+            }
+        }
+        if (opening_hours && Array.isArray(opening_hours.weekday_text)) {
+            return opening_hours.weekday_text[today].replace(/^星期[一二三四五六日]:\s*/, '') || '休息';
+        }
+        return '未提供營業時間';
+    }
+    
+    // 取得一週時段表
+    function getWeeklyHours(opening_hours) {
+        const week = [];
+        for (let d = 0; d < 7; d++) {
+            let dayPeriods = [];
+            if (opening_hours && Array.isArray(opening_hours.periods)) {
+                dayPeriods = opening_hours.periods.filter(p => p.open && p.open.day === d);
+            }
+            if (dayPeriods.length > 0) {
+                week.push(dayPeriods.map(period => {
+                    const open = parseTimeString(period.open.time);
+                    const close = parseTimeString(period.close.time);
+                    return `${open} - ${close}`;
+                }).join(', '));
+            } else if (opening_hours && Array.isArray(opening_hours.weekday_text)) {
+                const text = opening_hours.weekday_text[d].replace(/^星期[一二三四五六日]:\s*/, '') || '休息';
+                week.push(text);
+            } else {
+                week.push('休息');
+            }
+        }
+        return week;
+    }
+    
+    // 取得 opening_hours 從 json_raw
+    function getOpeningHoursFromJsonRaw(restaurant) {
+        if (restaurant.json_raw) {
+            try {
+                const json = typeof restaurant.json_raw === 'string' ? JSON.parse(restaurant.json_raw) : restaurant.json_raw;
+                if (json.opening_hours) return json.opening_hours;
+            } catch (e) {
+                console.warn('解析 json_raw 失敗:', e);
+            }
+        }
+        return restaurant.opening_hours || null;
+    }
+    
+    // 解析時間字符串
+    function parseTimeString(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string' || timeStr.length < 3) return '';
+        if (timeStr.length === 3) timeStr = '0' + timeStr;
+        return timeStr.slice(0, 2) + ':' + timeStr.slice(2, 4);
+    }
+    
+    // 判斷餐廳是否營業中
+    function isRestaurantOpenNow(opening_hours) {
+        const now = new Date();
+        const today = now.getDay(); // 0=週日
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        if (opening_hours && Array.isArray(opening_hours.periods)) {
+            const periods = opening_hours.periods.filter(p => p.open && p.open.day === today);
+            for (const period of periods) {
+                const open = period.open.time;
+                const close = period.close.time;
+                if (open && close) {
+                    const openMinutes = parseInt(open.slice(0, 2)) * 60 + parseInt(open.slice(2, 4));
+                    const closeMinutes = parseInt(close.slice(0, 2)) * 60 + parseInt(close.slice(2, 4));
+                    // 跨午夜
+                    if (closeMinutes > openMinutes) {
+                        if (currentMinutes >= openMinutes && currentMinutes < closeMinutes) return true;
+                    } else {
+                        if (currentMinutes >= openMinutes || currentMinutes < closeMinutes) return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     // 公開API

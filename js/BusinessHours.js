@@ -195,17 +195,7 @@ class BusinessHours {
         const timePart = todayText.split(/：|:/)[1]?.trim();
         
         // 移除可能存在的秒數
-        let timePartWithoutSeconds = timePart;
-        
-        if (timePart) {
-            // 先移除標準格式的秒數
-            timePartWithoutSeconds = timePart.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-            
-            // 處理逗號分隔的多時段
-            timePartWithoutSeconds = timePartWithoutSeconds.split(',').map(segment => {
-                return segment.trim().replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
-            }).join(', ');
-        }
+        const timePartWithoutSeconds = timePart ? timePart.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2') : null;
         
         // 調試信息
         if (this.DEBUG) {

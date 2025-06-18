@@ -1,3 +1,28 @@
+// ====== 分類顯示名稱對應表（請放在檔案最上方） ======
+const typeDisplayName = {
+    'restaurant': '餐廳',
+    '中式': '中式',
+    '美式': '美式',
+    '韓式': '韓式',
+    '義式': '義式',
+    '法式': '法式',
+    '泰式': '泰式',
+    '火鍋': '火鍋',
+    '牛排': '牛排',
+    '燒烤': '燒烤',
+    '飲品': '飲品',
+    '異國料理': '異國料理',
+    '素食': '素食'
+};
+
+// ====== 分類同義詞對應表（新增） ======
+const typeAlias = {
+    '素食': ['素食', '蔬食', 'vegan', 'vegetarian'],
+    '異國料理': ['異國料理', '異國', '異國風味', 'international', 'foreign'],
+    '燒烤': ['燒烤', '烤肉', 'bbq', 'barbecue'],
+    // 其他分類可依需求擴充
+};
+
 // 地圖初始化模組
 class MapInit {
     constructor() {
@@ -164,21 +189,19 @@ class MapInit {
         }
     }
 
-    // 修改搜尋餐廳類型的方法
+    // 修改搜尋餐廳類型的方法，支援解析 json_raw 裡的 cuisine_type
     async searchByType(type) {
         if (!type) {
             console.error('未指定搜尋類型');
             return;
         }
-
         try {
-            console.log(`開始搜尋 ${type} 類型的餐廳`);
-            
-            // 如果 allRestaurants 為空，先載入資料
-            if (!this.allRestaurants || this.allRestaurants.length === 0) {
-                await this.loadLocalData();
+            console.log(`開始搜尋 ${type} 類型的餐廳（從 restaurantService 取得資料，並解析 json_raw 分類）`);
+            // 直接從 restaurantService 取得所有餐廳資料
+            if (!window.restaurantService || typeof window.restaurantService.getAllRestaurantsJson !== 'function') {
+                throw new Error('restaurantService 未初始化或缺少 getAllRestaurantsJson 方法');
             }
-            
+            const allRestaurants = await window.restaurantService.getAllRestaurantsJson();
             // 獲取餐廳容器
             let container = document.getElementById('restaurants-container');
             if (!container) {
@@ -187,7 +210,6 @@ class MapInit {
                 container.className = 'restaurants-grid';
                 document.querySelector('.food-types-section').after(container);
             }
-            
             // 顯示載入中提示
             container.innerHTML = `
                 <div class="loading-message">
@@ -195,44 +217,54 @@ class MapInit {
                     <p>正在搜尋${type}美食...</p>
                 </div>
             `;
-
-            // 從已保存的所有餐廳中篩選
-            let results = this.allRestaurants.filter(restaurant => {
-                // 檢查餐廳類型
+            // 取得同義詞陣列
+            const aliasList = typeAlias[type] || [type];
+            // 從最新資料中篩選，支援 json_raw 分類與同義詞
+            let results = allRestaurants.filter(restaurant => {
+                let types = [];
                 if (restaurant.cuisine_type && Array.isArray(restaurant.cuisine_type)) {
-                    if (restaurant.cuisine_type.some(t => t === type || t.includes(type) || type.includes(t))) {
-                        return true;
-                    }
+                    types = types.concat(restaurant.cuisine_type);
                 }
-                
-                // 檢查關鍵字
+                if (restaurant.json_raw) {
+                    try {
+                        const raw = typeof restaurant.json_raw === 'string' ? JSON.parse(restaurant.json_raw) : restaurant.json_raw;
+                        if (raw.cuisine_type && Array.isArray(raw.cuisine_type)) {
+                            types = types.concat(raw.cuisine_type);
+                        }
+                    } catch (e) {}
+                }
+                // 標準化並分割
+                types = types.flatMap(t => t.split(/[ ,，、/|]+/)).map(t => t.trim().toLowerCase());
+                // 比對同義詞
+                if (aliasList.some(alias => types.includes(alias.trim().toLowerCase()))) return true;
+                // 關鍵字比對（保留原有）
                 const keywords = [...(this.cuisineKeywords[type] || []), ...(this.foodTypeKeywords[type] || [])];
                 if (keywords.length > 0) {
                     const searchText = `${restaurant.name} ${restaurant.vicinity || ''} ${restaurant.formatted_address || ''}`.toLowerCase();
                     return keywords.some(keyword => searchText.includes(keyword.toLowerCase()));
                 }
-                
                 return false;
             });
-
             // 更新結果標題
-            this.updateResultsTitle(`${type}餐廳 (找到 ${results.length} 間)`);
-            
-            // 清空容器
-            container.innerHTML = '';
-            
-            if (results.length > 0) {
-                // 創建餐廳卡片
-                results.forEach(restaurant => {
-                    const card = typeof window.createRestaurantCard === 'function' 
-                        ? window.createRestaurantCard(restaurant)
-                        : this.createRestaurantCard(restaurant);
-                    container.appendChild(card);
-                });
+            const displayName = typeDisplayName[type] || type;
+            this.updateResultsTitle(`${displayName}餐廳 (找到 ${results.length} 間)`);
+            // 統一用 displayRestaurants 顯示分類結果
+            if (window.displayRestaurants) {
+                window.displayRestaurants(results, true);
             } else {
-                container.innerHTML = `<div class="no-results">找不到${type}類型的餐廳</div>`;
+                // 備用方案
+                container.innerHTML = '';
+                if (results.length > 0) {
+                    results.forEach(restaurant => {
+                        const card = typeof window.createRestaurantCard === 'function' 
+                            ? window.createRestaurantCard(restaurant)
+                            : this.createRestaurantCard(restaurant);
+                        container.appendChild(card);
+                    });
+                } else {
+                    container.innerHTML = `<div class="no-results">找不到${displayName}類型的餐廳</div>`;
+                }
             }
-            
         } catch (error) {
             console.error('搜尋餐廳時發生錯誤:', error);
             this.updateResultsTitle('搜尋失敗');

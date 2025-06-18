@@ -500,12 +500,15 @@ async function renderFavoriteStores(stores) {
                         const timeStr = timeMatch ? timeMatch[1].trim() : null;
                         
                         if (timeStr) {
+                            // 移除可能存在的秒數
+                            const timeStrWithoutSeconds = timeStr.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                            
                             isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                                window.businessHours.isOpenFromText(timeStr) : 
+                                window.businessHours.isOpenFromText(timeStrWithoutSeconds) : 
                                 restaurant.opening_hours.open_now;
                                 
                             const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][today];
-                            todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${timeStr}</span>`;
+                            todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${timeStrWithoutSeconds}</span>`;
                         }
                     }
                 } else if (restaurant.opening_hours.periods) {
@@ -518,7 +521,7 @@ async function renderFavoriteStores(stores) {
                         const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
                         isOpen = window.businessHours && window.businessHours.isOpenNow ? 
                             window.businessHours.isOpenNow(openTime, closeTime) : false;
-                        todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${openTime}-${closeTime}</span>`;
+                        todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${openTime} - ${closeTime}</span>`;
                     }
                 } else if (restaurant.opening_hours.open_now !== undefined) {
                     // 如果只有 open_now 屬性
@@ -1107,8 +1110,14 @@ async function viewRestaurant(restaurantId) {
                             const period = restaurantData.opening_hours.periods.find(p => p.open.day === googleDay);
                             
                             if (period) {
-                                const openTime = `${period.open.hours}:${period.open.minutes || '00'}`;
-                                const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
+                                // 確保時間格式正確，並移除可能的秒數
+                                const openHours = period.open.hours.toString().padStart(2, '0');
+                                const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
+                                const closeHours = period.close.hours.toString().padStart(2, '0');
+                                const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
+                                
+                                const openTime = `${openHours}:${openMinutes}`;
+                                const closeTime = `${closeHours}:${closeMinutes}`;
                                 weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
                             } else {
                                 weekdayText.push(`${dayNames[i]}: 休息`);
@@ -1194,8 +1203,14 @@ async function viewRestaurant(restaurantId) {
                                     const period = localRestaurant.opening_hours.periods.find(p => p.open.day === googleDay);
                                     
                                     if (period) {
-                                        const openTime = `${period.open.hours}:${period.open.minutes || '00'}`;
-                                        const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
+                                        // 確保時間格式正確，並移除可能的秒數
+                                        const openHours = period.open.hours.toString().padStart(2, '0');
+                                        const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
+                                        const closeHours = period.close.hours.toString().padStart(2, '0');
+                                        const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
+                                        
+                                        const openTime = `${openHours}:${openMinutes}`;
+                                        const closeTime = `${closeHours}:${closeMinutes}`;
                                         weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
                                     } else {
                                         weekdayText.push(`${dayNames[i]}: 休息`);
