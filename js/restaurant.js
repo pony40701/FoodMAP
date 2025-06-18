@@ -1,4 +1,3 @@
-
 // 編輯功能
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM 已載入完成');
@@ -126,4 +125,52 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
     }
+});
+
+// 檢查商家是否已登入
+async function checkMerchantAuth() {
+    const token = localStorage.getItem("merchantToken");
+    if (!token) {
+        alert("請先登入");
+        window.location.href = "index.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch("http://localhost:8080/api/merchants/validate", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("驗證失敗");
+        }
+
+        const isValid = await response.json();
+        if (!isValid) {
+            throw new Error("Token 無效");
+        }
+
+        return true;
+    } catch (error) {
+        console.error("驗證失敗:", error);
+        alert("登入已過期，請重新登入");
+        localStorage.removeItem("merchantToken");
+        localStorage.removeItem("merchantEmail");
+        localStorage.removeItem("restaurantId");
+        window.location.href = "index.html";
+        return false;
+    }
+}
+
+// 當頁面載入時進行驗證
+document.addEventListener("DOMContentLoaded", async function() {
+    const isAuthenticated = await checkMerchantAuth();
+    if (!isAuthenticated) {
+        return;
+    }
+
+    // TODO: 載入餐廳資料
+    // 這部分我們之後會實作
 });
