@@ -1498,7 +1498,6 @@ function getStatusText(status) {
 
 function getNotificationTypeText(type) {
     const typeMap = {
-        'order': '訂單',
         'system': '系統',
         'promotion': '優惠'
     };
@@ -2026,9 +2025,9 @@ function loadNotifications(typeFilter = 'all') {
     
     if (!userId || !authToken) {
         // 使用假資料
-        let filteredNotifications = mockNotifications;
+        let filteredNotifications = mockNotifications.filter(notification => notification.type !== 'order');
         if (typeFilter !== 'all') {
-            filteredNotifications = mockNotifications.filter(notification => notification.type === typeFilter);
+            filteredNotifications = filteredNotifications.filter(notification => notification.type === typeFilter);
         }
         renderNotifications(filteredNotifications);
         return;
@@ -2053,16 +2052,35 @@ function loadNotifications(typeFilter = 'all') {
     })
     .then(notificationsData => {
         console.log('從 API 獲取的通知資料:', notificationsData);
-        renderNotifications(notificationsData);
+        // 過濾掉訂單類型的通知
+        const filteredNotifications = Array.isArray(notificationsData) 
+            ? notificationsData.filter(notification => notification.type !== 'order')
+            : [];
+        renderNotifications(filteredNotifications);
+        
+        // 添加標記所有通知為已讀的按鈕
+        if (filteredNotifications.length > 0) {
+            addMarkAllAsReadButton(notificationsList);
+        }
+        
+        // 自動標記通知為已讀（如果存在通知服務模組）
+        if (window.NotificationService && typeof window.NotificationService.markAllAsRead === 'function') {
+            window.NotificationService.markAllAsRead();
+        }
     })
     .catch(error => {
         console.error('獲取通知資料失敗:', error);
         // 使用假資料作為備用
-        let filteredNotifications = mockNotifications;
+        let filteredNotifications = mockNotifications.filter(notification => notification.type !== 'order');
         if (typeFilter !== 'all') {
-            filteredNotifications = mockNotifications.filter(notification => notification.type === typeFilter);
+            filteredNotifications = filteredNotifications.filter(notification => notification.type === typeFilter);
         }
         renderNotifications(filteredNotifications);
+        
+        // 添加標記所有通知為已讀的按鈕
+        if (filteredNotifications.length > 0) {
+            addMarkAllAsReadButton(notificationsList);
+        }
     });
     
     // 渲染通知列表
@@ -2073,7 +2091,7 @@ function loadNotifications(typeFilter = 'all') {
         }
 
         notificationsList.innerHTML = notifications.map(notification => `
-            <div class="notification-item ${notification.read ? '' : 'unread'}">
+            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
                 <div class="notification-header">
                     <span class="notification-type">${getNotificationTypeText(notification.type)}</span>
                     <span class="notification-time">${formatTime(notification.time || notification.createdAt)}</span>
@@ -2084,6 +2102,92 @@ function loadNotifications(typeFilter = 'all') {
                 ${!notification.read ? '<div class="unread-indicator"></div>' : ''}
             </div>
         `).join('');
+        
+        // 添加點擊事件，點擊通知時標記為已讀
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const notificationId = this.getAttribute('data-id');
+                markNotificationAsRead(notificationId, this);
+            });
+        });
+    }
+}
+
+// 添加標記所有通知為已讀的按鈕
+function addMarkAllAsReadButton(container) {
+    // 檢查是否已存在該按鈕
+    if (document.getElementById('mark-all-as-read-btn')) return;
+    
+    // 創建按鈕容器，便於定位
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'mark-all-read-container';
+    buttonContainer.style.marginBottom = '15px';  // 增加底部間距
+    buttonContainer.style.textAlign = 'right';    // 將按鈕靠右對齊
+    
+    // 創建按鈕
+    const markAllBtn = document.createElement('button');
+    markAllBtn.id = 'mark-all-as-read-btn';
+    markAllBtn.className = 'btn-primary';
+    markAllBtn.style.padding = '8px 15px';
+    markAllBtn.style.borderRadius = '4px';
+    markAllBtn.style.fontSize = '14px';
+    markAllBtn.style.cursor = 'pointer';
+    markAllBtn.textContent = '標記所有為已讀';
+    
+    // 添加點擊事件
+    markAllBtn.addEventListener('click', function() {
+        if (window.NotificationService && typeof window.NotificationService.markAllAsRead === 'function') {
+            window.NotificationService.markAllAsRead()
+                .then(success => {
+                    if (success) {
+                        // 重新載入通知列表
+                        loadNotifications('all');
+                        showToast('已將所有通知標記為已讀');
+                    }
+                });
+        } else {
+            // 如果沒有通知服務模組，直接更新UI
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                item.querySelector('.unread-indicator')?.remove();
+            });
+            showToast('已將所有通知標記為已讀');
+            buttonContainer.remove(); // 移除整個容器
+        }
+    });
+    
+    // 將按鈕添加到容器中
+    buttonContainer.appendChild(markAllBtn);
+    
+    // 獲取篩選欄，將按鈕容器插入到篩選欄之後、通知列表之前
+    const filterBar = document.querySelector('#notifications .filter-bar');
+    if (filterBar) {
+        filterBar.insertAdjacentElement('afterend', buttonContainer);
+    } else {
+        // 如果找不到篩選欄，則插入到通知列表之前
+        container.insertAdjacentElement('beforebegin', buttonContainer);
+    }
+}
+
+// 標記單個通知為已讀
+function markNotificationAsRead(notificationId, element) {
+    if (!notificationId) return;
+    
+    // 如果有通知服務模組，使用其標記為已讀功能
+    if (window.NotificationService && typeof window.NotificationService.markAsRead === 'function') {
+        window.NotificationService.markAsRead(notificationId)
+            .then(success => {
+                if (success && element) {
+                    element.classList.remove('unread');
+                    element.querySelector('.unread-indicator')?.remove();
+                }
+            });
+    } else {
+        // 否則僅更新UI
+        if (element) {
+            element.classList.remove('unread');
+            element.querySelector('.unread-indicator')?.remove();
+        }
     }
 }
 
@@ -2113,100 +2217,61 @@ function loadAnalyticsData(timeRange = 'month') {
         content.innerHTML = '<div class="loading">載入數據中...</div>';
     });
     
-    // 從 API 獲取數據分析資料
-    fetch(`${API_BASE_URL}/analytics/user/${userId}?timeRange=${timeRange}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
+    // 準備分析數據
+    const analyticsData = {
+        reviews: {
+            totalReviews: 8,
+            averageRating: 4.5,
+            totalLikes: 3
+        },
+        favorites: {
+            totalFavoriteStores: 0,
+            totalFavoriteReviews: 0,
+            newThisMonth: 0
         }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('無法獲取數據分析資料');
-        }
-        return response.json();
-    })
-    .then(analyticsData => {
-        console.log('從 API 獲取的數據分析資料:', analyticsData);
-        updateAnalyticsDisplay(analyticsData);
-    })
-    .catch(error => {
-        console.error('獲取數據分析資料失敗:', error);
-        // 使用假資料作為備用
-        const mockAnalyticsData = {
-            orders: {
-                totalOrders: 12,
-                totalSpent: 3500,
-                averageOrderAmount: 292
-            },
-            consumption: {
-                mostFrequentCategory: '台式料理',
-                highestSingleOrder: 1200,
-                mostFrequentStore: '老王牛肉麵'
-            },
-            reviews: {
-                totalReviews: 8,
-                averageRating: 4.5,
-                totalLikes: 3
-            },
-            favorites: {
-                totalFavoriteStores: 15,
-                totalFavoriteReviews: 8,
-                newThisMonth: 5
-            }
-        };
-        updateAnalyticsDisplay(mockAnalyticsData);
-    });
+    };
+    
+    // 立即獲取實際的收藏數據
+    try {
+        // 獲取收藏店家數量
+        const favoriteStores = getFavoriteStores();
+        analyticsData.favorites.totalFavoriteStores = favoriteStores.length;
+        
+        // 獲取收藏評論數量
+        const favoriteReviews = getFavoriteReviews();
+        analyticsData.favorites.totalFavoriteReviews = favoriteReviews.length;
+        
+        // 本月新增暫時用固定值
+        const thisMonth = new Date().getMonth();
+        const thisYear = new Date().getFullYear();
+        
+        // 計算本月新增收藏數量
+        const newThisMonthStores = favoriteStores.filter(store => {
+            const favoriteDate = new Date(store.favoriteTime || store.createdAt || store.addedAt || Date.now());
+            return favoriteDate.getMonth() === thisMonth && favoriteDate.getFullYear() === thisYear;
+        }).length;
+        
+        const newThisMonthReviews = favoriteReviews.filter(review => {
+            const favoriteDate = new Date(review.favoriteTime || review.createdAt || review.addedAt || Date.now());
+            return favoriteDate.getMonth() === thisMonth && favoriteDate.getFullYear() === thisYear;
+        }).length;
+        
+        analyticsData.favorites.newThisMonth = newThisMonthStores + newThisMonthReviews;
+        
+        console.log('收藏統計數據:', analyticsData.favorites);
+    } catch (error) {
+        console.error('獲取收藏數據失敗:', error);
+    }
+    
+    // 更新分析數據顯示
+    updateAnalyticsDisplay(analyticsData);
 }
 
 // 更新數據分析顯示
 function updateAnalyticsDisplay(data) {
-    // 訂單統計
-    if (data.orders) {
-        const ordersContent = document.querySelector('.analytics-card:nth-child(1) .card-content');
-        if (ordersContent) {
-            ordersContent.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-value">${data.orders.totalOrders || 0}</div>
-                    <div class="stat-label">總訂單數</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${data.orders.totalSpent || 0}</div>
-                    <div class="stat-label">總消費金額</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${data.orders.averageOrderAmount || 0}</div>
-                    <div class="stat-label">平均訂單金額</div>
-                </div>
-            `;
-        }
-    }
-    
-    // 消費分析
-    if (data.consumption) {
-        const consumptionContent = document.querySelector('.analytics-card:nth-child(2) .card-content');
-        if (consumptionContent) {
-            consumptionContent.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-value">${data.consumption.mostFrequentCategory || 'N/A'}</div>
-                    <div class="stat-label">最常消費類別</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${data.consumption.highestSingleOrder || 0}</div>
-                    <div class="stat-label">最高單筆消費</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${data.consumption.mostFrequentStore || 'N/A'}</div>
-                    <div class="stat-label">最常消費店家</div>
-                </div>
-            `;
-        }
-    }
-    
     // 評論統計
     if (data.reviews) {
-        const reviewsContent = document.querySelector('.analytics-card:nth-child(3) .card-content');
+        const reviewsContent = document.querySelector('.analytics-card:nth-child(1) .card-content');
         if (reviewsContent) {
             reviewsContent.innerHTML = `
                 <div class="stat-item">
@@ -2227,7 +2292,7 @@ function updateAnalyticsDisplay(data) {
     
     // 收藏統計
     if (data.favorites) {
-        const favoritesContent = document.querySelector('.analytics-card:nth-child(4) .card-content');
+        const favoritesContent = document.querySelector('.analytics-card:nth-child(2) .card-content');
         if (favoritesContent) {
             favoritesContent.innerHTML = `
                 <div class="stat-item">
@@ -2345,7 +2410,7 @@ function handleURLHash() {
         // 移除 # 符號
         const sectionId = hash.substring(1);
         // 檢查是否為有效的區塊 ID
-        const validSections = ['profile', 'analytics', 'orders', 'reviews', 'notifications', 'favorites', 'settings'];
+        const validSections = ['profile', 'analytics', 'reviews', 'notifications', 'favorites', 'settings'];
         if (validSections.includes(sectionId)) {
             targetSection = sectionId;
         }
@@ -2363,85 +2428,153 @@ function initializeCharts() {
 
 // 設置事件監聽器
 function setupEventListeners() {
-    // 監聽 hashchange 事件，處理瀏覽器後退/前進
-    window.addEventListener('hashchange', handleURLHash);
+    console.log('設置事件監聽');
     
-    // 選單切換
-    document.querySelectorAll('.sidebar .menu-item').forEach(item => { // 確保選擇器正確
+    // 設置選單項目點擊事件
+    document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
             const section = this.getAttribute('data-section');
-            // 更新 URL hash
+            switchSection(section);
+            
+            // 更新URL hash
             window.location.hash = section;
-            // switchSection 會由 hashchange 事件觸發
         });
     });
     
-    // 個人資料表單提交 (修改為按鈕點擊事件)
+    // 設置評論過濾器
+    const reviewRatingSelect = document.getElementById('reviewRating');
+    if (reviewRatingSelect) {
+        reviewRatingSelect.addEventListener('change', function() {
+            const rating = this.value;
+            loadReviews(rating);
+        });
+    }
+    
+    // 設置通知過濾按鈕
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const type = this.getAttribute('data-type');
+            filterNotifications(type);
+        });
+    });
+    
+    // 設置時間範圍選擇器
+    document.querySelectorAll('.time-range-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const timeRange = this.value;
+            const cardType = this.closest('.analytics-card').querySelector('h3').textContent.trim();
+            
+            // 更新所有卡片的時間範圍
+            document.querySelectorAll('.time-range-select').forEach(s => {
+                s.value = timeRange;
+            });
+            
+            // 重新載入相應的數據
+            loadAnalyticsData(timeRange);
+        });
+    });
+    
+    // 設置設定表單提交事件
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateSettings();
+        });
+    }
+    
+    // 添加收藏狀態變化的監聽
+    document.addEventListener('favoriteChanged', function(event) {
+        console.log('收藏狀態變化:', event.detail);
+        // 立即更新數據分析頁面的收藏統計
+        updateFavoriteStats();
+    });
+    
+    // 同時監聽來自favoriteButton.js的事件
+    document.addEventListener('favoritesChanged', function(event) {
+        console.log('收藏變更事件被觸發，更新統計數據');
+        updateFavoriteStats();
+    });
+    
+    // 添加URL Hash變化的監聽
+    window.addEventListener('hashchange', handleURLHash);
+    
+    // 設置個人資料更新按鈕
     const updateProfileBtn = document.querySelector('.update-profile-btn');
     if (updateProfileBtn) {
         updateProfileBtn.addEventListener('click', function() {
             updateProfile();
         });
     }
-
-    // 訂單狀態篩選 (保持原狀)
-    const orderStatus = document.getElementById('orderStatus');
-    if (orderStatus) { // 添加檢查確保元素存在
-         orderStatus.addEventListener('change', function() {
-             loadOrders(this.value);
-         });
-    }
-
-    // 評論評分篩選 (保持原狀)
-    const reviewRating = document.getElementById('reviewRating');
-    if (reviewRating) { // 添加檢查確保元素存在
-         reviewRating.addEventListener('change', function() {
-             loadReviews(this.value);
-        });
-    }
     
-    // 通知篩選 (保持原狀)
-    document.querySelectorAll('#notifications .filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const type = this.getAttribute('data-type');
-            filterNotifications(type);
-            
-            // 更新活動狀態
-            document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-    
-    // 收藏標籤切換
-    document.querySelectorAll('.view-toggle .toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const view = this.getAttribute('data-view');
-            document.querySelectorAll('.view-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const favoritesStores = document.querySelector('.favorites-stores');
-            const favoritesReviews = document.querySelector('.favorites-reviews');
-            
-            if (view === 'stores') {
-                favoritesStores.style.display = 'block';
-                favoritesReviews.style.display = 'none';
-                loadFavorites('stores');
-            } else if (view === 'reviews') {
-                favoritesStores.style.display = 'none';
-                favoritesReviews.style.display = 'grid';
-                loadFavorites('reviews');
+    // 監聽收藏相關操作
+    document.querySelector('.favorites-stores')?.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-favorite-btn');
+        if (removeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cardElement = removeBtn.closest('.restaurant-card');
+            const placeId = cardElement.getAttribute('data-id');
+            if (placeId) {
+                removeFavorite(placeId);
+                // 在移除收藏後觸發事件以更新統計數據
+                document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                    detail: { type: 'remove', id: placeId }
+                }));
             }
-        });
+        }
     });
+    
+    // 監聽收藏評論操作
+    document.querySelector('.favorites-reviews')?.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-favorite-review-btn');
+        if (removeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const reviewCard = removeBtn.closest('.review-card');
+            const reviewId = reviewCard.getAttribute('data-id');
+            if (reviewId) {
+                removeFavoriteReview(reviewId);
+                // 在移除收藏評論後觸發事件以更新統計數據
+                document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                    detail: { type: 'remove', id: reviewId, isReview: true }
+                }));
+            }
+        }
+    });
+}
+
+// 立即更新數據分析頁面的收藏統計
+function updateFavoriteStats() {
+    console.log('立即更新收藏統計數據');
+    
+    try {
+        // 獲取收藏店家數量
+        const favoriteStores = getFavoriteStores();
+        const totalFavoriteStores = favoriteStores.length;
         
-    // 設定表單提交 (保持原狀)
-    const settingsForm = document.getElementById('settingsForm');
-     if (settingsForm) { // 添加檢查確保元素存在
-         settingsForm.addEventListener('submit', function(e) {
-             e.preventDefault();
-             updateSettings();
-         });
+        // 獲取收藏評論數量
+        const favoriteReviews = getFavoriteReviews();
+        const totalFavoriteReviews = favoriteReviews.length;
+        
+        // 更新UI顯示
+        const favoritesCard = document.querySelector('.analytics-card:nth-child(2)');
+        if (favoritesCard) {
+            const statsValues = favoritesCard.querySelectorAll('.stat-value');
+            if (statsValues.length >= 2) {
+                // 更新收藏店家數
+                statsValues[0].textContent = totalFavoriteStores;
+                // 更新收藏評論數
+                statsValues[1].textContent = totalFavoriteReviews;
+            }
+        }
+        
+        console.log(`收藏統計已更新: 店家 ${totalFavoriteStores}, 評論 ${totalFavoriteReviews}`);
+    } catch (error) {
+        console.error('更新收藏統計數據失敗:', error);
     }
 }
 
@@ -2466,6 +2599,12 @@ function switchSection(sectionId) {
         // 如果切換到收藏區塊，初始化收藏功能
         if (sectionId === 'favorites') {
             initializeFavorites();
+        }
+        
+        // 如果切換到數據分析區塊，立即更新收藏統計數據
+        if (sectionId === 'analytics') {
+            loadAnalyticsData();
+            updateFavoriteStats();
         }
     }
     // 添加 active 類別到選中的選單項目
@@ -2534,3 +2673,4 @@ async function initializeUserCenter() {
 
 // 在 DOMContentLoaded 時初始化
 document.addEventListener('DOMContentLoaded', initializeUserCenter);
+

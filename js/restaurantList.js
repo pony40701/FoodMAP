@@ -3,7 +3,6 @@ let currentDisplayedRestaurants = [];
 let map; // Leaflet 地圖實例
 let markers = []; // Leaflet 標記陣列
 let userLocation = null;
-let currentSelectedTag = null;
 let currentSortType = null;
 let currentPage = 0; // 分頁變數，預設為 0
 let pageSize = 10; // 每頁顯示 10 筆
@@ -135,16 +134,8 @@ function updateMapMarkers(restaurants) {
 
 // 篩選餐廳
 function filterRestaurants() {
-  // 使用保存的標籤狀態
-  const selectedTag = currentSelectedTag;
-  
   // 使用 currentDisplayedRestaurants 作為篩選基礎
   let filtered = [...currentDisplayedRestaurants];
-
-  // 標籤篩選
-  if (selectedTag && selectedTag !== 'all') {
-    filtered = filtered.filter(restaurant => restaurant.types === selectedTag);
-  }
 
   // 排序處理
   if (currentSortType) {
@@ -401,147 +392,6 @@ function renderPagination(totalCount) {
       window.scrollTo({ top: document.getElementById('restaurant-cards').offsetTop - 20, behavior: 'smooth' });
     };
   });
-}
-
-// 獲取所有不重複的標籤
-function getAllUniqueTags() {
-  // 定義要保留的餐廳類型標籤
-  const validTags = new Set([
-    '日式', '美式', '中式', '台式', '義式', '泰式', '港式', '韓式', '法式', '德式', '越式',
-    '印度料理', '墨西哥料理', '燒肉', '火鍋', '牛排', '壽司', '拉麵', '自助餐', '素食',
-    '茶樓', '咖啡廳', '速食', '早午餐', '下午茶'
-  ]);
-
-  // 更新所有餐廳的標籤
-  currentDisplayedRestaurants.forEach(restaurant => {
-    const newTags = [];
-    restaurant.tags.forEach(tag => {
-      if (validTags.has(tag)) {
-        newTags.push(tag);
-      }
-    });
-    // 如果沒有有效標籤，根據餐廳類型添加一個基本標籤
-    if (newTags.length === 0) {
-      if (restaurant.name.includes('火鍋')) newTags.push('火鍋');
-      else if (restaurant.name.includes('牛排')) newTags.push('牛排');
-      else if (restaurant.name.includes('壽司')) newTags.push('壽司');
-      else if (restaurant.name.includes('拉麵')) newTags.push('拉麵');
-      else if (restaurant.name.includes('咖啡')) newTags.push('咖啡廳');
-      else if (restaurant.name.includes('茶樓') || restaurant.name.includes('飲茶')) newTags.push('茶樓');
-      else if (restaurant.name.includes('燒肉')) newTags.push('燒肉');
-      else if (restaurant.name.includes('泰式')) newTags.push('泰式');
-      else if (restaurant.name.includes('韓式')) newTags.push('韓式');
-      else if (restaurant.name.includes('義式') || restaurant.name.includes('披薩')) newTags.push('義式');
-      else if (restaurant.name.includes('美式') || restaurant.name.includes('漢堡')) newTags.push('美式');
-      else if (restaurant.name.includes('日式')) newTags.push('日式');
-      else if (restaurant.name.includes('港式')) newTags.push('港式');
-      else if (restaurant.name.includes('台式')) newTags.push('台式');
-      else if (restaurant.name.includes('素食')) newTags.push('素食');
-      else if (restaurant.name.includes('自助餐')) newTags.push('自助餐');
-      else if (restaurant.name.includes('早午餐')) newTags.push('早午餐');
-      else if (restaurant.name.includes('下午茶')) newTags.push('下午茶');
-      else newTags.push('中式'); // 預設為中式
-    }
-    restaurant.tags = newTags;
-  });
-
-  const allTags = new Set();
-  currentDisplayedRestaurants.forEach(restaurant => {
-    restaurant.tags.forEach(tag => {
-      if (validTags.has(tag)) {
-        allTags.add(tag);
-      }
-    });
-  });
-  return Array.from(allTags).sort();
-}
-
-// 生成標籤選項的 HTML
-function generateTagOptions() {
-  const tags = getAllUniqueTags();
-  const rows = [];
-  // 獲取當前選中的標籤
-  const selectedTag = document.querySelector('.tag-option.selected')?.dataset.type;
-
-  // 修改為每行四個標籤
-  for (let i = 0; i < tags.length; i += 4) {
-    const rowTags = tags.slice(i, i + 4);
-    const row = rowTags.map(tag => `
-      <div class="tag-option${tag === selectedTag ? ' selected' : ''}" data-type="${tag}">
-        <span>${tag}</span>
-      </div>
-    `).join('');
-    rows.push(`<div class="tag-row">${row}</div>`);
-  }
-  return rows.join('');
-}
-
-// 更新下拉選單的 HTML 和事件監聽器
-function updateDropdownMenu() {
-  const dropdownContent = document.querySelector('.type-dropdown-menu');
-  if (dropdownContent) {
-    // 獲取當前選中的標籤
-    const selectedTag = document.querySelector('.tag-option.selected')?.dataset.type;
-
-    dropdownContent.innerHTML = `
-      <div class="tag-grid">
-        <div class="tag-header">
-          <h4>選擇餐廳類型</h4>
-        </div>
-        <div class="tag-row">
-          <div class="tag-option${selectedTag === 'all' ? ' selected' : ''}" data-type="all">
-            <span>全部餐廳</span>
-          </div>
-        </div>
-        ${generateTagOptions()}
-      </div>
-      <div class="tag-actions">
-        <button class="apply-tags">套用篩選</button>
-      </div>
-    `;
-
-    // 添加事件監聽器
-    const tagOptions = dropdownContent.querySelectorAll('.tag-option');
-    
-    // 點擊標籤時切換選中狀態並立即執行篩選
-    tagOptions.forEach(label => {
-      label.addEventListener('click', function() {
-        // 移除其他標籤的選中狀態
-        tagOptions.forEach(otherLabel => {
-          if (otherLabel !== this) {
-            otherLabel.classList.remove('selected');
-          }
-        });
-        
-        // 切換當前標籤的選中狀態
-        this.classList.toggle('selected');
-        
-        // 更新當前選中的標籤
-        currentSelectedTag = this.dataset.type;
-        
-        // 更新按鈕文字
-        const dropdownTrigger = document.querySelector('.type-dropdown-trigger');
-        if (dropdownTrigger) {
-          dropdownTrigger.textContent = this.dataset.type === 'all' ? '所有類型 ▼' : `${this.dataset.type} ▼`;
-        }
-        
-        // 立即執行篩選
-        filterRestaurants();
-        
-        // 關閉下拉選單
-        document.querySelector('.dropdown-type').classList.remove('open');
-      });
-    });
-
-    // 套用篩選按鈕點擊事件
-    const applyTagsBtn = dropdownContent.querySelector('.apply-tags');
-    if (applyTagsBtn) {
-      applyTagsBtn.addEventListener('click', () => {
-        filterRestaurants();
-        document.querySelector('.dropdown-type').classList.remove('open');
-      });
-    }
-  }
 }
 
 // 修改 showRestaurantModal 函數
@@ -853,79 +703,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ... existing code ...
 
-// 初始化下拉選單和標籤功能
-function initializeDropdownAndTags() {
-  const dropdownTrigger = document.querySelector('.type-dropdown-trigger');
-  const dropdownType = document.querySelector('.dropdown-type');
-  const tagGrid = document.querySelector('.tag-grid');
-  const applyTagsBtn = document.querySelector('.apply-tags');
-  
-  if (!dropdownTrigger || !dropdownType || !tagGrid) {
-    console.error('Dropdown elements not found');
-    return;
-  }
-
-  // 點擊觸發器時切換下拉選單
-  dropdownTrigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdownType.classList.toggle('open');
-  });
-
-  // 點擊其他地方時關閉下拉選單
-  document.addEventListener('click', (e) => {
-    if (!dropdownType.contains(e.target)) {
-      dropdownType.classList.remove('open');
-    }
-  });
-
-  // 生成標籤選項
-  const uniqueTags = getAllUniqueTags();
-  const tagRow = document.querySelector('.tag-row');
-  
-  if (tagRow) {
-    uniqueTags.forEach(tag => {
-      const tagOption = document.createElement('div');
-      tagOption.className = 'tag-option';
-      tagOption.dataset.type = tag;
-      tagOption.innerHTML = `<span>${tag}</span>`;
-      
-      // 點擊標籤時切換選中狀態
-      tagOption.addEventListener('click', () => {
-        // 移除其他標籤的選中狀態
-        document.querySelectorAll('.tag-option').forEach(opt => {
-          opt.classList.remove('selected');
-        });
-        // 選中當前標籤
-        tagOption.classList.add('selected');
-        // 更新當前選中的標籤
-        currentSelectedTag = tag;
-      });
-      
-      tagRow.appendChild(tagOption);
-    });
-  }
-
-  // 套用篩選按鈕點擊事件
-  if (applyTagsBtn) {
-    applyTagsBtn.addEventListener('click', () => {
-      filterRestaurants();
-      dropdownType.classList.remove('open');
-    });
-  }
-}
-
-// 當 DOM 加載完成後初始化
-document.addEventListener('DOMContentLoaded', () => {
-  // ... existing code ...
-  
-  // 初始化下拉選單和標籤功能
-  initializeDropdownAndTags();
-  
-  // ... existing code ...
-});
-
-// ... existing code ...
-
 // 取代假資料，直接 fetch 後台 API
 function fetchRestaurants(sortType = null, page = 0) {
     // 確保 API_BASE_URL 存在，若不存在則使用預設值
@@ -1118,13 +895,11 @@ function renderRestaurants(restaurants) {
 
         // 添加點擊事件處理
         card.addEventListener('click', () => {
-            // 傳遞完整的餐廳對象
-            if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
-                window.RestaurantModal.showRestaurantDetail(restaurant);
-            } else {
-                // 如果 RestaurantModal 不可用，使用備用方案
-                showRestaurantModal(restaurant);
-            }
+            // 將餐廳資料儲存到 localStorage
+            localStorage.setItem('selectedRestaurant', JSON.stringify(restaurant));
+            
+            // 導頁到餐廳詳情頁面
+            window.location.href = 'restaurantListDetail.html';
         });
 
         container.appendChild(card);
