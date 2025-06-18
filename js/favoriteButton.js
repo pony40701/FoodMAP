@@ -23,10 +23,8 @@ class FavoriteButton {
             this.setupFavoritesChangedListener();
             
             this.initialized = true;
-            console.log('收藏按鈕初始化成功');
             return true;
         } catch (error) {
-            console.error('收藏按鈕初始化失敗:', error);
             return false;
         }
     }
@@ -34,7 +32,6 @@ class FavoriteButton {
     // 設置收藏變更事件監聽器
     setupFavoritesChangedListener() {
         document.addEventListener('favoritesChanged', async (event) => {
-            console.log('收藏變更事件被觸發，重新排序餐廳列表');
             await this.reorderRestaurantsByFavorite();
         });
     }
@@ -45,31 +42,25 @@ class FavoriteButton {
             // 獲取餐廳容器
             const container = document.getElementById('restaurants-container');
             if (!container) {
-                console.log('找不到餐廳容器，無法重新排序');
                 return;
             }
             
             // 獲取所有餐廳卡片
             const cards = Array.from(container.querySelectorAll('.restaurant-card'));
             if (cards.length === 0) {
-                console.log('沒有找到餐廳卡片，無法重新排序');
                 return;
             }
-            
-            console.log(`開始重新排序 ${cards.length} 張餐廳卡片`);
             
             // 創建一個新的陣列以保存排序後的卡片
             const sortedCards = await Promise.all(cards.map(async (card) => {
                 // 找到卡片中的收藏按鈕，獲取餐廳ID
                 const favoriteBtn = card.querySelector('.favorite-btn');
                 if (!favoriteBtn) {
-                    console.warn('找不到收藏按鈕，無法確定收藏狀態');
                     return { card, isFavorited: false };
                 }
                 
                 const placeId = favoriteBtn.getAttribute('data-place-id');
                 if (!placeId) {
-                    console.warn('找不到餐廳ID，無法確定收藏狀態');
                     return { card, isFavorited: false };
                 }
                 
@@ -89,8 +80,6 @@ class FavoriteButton {
                 return 0;
             });
             
-            console.log('餐廳卡片排序完成，開始更新DOM');
-            
             // 臨時容器用於重建DOM結構
             const fragment = document.createDocumentFragment();
             
@@ -102,10 +91,8 @@ class FavoriteButton {
             // 清空原容器並添加排序後的卡片
             container.innerHTML = '';
             container.appendChild(fragment);
-            
-            console.log('餐廳列表重新排序完成，收藏的餐廳已移到最前面');
         } catch (error) {
-            console.error('重新排序餐廳列表時發生錯誤:', error);
+            // 錯誤處理
         }
     }
     
@@ -115,20 +102,17 @@ class FavoriteButton {
             // 找到所屬的餐廳卡片
             const card = button.closest('.restaurant-card') || button.closest('.store-card');
             if (!card) {
-                console.warn('找不到餐廳卡片，無法移動到前面');
                 return;
             }
             
             // 找到餐廳容器
             const container = document.getElementById('restaurants-container');
             if (!container) {
-                console.warn('找不到餐廳容器，無法移動卡片');
                 return;
             }
             
             // 檢查卡片是否已在最前面
             if (container.firstChild === card) {
-                console.log('卡片已在最前面，無需移動');
                 return;
             }
             
@@ -147,10 +131,8 @@ class FavoriteButton {
             setTimeout(() => {
                 card.style.backgroundColor = '';
             }, 2000);
-            
-            console.log('已將餐廳卡片移到最前面');
         } catch (error) {
-            console.error('移動餐廳卡片時發生錯誤:', error);
+            // 錯誤處理
         }
     }
 
@@ -159,19 +141,11 @@ class FavoriteButton {
         try {
             // 找到所有收藏按鈕
             const buttons = document.querySelectorAll('.favorite-btn');
-            console.log(`找到 ${buttons.length} 個收藏按鈕`);
             
             for (const button of buttons) {
                 // 獲取店家/評論ID
                 const placeId = button.getAttribute('data-place-id');
                 const reviewId = button.getAttribute('data-review-id');
-
-                console.log('處理按鈕:', {
-                    placeId: placeId,
-                    reviewId: reviewId,
-                    classes: button.className,
-                    hasIcon: !!button.querySelector('i')
-                });
 
                 if (placeId) {
                     // 設置店家收藏按鈕狀態
@@ -182,7 +156,6 @@ class FavoriteButton {
                         e.stopPropagation();
                         this.toggleStoreFavorite(placeId, button);
                     };
-                    console.log(`初始化餐廳收藏按鈕 (ID: ${placeId})`);
                 } else if (reviewId) {
                     // 設置評論收藏按鈕狀態
                     this.updateReviewButtonState(button, reviewId);
@@ -192,41 +165,26 @@ class FavoriteButton {
                         e.stopPropagation();
                         this.toggleReviewFavorite(reviewId, button);
                     };
-                } else {
-                    console.warn('發現沒有 ID 的收藏按鈕');
                 }
-
-                // 確認按鈕初始化後的狀態
-                const icon = button.querySelector('i');
-                console.log('按鈕初始化後狀態:', {
-                    id: placeId || reviewId,
-                    isActive: button.classList.contains('active'),
-                    iconClass: icon ? icon.className : 'no icon',
-                    buttonClasses: button.className
-                });
             }
         } catch (error) {
-            console.error('初始化收藏按鈕時發生錯誤:', error);
+            // 錯誤處理
         }
     }
 
     // 更新店家收藏按鈕狀態
     async updateStoreButtonState(button, placeId) {
         if (!window.favoriteSystem) {
-            console.warn('收藏系統未初始化，無法更新按鈕狀態');
             return;
         }
         
-        console.log('更新按鈕狀態，檢查ID:', placeId);
         const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
-        console.log('按鈕狀態檢查結果:', isFavorited);
         this.updateButtonUI(button, isFavorited);
     }
 
     // 更新評論收藏按鈕狀態
     updateReviewButtonState(button, reviewId) {
         if (!window.favoriteSystem) {
-            console.warn('收藏系統未初始化，無法更新按鈕狀態');
             return;
         }
         
@@ -237,41 +195,24 @@ class FavoriteButton {
     // 更新按鈕UI
     updateButtonUI(button, isFavorited) {
         try {
-            console.log('更新按鈕UI:', {
-                button: button,
-                isFavorited: isFavorited,
-                hasIcon: !!button.querySelector('i')
-            });
-
             if (!button) {
-                console.error('按鈕元素不存在');
                 return;
             }
 
             const icon = button.querySelector('i');
             if (!icon) {
-                console.error('按鈕中找不到圖標元素');
                 return;
             }
 
             if (isFavorited) {
-                console.log('設置按鈕為已收藏狀態');
                 button.classList.add('active');
                 icon.className = 'fas fa-heart';
             } else {
-                console.log('設置按鈕為未收藏狀態');
                 button.classList.remove('active');
                 icon.className = 'far fa-heart';
             }
-
-            // 檢查更新後的狀態
-            console.log('按鈕更新後狀態:', {
-                classes: button.className,
-                iconClasses: icon.className,
-                isActive: button.classList.contains('active')
-            });
         } catch (error) {
-            console.error('更新按鈕UI時發生錯誤:', error);
+            // 錯誤處理
         }
     }
 
@@ -279,18 +220,14 @@ class FavoriteButton {
     async toggleStoreFavorite(placeId, button) {
         try {
             if (!window.favoriteSystem) {
-                console.error('收藏系統未初始化');
                 this.showToast('收藏系統未初始化，請重新整理頁面');
                 return;
             }
             
             if (!placeId) {
-                console.error('缺少餐廳ID');
                 this.showToast('無法識別餐廳，請重新整理頁面');
                 return;
             }
-
-            console.log('處理收藏切換，餐廳ID:', placeId);
 
             // 檢查是否已登入
             const userId = localStorage.getItem('userId');
@@ -304,7 +241,6 @@ class FavoriteButton {
             
             // 檢查收藏狀態
             const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
-            console.log('當前收藏狀態:', isFavorited);
             
             let success = false;
             
@@ -320,7 +256,6 @@ class FavoriteButton {
                         const imgElement = restCard.querySelector('img');
                         if (imgElement && imgElement.src) {
                             photos = imgElement.src;
-                            console.log(`找到商家圖片: ${photos}`);
                         }
                     }
                 }
@@ -328,7 +263,6 @@ class FavoriteButton {
                 // 若來自詳情彈窗，尋找彈窗圖片
                 if (!photos && window.currentSelectedRestaurant && window.currentSelectedRestaurant.photos) {
                     photos = window.currentSelectedRestaurant.photos;
-                    console.log(`從詳情彈窗獲取圖片: ${photos}`);
                 }
                 
                 const storeData = {
@@ -338,8 +272,6 @@ class FavoriteButton {
                     photos: photos,
                     favoriteTime: new Date().toISOString()
                 };
-                
-                console.log('準備添加收藏:', storeData);
                 
                 // 更新前端收藏系統
                 success = await window.favoriteSystem.addStore(storeData);
@@ -386,7 +318,6 @@ class FavoriteButton {
 
             // 如果操作成功，更新所有相同 ID 的按鈕
             if (success) {
-                console.log('操作成功，更新所有相同 ID 的按鈕');
                 await this.updateAllButtonsWithSameId(placeId);
             }
 
@@ -399,8 +330,7 @@ class FavoriteButton {
             
             return success;
         } catch (error) {
-            console.error('切換收藏狀態失敗:', error);
-            this.showToast('操作失敗，請稍後再試');
+            this.showToast('請先登入會員');
             return false;
         }
     }
@@ -409,13 +339,11 @@ class FavoriteButton {
     async toggleReviewFavorite(reviewId, button) {
         try {
             if (!window.favoriteSystem) {
-                console.error('收藏系統未初始化');
                 this.showToast('收藏系統未初始化，請重新整理頁面');
                 return;
             }
             
             if (!reviewId) {
-                console.error('缺少評論ID');
                 this.showToast('無法識別評論，請重新整理頁面');
                 return;
             }
@@ -484,38 +412,22 @@ class FavoriteButton {
                 await window.favoriteUI.loadContent();
             }
         } catch (error) {
-            console.error('切換收藏狀態失敗:', error);
-            this.showToast('操作失敗，請稍後再試');
+            this.showToast('請先登入會員');
         }
     }
 
     // 更新所有具有相同ID的按鈕
     async updateAllButtonsWithSameId(placeId) {
         try {
-            console.log(`開始更新所有 ID 為 ${placeId} 的按鈕`);
-            
             const buttons = document.querySelectorAll(`.favorite-btn[data-place-id="${placeId}"]`);
-            console.log(`找到 ${buttons.length} 個按鈕需要更新`);
             
             const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
-            console.log(`獲取到的收藏狀態: ${isFavorited}`);
             
             buttons.forEach((button, index) => {
-                console.log(`更新第 ${index + 1} 個按鈕`);
                 this.updateButtonUI(button, isFavorited);
             });
-            
-            // 驗證更新結果
-            buttons.forEach((button, index) => {
-                const icon = button.querySelector('i');
-                console.log(`按鈕 ${index + 1} 更新後狀態:`, {
-                    isActive: button.classList.contains('active'),
-                    iconClass: icon ? icon.className : 'no icon',
-                    buttonClasses: button.className
-                });
-            });
         } catch (error) {
-            console.error('更新相同ID按鈕時發生錯誤:', error);
+            // 錯誤處理
         }
     }
 
@@ -572,7 +484,6 @@ class FavoriteButton {
             throw new Error(result.message || '加入收藏失敗');
           }
         } catch (err) {
-          console.error('addToFavorites 錯誤：', err);
           alert(err.message || '網路異常，請稍後再試');
         }
     }
@@ -608,9 +519,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         if (!window.favoriteButton.initialized) {
             await window.favoriteButton.initialize();
-            console.log('收藏按鈕初始化完成');
         }
     } catch (error) {
-        console.error('收藏按鈕初始化失敗:', error);
+        // 錯誤處理
     }
 });
