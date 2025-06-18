@@ -59,48 +59,6 @@ body {
     gap: 24px;
 }
 
-.nav-link {
-    color: #333;
-    text-decoration: none;
-    font-size: 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    padding: 6px 10px;
-    border-radius: 8px;
-    text-shadow: none;
-    position: relative;
-    display: block;
-}
-
-.nav-link.active {
-    background: rgba(255, 107, 26, 0.2);
-    color: #ff6b1a;
-    box-shadow: 0 2px 8px rgba(255, 107, 26, 0.3);
-}
-
-.nav-link::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 107, 26, 0.1);
-    border-radius: 8px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.nav-link:hover::before {
-    opacity: 1;
-}
-
-.nav-link:hover {
-    color: #ff6b1a;
-    text-shadow: none;
-    transform: translateY(-1px);
-}
-
 .btn-login {
     background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
     color: white;
