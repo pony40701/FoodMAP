@@ -98,7 +98,6 @@ function updateMapMarkers(restaurants) {
             <div style="padding: 8px; min-width: 200px;">
                 <h3 style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${restaurant.name}</h3>
                 <p style="margin: 0; color: #666; font-size: 12px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
-                <p style="margin: 4px 0; color: #666; font-size: 12px;">${restaurant.types || ''}</p>
                 <div style="margin-top: 8px; color: #d32323; font-size: 11px; cursor: pointer;">
                     點擊查看詳細資訊 →
                 </div>
@@ -198,19 +197,47 @@ function debounce(func, wait) {
   };
 }
 
-// 即時搜尋功能
-function handleSearchInput() {
-  const foodSearch = document.getElementById("food-search").value.toLowerCase();
-  const locationSearch = document.getElementById("location-search").value.toLowerCase();
+// 將 handleSearch 函數移到文件頂部，確保它在被調用前已定義
+function handleSearch() {
+  console.log('Search function triggered');
+
+  const foodSearchInput = document.getElementById("food-search");
+  const locationSearchInput = document.getElementById("location-search");
+  
+  if (!foodSearchInput || !locationSearchInput) {
+    console.error('Search inputs not found');
+    return;
+  }
+
+  const foodSearch = (foodSearchInput.value || '').toLowerCase();
+  const locationSearch = (locationSearchInput.value || '').toLowerCase();
+  
+  console.log('Search terms:', { foodSearch, locationSearch });
 
   // 使用 currentDisplayedRestaurants 作為搜尋基礎
   let filtered = currentDisplayedRestaurants.filter(restaurant => {
+    if (!restaurant) return false;
+
     const matchesFood = restaurant.name.toLowerCase().includes(foodSearch) ||
-                       restaurant.tags.some(tag => tag.toLowerCase().includes(foodSearch)) ||
-                       restaurant.description.toLowerCase().includes(foodSearch);
-    const matchesLocation = restaurant.address.toLowerCase().includes(locationSearch);
+                       (restaurant.description && restaurant.description.toLowerCase().includes(foodSearch));
+    
+    const matchesLocation = restaurant.address && 
+                           restaurant.address.toLowerCase().includes(locationSearch);
+    
+    // 如果兩個搜尋框都為空，返回所有結果
+    if (!foodSearch && !locationSearch) return true;
+    
+    // 如果只有食物搜尋，只檢查食物相關
+    if (foodSearch && !locationSearch) return matchesFood;
+    
+    // 如果只有地點搜尋，只檢查地點相關
+    if (!foodSearch && locationSearch) return matchesLocation;
+    
+    // 如果兩個都有，則需要同時符合
     return matchesFood && matchesLocation;
   });
+
+  console.log('Filtered results:', filtered.length);
 
   // 儲存搜尋結果
   currentDisplayedRestaurants = filtered;
@@ -219,18 +246,12 @@ function handleSearchInput() {
   currentPage = 1;
   const pageData = currentDisplayedRestaurants.slice(0, pageSize);
   
-  // 使用淡出淡入效果更新餐廳列表
-  const restaurantList = document.querySelector('.restaurant-list');
-  if (restaurantList) {
-    // 淡出效果
-    restaurantList.style.opacity = '0';
-    restaurantList.style.transition = 'opacity 0.3s ease-in-out';
-    
-    setTimeout(() => {
-      renderFilteredCards(pageData, currentDisplayedRestaurants.length);
-      // 淡入效果
-      restaurantList.style.opacity = '1';
-    }, 300);
+  // 直接更新餐廳列表
+  const cardsContainer = document.getElementById('restaurant-cards');
+  if (cardsContainer) {
+    renderFilteredCards(pageData, currentDisplayedRestaurants.length);
+  } else {
+    console.error('Restaurant cards container not found!');
   }
 
   // 更新地圖標記
@@ -238,7 +259,7 @@ function handleSearchInput() {
 }
 
 // 使用防抖包裝搜尋函數
-const debouncedSearch = debounce(handleSearchInput, 300);
+const debouncedSearch = debounce(handleSearch, 300);
 
 // 添加事件監聽器
 document.addEventListener('DOMContentLoaded', function() {
@@ -474,13 +495,6 @@ function showRestaurantModal(restaurant) {
             </div>
           </div>
 
-          <!-- 標籤區域 -->
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${restaurant.tags.map(tag => 
-              `<span style="background: #f5f5f5; color: #666; padding: 6px 12px; border-radius: 20px; font-size: 14px;">${tag}</span>`
-            ).join("")}
-          </div>
-
           <!-- 價格範圍 -->
           <div style="color: #666; font-size: 15px;">
             <i class="fas fa-dollar-sign" style="color: #666; margin-right: 4px;"></i>
@@ -573,9 +587,6 @@ function renderFilteredCards(pageData, totalCount) {
           <span class="stars" style="color: #d32323; font-size: 14px;">${"★".repeat(Math.floor(restaurant.rating))}${restaurant.rating % 1 >= 0.5 ? "½" : ""}</span>
           <span class="rating-text" style="color: #666; font-size: 13px;">${restaurant.rating} (${restaurant.ratingCount} 則評論)</span>
         </div>
-        <div class="yelp-row yelp-tags-row" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${restaurant.tags.map(tag => `<span class="yelp-tag" style="background: #f5f5f5; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${tag}</span>`).join("")}
-        </div>
         <div class="yelp-row yelp-price-row" style="display: flex; gap: 12px; align-items: center;">
           <div style="color: #666; font-size: 13px; font-weight: 500; background: #f8f8f8; padding: 2px 8px; border-radius: 4px;">均消 ${restaurant.price}</div>
           <div style="color: #666; font-size: 13px;">${restaurant.address}</div>
@@ -621,69 +632,6 @@ function renderFilteredCards(pageData, totalCount) {
 // 新增導航到詳情頁的函數
 function navigateToDetail(restaurantData) {
   window.location.href = `restaurantListDetail.html?data=${restaurantData}`;
-}
-
-// 將 handleSearch 函數移到文件頂部，確保它在被調用前已定義
-function handleSearch() {
-  console.log('Search function triggered');
-
-  const foodSearchInput = document.getElementById("food-search");
-  const locationSearchInput = document.getElementById("location-search");
-  
-  if (!foodSearchInput || !locationSearchInput) {
-    console.error('Search inputs not found');
-    return;
-  }
-
-  const foodSearch = (foodSearchInput.value || '').toLowerCase();
-  const locationSearch = (locationSearchInput.value || '').toLowerCase();
-  
-  console.log('Search terms:', { foodSearch, locationSearch });
-
-  // 使用 currentDisplayedRestaurants 作為搜尋基礎
-  let filtered = currentDisplayedRestaurants.filter(restaurant => {
-    if (!restaurant) return false;
-
-    const matchesFood = restaurant.name.toLowerCase().includes(foodSearch) ||
-                       (restaurant.tags && restaurant.tags.some(tag => 
-                         tag && tag.toLowerCase().includes(foodSearch))) ||
-                       (restaurant.description && restaurant.description.toLowerCase().includes(foodSearch));
-    
-    const matchesLocation = restaurant.address && 
-                           restaurant.address.toLowerCase().includes(locationSearch);
-    
-    // 如果兩個搜尋框都為空，返回所有結果
-    if (!foodSearch && !locationSearch) return true;
-    
-    // 如果只有食物搜尋，只檢查食物相關
-    if (foodSearch && !locationSearch) return matchesFood;
-    
-    // 如果只有地點搜尋，只檢查地點相關
-    if (!foodSearch && locationSearch) return matchesLocation;
-    
-    // 如果兩個都有，則需要同時符合
-    return matchesFood && matchesLocation;
-  });
-
-  console.log('Filtered results:', filtered.length);
-
-  // 儲存搜尋結果
-  currentDisplayedRestaurants = filtered;
-  
-  // 重置到第一頁
-  currentPage = 1;
-  const pageData = currentDisplayedRestaurants.slice(0, pageSize);
-  
-  // 直接更新餐廳列表
-  const cardsContainer = document.getElementById('restaurant-cards');
-  if (cardsContainer) {
-    renderFilteredCards(pageData, currentDisplayedRestaurants.length);
-  } else {
-    console.error('Restaurant cards container not found!');
-  }
-
-  // 更新地圖標記
-  updateMapMarkers(currentDisplayedRestaurants);
 }
 
 // 當頁面載入完成時初始化
@@ -875,9 +823,6 @@ function renderRestaurants(restaurants) {
                 <div class="yelp-rating-row">
                     <div class="stars">${generateStars(rating)}</div>
                     <span class="rating-text">${rating ? rating.toFixed(1) : 'N/A'} (${reviewCount || 0} 則評論)</span>
-                </div>
-                <div class="yelp-tags-row">
-                    ${restaurant.types ? `<span class="yelp-tag">${restaurant.types}</span>` : ''}
                 </div>
                 <div class="yelp-price-row">
                     <span class="address">${restaurant.address || ''}</span>

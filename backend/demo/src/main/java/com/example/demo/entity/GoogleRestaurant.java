@@ -44,6 +44,9 @@ public class GoogleRestaurant {
     @Column(name = "types")
     private String types;
     
+    @Column(name = "opening_hours", columnDefinition = "text")
+    private String openingHours;
+    
     // 新增綜合評分欄位，但不儲存到資料庫
     @Transient
     private Double compositeScore;
