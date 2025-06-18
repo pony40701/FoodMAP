@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ReviewDraftDto;
 import com.example.demo.dto.ReviewRequestDto;
 import com.example.demo.dto.ReviewStatsDto;
 import com.example.demo.dto.ReviewStatsDetailDto;
@@ -28,7 +29,7 @@ public class ReviewController {
     }
 
     @GetMapping("/drafts/{userId}")
-    public ResponseEntity<List<Review>> getDraftsByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<List<ReviewDraftDto>> getDraftsByUserId(@PathVariable Integer userId) {
         log.info("獲取用戶草稿：userId={}", userId);
         return ResponseEntity.ok(reviewService.getDraftsByUserId(userId));
     }

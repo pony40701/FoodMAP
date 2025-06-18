@@ -4,6 +4,7 @@ import com.example.demo.dto.ReviewRequestDto;
 import com.example.demo.dto.ReviewStatsDto;
 import com.example.demo.dto.UserReviewStatsDto;
 import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.dto.ReviewDraftDto;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,10 +109,44 @@ public class ReviewService {
     }
 
     // 查詢用戶的草稿列表
-    public List<Review> getDraftsByUserId(Integer userId) {
+    public List<ReviewDraftDto> getDraftsByUserId(Integer userId) {
         List<Review> drafts = reviewRepository.findByUserIdAndStatus(userId.intValue(), "draft");
         log.info("查詢用戶草稿：userId={}, 草稿數量={}", userId, drafts.size());
-        return drafts;
+        
+        return drafts.stream().map(draft -> {
+            ReviewDraftDto dto = new ReviewDraftDto();
+            dto.setId(draft.getId().intValue());
+            dto.setTitle(draft.getTitle());
+            dto.setContentJson(draft.getContentJson());
+            dto.setStatus(draft.getStatus());
+            dto.setCreatedAt(draft.getCreatedAt());
+            dto.setUpdatedAt(draft.getUpdatedAt());
+
+            // 設置評分
+            ReviewRating rating = reviewRatingRepository.findById(draft.getId().intValue())
+                    .orElseThrow(() -> new RuntimeException("評分資料不存在"));
+            ReviewDraftDto.ReviewRatingsDto ratingsDto = new ReviewDraftDto.ReviewRatingsDto();
+            ratingsDto.setEnvironmentScore(rating.getEnvironmentScore());
+            ratingsDto.setServiceScore(rating.getServiceScore());
+            ratingsDto.setTasteScore(rating.getTasteScore());
+            ratingsDto.setPriceScore(rating.getPriceScore());
+            ratingsDto.setOverallScore(rating.getOverallScore());
+            dto.setRatings(ratingsDto);
+
+            // 設置照片
+            List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewId(draft.getId().intValue());
+            dto.setPhotos(photos.stream()
+                    .map(ReviewPhoto::getImageUrl)
+                    .collect(Collectors.toList()));
+
+            // 設置標籤
+            List<ReviewTag> tags = reviewTagRepository.findByReviewId(draft.getId().intValue());
+            dto.setTags(tags.stream()
+                    .map(tag -> tag.getTag().getName())
+                    .collect(Collectors.toList()));
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     // 查詢單篇草稿詳細資料
