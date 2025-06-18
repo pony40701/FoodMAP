@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>美食地圖FoodMAP</title>
     <!-- 防止 favicon.ico 404 錯誤 -->
-    <link rel="icon" href="data:,">    <link rel="stylesheet" href="css/food-categories.css">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/food-categories.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="ranking/ranking.css">
     <link rel="stylesheet" href="css/food-types.css">
@@ -26,6 +28,7 @@
     <script src="js/favoriteSystem.js"></script>
     <script src="js/favoriteService.js"></script>
     <script src="js/favoriteButton.js"></script>
+    <script src="js/notificationService.js"></script>
     <script src="js/displayRestaurants.js"></script>
     <style>
         /* 登入視窗樣式 - 極簡版本 */
@@ -281,6 +284,58 @@
             height: 1px;
             background: rgba(255, 107, 26, 0.1);
             margin: 8px 0;
+        }
+
+        /* 通知計數樣式 */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4757;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            border: 1px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 頭像通知徽章樣式 */
+        .avatar-notification-badge {
+            position: absolute;
+            top: -10px;
+            right: -6px;
+            background-color: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: pulse 1.5s infinite;
+            z-index: 1099;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .dropdown-item .notification-icon {
+            position: relative;
         }
 
         /* 登出選項樣式 */
@@ -971,19 +1026,19 @@
             </a>
 
             <div class="restaurant-dropdown">
-                <a href="#" class="nav-link dropdown-toggle">排行榜<i class="fas fa-chevron-down"></i></a>
+                <a href="ranking.html" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="ranking/ranking.html" class="dropdown-item">
+                    <a href="ranking.html" class="dropdown-item">
                         <i class="fas fa-trophy"></i>
-                        <span>綜合排行榜</span>
+                        <span>綜合排行</span>
                     </a>
-                    <a href="ranking/ranking.html#popular" class="dropdown-item">
+                    <a href="ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
-                        <span>人氣排行榜</span>
+                        <span>人氣排行</span>
                     </a>
-                    <a href="ranking/ranking.html#rating" class="dropdown-item">
+                    <a href="ranking.html#rating" class="dropdown-item">
                         <i class="fas fa-star"></i>
-                        <span>評分排行榜</span>
+                        <span>評分排行</span>
                     </a>
                 </div>
             </div>
@@ -1021,13 +1076,20 @@
             <!-- 已登入狀態- 顯示會員頭像 -->
             <div id="userSection" class="user-section" style="display: none;">
                 <div class="user-avatar">
+                    <span class="avatar-notification-badge" id="avatar-notification-badge" style="display: none;"><i class="fas fa-exclamation"></i></span>
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
                         <a href="usercenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-
+                        <a href="usercenter.html#notifications" class="dropdown-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge" id="notification-count" style="display: none;">0</span>
+                            </div>
+                            <span>通知中心</span>
+                        </a>
                         <a href="usercenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
@@ -1040,8 +1102,6 @@
                             <i class="fas fa-history"></i>
                             <span>瀏覽紀錄</span>
                         </a>
-
-                        </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item logout-item" onclick="logout()">
                             <i class="fas fa-sign-out-alt"></i>
@@ -1051,6 +1111,9 @@
                 </div>
             </div>
         </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
     <!-- 輪播圖區域-->
     <div class="carousel-container">
@@ -1321,7 +1384,7 @@
                 <h4>快速連結</h4>
                 <div class="footer-links">
                     <a href="/restaurant-signup.html">商家註冊</a>
-                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="ranking.html">排行榜</a>
                     <a href="/blogPost.html">寫評論</a>
                     <a href="/helpcenter.html">幫助中心</a>
                 </div>
@@ -1541,7 +1604,24 @@
             }
         });
     </script>
+    <script src="js/userRegister.js" type="module"></script>
+    <script src="js/userForgotPassword.js"></script>
+    <script src="js/restaurant-revenue.js"></script>
+
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
+        });
+    </script>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</script>
 </body>
 
 </html>

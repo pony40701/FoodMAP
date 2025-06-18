@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>美食排行榜 - 食力派ChowCrew</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="../css/navforaboutus.css">
-    <link rel="stylesheet" href="../CSS/footer.css">
-    <link rel="stylesheet" href="./ranking.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/ranking.css">
     <style>
         .title-section {
             text-align: center;
@@ -79,13 +79,109 @@
             font-family: "Font Awesome 6 Free" !important;
             font-weight: 900 !important;
         }
+
+        /* 登入視窗樣式 - 極簡版本 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            border-radius: 12px;
+            padding: 15px 15px 20px 15px;
+            border: 1px solid rgba(255, 107, 26, 0.3);
+            width: 90%;
+            max-width: 340px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #ff6b1a;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-left: auto;
+            position: absolute;
+            right: 15px;
+            top: 12px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            padding: 9px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #ff6b1a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 0;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .form-footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
     <!-- 導航欄 -->
     <div class="navbar">
         <div class="navbar-left">
-            <a href="../index.html" class="logo-text">食力派ChowCrew</a>
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
         </div>
         <div class="search-section">
             <div class="search-bar">
@@ -100,29 +196,29 @@
                 </div>
                 <!-- 搜尋按鈕 -->
                 <button class="search-btn">
-                    <img src="../images/search.png" alt="search" width="26" height="26" />
+                    <img src="images/search.png" alt="search" width="26" height="26" />
                 </button>
             </div>
         </div>
         <div class="navbar-right">
             <div class="restaurant-dropdown">
-                <a href="../restaurantList.html" class="nav-link dropdown-toggle">
+                <a href="restaurantList.html" class="nav-link dropdown-toggle">
                     <i class="fas fa-utensils"></i>
                     <span>餐廳詳情</span>
                 </a>
             </div>
             <div class="restaurant-dropdown">
-                <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <a href="ranking.html" class="nav-link dropdown-toggle active">排行榜 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="./ranking.html" class="dropdown-item">
+                    <a href="ranking.html" class="dropdown-item">
                         <i class="fas fa-trophy"></i>
                         <span>綜合排行</span>
                     </a>
-                    <a href="./ranking.html#popular" class="dropdown-item">
+                    <a href="ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
                         <span>人氣排行</span>
                     </a>
-                    <a href="./ranking.html#rating" class="dropdown-item">
+                    <a href="ranking.html#rating" class="dropdown-item">
                         <i class="fas fa-star"></i>
                         <span>評分排行</span>
                     </a>
@@ -131,11 +227,11 @@
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                    <a href="blogPost.html" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
                         <span>寫食記</span>
                     </a>
-                    <a href="/experienceList.html" class="dropdown-item">
+                    <a href="experienceList.html" class="dropdown-item">
                         <i class="fas fa-book-open"></i>
                         <span>瀏覽心得</span>
                     </a>
@@ -144,7 +240,7 @@
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="../restaurant-signup.html" class="dropdown-item">
+                    <a href="restaurant-signup.html" class="dropdown-item">
                         <i class="fas fa-store"></i>
                         <span>商家註冊</span>
                     </a>
@@ -162,21 +258,21 @@
             <!-- 已登入狀態 - 顯示會員頭像 -->
             <div id="userSection" class="user-section" style="display: none;">
                 <div class="user-avatar">
-                    <img src="../images/TEST.jpg" alt="會員頭像" class="avatar-img">
+                    <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
-                        <a href="../usercenter.html" class="dropdown-item">
+                        <a href="usercenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-                        <a href="../usercenter.html#favorites" class="dropdown-item">
+                        <a href="usercenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
                         </a>
-                        <a href="../usercenter.html#reviews" class="dropdown-item">
+                        <a href="usercenter.html#reviews" class="dropdown-item">
                             <i class="fas fa-star"></i>
                             <span>我的評論</span>
                         </a>
-                        <a href="../usercenter.html#orders" class="dropdown-item">
+                        <a href="usercenter.html#orders" class="dropdown-item">
                             <i class="fas fa-history"></i>
                             <span>瀏覽紀錄</span>
                         </a>
@@ -230,14 +326,41 @@
         </div>
     </div>
 
-    <script src="./ranking.js"></script>
+    <!-- 登入彈出視窗 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>會員登入</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">電子郵件</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-primary">登入</button>
+            </form>
+            <div class="form-footer">
+                <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ranking.js"></script>
+    <script src="js/loginModal.js"></script>
     <script>
         const hamburger = document.querySelector('.hamburger');
         const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
 
         hamburger.addEventListener('click', () => {
             navRight.classList.toggle('active');
-            hamburger.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
         });
     </script>
 </body>

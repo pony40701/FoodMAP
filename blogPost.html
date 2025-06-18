@@ -6,6 +6,7 @@
     <title>撰寫美食心得 - 食力派ChowCrew</title>
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
     <link rel="stylesheet" href="css/blogPost.css">
  
     <style>
@@ -272,19 +273,77 @@
 </head>
 <body>
     <!-- 導覽列 -->
-    <nav class="navbar">
+    <div class="navbar">
         <div class="navbar-left">
             <a href="index.html" class="logo-text">食力派ChowCrew</a>
         </div>
-        
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="input-container">
+                    <span class="input-icon">🍴</span>
+                    <input class="search-input" placeholder="找美食" />
+                </div>
+                <div class="search-divider"></div>
+                <div class="input-container">
+                    <span class="input-icon">📍</span>
+                    <input class="search-input" placeholder="選擇地點" />
+                </div>
+                <!-- 搜尋按鈕 -->
+                <button class="search-btn">
+                    <img src="images/search.png" alt="search" width="26" height="26" />
+                </button>
+            </div>
+        </div>
         <div class="navbar-right">
-            <a href="restaurantList.html" class="nav-link">
-                <i class="fas fa-utensils"></i>
-                <span>餐廳詳情</span>
-            </a>
-            <a href="ranking/ranking.html" class="nav-link">排行榜</a>
-            <a href="#" class="nav-link active">寫評論</a>
-            
+            <div class="restaurant-dropdown">
+                <a href="restaurantList.html" class="nav-link dropdown-toggle">
+                    <i class="fas fa-utensils"></i>
+                    <span>餐廳詳情</span>
+                </a>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="ranking.html" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="ranking.html" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>綜合排行</span>
+                    </a>
+                    <a href="ranking.html#popular" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <span>人氣排行</span>
+                    </a>
+                    <a href="ranking.html#rating" class="dropdown-item">
+                        <i class="fas fa-star"></i>
+                        <span>評分排行</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle active">食評 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="blogPost.html" class="dropdown-item">
+                        <i class="fas fa-pen-alt"></i>
+                        <span>寫食記</span>
+                    </a>
+                    <a href="experienceList.html" class="dropdown-item">
+                        <i class="fas fa-book-open"></i>
+                        <span>瀏覽心得</span>
+                    </a>
+                </div>
+            </div>
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
             <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
                 <button class="btn-login">登入</button>
@@ -299,10 +358,6 @@
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-                        <a href="usercenter.html#profile" class="dropdown-item">
-                            <i class="fas fa-user"></i>
-                            <span>個人資料</span>
-                        </a>
                         <a href="usercenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
@@ -315,10 +370,6 @@
                             <i class="fas fa-history"></i>
                             <span>瀏覽紀錄</span>
                         </a>
-                        <a href="usercenter.html#settings" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            <span>帳號設定</span>
-                        </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item logout-item" onclick="logout()">
                             <i class="fas fa-sign-out-alt"></i>
@@ -328,7 +379,10 @@
                 </div>
             </div>
         </div>
-    </nav>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
 
     <!-- 主要內容區域 -->
     <div class="content-container">
@@ -803,7 +857,7 @@
                 <h4>快速連結</h4>
                 <div class="footer-links">
                     <a href="/restaurant-signup.html">商家註冊</a>
-                    <a href="/ranking/ranking.html">排行榜</a>
+                    <a href="ranking.html">排行榜</a>
                     <a href="/blogPost.html">寫評論</a>
                     <a href="helpcenter.html">幫助中心</a>
                 </div>
@@ -855,6 +909,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <script src="js/login.js"></script>
     <script src="js/blogPost2.js"></script>
-    
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
+        });
+    </script>
 </body>
 </html> 

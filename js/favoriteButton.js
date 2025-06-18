@@ -351,6 +351,14 @@ class FavoriteButton {
                         // 立即將該餐廳卡片移到最前面
                         this.moveCardToFront(button);
                     }
+                    
+                    // 觸發自定義事件通知收藏狀態變化
+                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                        detail: { type: 'add', id: placeId }
+                    }));
+                    
+                    // 同時觸發favoritesChanged事件以立即更新統計數據
+                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
                 } else {
                     this.showToast('加入收藏失敗，請稍後再試');
                 }
@@ -363,6 +371,14 @@ class FavoriteButton {
                     if (button) {
                         this.updateButtonUI(button, false);
                     }
+                    
+                    // 觸發自定義事件通知收藏狀態變化
+                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                        detail: { type: 'remove', id: placeId }
+                    }));
+                    
+                    // 同時觸發favoritesChanged事件以立即更新統計數據
+                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
                 } else {
                     this.showToast('取消收藏失敗，請稍後再試');
                 }
@@ -414,12 +430,21 @@ class FavoriteButton {
             }
             
             const isFavorited = window.favoriteSystem.isReviewFavorited(reviewId);
+            let success = false;
             
             if (isFavorited) {
                 // 移除收藏
-                const success = await window.favoriteSystem.removeReview(reviewId);
+                success = await window.favoriteSystem.removeReview(reviewId);
                 if (success) {
                     this.showToast('已取消收藏');
+                    
+                    // 觸發自定義事件通知收藏狀態變化
+                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                        detail: { type: 'remove', id: reviewId, isReview: true }
+                    }));
+                    
+                    // 同時觸發favoritesChanged事件以立即更新統計數據
+                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
                 } else {
                     this.showToast('取消收藏失敗，請稍後再試');
                     return;
@@ -434,9 +459,17 @@ class FavoriteButton {
                     return;
                 }
                 
-                const success = await window.favoriteSystem.addReview(reviewData);
+                success = await window.favoriteSystem.addReview(reviewData);
                 if (success) {
                     this.showToast('已加入收藏');
+                    
+                    // 觸發自定義事件通知收藏狀態變化
+                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
+                        detail: { type: 'add', id: reviewId, isReview: true }
+                    }));
+                    
+                    // 同時觸發favoritesChanged事件以立即更新統計數據
+                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
                 } else {
                     this.showToast('加入收藏失敗，請稍後再試');
                     return;
