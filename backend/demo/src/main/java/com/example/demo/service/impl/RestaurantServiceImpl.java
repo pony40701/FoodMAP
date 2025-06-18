@@ -118,7 +118,8 @@ public class RestaurantServiceImpl implements RestaurantService {
                 restaurant.getTypes(),
                 base64Photo,
                 restaurant.getLatitude() != null ? restaurant.getLatitude() : restaurant.getLat(),
-                restaurant.getLongitude() != null ? restaurant.getLongitude() : restaurant.getLng()
+                restaurant.getLongitude() != null ? restaurant.getLongitude() : restaurant.getLng(),
+                restaurant.getOpeningHours()
         );
     }
 } 
