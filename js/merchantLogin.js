@@ -67,14 +67,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (response.ok) {
           const result = await response.json();
+          
+          // 儲存 JWT token 和餐廳資訊
+          localStorage.setItem("merchantToken", result.token);
+          localStorage.setItem("merchantEmail", result.email);
+          localStorage.setItem("restaurantId", result.restaurantId);
+          
           alert("登入成功！歡迎回來～");
-          console.log("登入成功:", result);
           closeRestaurantLoginModal();
-          // Redirect to the merchant dashboard
+          
+          // 跳轉到商家後台
           window.location.href = "restaurant.html";
         } else {
-          const errorText = await response.text();
-          alert("登入失敗：" + errorText);
+          const errorData = await response.text();
+          alert("登入失敗：" + errorData);
         }
       } catch (error) {
         console.error("登入請求失敗:", error);
