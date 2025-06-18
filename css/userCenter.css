@@ -653,32 +653,91 @@ body {
 
 /* 通知中心區塊 */
 #notifications {
-    background-color: #FFF;
+    padding-bottom: 30px;
 }
 
 .notifications-list {
+    margin-top: 15px;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 10px;
+}
+
+/* 標記所有為已讀按鈕容器 */
+.mark-all-read-container {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    text-align: right;
+    padding: 0 5px;
+}
+
+/* 標記所有為已讀按鈕 */
+#mark-all-as-read-btn {
+    background-color: #ff6b1a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#mark-all-as-read-btn:hover {
+    background-color: #ff8542;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .notification-item {
     background-color: #fff;
-    border: 1px solid #FDBA74;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(249, 115, 22, 0.1);
-    transition: transform 0.3s ease;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    transition: all 0.3s;
+    border-left: 4px solid transparent;
+}
+
+.notification-item.unread {
+    border-left-color: #ff6b1a;
+    background-color: #fff8f5;
 }
 
 .notification-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(249, 115, 22, 0.15);
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.notification-type {
+    font-weight: 600;
+    color: #ff6b1a;
 }
 
 .notification-time {
-    color: #F97316;
+    color: #888;
     font-size: 0.9rem;
+}
+
+.notification-content {
+    color: #333;
+    line-height: 1.5;
+}
+
+.unread-indicator {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ff6b1a;
 }
 
 /* 帳號設定區塊 */
