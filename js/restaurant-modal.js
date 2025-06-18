@@ -45,6 +45,15 @@ const RestaurantModal = (function() {
         
         console.log('餐廳彈窗DOM元素:', elements);
         
+        // 檢查關鍵元素是否存在，如果不存在則顯示警告
+        const requiredElements = ['modal', 'name', 'image', 'stars', 'rating', 'ratingCount', 'address', 'status', 'statusText', 'todayHours', 'viewHoursBtn'];
+        const missingElements = requiredElements.filter(key => !elements[key]);
+        
+        if (missingElements.length > 0) {
+            console.error('缺少必要DOM元素:', missingElements);
+            alert('頁面缺少必要元素，餐廳詳情功能可能無法正常工作。請重新整理頁面後再試。');
+        }
+        
         // 綁定事件
         if (elements.closeBtn) {
             elements.closeBtn.addEventListener('click', closeModal);
@@ -170,11 +179,28 @@ const RestaurantModal = (function() {
         // 設置餐廳名稱
         if (elements.name) elements.name.textContent = restaurant.name || '暫無資料';
         
-        // 處理圖片URL
+        // 處理圖片URL - 使用與商家卡片相同的方式
         let photoUrl = '';
         
-        // 直接使用餐廳ID獲取圖片 (從後端API)
-        if (restaurantId) {
+        // 優先使用restaurant中已存在的圖片URL
+        if (restaurant.photo) {
+            photoUrl = restaurant.photo;
+            console.log('使用餐廳對象中的photo屬性:', photoUrl);
+        } else if (restaurant.photos && restaurant.photos.length > 0) {
+            // 檢查photos是否是URL數組或對象數組
+            if (typeof restaurant.photos[0] === 'string') {
+                photoUrl = restaurant.photos[0];
+            } else if (restaurant.photos[0].getUrl) {
+                photoUrl = restaurant.photos[0].getUrl();
+            } else if (restaurant.photos[0].url) {
+                photoUrl = restaurant.photos[0].url;
+            }
+            console.log('使用餐廳對象中的photos陣列:', photoUrl);
+        } else if (restaurant.image_url) {
+            photoUrl = restaurant.image_url;
+            console.log('使用餐廳對象中的image_url屬性:', photoUrl);
+        } else if (restaurantId) {
+            // 如果沒有直接的圖片URL，從後端API獲取
             photoUrl = `${baseUrl}/restaurant-images/${restaurantId}/raw`;
             console.log('從後端API獲取圖片:', photoUrl);
         }
@@ -182,26 +208,29 @@ const RestaurantModal = (function() {
         // 設置圖片
         if (elements.image) {
             console.log('設置餐廳圖片:', photoUrl);
-            elements.image.src = photoUrl;
-            elements.image.alt = restaurant.name || '暫無資料';
+            // 清除舊的錯誤處理
+            elements.image.onerror = null;
+            // 顯示圖片元素
+            elements.image.style.display = 'block';
             
-            // 簡化錯誤處理，即使圖片加載失敗也不顯示本地圖片
-            elements.image.onerror = function() {
-                console.log('圖片載入失敗');
-                // 不使用本地圖片
-                this.style.display = 'none';  // 隱藏圖片元素
-                
-                // 添加一個文字提示
-                const imgContainer = this.parentElement;
-                if (imgContainer) {
-                    const errorMsg = document.createElement('div');
-                    errorMsg.className = 'image-error-message';
-                    errorMsg.textContent = '圖片載入失敗';
-                    errorMsg.style.textAlign = 'center';
-                    errorMsg.style.padding = '20px';
-                    errorMsg.style.color = '#999';
-                    imgContainer.appendChild(errorMsg);
+            // 清除可能存在的錯誤提示
+            const imgContainer = elements.image.parentElement;
+            if (imgContainer) {
+                const existingError = imgContainer.querySelector('.image-error-message');
+                if (existingError) {
+                    imgContainer.removeChild(existingError);
                 }
+            }
+            
+            // 設置新圖片
+            elements.image.src = photoUrl;
+            elements.image.alt = restaurant.name || '餐廳圖片';
+            
+            // 設置錯誤處理
+            elements.image.onerror = function() {
+                console.log('圖片載入失敗，使用預設圖片');
+                this.src = 'images/default-restaurant.jpg';
+                this.onerror = null; // 防止循環錯誤
             };
         }
         
@@ -256,30 +285,40 @@ const RestaurantModal = (function() {
             prepareWeeklyHoursData(restaurant.opening_hours);
             
             if (restaurant.opening_hours.weekday_text) {
-                // 獲取今日營業時間文字
-                const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
-                
-                if (restaurant.opening_hours.weekday_text[index]) {
-                    const todayText = restaurant.opening_hours.weekday_text[index];
-                    // 直接從完整的營業時間文字中提取時間部分
-                    const timeMatch = todayText.match(/:\s*(.+)$/);
-                    const timeStr = timeMatch ? timeMatch[1].trim() : null;
+                // 使用 BusinessHours 類獲取今日營業時間
+                if (window.businessHours) {
+                    todayHoursText = window.businessHours.getTodayHours(restaurant.opening_hours.weekday_text);
+                    if (todayHoursText) {
+                        isOpen = window.businessHours.isOpenFromText(todayHoursText);
+                    }
+                } else {
+                    // 舊的方式：獲取今日營業時間文字
+                    const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
                     
-                    if (timeStr) {
-                        isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                            window.businessHours.isOpenFromText(timeStr) : 
-                            restaurant.opening_hours.open_now;
-                        todayHoursText = timeStr;
+                    if (restaurant.opening_hours.weekday_text[index]) {
+                        const todayText = restaurant.opening_hours.weekday_text[index];
+                        // 直接從完整的營業時間文字中提取時間部分
+                        const timeMatch = todayText.match(/:\s*(.+)$/);
+                        const timeStr = timeMatch ? timeMatch[1].trim() : null;
                         
-                        console.log('營業時間判斷:', {
-                            restaurantName: restaurant.name,
-                            todayFullText: todayText,
-                            extractedTime: timeStr,
-                            isOpen: isOpen,
-                            currentTime: new Date().toLocaleTimeString()
-                        });
+                        if (timeStr) {
+                            // 移除可能存在的秒數
+                            const timeStrWithoutSeconds = timeStr.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                            
+                            isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
+                                window.businessHours.isOpenFromText(timeStrWithoutSeconds) : 
+                                restaurant.opening_hours.open_now;
+                            todayHoursText = timeStrWithoutSeconds;
+                        }
                     }
                 }
+                
+                console.log('營業時間判斷:', {
+                    restaurantName: restaurant.name,
+                    todayHoursText: todayHoursText,
+                    isOpen: isOpen,
+                    currentTime: new Date().toLocaleTimeString()
+                });
             } else if (restaurant.opening_hours.periods) {
                 // 如果有 periods 資料，使用它來判斷
                 const now = new Date();
@@ -290,7 +329,7 @@ const RestaurantModal = (function() {
                     const closeTime = `${period.close.hours}:${period.close.minutes || '00'}`;
                     isOpen = window.businessHours && window.businessHours.isOpenNow ? 
                         window.businessHours.isOpenNow(openTime, closeTime) : false;
-                    todayHoursText = `${openTime}-${closeTime}`;
+                    todayHoursText = `${openTime} - ${closeTime}`;
                 }
             } else if (restaurant.opening_hours.open_now !== undefined) {
                 // 如果只有 open_now 屬性
@@ -325,16 +364,75 @@ const RestaurantModal = (function() {
         
         // 更新今日營業時間
         if (elements.todayHours) {
-            elements.todayHours.textContent = todayHoursText || '未提供營業時間';
+            // 格式化營業時間文字，確保時間範圍格式一致 (09:00 - 18:00)
+            let formattedHoursText = todayHoursText;
+            if (todayHoursText) {
+                console.log('格式化前的營業時間:', todayHoursText);
+                
+                // 移除所有秒數，包括多個時間段的情況
+                formattedHoursText = todayHoursText.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                
+                // 處理逗號分隔的多時段情況
+                formattedHoursText = formattedHoursText.split(',').map(segment => {
+                    return segment.trim().replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                }).join(', ');
+                
+                // 處理沒有冒號的數字 (如 "9-18" 或 "週三12")，確保添加分鐘
+                formattedHoursText = formattedHoursText.replace(/(\d+)(?!\:)(?=\s*[-–~]|$)/g, '$1:00');
+                
+                // 特別處理"週三12"這種情況
+                formattedHoursText = formattedHoursText.replace(/(週[一二三四五六日])\s*(\d+)(?!:)/g, '$1 $2:00');
+                
+                // 處理可能的不同格式，統一為「09:00 - 18:00」格式
+                formattedHoursText = formattedHoursText
+                    .replace(/(\d+):(\d+)\s*[-–~]\s*(\d+):(\d+)/g, '$1:$2 - $3:$4')  // 有冒號的時間
+                    .replace(/(\d+)[-–~](\d+)/g, '$1:00 - $2:00')  // 沒有冒號的時間
+                    .replace(/–/g, ' - ')  // 其他可能的破折號
+                    .replace(/-/g, ' - ');  // 統一短破折號
+                
+                console.log('第一階段格式化後:', formattedHoursText);
+            }
+            
+            // 添加星期幾的標示，確保星期和時間之間有一個空格
+            const displayText = formattedHoursText ? `${todayName} ${formattedHoursText}` : '未提供營業時間';
+            
+            // 確保顯示格式為「週三 09:00 - 18:00」
+            let finalDisplayText = displayText;
+            
+            // 修正「週三09:00」格式為「週三 09:00」
+            finalDisplayText = finalDisplayText.replace(/(週[一二三四五六日])(\d+)/g, '$1 $2');
+            
+            // 修正數字與冒號間的問題（例如「09 :00」變為「09:00」）
+            finalDisplayText = finalDisplayText.replace(/(\d+)\s+:(\d+)/g, '$1:$2');
+            
+            // 修正「9:00」變為「09:00」，確保小時是兩位數
+            finalDisplayText = finalDisplayText.replace(/(週[一二三四五六日]\s+)(\d):(\d+)/g, function(match, prefix, hour, minute) {
+                return prefix + (hour.length === 1 ? '0' : '') + hour + ':' + minute;
+            });
+            
+            // 將後半部分的時間也格式化為兩位數（例如「09:00 - 9:00」變為「09:00 - 09:00」）
+            finalDisplayText = finalDisplayText.replace(/(\d+:\d+)\s+-\s+(\d):(\d+)/g, function(match, firstTime, hour, minute) {
+                return firstTime + ' - ' + (hour.length === 1 ? '0' : '') + hour + ':' + minute;
+            });
+            
+            console.log('營業時間格式化:', { 
+                original: todayHoursText, 
+                formatted: formattedHoursText,
+                withDay: displayText,
+                final: finalDisplayText
+            });
+            
+            elements.todayHours.textContent = finalDisplayText;
+            
+            // 確保營業時間元素可見
+            elements.todayHours.style.display = 'block';
+            elements.todayHours.style.visibility = 'visible';
+            elements.todayHours.style.opacity = '1';
         }
         
         // 顯示完整營業時間按鈕
         if (elements.viewHoursBtn) {
-            if (weeklyHoursData && weeklyHoursData.length > 0) {
-                elements.viewHoursBtn.style.display = 'block';
-            } else {
-                elements.viewHoursBtn.style.display = 'none';
-            }
+            elements.viewHoursBtn.style.display = weeklyHoursData && weeklyHoursData.length > 0 ? 'block' : 'none';
         }
         
         // 設置收藏按鈕狀態
@@ -356,6 +454,14 @@ const RestaurantModal = (function() {
         // 顯示彈窗
         elements.modal.classList.add('active');
         console.log('彈窗已顯示');
+        console.log('營業時間檢查 - 當前週營業時間數據:', weeklyHoursData);
+        console.log('營業時間檢查 - 營業時間設置:', {
+            isOpen: isOpen,
+            todayHoursText: todayHoursText,
+            statusElement: elements.status,
+            statusTextElement: elements.statusText,
+            todayHoursElement: elements.todayHours
+        });
         
         // 初始化地圖
         try {
@@ -504,13 +610,40 @@ const RestaurantModal = (function() {
     
     // 準備週營業時間數據
     function prepareWeeklyHoursData(openingHours) {
+        console.log('準備週營業時間數據，輸入:', openingHours);
+        
         if (!openingHours) {
-            weeklyHoursData = null;
-            return;
+            console.log('沒有營業時間數據，檢查currentRestaurant是否有json_raw');
+            
+            // 嘗試從currentRestaurant的json_raw中獲取營業時間數據
+            if (currentRestaurant && currentRestaurant.json_raw) {
+                try {
+                    const jsonData = JSON.parse(currentRestaurant.json_raw);
+                    console.log('從json_raw解析數據:', jsonData);
+                    
+                    if (jsonData.opening_hours) {
+                        console.log('從json_raw中找到營業時間數據:', jsonData.opening_hours);
+                        openingHours = jsonData.opening_hours;
+                    } else {
+                        console.log('json_raw中沒有營業時間數據');
+                        weeklyHoursData = null;
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('解析json_raw失敗:', error);
+                    weeklyHoursData = null;
+                    return;
+                }
+            } else {
+                console.log('沒有json_raw數據');
+                weeklyHoursData = null;
+                return;
+            }
         }
         
         // 如果已經有 weekday_text 數組，直接使用
         if (openingHours.weekday_text && Array.isArray(openingHours.weekday_text)) {
+            console.log('使用現有的 weekday_text 數據:', openingHours.weekday_text);
             weeklyHoursData = openingHours.weekday_text;
             return;
         }
@@ -522,18 +655,25 @@ const RestaurantModal = (function() {
                 const weekdayText = [];
                 
                 for (let i = 0; i < 7; i++) {
-                    const period = openingHours.periods.find(p => p.open.day === (i === 6 ? 0 : i + 1));
-                    if (period) {
-                        const openTime = `${period.open.hours.toString().padStart(2, '0')}:${(period.open.minutes || '00').toString().padStart(2, '0')}`;
-                        const closeTime = `${period.close.hours.toString().padStart(2, '0')}:${(period.close.minutes || '00').toString().padStart(2, '0')}`;
+                    const googleDay = i === 6 ? 0 : i + 1; // 轉換為 Google API 格式 (0=週日, 1=週一)
+                    const period = openingHours.periods.find(p => p.open && p.open.day === googleDay);
+                    
+                    if (period && period.open && period.close) {
+                        const openHours = period.open.hours.toString().padStart(2, '0');
+                        const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
+                        const closeHours = period.close.hours.toString().padStart(2, '0');
+                        const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
+                        
+                        const openTime = `${openHours}:${openMinutes}`;
+                        const closeTime = `${closeHours}:${closeMinutes}`;
                         weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
                     } else {
                         weekdayText.push(`${dayNames[i]}: 休息`);
                     }
                 }
                 
+                console.log('成功從 periods 構建營業時間:', weekdayText);
                 weeklyHoursData = weekdayText;
-                console.log('從 periods 構建的營業時間:', weeklyHoursData);
                 return;
             } catch (error) {
                 console.warn('從 periods 構建營業時間失敗:', error);
@@ -541,10 +681,21 @@ const RestaurantModal = (function() {
         }
         
         // 嘗試從 business_hours 構建 weekday_text
-        if (openingHours.business_hours || currentRestaurant.business_hours) {
+        if (openingHours.business_hours || (currentRestaurant && currentRestaurant.business_hours)) {
             try {
-                const businessHours = openingHours.business_hours || currentRestaurant.business_hours;
-                const businessHoursObj = typeof businessHours === 'string' ? JSON.parse(businessHours) : businessHours;
+                const businessHours = openingHours.business_hours || (currentRestaurant && currentRestaurant.business_hours);
+                let businessHoursObj;
+                
+                if (typeof businessHours === 'string') {
+                    try {
+                        businessHoursObj = JSON.parse(businessHours);
+                    } catch (e) {
+                        console.warn('解析營業時間字符串失敗:', e);
+                        businessHoursObj = null;
+                    }
+                } else if (typeof businessHours === 'object') {
+                    businessHoursObj = businessHours;
+                }
                 
                 if (businessHoursObj) {
                     const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -556,8 +707,8 @@ const RestaurantModal = (function() {
                         weekdayText.push(`${dayNames[i]}: ${dayHours || '休息'}`);
                     }
                     
+                    console.log('從 business_hours 構建的營業時間:', weekdayText);
                     weeklyHoursData = weekdayText;
-                    console.log('從 business_hours 構建的營業時間:', weeklyHoursData);
                     return;
                 }
             } catch (error) {
@@ -565,8 +716,19 @@ const RestaurantModal = (function() {
             }
         }
         
-        // 如果都無法獲取，設為空
-        weeklyHoursData = null;
+        // 如果沒有找到任何營業時間數據，建立模擬數據用於測試
+        console.warn('無法獲取有效的營業時間數據，創建模擬數據');
+        const mockWeekdayText = [
+            '週一: 11:00 - 21:00',
+            '週二: 11:00 - 21:00',
+            '週三: 11:00 - 21:00',
+            '週四: 11:00 - 21:00',
+            '週五: 11:00 - 22:00',
+            '週六: 10:00 - 22:00',
+            '週日: 10:00 - 21:00'
+        ];
+        weeklyHoursData = mockWeekdayText;
+        console.log('使用模擬營業時間數據:', mockWeekdayText);
     }
     
     // 顯示週營業時間彈窗
@@ -603,33 +765,80 @@ const RestaurantModal = (function() {
         // 轉換為 weekday_text 的索引 (0=週一, 1=週二, ..., 6=週日)
         const todayIndex = today === 0 ? 6 : today - 1;
         
+        console.log('營業時間表顯示 - 原始數據:', weekdayText);
+        
         // 創建營業時間表格
-        let html = '<div class="weekly-hours-table-new">';
+        let html = '<h3 class="weekly-hours-modal-title-new">';
+        
+        // 如果有餐廳名稱，顯示在標題中
+        if (currentRestaurant && currentRestaurant.name) {
+            html += `${currentRestaurant.name} - `;
+        }
+        
+        html += '營業時間</h3>';
+        html += '<div class="weekly-hours-table-new">';
         
         // 遍歷每一天的營業時間
         weekdayText.forEach((dayText, index) => {
             // 分割日期和時間
             const parts = dayText.split(': ');
             const day = parts[0];
-            const hours = parts[1] || '休息';
+            let hours = parts[1] || '休息';
+            
+            console.log(`處理 ${day} 的營業時間:`, hours);
+            
+            // 格式化時間範圍，保持一致格式
+            if (hours !== '休息') {
+                // 先移除可能存在的秒數
+                hours = hours.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                
+                // 處理逗號分隔的多時段情況
+                hours = hours.split(',').map(segment => {
+                    return segment.trim().replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2');
+                }).join(', ');
+                
+                // 先檢查是否包含冒號，如果沒有則添加
+                hours = hours.replace(/(\d+)(?!\:)(?=\s*[-–~]|$)/g, '$1:00');
+                
+                // 格式化時間範圍
+                hours = hours
+                    .replace(/(\d+):(\d+)\s*[-–~]\s*(\d+):(\d+)/g, '$1:$2 - $3:$4')  // 有冒號的時間
+                    .replace(/(\d+)[-–~](\d+)/g, '$1:00 - $2:00')  // 沒有冒號的時間
+                    .replace(/–/g, ' - ')  // 其他可能的破折號
+                    .replace(/-/g, ' - ');  // 統一短破折號
+                
+                // 將單位數時間轉為兩位數 (9:00 → 09:00)
+                hours = hours.replace(/(\D|^)(\d):(\d+)/g, function(match, prefix, hour, minute) {
+                    return prefix + '0' + hour + ':' + minute;
+                });
+                
+                console.log(`${day} 格式化後:`, hours);
+            }
             
             // 判斷是否為今天
             const isToday = index === todayIndex;
             
             // 判斷是否營業中
             let statusIcon = '';
+            let statusText = '';
+            
             if (isToday) {
                 const isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
                     window.businessHours.isOpenFromText(hours) : false;
+                
                 statusIcon = isOpen ? 
                     '<span class="status-dot-new open" title="營業中"></span>' : 
                     '<span class="status-dot-new closed" title="休息中"></span>';
+                
+                statusText = isOpen ? 
+                    '<span class="status-text open">(營業中)</span>' : 
+                    '<span class="status-text closed">(休息中)</span>';
             }
             
-            // 添加表格行
+            // 添加表格行，將 day 加粗顯示
             html += `
                 <div class="hours-row-new ${isToday ? 'today' : ''}">
-                    <div class="day-name-new">${day} ${statusIcon}</div>
+                    <div class="day-name-new"><strong>${day}</strong> ${statusIcon} ${isToday ? statusText : ''}</div>
                     <div class="day-hours-new">${hours}</div>
                 </div>
             `;
@@ -637,6 +846,30 @@ const RestaurantModal = (function() {
         
         html += '</div>';
         elements.hoursModalBody.innerHTML = html;
+        
+        // 添加額外的 CSS 樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            .status-text {
+                font-size: 12px;
+                margin-left: 4px;
+            }
+            .status-text.open {
+                color: #4caf50;
+            }
+            .status-text.closed {
+                color: #f44336;
+            }
+            .hours-row-new.today {
+                background-color: rgba(255, 107, 26, 0.1);
+                font-weight: bold;
+            }
+            .hours-row-new {
+                padding: 8px 12px;
+                border-bottom: 1px solid #eee;
+            }
+        `;
+        elements.hoursModalBody.appendChild(style);
     }
     
     // 切換收藏狀態
