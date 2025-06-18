@@ -1201,6 +1201,7 @@
 
     </div>
     </div>
+
     </div>
 
     <!-- 營業時間詳細彈窗 -->
@@ -1332,22 +1333,25 @@
                 if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
                     await window.favoriteSystem.initialize();
                 }
+
                 if (typeof RestaurantModal !== 'undefined' && typeof RestaurantModal.init === 'function') {
                     RestaurantModal.init();
+
                     if (!window.RestaurantModal) {
                         window.RestaurantModal = RestaurantModal;
                     }
                 } else {
                     console.error('RestaurantModal 未定義或缺少 init 方法');
                 }
-
                 // 初始化地圖和餐廳數據
 
                 window.mapInit = new MapInit();
                 await window.mapInit.init();
 
+
                 // 設置餐廳卡片點擊事件
                 setTimeout(setupCardClickEvents, 1000);
+
 
 
 
@@ -1369,10 +1373,8 @@
                             e.stopPropagation();
                             return;
                         }
-
-
-
                         if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
+
 
                             fetch(`${window.API_BASE_URL || 'http://localhost:8080/api'}/google-restaurants/${placeId}`)
                                 .then(response => response.json())
@@ -1390,12 +1392,8 @@
                     });
                 }
             });
-
         }
-
-
         document.addEventListener('DOMContentLoaded', function () {
-
             initializeServices().then(() => {
 
             }).catch(error => {
@@ -1417,6 +1415,7 @@
     <script src="js/restaurantCategory.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
 
             if (window.RestaurantCategory) {
                 const category = new window.RestaurantCategory();
