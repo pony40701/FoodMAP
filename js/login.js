@@ -143,6 +143,14 @@ function initLogin() {
                         loginElements.loginModal.style.display = 'none';
                     }
                     
+                    // 初始化通知服務
+                    if (window.NotificationService && typeof window.NotificationService.initialize === 'function') {
+                        console.log('初始化通知服務');
+                        window.NotificationService.initialize();
+                    } else {
+                        console.warn('找不到 NotificationService 或 initialize 方法');
+                    }
+                    
                     // 顯示成功訊息
                     window.showToast('登入成功！');
                 } else {
@@ -485,6 +493,24 @@ function handleLoginSuccess(userData) {
         }
     }
     
+    // 初始化通知服務並立即顯示通知徽章
+    if (window.NotificationService) {
+        console.log('初始化通知服務');
+        window.NotificationService.initialize();
+        
+        // 立即顯示通知徽章 (測試用)
+        setTimeout(() => {
+            // 直接顯示頭像上的通知徽章
+            const avatarBadge = document.getElementById('avatar-notification-badge');
+            if (avatarBadge) {
+                avatarBadge.style.display = 'flex';
+                console.log('登入後顯示通知徽章');
+            }
+        }, 500);
+    } else {
+        console.warn('找不到 NotificationService');
+    }
+    
     // 顯示登入成功訊息
     window.showToast('登入成功！');
     
@@ -499,9 +525,44 @@ function handleLoginSuccess(userData) {
 
 // 將登入模組掛載到全局 window 物件
 window.login = {
-    // ... existing code ...
-
-    // ... existing code ...
-
-    // ... existing code ...
+    initLogin: initLogin,
+    checkLoginStatus: checkLoginStatus,
+    handleLoginSuccess: handleLoginSuccess,
+    logout: window.logout,
+    
+    // 測試通知徽章功能
+    testNotificationBadge: function() {
+        console.log('測試通知徽章功能');
+        
+        // 設置調試模式
+        localStorage.setItem('debugMode', 'true');
+        localStorage.setItem('debugShowNotification', 'true');
+        
+        // 如果通知服務已初始化，則立即顯示測試通知
+        if (window.NotificationService && window.NotificationService.initialized) {
+            window.NotificationService.showTestNotification();
+        } else {
+            console.log('通知服務未初始化，嘗試初始化...');
+            if (window.NotificationService) {
+                window.NotificationService.initialize();
+            } else {
+                console.error('找不到通知服務模組');
+            }
+        }
+    }
 };
+
+// 頁面載入完成後，如果已登入且有未讀通知標記，則顯示通知徽章
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        if (localStorage.getItem('isLoggedIn') === 'true' && 
+            localStorage.getItem('hasUnreadNotifications') === 'true') {
+            // 確保通知徽章顯示
+            const avatarBadge = document.getElementById('avatar-notification-badge');
+            if (avatarBadge) {
+                avatarBadge.style.display = 'flex';
+                console.log('從本地存儲恢復通知徽章顯示');
+            }
+        }
+    }, 1500); // 延遲一點時間，確保DOM已完全載入
+});
