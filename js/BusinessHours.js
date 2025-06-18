@@ -10,14 +10,15 @@ class BusinessHours {
     /**
      * 強制設置當前是星期幾，用於測試
      * @param {number} day - 星期幾 (0-6，0=星期日)
+     * 
      */
     forceDay(day) {
         if (day >= 0 && day <= 6) {
             this.forcedDay = day;
-            console.log(`[BusinessHours] 已強制設置當前為星期${['日', '一', '二', '三', '四', '五', '六'][day]}`);
+           
         } else {
             this.forcedDay = null;
-            console.log('[BusinessHours] 已取消強制設置日期');
+            
         }
     }
 
@@ -67,29 +68,9 @@ class BusinessHours {
         let endMin = this.parseTimeToMinutes(closeTime);
         const nowMin = this.getCurrentMinutes();
 
-        // 調試信息
-        if (this.DEBUG) {
-            console.log('[BusinessHours] 營業時間判斷:', {
-                openTime,
-                closeTime,
-                startMin,
-                endMin,
-                nowMin,
-                currentTime: new Date().toLocaleTimeString()
-            });
-        }
-
         // 處理跨日營業的情況 (結束時間小於開始時間，表示跨日)
         if (endMin < startMin) {
             endMin += 24 * 60; // 將結束時間加上24小時
-            
-            if (this.DEBUG) {
-                console.log('[BusinessHours] 跨日營業檢測:', {
-                    adjustedEndMin: endMin,
-                    condition: `${startMin} <= ${nowMin} 或 ${nowMin} <= ${endMin - 24 * 60}`
-                });
-            }
-
             // 跨日營業有兩種情況：
             // 1. 現在時間 >= 開始時間 (今天的營業時段)
             // 2. 現在時間 <= 結束時間 (隔天的營業時段，需要調整結束時間)
@@ -98,14 +79,6 @@ class BusinessHours {
 
         // 一般營業時間判斷
         const isOpen = nowMin >= startMin && nowMin <= endMin;
-        
-        if (this.DEBUG) {
-            console.log('[BusinessHours] 一般營業時間判斷:', {
-                isOpen,
-                condition: `${startMin} <= ${nowMin} <= ${endMin}`
-            });
-        }
-
         return isOpen;
     }
 
@@ -128,17 +101,7 @@ class BusinessHours {
             return false;
         }
 
-        // 調試信息
-        if (this.DEBUG) {
-            console.log('[BusinessHours] 解析營業時間:', {
-                original: businessHoursText,
-                normalized: normalizedText,
-                currentTime: new Date().toLocaleTimeString()
-            });
-        }
-
         const periods = normalizedText.split(',').map(p => p.trim());
-        
         // 檢查每個營業時段
         for (const period of periods) {
             const timeRange = period.match(/(\d{1,2}(?::\d{2})?)\s*[-–]\s*(\d{1,2}(?::\d{2})?)/);
@@ -147,20 +110,11 @@ class BusinessHours {
                 // 確保時間格式正確（添加分鐘如果沒有）
                 const startTime = start.includes(':') ? start : `${start}:00`;
                 const endTime = end.includes(':') ? end : `${end}:00`;
-                
-                if (this.DEBUG) {
-                    console.log('[BusinessHours] 檢查時段:', {
-                        start: startTime,
-                        end: endTime
-                    });
-                }
-
                 if (this.isOpenNow(startTime, endTime)) {
                     return true;
                 }
             }
         }
-
         return false;
     }
 
@@ -187,27 +141,12 @@ class BusinessHours {
         const today = this.getCurrentDay();
         // 轉換星期幾的索引 (API中 0=週一, 6=週日)
         const index = today === 0 ? 6 : today - 1;
-        
         const todayText = weekdayText[index];
         if (!todayText) return null;
-
         // 分割日期和時間，只返回時間部分
         const timePart = todayText.split(/：|:/)[1]?.trim();
-        
         // 移除可能存在的秒數
         const timePartWithoutSeconds = timePart ? timePart.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2') : null;
-        
-        // 調試信息
-        if (this.DEBUG) {
-            console.log('[BusinessHours] 獲取今日營業時間:', {
-                today,
-                index,
-                todayText,
-                timePart,
-                timePartWithoutSeconds
-            });
-        }
-        
         return timePartWithoutSeconds || timePart || null;
     }
 }

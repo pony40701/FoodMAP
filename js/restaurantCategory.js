@@ -25,7 +25,7 @@ class RestaurantCategory {
 
         // 新增橫向排列的外層
         container.innerHTML = `
-            <div class="food-types-row" style="display: flex; flex-wrap: wrap; gap: 16px; overflow-x: auto; padding: 8px 0;">
+            <div class="food-types-row" style="display: flex; flex-wrap: wrap; gap: 16px; overflow-x: auto; padding: 8px 0;justify-content: center; align-items: center">
                 ${this.categories.map(category => `
                     <div class="food-type-item" data-type="${category.type}" data-name="${category.name}" style="display: flex; flex-direction: column; align-items: center; min-width: 72px; cursor: pointer;">
                         <div class="emoji-circle" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: #fff6ee; border-radius: 50%; box-shadow: 0 2px 8px rgba(255,107,26,0.08); margin-bottom: 4px;">${category.icon}</div>

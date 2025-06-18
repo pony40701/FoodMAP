@@ -46,7 +46,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 初始化地圖
         window.mapInit = await new MapInit().init();
     } catch (error) {
-        console.error('初始化失敗:', error);
         showToast('初始化失敗，請重新整理頁面');
     }
 });
@@ -55,14 +54,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 // 餐廳列表顯示
 // ===========================================
 async function createRestaurantCard(restaurant) {
-    // 添加調試信息
-    console.log('創建餐廳卡片:', {
-        restaurant: restaurant,
-        id: restaurant.id || restaurant.place_id,
-        place_id: restaurant.place_id,
-        name: restaurant.name
-    });
-
     const card = document.createElement('div');
     card.className = 'restaurant-card v3';
     
@@ -70,18 +61,13 @@ async function createRestaurantCard(restaurant) {
     const restaurantId = restaurant.place_id || restaurant.id;
     
     if (!restaurantId) {
-        console.error('找不到餐廳ID，無法創建收藏按鈕:', restaurant);
+        return card;
     }
     
     // 從 json_raw 解析數據
     if (restaurant.json_raw) {
         try {
             const jsonData = JSON.parse(restaurant.json_raw);
-            console.log('成功解析 json_raw 數據:', restaurant.name, {
-                rating: jsonData.rating,
-                user_ratings_total: jsonData.user_ratings_total,
-                opening_hours: jsonData.opening_hours
-            });
             
             // 從 JSON 數據中提取評分、評論數
             if (jsonData.rating) {
@@ -91,9 +77,6 @@ async function createRestaurantCard(restaurant) {
             if (jsonData.user_ratings_total) {
                 restaurant.user_ratings_total = jsonData.user_ratings_total;
                 restaurant.reviewCount = jsonData.user_ratings_total;
-                console.log(`設置 ${restaurant.name} 的評論數為: ${jsonData.user_ratings_total}`);
-            } else {
-                console.log(`警告: ${restaurant.name} 沒有 user_ratings_total 欄位`);
             }
             
             // 提取營業時間
@@ -101,7 +84,6 @@ async function createRestaurantCard(restaurant) {
                 restaurant.opening_hours = jsonData.opening_hours;
             }
         } catch (error) {
-            console.error('解析 json_raw 失敗:', error);
         }
     }
     
@@ -125,15 +107,6 @@ async function createRestaurantCard(restaurant) {
                     isOpen = window.businessHours.isOpenFromText(timeStr);
                     const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][today];
                     todayHours = `<span class='status-hours'><i class='fas fa-clock'></i> ${dayName} ${timeStr}</span>`;
-                    
-                    // 調試信息
-                    console.log('營業時間判斷:', {
-                        restaurantName: restaurant.name,
-                        todayFullText: todayText,
-                        extractedTime: timeStr,
-                        isOpen: isOpen,
-                        currentTime: new Date().toLocaleTimeString()
-                    });
                 }
             }
         } else if (restaurant.opening_hours.periods) {
@@ -162,9 +135,7 @@ async function createRestaurantCard(restaurant) {
                 await window.favoriteSystem.initialize();
             }
             isFavorited = await window.favoriteSystem.isStoreFavorited(restaurantId);
-            console.log(`餐廳 ${restaurant.name} (ID: ${restaurantId}) 收藏狀態:`, isFavorited);
         } catch (error) {
-            console.error('檢查收藏狀態失敗:', error);
         }
     }
     
@@ -228,8 +199,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
         window.displayedRestaurants = new Set();
     }
     
-    console.log(`準備處理 ${restaurants.length} 間餐廳`);
-    
     // 使用 Set 來追蹤已顯示的餐廳
     const uniqueRestaurants = [];
     for (const restaurant of restaurants) {
@@ -238,7 +207,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
         
         // 檢查是否已經顯示過這家餐廳
         if (window.displayedRestaurants.has(restaurantId)) {
-            console.log(`跳過重複餐廳: ${restaurant.name} (${restaurantId})`);
             continue;
         }
         
@@ -246,8 +214,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
         window.displayedRestaurants.add(restaurantId);
         uniqueRestaurants.push(restaurant);
     }
-    
-    console.log(`過濾後剩餘 ${uniqueRestaurants.length} 間不重複餐廳`);
     
     // 檢查收藏狀態並排序
     const restaurantsWithFavoriteStatus = await Promise.all(
@@ -262,7 +228,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
                     }
                     isFavorited = await window.favoriteSystem.isStoreFavorited(restaurantId);
                 } catch (error) {
-                    console.error('檢查收藏狀態失敗:', error);
                 }
             }
             
@@ -291,7 +256,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
             if (window.mapInit && typeof window.mapInit.showRestaurantDetail === 'function') {
                 window.mapInit.showRestaurantDetail(restaurant);
             } else {
-                console.error('找不到 showRestaurantDetail 函數');
                 showToast('無法顯示餐廳詳情，請重新整理頁面');
             }
         });
@@ -314,7 +278,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
             const name = this.getAttribute('data-name');
             
             if (!placeId) {
-                console.error('找不到餐廳ID');
                 showToast('無法識別餐廳，請重新整理頁面');
                 return;
             }
@@ -336,7 +299,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
             
             // 檢查收藏系統是否已初始化
             if (!window.favoriteSystem || !window.favoriteSystem.initialized) {
-                console.error('收藏系統未初始化');
                 showToast('收藏系統初始化失敗，請重新整理頁面');
                 return;
             }
@@ -352,7 +314,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
                         this.querySelector('i').classList.replace('fas', 'far');
                         this.classList.remove('active');
                         showToast('已取消收藏');
-                        console.log(`已取消收藏餐廳 (ID: ${placeId})`);
                     } else {
                         showToast('取消收藏失敗，請稍後再試');
                     }
@@ -366,14 +327,12 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
                         const imgElement = restCard.querySelector('img');
                         if (imgElement && imgElement.src) {
                             photos = imgElement.src;
-                            console.log(`找到商家圖片: ${photos}`);
                         }
                     }
                     
                     // 嘗試從彈窗中獲取圖片
                     if (!photos && window.currentSelectedRestaurant && window.currentSelectedRestaurant.photos) {
                         photos = window.currentSelectedRestaurant.photos;
-                        console.log(`從詳情彈窗獲取圖片: ${photos}`);
                     }
                     
                     const storeData = {
@@ -388,7 +347,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
                         this.querySelector('i').classList.replace('far', 'fas');
                         this.classList.add('active');
                         showToast('已加入收藏');
-                        console.log(`已收藏餐廳 (ID: ${placeId})`);
                     } else {
                         showToast('加入收藏失敗，請稍後再試');
                     }
@@ -399,7 +357,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
                     window.favoriteButton.updateAllButtonsWithSameId(placeId);
                 }
             } catch (error) {
-                console.error('收藏操作失敗:', error);
                 showToast('收藏操作失敗，請稍後再試');
             }
         });
@@ -417,8 +374,6 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
         `;
         container.appendChild(loadingElement);
     }
-    
-    console.log(`完成顯示 ${restaurantsWithFavoriteStatus.length} 間餐廳`);
 };
 
 // 生成星級評分
@@ -475,7 +430,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 設置今天是星期五，用於測試
         if (window.businessHours) {
             window.businessHours.forceDay(5); // 5 = 星期五
-            console.log('已設置今天是星期五，用於測試');
         }
         
         // 初始化輪播
@@ -483,7 +437,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // 初始化收藏系統
         if (!window.favoriteSystem) {
-            console.log('初始化收藏系統');
             await window.favoriteSystem.initialize();
         }
         
@@ -492,7 +445,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await window.favoriteButton.initialize();
         }
     } catch (error) {
-        console.error('初始化頁面時發生錯誤:', error);
         showToast('初始化失敗，請重新整理頁面');
     }
     
@@ -578,7 +530,6 @@ function initLoginModal() {
     const loginForm = document.getElementById('loginForm');
     
     if (!loginModal || !closeBtn || !loginForm) {
-        console.error('找不到登入彈窗相關元素');
         return;
     }
     
@@ -593,8 +544,6 @@ function initLoginModal() {
             loginModal.style.display = 'none';
         }
     });
-    
-    console.log('登入彈窗初始化完成');
 }
 
 // 檢查 URL 參數，處理從其他頁面跳轉過來的餐廳詳情請求
@@ -603,28 +552,22 @@ function checkUrlParameters() {
     const showRestaurantId = urlParams.get('showRestaurant');
     
     if (showRestaurantId) {
-        console.log('檢測到 showRestaurant 參數:', showRestaurantId);
-        
         // 嘗試從 sessionStorage 獲取餐廳數據
         try {
             const restaurantData = JSON.parse(sessionStorage.getItem('selectedRestaurant'));
-            console.log('從 sessionStorage 獲取的餐廳數據:', restaurantData);
             
             if (restaurantData && (restaurantData.place_id === showRestaurantId || restaurantData.id === showRestaurantId)) {
                 // 等待地圖初始化完成
                 setTimeout(() => {
                     if (window.mapInit) {
-                        console.log('使用 mapInit 顯示餐廳詳情');
                         window.mapInit.showRestaurantDetail(restaurantData);
                     } else {
-                        console.log('嘗試初始化 MapInit');
                         // 嘗試初始化 mapInit
                         const mapInitInstance = new MapInit();
                         mapInitInstance.init().then(() => {
                             window.mapInit = mapInitInstance;
                             window.mapInit.showRestaurantDetail(restaurantData);
                         }).catch(error => {
-                            console.error('初始化 MapInit 失敗:', error);
                         });
                     }
                 }, 1000); // 給地圖加載一些時間
@@ -632,18 +575,14 @@ function checkUrlParameters() {
                 // 清除 sessionStorage 中的數據
                 sessionStorage.removeItem('selectedRestaurant');
             } else {
-                console.warn('sessionStorage 中的餐廳 ID 與 URL 參數不匹配');
             }
         } catch (error) {
-            console.error('解析 sessionStorage 餐廳數據時出錯:', error);
         }
     }
 }
 
 // 頁面載入完成後執行
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('頁面已載入，初始化應用程式...');
-    
     // 初始化輪播圖
     initCarousel();
     
@@ -652,15 +591,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 載入所有餐廳資料
     loadAllRestaurants();
-    
-    // 其他初始化...
 });
 
 // 載入所有餐廳資料
 async function loadAllRestaurants() {
     try {
-        console.log('開始載入所有餐廳資料...');
-        
         // 顯示載入中提示
         const resultsTitle = document.getElementById('results-title');
         if (resultsTitle) {
@@ -691,7 +626,6 @@ async function loadAllRestaurants() {
 
         // 從 API 獲取資料
         const apiUrl = 'http://localhost:8080/api/google-restaurants/all';
-        console.log('發送 API 請求到:', apiUrl);
         
         const response = await fetch(apiUrl, {
             method: 'GET',
@@ -722,15 +656,6 @@ async function loadAllRestaurants() {
                 duplicates.get(id).push(item);
             }
         });
-        
-        console.log('API 回傳資料分析：');
-        console.log(`總資料筆數: ${rawData.length}`);
-        console.log(`不重複 ID 數量: ${idCounts.size}`);
-        console.log('重複項分析：');
-        duplicates.forEach((items, id) => {
-            console.log(`ID ${id} 出現 ${items.length + 1} 次：`);
-            console.log('重複項資料：', items);
-        });
 
         // 使用 Map 進行徹底去重
         const restaurantMap = new Map();
@@ -739,7 +664,6 @@ async function loadAllRestaurants() {
         for (const item of rawData) {
             const id = item.place_id || item.id;
             if (!id) {
-                console.warn('發現無效餐廳資料:', item);
                 continue;
             }
 
@@ -747,17 +671,10 @@ async function loadAllRestaurants() {
                 const existing = restaurantMap.get(id);
                 const merged = mergeRestaurantData(existing, item);
                 restaurantMap.set(id, merged);
-                console.log(`合併餐廳資料: ${id}`, {
-                    existing: existing,
-                    new: item,
-                    merged: merged
-                });
             } else {
                 restaurantMap.set(id, item);
             }
         }
-
-        console.log(`第一階段去重後剩餘: ${restaurantMap.size} 間餐廳`);
 
         // 處理 json_raw 並標準化資料
         const processedRestaurants = [];
@@ -768,25 +685,8 @@ async function loadAllRestaurants() {
                     processedRestaurants.push(processed);
                 }
             } catch (error) {
-                console.error(`處理餐廳資料失敗 (${id}):`, error);
+                // 處理餐廳資料失敗
             }
-        }
-
-        console.log(`資料處理完成，準備顯示 ${processedRestaurants.length} 間餐廳`);
-        
-        // 最後檢查處理後的資料是否還有重複
-        const finalCheck = new Set();
-        const finalDuplicates = [];
-        processedRestaurants.forEach(restaurant => {
-            const id = restaurant.place_id || restaurant.id;
-            if (finalCheck.has(id)) {
-                finalDuplicates.push(restaurant);
-            }
-            finalCheck.add(id);
-        });
-        
-        if (finalDuplicates.length > 0) {
-            console.error('警告：處理後的資料中仍有重複項：', finalDuplicates);
         }
 
         // 更新結果標題
@@ -798,12 +698,10 @@ async function loadAllRestaurants() {
         if (window.displayRestaurants) {
             await window.displayRestaurants(processedRestaurants, true);
         } else {
-            console.error('找不到 displayRestaurants 函數');
             container.innerHTML = '<div class="no-results">顯示餐廳失敗，請重新整理頁面</div>';
         }
 
     } catch (error) {
-        console.error('載入餐廳資料失敗:', error);
         const container = document.getElementById('restaurants-container');
         if (container) {
             container.innerHTML = '<div class="no-results">載入餐廳資料失敗，請稍後再試</div>';
@@ -851,7 +749,6 @@ async function processRestaurantData(restaurant) {
                 // 合併 json_raw 中的資料
                 processedData = { ...processedData, ...jsonData };
             } catch (error) {
-                console.warn(`解析 json_raw 失敗 (${restaurant.place_id || restaurant.id}):`, error);
             }
         }
 
@@ -868,14 +765,12 @@ async function processRestaurantData(restaurant) {
                 try {
                     processedData.opening_hours = JSON.parse(processedData.opening_hours);
                 } catch (error) {
-                    console.warn(`解析營業時間失敗 (${processedData.id}):`, error);
                 }
             }
         }
 
         return processedData;
     } catch (error) {
-        console.error('處理餐廳資料時發生錯誤:', error);
         return null;
     }
 }
