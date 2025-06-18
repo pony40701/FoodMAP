@@ -15,13 +15,14 @@ public class RestaurantListDTO {
 	private String photoUrl;
 	private Double latitude;
 	private Double longitude;
+	private String openingHours;
 	
 	public RestaurantListDTO() {}
 	
 	public RestaurantListDTO(String name, String address,
 			Double averageRating, Integer reviewCount, String placeId,
 			Timestamp createdAt, String description, String types, String photoUrl,
-			Double latitude, Double longitude) {
+			Double latitude, Double longitude, String openingHours) {
 				this.name = name;
 				this.address = address;
 				this.averageRating = averageRating;
@@ -33,6 +34,7 @@ public class RestaurantListDTO {
 				this.photoUrl = photoUrl;
 				this.latitude = latitude;
 				this.longitude = longitude;
+				this.openingHours = openingHours;
 	}
 
 	public Timestamp getCreatedAt() {
@@ -121,5 +123,13 @@ public class RestaurantListDTO {
 
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
+	}
+
+	public String getOpeningHours() {
+		return openingHours;
+	}
+
+	public void setOpeningHours(String openingHours) {
+		this.openingHours = openingHours;
 	}
 }
