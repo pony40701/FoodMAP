@@ -146,19 +146,12 @@
 							<div class="info-item">
 								<label>營業時間</label>
 								<p class="view-mode"></p>
-								<textarea class="edit-mode"></textarea>
+								<input type="text" class="edit-mode" value="">
 							</div>
 							<div class="info-item">
 								<label>餐廳類型</label>
 								<p class="view-mode"></p>
-								<select class="edit-mode">
-									<option value="">請選擇</option>
-									<option value="中式料理">中式料理</option>
-									<option value="日式料理">日式料理</option>
-									<option value="西式料理">西式料理</option>
-									<option value="甜點飲品">甜點飲品</option>
-									<option value="其他">其他</option>
-								</select>
+								<input type="text" class="edit-mode" value="">
 							</div>
 							<div class="info-item">
 								<label>付款方式</label>
@@ -170,7 +163,7 @@
 
 					<div class="info-section">
 						<div class="section-header">
-							<h2>餐廳簡介</h2>
+							<h2>餐廳資訊</h2>
 							<div class="button-group">
 								<button type="button" class="edit-button" onclick="toggleEditMode('description-info')">
 									<i class="fas fa-edit"></i>
@@ -188,9 +181,12 @@
 								</div>
 							</div>
 						</div>
-						<div class="info-content" id="description-info">
-							<p class="view-mode"></p>
-							<textarea class="edit-mode"></textarea>
+						<div class="info-grid" id="description-info">
+							<div class="info-item">
+								<label>餐廳簡介</label>
+								<p class="view-mode"></p>
+								<input type="text" class="edit-mode" value="">
+							</div>
 						</div>
 					</div>
 
