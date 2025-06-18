@@ -1679,3 +1679,23 @@ body {
         border-radius: 8px;
     }
 }
+
+/* 營業狀態樣式 */
+.open-status {
+  background: #27ae60;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 16px;
+}
+.closed-status {
+  background: #e74c3c;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 16px;
+}

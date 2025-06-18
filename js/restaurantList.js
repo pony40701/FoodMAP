@@ -98,7 +98,6 @@ function updateMapMarkers(restaurants) {
             <div style="padding: 8px; min-width: 200px;">
                 <h3 style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${restaurant.name}</h3>
                 <p style="margin: 0; color: #666; font-size: 12px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
-                <p style="margin: 4px 0; color: #666; font-size: 12px;">${restaurant.types || ''}</p>
                 <div style="margin-top: 8px; color: #d32323; font-size: 11px; cursor: pointer;">
                     點擊查看詳細資訊 →
                 </div>
@@ -198,19 +197,47 @@ function debounce(func, wait) {
   };
 }
 
-// 即時搜尋功能
-function handleSearchInput() {
-  const foodSearch = document.getElementById("food-search").value.toLowerCase();
-  const locationSearch = document.getElementById("location-search").value.toLowerCase();
+// 將 handleSearch 函數移到文件頂部，確保它在被調用前已定義
+function handleSearch() {
+  console.log('Search function triggered');
+
+  const foodSearchInput = document.getElementById("food-search");
+  const locationSearchInput = document.getElementById("location-search");
+  
+  if (!foodSearchInput || !locationSearchInput) {
+    console.error('Search inputs not found');
+    return;
+  }
+
+  const foodSearch = (foodSearchInput.value || '').toLowerCase();
+  const locationSearch = (locationSearchInput.value || '').toLowerCase();
+  
+  console.log('Search terms:', { foodSearch, locationSearch });
 
   // 使用 currentDisplayedRestaurants 作為搜尋基礎
   let filtered = currentDisplayedRestaurants.filter(restaurant => {
+    if (!restaurant) return false;
+
     const matchesFood = restaurant.name.toLowerCase().includes(foodSearch) ||
-                       restaurant.tags.some(tag => tag.toLowerCase().includes(foodSearch)) ||
-                       restaurant.description.toLowerCase().includes(foodSearch);
-    const matchesLocation = restaurant.address.toLowerCase().includes(locationSearch);
+                       (restaurant.description && restaurant.description.toLowerCase().includes(foodSearch));
+    
+    const matchesLocation = restaurant.address && 
+                           restaurant.address.toLowerCase().includes(locationSearch);
+    
+    // 如果兩個搜尋框都為空，返回所有結果
+    if (!foodSearch && !locationSearch) return true;
+    
+    // 如果只有食物搜尋，只檢查食物相關
+    if (foodSearch && !locationSearch) return matchesFood;
+    
+    // 如果只有地點搜尋，只檢查地點相關
+    if (!foodSearch && locationSearch) return matchesLocation;
+    
+    // 如果兩個都有，則需要同時符合
     return matchesFood && matchesLocation;
   });
+
+  console.log('Filtered results:', filtered.length);
 
   // 儲存搜尋結果
   currentDisplayedRestaurants = filtered;
@@ -219,18 +246,12 @@ function handleSearchInput() {
   currentPage = 1;
   const pageData = currentDisplayedRestaurants.slice(0, pageSize);
   
-  // 使用淡出淡入效果更新餐廳列表
-  const restaurantList = document.querySelector('.restaurant-list');
-  if (restaurantList) {
-    // 淡出效果
-    restaurantList.style.opacity = '0';
-    restaurantList.style.transition = 'opacity 0.3s ease-in-out';
-    
-    setTimeout(() => {
-      renderFilteredCards(pageData, currentDisplayedRestaurants.length);
-      // 淡入效果
-      restaurantList.style.opacity = '1';
-    }, 300);
+  // 直接更新餐廳列表
+  const cardsContainer = document.getElementById('restaurant-cards');
+  if (cardsContainer) {
+    renderFilteredCards(pageData, currentDisplayedRestaurants.length);
+  } else {
+    console.error('Restaurant cards container not found!');
   }
 
   // 更新地圖標記
@@ -238,7 +259,7 @@ function handleSearchInput() {
 }
 
 // 使用防抖包裝搜尋函數
-const debouncedSearch = debounce(handleSearchInput, 300);
+const debouncedSearch = debounce(handleSearch, 300);
 
 // 添加事件監聽器
 document.addEventListener('DOMContentLoaded', function() {
@@ -474,13 +495,6 @@ function showRestaurantModal(restaurant) {
             </div>
           </div>
 
-          <!-- 標籤區域 -->
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            ${restaurant.tags.map(tag => 
-              `<span style="background: #f5f5f5; color: #666; padding: 6px 12px; border-radius: 20px; font-size: 14px;">${tag}</span>`
-            ).join("")}
-          </div>
-
           <!-- 價格範圍 -->
           <div style="color: #666; font-size: 15px;">
             <i class="fas fa-dollar-sign" style="color: #666; margin-right: 4px;"></i>
@@ -556,48 +570,49 @@ function renderFilteredCards(pageData, totalCount) {
   const cardsContainer = document.getElementById('restaurant-cards');
   if (!cardsContainer) return;
 
-  const cards = pageData.map(restaurant => `
-    <div class="restaurant-card yelp-style" style="display: flex; gap: 16px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); align-items: center; cursor: pointer;" 
-      onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
-      <div class="yelp-img-wrap" style="flex: 0 0 200px; height: 150px; overflow: hidden; border-radius: 4px;">
-        <img src="${restaurant.image}" alt="${restaurant.name}" class="yelp-image" style="width: 100%; height: 100%; object-fit: cover;" />
-      </div>
-      <div class="yelp-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-        <div class="yelp-row yelp-title-row">
-          <h3 class="yelp-name" style="font-size: 18px; font-weight: 600; margin: 0; line-height: 1.3;">
-            ${restaurant.name}
-          </h3>
-          ${restaurant.isVerified ? '<div style="color: #d32323; font-size: 13px; margin-top: 2px;">✓ 食力派</div>' : ''}
+  const cards = pageData.map(restaurant => {
+    // 在組裝卡片時，根據 isOpen 設定 class
+    const hoursStatusClass = restaurant.isOpen ? 'open-status' : 'closed-status';
+    return `
+      <div class="restaurant-card yelp-style" style="display: flex; gap: 16px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); align-items: center; cursor: pointer;" 
+        onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
+        <div class="yelp-img-wrap" style="flex: 0 0 200px; height: 150px; overflow: hidden; border-radius: 4px;">
+          <img src="${restaurant.image}" alt="${restaurant.name}" class="yelp-image" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
-        <div class="yelp-row yelp-rating-row" style="display: flex; align-items: center; gap: 4px;">
-          <span class="stars" style="color: #d32323; font-size: 14px;">${"★".repeat(Math.floor(restaurant.rating))}${restaurant.rating % 1 >= 0.5 ? "½" : ""}</span>
-          <span class="rating-text" style="color: #666; font-size: 13px;">${restaurant.rating} (${restaurant.ratingCount} 則評論)</span>
-        </div>
-        <div class="yelp-row yelp-tags-row" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${restaurant.tags.map(tag => `<span class="yelp-tag" style="background: #f5f5f5; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${tag}</span>`).join("")}
-        </div>
-        <div class="yelp-row yelp-price-row" style="display: flex; gap: 12px; align-items: center;">
-          <div style="color: #666; font-size: 13px; font-weight: 500; background: #f8f8f8; padding: 2px 8px; border-radius: 4px;">均消 ${restaurant.price}</div>
-          <div style="color: #666; font-size: 13px;">${restaurant.address}</div>
-        </div>
-        <div class="yelp-row yelp-review-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #eee;">
-          <div style="display: flex; gap: 8px; align-items: flex-start;">
-            <img src="${restaurant.reviewImage}" alt="評論照片" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;" />
-            <div style="flex: 1;">
-              <div style="font-size: 13px; margin-bottom: 2px;">
-                <span style="font-weight: 500;">${restaurant.reviewer}</span>
-                <span style="color: #666; margin-left: 6px;">${restaurant.rating} ★</span>
+        <div class="yelp-info" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div class="yelp-row yelp-title-row">
+            <h3 class="yelp-name" style="font-size: 18px; font-weight: 600; margin: 0; line-height: 1.3;">
+              ${restaurant.name}
+            </h3>
+            ${restaurant.isVerified ? '<div style="color: #d32323; font-size: 13px; margin-top: 2px;">✓ 食力派</div>' : ''}
+          </div>
+          <div class="yelp-row yelp-rating-row" style="display: flex; align-items: center; gap: 4px;">
+            <span class="stars" style="color: #d32323; font-size: 14px;">${"★".repeat(Math.floor(restaurant.rating))}${restaurant.rating % 1 >= 0.5 ? "½" : ""}</span>
+            <span class="rating-text" style="color: #666; font-size: 13px;">${restaurant.rating} (${restaurant.ratingCount} 則評論)</span>
+          </div>
+          <div class="yelp-row yelp-price-row" style="display: flex; gap: 12px; align-items: center;">
+            <div style="color: #666; font-size: 13px; font-weight: 500; background: #f8f8f8; padding: 2px 8px; border-radius: 4px;">均消 ${restaurant.price}</div>
+            <div style="color: #666; font-size: 13px;">${restaurant.address}</div>
+          </div>
+          <div class="yelp-row yelp-review-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #eee;">
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <img src="${restaurant.reviewImage}" alt="評論照片" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;" />
+              <div style="flex: 1;">
+                <div style="font-size: 13px; margin-bottom: 2px;">
+                  <span style="font-weight: 500;">${restaurant.reviewer}</span>
+                  <span style="color: #666; margin-left: 6px;">${restaurant.rating} ★</span>
+                </div>
+                <p style="font-size: 13px; color: #333; margin: 0; line-height: 1.4;">${restaurant.review}</p>
               </div>
-              <p style="font-size: 13px; color: #333; margin: 0; line-height: 1.4;">${restaurant.review}</p>
             </div>
           </div>
-        </div>
-        <div class="favorite-btn" data-id="${restaurant.id}">
-          <i class="far fa-heart"></i> <!-- 預設空心愛心 -->
+          <div class="favorite-btn" data-id="${restaurant.id}">
+            <i class="far fa-heart"></i> <!-- 預設空心愛心 -->
+          </div>
         </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   cardsContainer.innerHTML = `
     <div class="yelp-cards-list" style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
@@ -621,69 +636,6 @@ function renderFilteredCards(pageData, totalCount) {
 // 新增導航到詳情頁的函數
 function navigateToDetail(restaurantData) {
   window.location.href = `restaurantListDetail.html?data=${restaurantData}`;
-}
-
-// 將 handleSearch 函數移到文件頂部，確保它在被調用前已定義
-function handleSearch() {
-  console.log('Search function triggered');
-
-  const foodSearchInput = document.getElementById("food-search");
-  const locationSearchInput = document.getElementById("location-search");
-  
-  if (!foodSearchInput || !locationSearchInput) {
-    console.error('Search inputs not found');
-    return;
-  }
-
-  const foodSearch = (foodSearchInput.value || '').toLowerCase();
-  const locationSearch = (locationSearchInput.value || '').toLowerCase();
-  
-  console.log('Search terms:', { foodSearch, locationSearch });
-
-  // 使用 currentDisplayedRestaurants 作為搜尋基礎
-  let filtered = currentDisplayedRestaurants.filter(restaurant => {
-    if (!restaurant) return false;
-
-    const matchesFood = restaurant.name.toLowerCase().includes(foodSearch) ||
-                       (restaurant.tags && restaurant.tags.some(tag => 
-                         tag && tag.toLowerCase().includes(foodSearch))) ||
-                       (restaurant.description && restaurant.description.toLowerCase().includes(foodSearch));
-    
-    const matchesLocation = restaurant.address && 
-                           restaurant.address.toLowerCase().includes(locationSearch);
-    
-    // 如果兩個搜尋框都為空，返回所有結果
-    if (!foodSearch && !locationSearch) return true;
-    
-    // 如果只有食物搜尋，只檢查食物相關
-    if (foodSearch && !locationSearch) return matchesFood;
-    
-    // 如果只有地點搜尋，只檢查地點相關
-    if (!foodSearch && locationSearch) return matchesLocation;
-    
-    // 如果兩個都有，則需要同時符合
-    return matchesFood && matchesLocation;
-  });
-
-  console.log('Filtered results:', filtered.length);
-
-  // 儲存搜尋結果
-  currentDisplayedRestaurants = filtered;
-  
-  // 重置到第一頁
-  currentPage = 1;
-  const pageData = currentDisplayedRestaurants.slice(0, pageSize);
-  
-  // 直接更新餐廳列表
-  const cardsContainer = document.getElementById('restaurant-cards');
-  if (cardsContainer) {
-    renderFilteredCards(pageData, currentDisplayedRestaurants.length);
-  } else {
-    console.error('Restaurant cards container not found!');
-  }
-
-  // 更新地圖標記
-  updateMapMarkers(currentDisplayedRestaurants);
 }
 
 // 當頁面載入完成時初始化
@@ -842,20 +794,68 @@ function renderRestaurants(restaurants) {
         // 營業時間處理
         let businessHoursText = '暫無營業時間資料';
         let isOpen = false;
-        
-        if (restaurant.opening_hours) {
+
+        // 判斷現在是否營業的函數
+        function isOpenNow(businessHoursText) {
+            if (!businessHoursText) return false;
+            // 處理多個時段
+            const now = new Date();
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            // 支援全形/半形符號
+            const normalized = businessHoursText.replace(/：/g, ':').replace(/[－–—~]/g, '-');
+            const periods = normalized.split(',').map(p => p.trim());
+            for (const period of periods) {
+                const match = period.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+                if (match) {
+                    const [_, start, end] = match;
+                    const [startH, startM] = start.split(':').map(Number);
+                    const [endH, endM] = end.split(':').map(Number);
+                    const startMin = startH * 60 + startM;
+                    let endMin = endH * 60 + endM;
+                    // 跨日
+                    if (endMin < startMin) endMin += 24 * 60;
+                    if (
+                        (nowMinutes >= startMin && nowMinutes <= endMin) ||
+                        (endMin > 24 * 60 && nowMinutes <= endMin - 24 * 60)
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // robust openingHours 處理
+        if (restaurant.openingHours) {
+            let openingHoursArr = restaurant.openingHours;
+            if (typeof openingHoursArr === 'string' && openingHoursArr.startsWith('[')) {
+                try {
+                    openingHoursArr = JSON.parse(openingHoursArr);
+                } catch (e) {
+                    openingHoursArr = null;
+                }
+            }
+            if (Array.isArray(openingHoursArr) && openingHoursArr.length === 7) {
+                const today = new Date().getDay();
+                const index = today === 0 ? 6 : today - 1;
+                const todayText = openingHoursArr[index] || '暫無營業時間資料';
+                // 只取第一個「：」或「:」之後的所有內容
+                const timePart = todayText.split(/：|:/).slice(1).join(':').trim();
+                businessHoursText = timePart ? timePart : todayText;
+                isOpen = isOpenNow(businessHoursText);
+            } else if (typeof openingHoursArr === 'string' && openingHoursArr.length > 0) {
+                businessHoursText = openingHoursArr;
+            }
+        } else if (restaurant.opening_hours) {
             isOpen = restaurant.opening_hours.open_now || false;
-            
-            // 如果有 weekday_text，獲取今日營業時間
             if (restaurant.opening_hours.weekday_text && Array.isArray(restaurant.opening_hours.weekday_text)) {
-                const today = new Date().getDay(); // 0-6，0代表星期日
-                const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引 (0=週一, 1=週二, ..., 6=週日)
-                
+                const today = new Date().getDay();
+                const index = today === 0 ? 6 : today - 1;
                 if (restaurant.opening_hours.weekday_text[index]) {
                     const todayText = restaurant.opening_hours.weekday_text[index];
-                    // 直接從完整的營業時間文字中提取時間部分
                     const timeMatch = todayText.match(/:\s*(.+)$/);
                     businessHoursText = timeMatch ? timeMatch[1].trim() : '暫無營業時間資料';
+                    isOpen = isOpenNow(businessHoursText);
                 }
             } else if (restaurant.businessHours && Array.isArray(restaurant.businessHours)) {
                 businessHoursText = restaurant.businessHours[0] || '暫無營業時間資料';
@@ -876,15 +876,12 @@ function renderRestaurants(restaurants) {
                     <div class="stars">${generateStars(rating)}</div>
                     <span class="rating-text">${rating ? rating.toFixed(1) : 'N/A'} (${reviewCount || 0} 則評論)</span>
                 </div>
-                <div class="yelp-tags-row">
-                    ${restaurant.types ? `<span class="yelp-tag">${restaurant.types}</span>` : ''}
-                </div>
                 <div class="yelp-price-row">
                     <span class="address">${restaurant.address || ''}</span>
                 </div>
                 <div class="yelp-hours-row">
                     <span class="hours-icon ${isOpen ? 'open' : 'closed'}"></span>
-                    <span class="hours-text">${isOpen ? '營業中' : '休息中'}</span>
+                    <span class="hours-text ${isOpen ? 'open-status' : 'closed-status'}">${isOpen ? '營業中' : '休息中'}</span>
                     <span class="hours-details">${businessHoursText}</span>
                 </div>
                 <div class="yelp-review-row">
