@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -20,6 +21,18 @@ public class MerchantRestaurantDTO {
     private String paymentMethods;
     private String description;
     private String avatarUrl;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateBasicInfoRequest {
+        private String name;
+        private String email;
+        private String phoneNumber;
+        private String address;
+        private MultipartFile avatar;
+    }
 
     public interface MerchantRestaurantProjection {
         String getName();
