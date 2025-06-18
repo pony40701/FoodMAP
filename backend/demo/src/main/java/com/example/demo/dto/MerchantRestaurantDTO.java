@@ -34,6 +34,16 @@ public class MerchantRestaurantDTO {
         private MultipartFile avatar;
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateBusinessInfoRequest {
+        private String businessHours;
+        private String cuisineType;
+        private String paymentMethods;
+    }
+
     public interface MerchantRestaurantProjection {
         String getName();
         String getEmail();
