@@ -14,17 +14,17 @@
   <link rel="stylesheet" href="css/business-hours.css">
   <link rel="stylesheet" href="css/modal-fix.css">
   <link rel="stylesheet" href="css/restaurant-modal.css">
+  <!-- 添加 Leaflet 地圖 CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <!-- 添加登入相關功能 -->
   <script src="js/config.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/login.js"></script>
   <script src="js/loginModal.js"></script>
-  <script src="js/userCenter.js"></script>
+  <script src="js/BusinessHours.js"></script>
   <!-- 核心功能模組 -->
-  <script src="js/favoriteSystem.js"></script>
-  <script src="js/favoriteButton.js"></script>
-  <script src="js/businessHours.js"></script>
   <script src="js/restaurantService.js"></script>
+  <script src="js/restaurant-modal.js"></script>
 </head>
 <body>
   <!-- 導覽列 -->
@@ -289,8 +289,24 @@
             </button>
           </div>
         </div>
-        <div class="favorites-stores"></div>
-        <div class="favorites-reviews" style="display: none;"></div>
+        
+        <!-- 收藏店家區塊 -->
+        <div class="favorites-content">
+          <div class="favorites-stores">
+            <!-- 這裡將顯示收藏的餐廳卡片 -->
+            <div class="loading">
+              <i class="fas fa-spinner fa-spin"></i> 載入收藏店家中...
+            </div>
+          </div>
+          
+          <!-- 收藏評論區塊 -->
+          <div class="favorites-reviews" style="display: none;">
+            <!-- 這裡將顯示收藏的評論卡片 -->
+            <div class="loading">
+              <i class="fas fa-spinner fa-spin"></i> 載入收藏評論中...
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- 設定區塊 -->
@@ -303,7 +319,7 @@
           </div>
           <div class="form-group">
             <label>電子郵件</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" readonly>
           </div>
           <div class="form-group">
             <label>目前密碼</label>
@@ -352,11 +368,17 @@
   </div>
 
   <!-- 添加必要的 JavaScript 文件 -->
-  <script src="js/restaurant-modal.js"></script>
+  <!-- 先引入 config.js 設置 API_BASE_URL -->
+  <script src="js/config.js"></script>
+  <script src="js/toast.js"></script>
   <script src="js/BusinessHours.js"></script>
+  <script src="js/restaurant-modal.js"></script>
   <script src="js/favoriteSystem.js"></script>
   <script src="js/favoriteButton.js"></script>
   <script src="js/userCenter.js"></script>
+  
+  <!-- 添加 Leaflet 地圖 JavaScript -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   
   <!-- 添加登出功能的腳本 -->
   <script>
@@ -379,17 +401,27 @@
         });
       }
       
-      // 確保 RestaurantModal 已初始化
-      if (typeof RestaurantModal !== 'undefined' && typeof RestaurantModal.init === 'function') {
-        console.log('確保 RestaurantModal 已初始化');
+      // 初始化 RestaurantModal
+      if (typeof RestaurantModal !== 'undefined') {
+        console.log('初始化 RestaurantModal');
         RestaurantModal.init();
-      } else if (window.RestaurantModal && typeof window.RestaurantModal.init === 'function') {
-        console.log('確保 window.RestaurantModal 已初始化');
-        window.RestaurantModal.init();
+        window.RestaurantModal = RestaurantModal;
+      }
+      
+      // 初始化收藏系統
+      if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
+        console.log('初始化收藏系統');
+        window.favoriteSystem.initialize();
+      }
+      
+      // 初始化用戶中心
+      if (typeof initializeUserCenter === 'function') {
+        console.log('初始化用戶中心');
+        initializeUserCenter();
       }
     });
   </script>
-
+  
   <!-- 餐廳詳細資訊彈窗 - 新版 -->
   <div id="restaurantModalNew" class="restaurant-modal-new">
     <div class="restaurant-modal-content-new">
@@ -404,7 +436,7 @@
           </div>
           <div class="restaurant-info-text-new">
             <div class="modal-rating-new">
-              <span class="modal-stars-new" id="modal-stars-new">★★★★★</span>
+              <span class="modal-stars-new" id="modal-stars-new">★★★★</span>
               <span class="modal-rating-value-new" id="modal-rating-new">4.5</span>
               <span class="modal-rating-count-new" id="modal-rating-count-new">(123則評論)</span>
             </div>
@@ -435,7 +467,7 @@
             </div>
           </div>
         </div>
-        <!-- 添加位置資訊區塊 -->
+        <!-- 添加位置資訊區域-->
         <div class="restaurant-location-new">
           <h3>位置資訊</h3>
           <div class="restaurant-map-container-new">
@@ -459,15 +491,112 @@
     </div>
   </div>
 
+  <!-- 舊版餐廳詳情彈窗 (備用) -->
+  <div id="restaurantModal" class="restaurant-modal">
+    <div class="restaurant-modal-content">
+      <div class="restaurant-modal-header">
+        <h2 id="modal-restaurant-name">餐廳名稱</h2>
+        <span class="restaurant-modal-close">&times;</span>
+      </div>
+      <div class="restaurant-modal-body">
+        <div class="restaurant-details">
+          <div class="restaurant-main-info">
+            <div class="restaurant-modal-image">
+              <img id="modal-restaurant-img" src="" alt="餐廳圖片">
+            </div>
+            <div class="restaurant-info-text">
+              <div class="modal-rating">
+                <span class="modal-stars" id="modal-stars">★★★★</span>
+                <span class="modal-rating-value" id="modal-rating">4.5</span>
+                <span class="modal-rating-count" id="modal-rating-count">(123則評論)</span>
+              </div>
+              <div class="modal-address">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="modal-address">餐廳地址</span>
+              </div>
+              <div class="modal-hours">
+                <div class="modal-status" id="modal-status">
+                  <i class="fas fa-clock"></i>
+                  <span class="modal-status-text">營業中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const finalCheck = new Set();
     const finalDuplicates = [];
+    // 確保 processedRestaurants 已正確取得
+    const processedRestaurants = window.favoriteSystem?.favorites || [];
     processedRestaurants.forEach(restaurant => {
         const id = restaurant.place_id || restaurant.id;
         if (finalCheck.has(id)) {
             finalDuplicates.push(restaurant);
         }
         finalCheck.add(id);
+    });
+  </script>
+  
+  <!-- Debug 腳本 -->
+  <script>
+    // 檢查 RestaurantModal 是否正確初始化
+    console.log('RestaurantModal 狀態檢查:');
+    console.log('window.RestaurantModal 存在:', !!window.RestaurantModal);
+    if (window.RestaurantModal) {
+      console.log('window.RestaurantModal.showRestaurantDetail 存在:', !!window.RestaurantModal.showRestaurantDetail);
+      console.log('window.RestaurantModal.init 存在:', !!window.RestaurantModal.init);
+    }
+    
+    // 檢查必要的 DOM 元素是否存在
+    console.log('DOM 元素檢查:');
+    console.log('restaurantModalNew 元素存在:', !!document.getElementById('restaurantModalNew'));
+    console.log('modal-restaurant-name-new 元素存在:', !!document.getElementById('modal-restaurant-name-new'));
+    console.log('modal-restaurant-img-new 元素存在:', !!document.getElementById('modal-restaurant-img-new'));
+    
+    // 綁定餐廳卡片點擊事件的輔助函數
+    function setupCardClickEvents() {
+      console.log('設置餐廳卡片點擊事件');
+      const cards = document.querySelectorAll('.restaurant-card');
+      cards.forEach(card => {
+        const placeId = card.getAttribute('data-id');
+        if (placeId) {
+          card.addEventListener('click', (e) => {
+            // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
+            if (e.target.closest('.favorite-btn')) {
+              e.stopPropagation();
+              return;
+            }
+            console.log('卡片被點擊，placeId:', placeId);
+            viewRestaurant(placeId);
+          });
+        }
+      });
+      console.log(`已設置 ${cards.length} 張卡片的點擊事件`);
+    }
+    
+    // 頁面載入完成後執行
+    document.addEventListener('DOMContentLoaded', function() {
+      // 延遲一點時間確保所有元素都已載入
+      setTimeout(setupCardClickEvents, 1000);
+    });
+    
+    // 監聽 DOM 變化，確保新添加的卡片也能正確綁定事件
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes.length) {
+          setupCardClickEvents();
+        }
+      });
+    });
+    
+    // 開始觀察 DOM 變化
+    observer.observe(document.querySelector('.favorites-stores') || document.body, {
+      childList: true,
+      subtree: true
     });
   </script>
 </body>

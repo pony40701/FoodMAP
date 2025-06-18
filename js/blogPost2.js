@@ -966,12 +966,12 @@ function updateRankings(type) {
 }
 
 // 生成隨機測試數據
-function generateTestData() {
-    return {
-        views: Math.floor(Math.random() * 1000) + 100, // 100-1099 的隨機觀看數
-        likes: Math.floor(Math.random() * 200) + 50    // 50-249 的隨機讚數
-    };
-}
+// function generateTestData() {
+//     return {
+//         views: Math.floor(Math.random() * 1000) + 100, // 100-1099 的隨機觀看數
+//         likes: Math.floor(Math.random() * 200) + 50    // 50-249 的隨機讚數
+//     };
+// }
 
 // 表單提交處理（發布文章）
 document.getElementById('blogPostForm')?.addEventListener('submit', async function(e) {
@@ -995,7 +995,7 @@ document.getElementById('blogPostForm')?.addEventListener('submit', async functi
     }
 
     // 生成測試數據
-    const testData = generateTestData();
+    // const testData = generateTestData();
 
     // 準備發布數據
     const postData = {
@@ -1148,96 +1148,217 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 文章操作函數
+// ========== 編輯文章/草稿時切換到 edit-section 並帶入資料 ==========
 function editPost(postId) {
     const posts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-
-    // 設置編輯模式標記
     isEditingPost = true;
     editingPostId = post.id;
-
-    // 產生新的草稿 id，避免覆蓋原本草稿
-    const newDraftId = Date.now();
-
-    // 將文章轉為草稿（給新 id）
-    const draft = {
-        ...post,
-        id: newDraftId,
-        lastModified: new Date().toISOString(),
-        status: 'draft'
-    };
-
-    // 儲存為草稿
-    const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
-    drafts.push(draft);
-    localStorage.setItem('blogDrafts', JSON.stringify(drafts));
-
-    // 刪除已發布文章
-    deletePost(postId, true);
-
-    // 切換到編輯頁面
-    showSection('write');
-
-    // 填充表單
-    document.getElementById('postTitle').value = draft.title;
-    document.getElementById('restaurantName').value = draft.restaurant;
-    document.getElementById('restaurantLocation').value = draft.location;
-    document.getElementById('editor').innerHTML = draft.content;
-    document.getElementById('tags').value = draft.tags.join(', ');
-
-    // 設置評分
-    Object.entries(draft.ratings).forEach(([category, rating]) => {
-        const starsContainer = document.querySelector(`.stars[data-category="${category}"]`);
+    showSection('edit');
+    document.getElementById('postTitleEdit').value = post.title;
+    document.getElementById('restaurantNameEdit').value = post.restaurant;
+    document.getElementById('restaurantLocationEdit').value = post.location;
+    document.getElementById('editorEdit').innerHTML = post.content;
+    document.getElementById('tagsEdit').value = post.tags.join(', ');
+    Object.entries(post.ratings).forEach(([category, rating]) => {
+        const starsContainer = document.querySelector('#edit-section .stars[data-category="' + category + '"]');
         if (starsContainer) {
             starsContainer.setAttribute('data-selected-rating', rating);
             updateStars(starsContainer, rating);
-            // 新增：同步更新評分數值
             const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
-            if (ratingValue) {
-                ratingValue.textContent = rating + '.0';
-            }
-            updateOverallRating();
+            if (ratingValue) ratingValue.textContent = rating + '.0';
         }
     });
+    updateOverallRating('#edit-section');
+    const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+    if (saveDraftBtn) saveDraftBtn.textContent = '更新草稿';
+}
 
-    // 更新按鈕文字
-    const saveDraftBtn = document.querySelector('.btn-save-draft');
-    if (saveDraftBtn) {
-        saveDraftBtn.textContent = '更新草稿';
+// ========== 載入草稿箱（改為後端API） ==========
+async function loadDrafts() {
+    const draftsList = document.getElementById('draftsList');
+    if (!draftsList) return;
+    draftsList.innerHTML = '';
+    try {
+        const response = await fetch('http://localhost:8080/api/reviews/drafts?userId=1');
+        if (!response.ok) throw new Error('載入草稿失敗');
+        const drafts = await response.json();
+        if (drafts.length === 0) {
+            draftsList.innerHTML = '<div class="no-drafts">目前沒有草稿</div>';
+            return;
+        }
+        // 按最後修改時間排序（新的在前）
+        drafts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        drafts.forEach(draft => {
+            const draftElement = createDraftElement(draft);
+            draftsList.appendChild(draftElement);
+        });
+    } catch (e) {
+        draftsList.innerHTML = '<div class="no-drafts">草稿載入失敗</div>';
     }
-
-    showNotification('文章已載入編輯模式', 'info');
 }
 
-function publishPost(postId) {
-    // 實現發布草稿功能
-    console.log('發布文章：', postId);
+// ========== 編輯草稿時帶入資料 ==========
+function editDraft(draftId) {
+    // 直接從目前草稿列表中找（已經是後端資料）
+    const drafts = Array.from(document.querySelectorAll('.draft-card')).map(card => card.draftData).filter(Boolean);
+    const draft = drafts.find(d => d.id === draftId);
+    if (!draft) return;
+    isEditingPost = true;
+    editingPostId = draft.id;
+    // 存下 restaurantId、createdAt 供後續儲存用
+    window._editingRestaurantId = draft.restaurantId;
+    window._editingCreatedAt = draft.createdAt;
+    showSection('edit');
+    document.getElementById('postTitleEdit').value = draft.title;
+    document.getElementById('restaurantNameEdit').value = draft.restaurant;
+    document.getElementById('restaurantLocationEdit').value = draft.location;
+    document.getElementById('editorEdit').innerHTML = draft.contentJson || '';
+    document.getElementById('tagsEdit').value = (draft.tags || []).join(', ');
+    Object.entries(draft.ratings || {}).forEach(([category, rating]) => {
+        const starsContainer = document.querySelector('#edit-section .stars[data-category="' + category + '"]');
+        if (starsContainer) {
+            starsContainer.setAttribute('data-selected-rating', rating);
+            updateStars(starsContainer, rating);
+            const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+            if (ratingValue) ratingValue.textContent = rating + '.0';
+        }
+    });
+    updateOverallRating('#edit-section');
+    const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+    if (saveDraftBtn) saveDraftBtn.textContent = '更新草稿';
 }
 
-// 刪除已發布文章
-function deletePost(postId, silent = false) {
-    if (!silent && !confirm('確定要刪除這篇文章嗎？')) return;
-
-    // 從 localStorage 獲取已發布文章
+// ========== 儲存草稿（edit-section，改為呼叫後端API） ==========
+document.querySelector('#edit-section .btn-save-draft').addEventListener('click', async function(e) {
+    e.preventDefault();
+    const postData = {
+        userId: 1,
+        restaurantId: window._editingRestaurantId,
+        createdAt: window._editingCreatedAt,
+        title: document.getElementById('postTitleEdit').value || '未命名草稿',
+        restaurant: document.getElementById('restaurantNameEdit').value || '',
+        location: document.getElementById('restaurantLocationEdit').value || '',
+        content: document.getElementById('editorEdit').innerHTML || '',
+        ratings: collectRatings('#edit-section'),
+        tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean),
+        date: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+    };
+    if (!postData.restaurant || !postData.content) {
+        alert('請至少填寫餐廳名稱和評論內容');
+        return;
+    }
+    const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
+    if (isEditingPost) {
+        const draftIndex = drafts.findIndex(d => d.id === editingPostId);
+        if (draftIndex !== -1) {
+            drafts[draftIndex] = postData;
+        } else {
+            drafts.push(postData);
+        }
+        alert('草稿已更新');
+    } else {
+        drafts.push(postData);
+        alert('新草稿已儲存');
+    }
+    localStorage.setItem('blogDrafts', JSON.stringify(drafts));
+    clearEditForm();
+    loadDrafts();
+    showSection('drafts');
+});
+// ========== 發布文章（edit-section） ==========
+document.getElementById('blogPostFormEdit').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const postData = {
+        id: isEditingPost ? editingPostId : Date.now(),
+        title: document.getElementById('postTitleEdit').value || '未命名文章',
+        restaurant: document.getElementById('restaurantNameEdit').value || '',
+        location: document.getElementById('restaurantLocationEdit').value || '',
+        content: document.getElementById('editorEdit').innerHTML || '',
+        ratings: collectRatings('#edit-section'),
+        tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean),
+        publishDate: new Date().toISOString(),
+        status: 'published',
+        views: 0,
+        likes: 0
+    };
+    if (!postData.restaurant || !postData.content) {
+        alert('請至少填寫餐廳名稱和評論內容');
+        return;
+    }
+    if (isEditingPost) {
+        const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
+        const updatedDrafts = drafts.filter(d => d.id !== editingPostId);
+        localStorage.setItem('blogDrafts', JSON.stringify(updatedDrafts));
+    }
     const publishedPosts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
-    
-    // 過濾掉要刪除的文章
-    const updatedPosts = publishedPosts.filter(post => post.id !== postId);
-    
-    // 儲存更新後的文章列表
-    localStorage.setItem('publishedPosts', JSON.stringify(updatedPosts));
-    
-    if (!silent) {
-        // 顯示成功訊息
-        showNotification('文章已刪除', 'success');
-        
-        // 重新載入文章列表
-        loadPublishedPosts();
-        
-        // 更新統計數據和排行榜
-        initStatsChart();
+    const existingIndex = publishedPosts.findIndex(p => p.id === postData.id);
+    if (existingIndex !== -1) {
+        publishedPosts[existingIndex] = postData;
+    } else {
+        publishedPosts.push(postData);
+    }
+    localStorage.setItem('publishedPosts', JSON.stringify(publishedPosts));
+    clearEditForm();
+    loadPublishedPosts();
+    showSection('published');
+    alert('文章已發布！');
+});
+// ========== 清空 edit-section 表單 ==========
+function clearEditForm() {
+    document.getElementById('postTitleEdit').value = '';
+    document.getElementById('restaurantNameEdit').value = '';
+    document.getElementById('restaurantLocationEdit').value = '';
+    document.getElementById('editorEdit').innerHTML = '';
+    document.getElementById('tagsEdit').value = '';
+    document.querySelectorAll('#edit-section .stars').forEach(starsContainer => {
+        starsContainer.setAttribute('data-selected-rating', '0');
+        starsContainer.querySelectorAll('i').forEach(star => star.classList.remove('active'));
+    });
+    document.querySelectorAll('#edit-section .rating-value').forEach(value => value.textContent = '0.0');
+    isEditingPost = false;
+    editingPostId = null;
+    const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+    if (saveDraftBtn) saveDraftBtn.textContent = '儲存草稿';
+}
+// ========== 收集評分（支援區塊選擇器） ==========
+function collectRatings(sectionSelector = '') {
+    const ratings = {};
+    document.querySelectorAll(`${sectionSelector} .stars`).forEach(starsContainer => {
+        const category = starsContainer.dataset.category;
+        if (category) {
+            ratings[category] = starsContainer.getAttribute('data-selected-rating') || '0';
+        }
+    });
+    return ratings;
+}
+// ========== 更新總評分（支援區塊選擇器） ==========
+function updateOverallRating(sectionSelector = '') {
+    const categories = ['environment', 'service', 'taste', 'price'];
+    let totalRating = 0;
+    let validRatings = 0;
+    categories.forEach(category => {
+        const starsContainer = document.querySelector(`${sectionSelector} .stars[data-category="${category}"]`);
+        if (starsContainer) {
+            const rating = parseInt(starsContainer.getAttribute('data-selected-rating')) || 0;
+            if (rating > 0) {
+                totalRating += rating;
+                validRatings++;
+            }
+        }
+    });
+    const averageRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : '0.0';
+    const overallStars = document.querySelector(`${sectionSelector} .overall-rating .stars`);
+    const overallValue = document.querySelector(`${sectionSelector} .overall-rating .rating-value`);
+    if (overallStars && overallValue) {
+        const stars = overallStars.querySelectorAll('i');
+        const ratingNum = parseFloat(averageRating);
+        stars.forEach((star, index) => {
+            star.classList.toggle('active', index < Math.floor(ratingNum));
+        });
+        overallValue.textContent = averageRating;
     }
 }
 
@@ -1550,87 +1671,6 @@ function highlightStars(group, rating) {
     });
 }
 
-// 更新總評分
-function updateOverallRating() {
-    const categories = ['environment', 'service', 'taste', 'price'];
-    let totalRating = 0;
-    let validRatings = 0;
-    
-    // 計算平均分數
-    categories.forEach(category => {
-        const starsContainer = document.querySelector(`.stars[data-category="${category}"]`);
-        if (starsContainer) {
-            const rating = parseInt(starsContainer.getAttribute('data-selected-rating')) || 0;
-            if (rating > 0) {
-                totalRating += rating;
-                validRatings++;
-            }
-        }
-    });
-    
-    // 更新總評分
-    const averageRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : '0.0';
-    const overallStars = document.querySelector('.overall-rating .stars');
-    const overallValue = document.querySelector('.overall-rating .rating-value');
-    
-    if (overallStars && overallValue) {
-        // 更新總評分的星星顯示
-        const stars = overallStars.querySelectorAll('i');
-        const ratingNum = parseFloat(averageRating);
-        
-        stars.forEach((star, index) => {
-            star.classList.toggle('active', index < Math.floor(ratingNum));
-        });
-        
-        // 更新總評分數值
-        overallValue.textContent = averageRating;
-    }
-}
-
-// 收集評分數據
-function collectRatings() {
-    const ratings = {};
-    document.querySelectorAll('.stars').forEach(starsContainer => {
-        const category = starsContainer.dataset.category;
-        if (category) {
-            ratings[category] = starsContainer.getAttribute('data-selected-rating') || '0';
-        }
-    });
-    return ratings;
-}
-
-// 清空表單
-function clearForm() {
-    document.getElementById('postTitle').value = '';
-    document.getElementById('restaurantName').value = '';
-    document.getElementById('restaurantLocation').value = '';
-    document.getElementById('editor').innerHTML = '';
-    document.getElementById('tags').value = '';
-    
-    // 重置所有評分
-    document.querySelectorAll('.stars').forEach(starsContainer => {
-        starsContainer.setAttribute('data-selected-rating', '0');
-        starsContainer.querySelectorAll('i').forEach(star => {
-            star.classList.remove('active');
-        });
-    });
-    
-    // 重置評分數值顯示
-    document.querySelectorAll('.rating-value').forEach(value => {
-        value.textContent = '0.0';
-    });
-
-    // 重置按鈕文字
-    const saveDraftBtn = document.querySelector('.btn-save-draft');
-    if (saveDraftBtn) {
-        saveDraftBtn.textContent = '儲存草稿';
-    }
-
-    // 重置編輯狀態
-    isEditingPost = false;
-    editingPostId = null;
-}
-
 // 載入草稿箱
 function loadDrafts() {
     const draftsList = document.getElementById('draftsList');
@@ -1702,51 +1742,6 @@ function createDraftElement(draft) {
     `;
     
     return div;
-}
-
-// 編輯草稿
-function editDraft(draftId) {
-    const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
-    const draft = drafts.find(d => d.id === draftId);
-    
-    if (!draft) return;
-
-    // 設置編輯模式標記
-    isEditingPost = true;
-    editingPostId = draft.id;
-
-    // 切換到寫文章頁面
-    showSection('write');
-    
-    // 填充表單
-    document.getElementById('postTitle').value = draft.title;
-    document.getElementById('restaurantName').value = draft.restaurant;
-    document.getElementById('restaurantLocation').value = draft.location;
-    document.getElementById('editor').innerHTML = draft.content;
-    document.getElementById('tags').value = draft.tags.join(', ');
-    
-    // 設置評分
-    Object.entries(draft.ratings).forEach(([category, rating]) => {
-        const starsContainer = document.querySelector(`.stars[data-category="${category}"]`);
-        if (starsContainer) {
-            starsContainer.setAttribute('data-selected-rating', rating);
-            updateStars(starsContainer, rating);
-            // 新增：同步更新評分數值
-            const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
-            if (ratingValue) {
-                ratingValue.textContent = rating + '.0';
-            }
-            updateOverallRating();
-        }
-    });
-
-    // 更新按鈕文字
-    const saveDraftBtn = document.querySelector('.btn-save-draft');
-    if (saveDraftBtn) {
-        saveDraftBtn.textContent = '更新草稿';
-    }
-
-    showNotification('正在編輯草稿', 'info');
 }
 
 // 刪除草稿

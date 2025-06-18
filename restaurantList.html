@@ -8,16 +8,11 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
     <link rel="stylesheet" href="css/restaurantList.css" />
-    <link rel="stylesheet" href="css/restaurant-card-v2.css">
-    <link rel="stylesheet" href="css/business-hours.css">
-    <link rel="stylesheet" href="css/restaurant-modal.css">
-    <!-- 添加 login.js -->
-    <script src="js/login.js"></script>
-    <!-- 加入 Google Maps API -->
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqANvNvM5qZb9I_nkoMPJz_yjhvYKlKD0&libraries=places,geometry&callback=initMap">
-    </script>
   </head>
   <body>
     <!--only complete this page's search cuz no idea with others page-->
@@ -84,6 +79,10 @@
               <i class="fas fa-pen-alt"></i>
               <span>寫食記</span>
             </a>
+            <a href="experienceList.html" class="dropdown-item">
+              <i class="fas fa-book-open"></i>
+              <span>瀏覽心得</span>
+            </a>
           </div>
         </div>
         <div class="restaurant-dropdown">
@@ -126,9 +125,9 @@
                 <span>瀏覽紀錄</span>
               </a>
               <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item logout-item" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>登出</span>
+              <a href="#" class="dropdown-item logout-item" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>登出</span>
               </a>
             </div>
           </div>
@@ -180,21 +179,13 @@
     </main>
 
     <!-- 彈出視窗 -->
-    <div id="restaurantModal" class="modal" style="display: none;">
-        <!-- 內容將由 JavaScript 動態填充 -->
-    </div>
-
-    <!-- 營業時間詳細彈窗 -->
-    <div id="weeklyHoursModal" class="weekly-hours-modal">
-        <div class="weekly-hours-modal-content">
-            <div class="weekly-hours-modal-header">
-                <h3>營業時間</h3>
-                <span class="weekly-hours-modal-close" onclick="window.closeWeeklyHoursModal()">&times;</span>
-            </div>
-            <div class="weekly-hours-modal-body" id="weekly-hours-modal-body">
-                <!-- 一週的營業時間將由JavaScript動態填充 -->
-            </div>
+    <div id="restaurant-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+      <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
+        <button class="modal-close" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+        <div id="modal-content-container">
+          <!-- 內容將由 JavaScript 動態填充 -->
         </div>
+      </div>
     </div>
 
     <!-- 頁尾 -->
@@ -240,7 +231,7 @@
     <div id="loginModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>會員登入</h2>
+          <h2>登入</h2>
           <span class="close">&times;</span>
         </div>
         <div class="modal-body">
@@ -256,24 +247,19 @@
             <button type="submit" class="btn-primary">登入</button>
           </form>
           <div class="form-footer">
-            <a href="userRegister.html">註冊新帳號</a>
-            <span>|</span>
-            <a href="userForgotPassword.html">忘記密碼？</a>
+            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
           </div>
           <div class="social-login">
-            <p>使用社群帳號登入</p>
+            <p>或使用以下方式登入</p>
             <div class="social-buttons">
-              <button type="button" class="social-btn google" onclick="socialLogin('google')">
-                <i class="fab fa-google"></i>
-                Google
+              <button class="social-btn google" onclick="socialLogin('google')">
+                <i class="fab fa-google"></i> Google
               </button>
-              <button type="button" class="social-btn facebook" onclick="socialLogin('facebook')">
-                <i class="fab fa-facebook-f"></i>
-                Facebook
+              <button class="social-btn facebook" onclick="socialLogin('facebook')">
+                <i class="fab fa-facebook-f"></i> Facebook
               </button>
-              <button type="button" class="social-btn line" onclick="socialLogin('line')">
-                <i class="fab fa-line"></i>
-                Line
+              <button class="social-btn line" onclick="socialLogin('line')">
+                <i class="fab fa-line"></i> Line
               </button>
             </div>
           </div>
@@ -311,8 +297,15 @@
       </div>
     </div>
 
-    <!-- 加入必要的 JavaScript -->
-    <script src="js/restaurantList.js"></script>
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <!-- 先引入 config.js 設置 API_BASE_URL -->
+    <script src="js/config.js"></script>
+    <script src="js/restaurant-modal.js"></script>
+    <script src="JS/restaurantList.js"></script>
+    <script src="js/login.js"></script>
     <script>
       // 處理寫食記按鈕點擊
       function handleWriteReview() {
@@ -398,277 +391,7 @@
             closeRestaurantLoginModal();
           }
         };
-
-        // 登出按鈕 JS 綁定
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (typeof logout === 'function') logout();
-            else if (window.logout) window.logout();
-          });
-        }
       });
-
-      document.addEventListener('DOMContentLoaded', function() {
-        // 初始化收藏系統
-        window.favoriteSystem = new FavoriteSystem();
-        
-        // 獲取餐廳數據
-        fetchRestaurants();
-        
-        // 設置篩選事件
-        setupFilters();
-      });
-      
-      // 獲取餐廳數據
-      async function fetchRestaurants() {
-        try {
-          const response = await fetch('http://localhost:8080/api/google-restaurants/all');
-          if (!response.ok) {
-            throw new Error(`API回應錯誤: ${response.status} ${response.statusText}`);
-          }
-          
-          const restaurants = await response.json();
-          console.log(`獲取到 ${restaurants.length} 間餐廳`);
-          
-          // 保存到全局變量
-          window.allRestaurants = restaurants;
-          
-          // 顯示餐廳列表
-          displayRestaurants(restaurants);
-          
-          // 初始化分類選項
-          initCategoryOptions(restaurants);
-          
-          // 隱藏載入中圖示
-          document.getElementById('loading').style.display = 'none';
-        } catch (error) {
-          console.error('獲取餐廳資料失敗:', error);
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('error-message').style.display = 'block';
-          document.getElementById('error-message').textContent = `獲取餐廳資料失敗: ${error.message}`;
-        }
-      }
-      
-      // 顯示餐廳列表
-      function displayRestaurants(restaurantsToDisplay) {
-        const container = document.getElementById('restaurant-list');
-        container.innerHTML = '';
-        
-        if (restaurantsToDisplay.length === 0) {
-          container.innerHTML = '<div class="no-results">沒有符合條件的餐廳</div>';
-          return;
-        }
-        
-        restaurantsToDisplay.forEach(restaurant => {
-          const card = createRestaurantCard(restaurant);
-          container.appendChild(card);
-        });
-        
-        // 設置收藏按鈕事件
-        setupFavoriteButtons();
-      }
-      
-      // 創建餐廳卡片
-      function createRestaurantCard(restaurant) {
-        const card = document.createElement('div');
-        card.className = 'restaurant-card';
-        
-        const restaurantId = restaurant.place_id || restaurant.id;
-        const isFavorited = window.favoriteSystem && restaurantId && 
-            window.favoriteSystem.isStoreFavorited(restaurantId);
-        
-        // 使用API獲取圖片
-        const imageUrl = `http://localhost:8080/api/restaurant-images/${restaurantId}/raw`;
-        
-        // 營業時間判斷
-        let isOpen = false;
-        let todayHours = '';
-        
-        if (restaurant.opening_hours) {
-          if (restaurant.opening_hours.weekday_text) {
-            // 獲取今日營業時間文字
-            const today = new Date().getDay();
-            const index = today === 0 ? 6 : today - 1; // 轉換為 API 索引
-            
-            if (restaurant.opening_hours.weekday_text[index]) {
-              const todayText = restaurant.opening_hours.weekday_text[index];
-              // 直接從完整的營業時間文字中提取時間部分
-              const timeMatch = todayText.match(/:\s*(.+)$/);
-              const timeStr = timeMatch ? timeMatch[1].trim() : null;
-              
-              if (timeStr) {
-                isOpen = window.businessHours && window.businessHours.isOpenFromText ? 
-                    window.businessHours.isOpenFromText(timeStr) : false;
-                const dayName = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][today];
-                todayHours = `<span class='hours'>${dayName} ${timeStr}</span>`;
-              }
-            }
-          } else if (restaurant.opening_hours.open_now !== undefined) {
-            // 如果只有 open_now 屬性
-            isOpen = restaurant.opening_hours.open_now;
-          }
-        }
-        
-        card.innerHTML = `
-          <div class="restaurant-image">
-            <img src="${imageUrl}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
-            <button class="favorite-btn" data-place-id="${restaurantId || ''}" data-name="${(restaurant.name || '').replace(/"/g, '&quot;')}">
-              <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-            </button>
-          </div>
-          <div class="restaurant-info">
-            <h3>${restaurant.name}</h3>
-            <div class="rating">
-              <div class="stars">
-                ${generateStars(restaurant.rating)}
-              </div>
-              <span class="rating-text">${restaurant.rating ? restaurant.rating.toFixed(1) : 'N/A'} (${restaurant.user_ratings_total || 0})</span>
-            </div>
-            <div class="address">
-              <i class="fas fa-map-marker-alt"></i>
-              <span>${restaurant.address}</span>
-            </div>
-            <div class="tags">
-              ${restaurant.types ? restaurant.types.slice(0, 3).map(type => `<span class="tag">${type}</span>`).join('') : ''}
-            </div>
-            <div class="status">
-              <span class="status-dot ${isOpen ? 'open' : 'closed'}"></span>
-              <span class="status-text">${isOpen ? '營業中' : '休息中'}</span>
-              ${todayHours}
-            </div>
-          </div>
-        `;
-        
-        return card;
-      }
-      
-      // 生成星級評分
-      function generateStars(rating) {
-        if (!rating) return '<i class="far fa-star"></i>'.repeat(5);
-        
-        const fullStars = Math.floor(rating);
-        const halfStar = rating % 1 >= 0.5 ? 1 : 0;
-        const emptyStars = 5 - fullStars - halfStar;
-        
-        return '<i class="fas fa-star"></i>'.repeat(fullStars) +
-               (halfStar ? '<i class="fas fa-star-half-alt"></i>' : '') +
-               '<i class="far fa-star"></i>'.repeat(emptyStars);
-      }
-      
-      // 初始化分類選項
-      function initCategoryOptions(restaurants) {
-        const categorySelect = document.getElementById('category-filter');
-        
-        // 收集所有餐廳類型
-        const allTypes = new Set();
-        restaurants.forEach(restaurant => {
-          if (restaurant.types && Array.isArray(restaurant.types)) {
-            restaurant.types.forEach(type => allTypes.add(type));
-          }
-        });
-        
-        // 按字母順序排序
-        const sortedTypes = Array.from(allTypes).sort();
-        
-        // 添加到選擇框
-        sortedTypes.forEach(type => {
-          const option = document.createElement('option');
-          option.value = type;
-          option.textContent = type;
-          categorySelect.appendChild(option);
-        });
-      }
-      
-      // 設置篩選事件
-      function setupFilters() {
-        // 搜尋框
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', filterRestaurants);
-        
-        // 類別篩選
-        const categorySelect = document.getElementById('category-filter');
-        categorySelect.addEventListener('change', filterRestaurants);
-        
-        // 評分篩選
-        const ratingSelect = document.getElementById('rating-filter');
-        ratingSelect.addEventListener('change', filterRestaurants);
-        
-        // 營業狀態篩選
-        const openStatusSelect = document.getElementById('open-status-filter');
-        openStatusSelect.addEventListener('change', filterRestaurants);
-      }
-      
-      // 篩選餐廳
-      function filterRestaurants() {
-        if (!window.allRestaurants) return;
-        
-        const searchTerm = document.getElementById('search-input').value.toLowerCase();
-        const categoryFilter = document.getElementById('category-filter').value;
-        const ratingFilter = parseFloat(document.getElementById('rating-filter').value);
-        const openStatusFilter = document.getElementById('open-status-filter').value;
-        
-        // 篩選餐廳
-        const filteredRestaurants = window.allRestaurants.filter(restaurant => {
-          // 搜尋詞篩選
-          const nameMatch = restaurant.name && restaurant.name.toLowerCase().includes(searchTerm);
-          const addressMatch = restaurant.address && restaurant.address.toLowerCase().includes(searchTerm);
-          const searchMatch = searchTerm === '' || nameMatch || addressMatch;
-          
-          // 類別篩選
-          const categoryMatch = categoryFilter === '' || 
-              (restaurant.types && restaurant.types.includes(categoryFilter));
-          
-          // 評分篩選
-          const ratingMatch = isNaN(ratingFilter) || 
-              (restaurant.rating && restaurant.rating >= ratingFilter);
-          
-          // 營業狀態篩選
-          let openStatusMatch = true;
-          if (openStatusFilter !== '') {
-            const isOpen = restaurant.opening_hours && restaurant.opening_hours.open_now;
-            openStatusMatch = (openStatusFilter === 'open' && isOpen) || 
-                             (openStatusFilter === 'closed' && !isOpen) ||
-                             openStatusFilter === '';
-          }
-          
-          return searchMatch && categoryMatch && ratingMatch && openStatusMatch;
-        });
-        
-        // 更新顯示
-        displayRestaurants(filteredRestaurants);
-      }
-      
-      // 設置收藏按鈕事件
-      function setupFavoriteButtons() {
-        document.querySelectorAll('.favorite-btn').forEach(button => {
-          button.addEventListener('click', function(e) {
-            e.stopPropagation(); // 阻止事件冒泡
-            
-            const placeId = this.dataset.placeId;
-            const name = this.dataset.name;
-            
-            if (!placeId) {
-              console.error('收藏按鈕缺少 place_id');
-              return;
-            }
-            
-            const isFavorited = window.favoriteSystem.toggleFavorite(placeId, name);
-            
-            // 更新按鈕圖標
-            const icon = this.querySelector('i');
-            if (isFavorited) {
-              icon.classList.remove('far');
-              icon.classList.add('fas');
-            } else {
-              icon.classList.remove('fas');
-              icon.classList.add('far');
-            }
-          });
-        });
-      }
     </script>
-    
   </body>
-</html>
+</html> 

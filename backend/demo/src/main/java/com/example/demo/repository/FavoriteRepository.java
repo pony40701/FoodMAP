@@ -25,9 +25,19 @@ public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> 
     @Query("SELECT f FROM Favorite f WHERE f.userId = :userId AND f.targetType = 'restaurant'")
     List<Favorite> findUserRestaurants(@Param("userId") Long userId);
     
-    // 根據用戶ID和餐廳ID刪除收藏
+    // 根據用戶ID和餐廳ID刪除收藏，返回刪除的行數
     @Modifying
     @Transactional
     @Query("DELETE FROM Favorite f WHERE f.userId = :userId AND f.targetId = :targetId AND f.targetType = 'restaurant'")
-    void deleteByUserIdAndTargetId(@Param("userId") Long userId, @Param("targetId") String targetId);
+    int deleteByUserIdAndTargetId(@Param("userId") Long userId, @Param("targetId") String targetId);
+    
+    // 查詢用戶收藏餐廳的原始JSON資料
+    @Query(value = "SELECT gr.json_raw " +
+           "FROM google_restaurants gr " +
+           "JOIN user_favorites uf " +
+           "  ON gr.place_id = uf.target_id " +
+           "WHERE uf.user_id     = :userId " +
+           "  AND uf.target_type = 'restaurant' " +
+           "ORDER BY uf.favorited_at DESC", nativeQuery = true)
+    List<String> findFavoriteJsonRawByUserId(@Param("userId") Long userId);
 } 

@@ -1,257 +1,270 @@
-// 食物類型選擇功能
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('foodTypeModal');
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
     const foodTypeBtn = document.getElementById('foodTypeBtn');
-    const closeBtn = modal.querySelector('.close-modal');
-    const applyBtn = modal.querySelector('.btn-apply');
-    const clearBtn = modal.querySelector('.btn-clear');
-    const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
-    const otherCheckbox = document.getElementById('otherFoodType');
-    const otherInput = document.getElementById('otherFoodTypeInput');
-    const filterButtons = document.querySelectorAll('.category-item[data-filter]');
-    let selectedTypes = new Set();
-    let otherValue = '';
+    const foodTypeModal = document.getElementById('foodTypeModal');
+    const closeModal = foodTypeModal.querySelector('.close-modal');
+    const applyBtn = foodTypeModal.querySelector('.btn-apply');
+    const clearBtn = foodTypeModal.querySelector('.btn-clear');
+    const filterItems = document.querySelectorAll('.category-item[data-filter]');
+    const searchInput = document.getElementById('content-search');
+    const searchBtn = document.querySelector('.content-search-btn');
+    const foodGrid = document.querySelector('.food-grid');
 
-    // 收藏功能
-    const favoriteButtons = document.querySelectorAll('.favorite-btn');
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    // State for infinite scroll and filtering
+    let allArticles = [];
+    let isLoading = false;
+    let hasMore = true;
+    const TOTAL_ARTICLES_LIMIT = 15;
+    const initialLoadSize = 6;
+    const subsequentLoadSize = 3;
+    let currentFilters = {
+        sort: 'latest',
+        search: '',
+        cuisineTypes: []
+    };
 
-    // 初始化時顯示最新文章
-    filterArticlesByDate();
+    // --- MOCK DATA ---
+    const mockArticles = [
+        { id: 1, user: { name: '美食達人小明', avatar: 'https://i.pravatar.cc/40?img=1' }, rating: 5, title: '台北信義區隱藏版日式拉麵', restaurant: '麵屋武藏', imageUrl: '/images/restaurant1.jpg', excerpt: '這家位於信義區巷弄內的拉麵店，湯頭濃郁，叉燒軟嫩多汁，值得一試！', date: '2024-03-20', category: '日式', views: 150, favorited: false },
+        { id: 2, user: { name: '早餐控大王', avatar: 'https://i.pravatar.cc/40?img=2' }, rating: 4, title: '老字號台式早餐店推薦', restaurant: '阜杭豆漿', imageUrl: '/images/carousel2.jpg', excerpt: '傳統台式早餐店，蛋餅外酥內軟，搭配特製醬料，每天都想吃！', date: '2024-03-19', category: '台式', views: 320, favorited: true },
+        { id: 3, user: { name: '義食主義者', avatar: 'https://i.pravatar.cc/40?img=3' }, rating: 5, title: '道地義大利手工披薩', restaurant: 'Pizzeria Oggi', imageUrl: '/images/restaurant2.jpg', excerpt: '採用進口食材，薄脆餅皮配上新鮮配料，道地義式風味！', date: '2024-03-18', category: '義式', views: 280, favorited: false },
+        { id: 4, user: { name: '泰式美食家', avatar: 'https://i.pravatar.cc/40?img=4' }, rating: 5, title: '隱藏版泰式船麵', restaurant: '船麵小廚', imageUrl: '/images/restaurant3.jpg', excerpt: '巷弄中的泰式船麵，湯頭香辣夠味，配料新鮮豐富，絕對值得一試！', date: '2024-03-17', category: '東南亞', views: 245, favorited: false },
+        { id: 5, user: { name: '甜點控女孩', avatar: 'https://i.pravatar.cc/40?img=5' }, rating: 4, title: '法式手工甜點工作室', restaurant: 'Le Petit Pâtissier', imageUrl: '/images/carousel3.jpg', excerpt: '純手工製作的法式馬卡龍，口感酥脆，內餡綿密，完美比例的甜度讓人難以忘懷。', date: '2024-03-16', category: '甜點', views: 198, favorited: false },
+        { id: 6, user: { name: '韓食達人', avatar: 'https://i.pravatar.cc/40?img=6' }, rating: 5, title: '正宗韓式部隊鍋', restaurant: '韓食堂', imageUrl: '/images/carousel1.jpg', excerpt: '超濃郁起司配上道地韓式辣醬，各式配料豐富多樣，是一鍋值得分享的美味！', date: '2024-03-15', category: '韓式', views: 267, favorited: true },
+    ];
 
-    // 添加過濾按鈕的點擊事件
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            // 移除所有按鈕的 active 類
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            // 添加當前按鈕的 active 類
-            this.classList.add('active');
+    // --- API Fetching ---
+    async function fetchAndRenderArticles(limit, offset, append = false) {
+        if (isLoading || !hasMore) return;
+        isLoading = true;
 
-            const filterType = this.dataset.filter;
-            if (filterType === 'latest') {
-                filterArticlesByDate();
-            } else if (filterType === 'popular') {
-                filterArticlesByViews();
+        const params = new URLSearchParams({
+            limit: limit,
+            offset: offset,
+            sort: currentFilters.sort
+        });
+        if (currentFilters.search) {
+            params.append('search', currentFilters.search);
+        }
+        currentFilters.cuisineTypes.forEach(type => {
+            params.append('cuisineTypes', type);
+        });
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/ex-reviews?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        });
-    });
+            const data = await response.json();
+            
+            if (data.length < limit || (allArticles.length + data.length) >= TOTAL_ARTICLES_LIMIT) {
+                hasMore = false;
+            }
 
-    // 按日期排序（最新的在前面）
-    function filterArticlesByDate() {
-        const articles = Array.from(document.querySelectorAll('.food-card'));
-        articles.sort((a, b) => {
-            const dateA = new Date(a.dataset.date);
-            const dateB = new Date(b.dataset.date);
-            return dateB - dateA;
-        });
-        reorderArticles(articles);
-    }
+            const newArticles = data.map(dto => ({
+                id: dto.reviewId || `temp-${Math.random()}`,
+                user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' },
+                rating: dto.authorRating,
+                title: dto.reviewTitle,
+                restaurant: dto.restaurantName,
+                imageUrl: dto.reviewImage || '/images/default-food.jpg',
+                excerpt: extractExcerpt(dto.contentJson),
+                date: new Date(dto.reviewDate).toISOString().split('T')[0],
+                category: dto.cuisineType,
+                views: dto.viewCount,
+                favorited: false
+            }));
 
-    // 按瀏覽次數排序（最多的在前面）
-    function filterArticlesByViews() {
-        const articles = Array.from(document.querySelectorAll('.food-card'));
-        articles.sort((a, b) => {
-            const viewsA = parseInt(a.dataset.views);
-            const viewsB = parseInt(b.dataset.views);
-            return viewsB - viewsA;
-        });
-        reorderArticles(articles);
-    }
+            if (append) {
+                allArticles.push(...newArticles);
+                appendArticleCards(newArticles);
+            } else {
+                allArticles = newArticles;
+                renderArticles(allArticles);
+            }
 
-    // 重新排序文章
-    function reorderArticles(sortedArticles) {
-        const container = document.querySelector('.food-grid');
-        sortedArticles.forEach(article => {
-            container.appendChild(article);
-        });
-    }
-
-    // 打開彈窗
-    foodTypeBtn.addEventListener('click', function() {
-        modal.classList.add('show');
-    });
-
-    // 關閉彈窗
-    function closeModal() {
-        modal.classList.remove('show');
-    }
-
-    closeBtn.addEventListener('click', closeModal);
-
-    // 點擊彈窗外部關閉
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeModal();
+        } catch (error) {
+            console.error("Could not fetch articles:", error);
+            if (!append) {
+                foodGrid.innerHTML = '<p>無法載入文章，請稍後再試。</p>';
+            }
+        } finally {
+            isLoading = false;
         }
-    });
+    }
 
-    // 處理其他類型輸入框的顯示/隱藏
-    otherCheckbox.addEventListener('change', function() {
-        otherInput.classList.toggle('show', this.checked);
-        if (!this.checked) {
-            otherInput.value = '';
-            otherValue = '';
-        }
-    });
-
-    // 儲存其他類型的輸入值
-    otherInput.addEventListener('input', function() {
-        otherValue = this.value;
-    });
-
-    // 清除選擇
-    clearBtn.addEventListener('click', function() {
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        selectedTypes.clear();
-        otherValue = '';
-        otherInput.value = '';
-        otherInput.classList.remove('show');
-        updateFoodTypeButton();
-    });
-
-    // 套用選擇
-    applyBtn.addEventListener('click', function() {
-        selectedTypes.clear();
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                if (checkbox.value === 'other' && otherValue.trim()) {
-                    selectedTypes.add('other:' + otherValue.trim());
-                } else if (checkbox.value !== 'other') {
-                    selectedTypes.add(checkbox.value);
+    function extractExcerpt(contentJson, maxLength = 50) {
+        if (!contentJson) return '';
+        try {
+            const content = JSON.parse(contentJson);
+            if (content && content.blocks && content.blocks.length > 0) {
+                for (const block of content.blocks) {
+                    if (block.type === 'paragraph' && block.data && block.data.text) {
+                        const text = block.data.text;
+                        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                    }
                 }
             }
-        });
-        updateFoodTypeButton();
-        filterArticles();
-        closeModal();
-    });
-
-    // 更新按鈕文字
-    function updateFoodTypeButton() {
-        if (selectedTypes.size === 0) {
-            foodTypeBtn.textContent = '食物類型';
-            foodTypeBtn.classList.remove('active');
-        } else {
-            foodTypeBtn.textContent = `已選擇 ${selectedTypes.size} 種類型`;
-            foodTypeBtn.classList.add('active');
+        } catch (error) {
+            console.error('Error parsing content_json:', error);
         }
+        return '';
     }
 
-    // 篩選文章
-    function filterArticles() {
-        const articles = document.querySelectorAll('.food-card');
-        
-        if (selectedTypes.size === 0) {
-            // 如果沒有選擇任何類型，顯示所有文章
-            articles.forEach(article => {
-                article.style.display = 'block';
-            });
+    // --- Rendering ---
+    function createStarRating(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            stars += i <= rating ? '★' : '☆';
+        }
+        return stars;
+    }
+
+    function createArticleCard(article) {
+        const card = document.createElement('article');
+        card.className = 'food-card';
+        card.dataset.id = article.id;
+        card.dataset.date = article.date;
+        card.dataset.views = article.views;
+        card.dataset.category = article.category;
+
+        card.innerHTML = `
+            <div class="food-image">
+                <img src="${article.imageUrl}" alt="美食照片">
+                <button class="favorite-btn" title="收藏">
+                    <i class="${article.favorited ? 'fas' : 'far'} fa-heart"></i>
+                </button>
+            </div>
+            <div class="food-content">
+                <div class="user-info">
+                    <img src="${article.user.avatar}" alt="用戶頭像" class="avatar">
+                    <div class="user-details">
+                        <span class="username">${article.user.name}</span>
+                        <div class="rating">${createStarRating(article.rating)}</div>
+                    </div>
+                </div>
+                <div class="restaurant-info">
+                    <h2>${article.title}</h2>
+                    <div class="restaurant-name">
+                        <i class="fas fa-store"></i>
+                        <span>${article.restaurant}</span>
+                    </div>
+                </div>
+                <p class="excerpt">${article.excerpt || '點擊查看更多...'}</p>
+                <div class="meta">
+                    <div class="meta-left">
+                        <span class="date">${article.date}</span>
+                        <span class="category">${article.category}</span>
+                    </div>
+                    <span class="views">${article.views} 次瀏覽</span>
+                </div>
+            </div>
+        `;
+
+        card.querySelector('.favorite-btn').addEventListener('click', () => {
+             const icon = card.querySelector('.favorite-btn i');
+             icon.classList.toggle('far');
+             icon.classList.toggle('fas');
+             const targetArticle = allArticles.find(a => a.id === article.id);
+             if(targetArticle) {
+                targetArticle.favorited = !targetArticle.favorited;
+             }
+        });
+
+        return card;
+    }
+
+    function renderArticles(articles) {
+        foodGrid.innerHTML = '';
+        if (articles.length === 0 && !isLoading) {
+            foodGrid.innerHTML = '<p>找不到相符的文章。</p>';
             return;
         }
+        appendArticleCards(articles);
+    }
 
+    function appendArticleCards(articles) {
         articles.forEach(article => {
-            const category = article.querySelector('.category').textContent.trim();
-            const categoryValue = getCategoryValue(category);
-            
-            // 檢查是否符合選擇的類型（包括其他類型）
-            const isMatch = Array.from(selectedTypes).some(type => {
-                if (type.startsWith('other:')) {
-                    // 對於其他類型，檢查標題、店名和描述
-                    const title = article.querySelector('h2').textContent.toLowerCase();
-                    const restaurantName = article.querySelector('.restaurant-name span').textContent.toLowerCase();
-                    const excerpt = article.querySelector('.excerpt').textContent.toLowerCase();
-                    const searchTerm = type.split(':')[1].toLowerCase();
-                    return title.includes(searchTerm) || 
-                           restaurantName.includes(searchTerm) || 
-                           excerpt.includes(searchTerm);
-                }
-                return type === categoryValue;
-            });
-
-            article.style.display = isMatch ? 'block' : 'none';
+            const card = createArticleCard(article);
+            foodGrid.appendChild(card);
         });
     }
 
-    // 將中文類別轉換為對應的值
-    function getCategoryValue(category) {
-        const categoryMap = {
-            '台式': 'taiwanese',
-            '日式': 'japanese',
-            '韓式': 'korean',
-            '東南亞': 'southeast-asian',
-            '中東': 'middle-eastern',
-            '義式': 'italian',
-            '燒肉': 'bbq',
-            '火鍋': 'hotpot',
-            '漢堡': 'burger',
-            '牛排': 'steak',
-            '甜點': 'dessert',
-            '素食': 'vegetarian',
-            // 相容舊的類別名稱
-            '泰式料理': 'southeast-asian',
-            '韓式料理': 'korean',
-            '日本料理': 'japanese',
-            '台式料理': 'taiwanese',
-            '義式料理': 'italian'
-        };
-        return categoryMap[category] || category.toLowerCase();
-    }
-
-    // 初始化收藏狀態
-    function initializeFavorites() {
-        favoriteButtons.forEach(btn => {
-            const card = btn.closest('.food-card');
-            const articleId = getArticleId(card);
-            if (favorites.includes(articleId)) {
-                btn.classList.add('active');
-                btn.querySelector('i').classList.remove('far');
-                btn.querySelector('i').classList.add('fas');
-            }
-        });
-    }
-
-    // 生成文章唯一ID
-    function getArticleId(card) {
-        const title = card.querySelector('h2').textContent;
-        const date = card.dataset.date;
-        return `${title}-${date}`;
-    }
-
-    // 處理收藏點擊
-    favoriteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const card = this.closest('.food-card');
-            const articleId = getArticleId(card);
-            const icon = this.querySelector('i');
-
-            // 添加動畫
-            this.classList.add('animating');
-            setTimeout(() => {
-                this.classList.remove('animating');
-            }, 400);
-
-            if (this.classList.contains('active')) {
-                // 取消收藏
-                this.classList.remove('active');
-                icon.classList.remove('fas');
-                icon.classList.add('far');
-                favorites = favorites.filter(id => id !== articleId);
-            } else {
-                // 加入收藏
-                this.classList.add('active');
-                icon.classList.remove('far');
-                icon.classList.add('fas');
-                favorites.push(articleId);
-            }
-
-            // 儲存到 localStorage
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-        });
+    // --- Event Listeners ---
+    window.addEventListener('scroll', () => {
+        if (isLoading || !hasMore) return;
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+            fetchAndRenderArticles(subsequentLoadSize, allArticles.length, true);
+        }
     });
 
-    // 初始化收藏狀態
-    initializeFavorites();
+    modalEventListeners();
+    filterEventListeners();
+    searchEventListeners();
+
+    function modalEventListeners() {
+        foodTypeBtn.addEventListener('click', () => {
+            foodTypeModal.style.display = 'block';
+        });
+        closeModal.addEventListener('click', () => {
+            foodTypeModal.style.display = 'none';
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target === foodTypeModal) {
+                foodTypeModal.style.display = 'none';
+            }
+        });
+        applyBtn.addEventListener('click', () => {
+            currentFilters.cuisineTypes = Array.from(foodTypeModal.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.closest('.checkbox-container').textContent.trim());
+            foodTypeModal.style.display = 'none';
+            applyFilters();
+        });
+        clearBtn.addEventListener('click', () => {
+            foodTypeModal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            currentFilters.cuisineTypes = [];
+            applyFilters();
+        });
+    }
+
+    function filterEventListeners() {
+        filterItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector('.category-item.active').classList.remove('active');
+                item.classList.add('active');
+                currentFilters.sort = item.dataset.filter;
+                applyFilters();
+            });
+        });
+    }
+    
+    function searchEventListeners() {
+        searchBtn.addEventListener('click', () => {
+            currentFilters.search = searchInput.value;
+            applyFilters();
+        });
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                currentFilters.search = searchInput.value;
+                applyFilters();
+            }
+        });
+    }
+
+    function applyFilters() {
+        currentFilters.search = searchInput.value;
+        allArticles = [];
+        hasMore = true;
+        foodGrid.innerHTML = '';
+        window.scrollTo(0, 0);
+        fetchAndRenderArticles(initialLoadSize, 0, false);
+    }
+
+    // --- Initialization ---
+    function initializePage() {
+        fetchAndRenderArticles(initialLoadSize, 0);
+    }
+
+    initializePage();
 }); 

@@ -19,7 +19,7 @@
 				<p>加入食力派ChowCrew，開啟您的美食事業</p>
 			</div>
 
-			<form class="signup-form" id="restaurant-signup-form">
+			<form class="signup-form" id="restaurant-signup-form" enctype="multipart/form-data" method="POST">
 				<!-- 基本資料區塊 -->
 				<div class="form-section">
 					<h2>基本資料</h2>
@@ -32,7 +32,7 @@
 									<span>點擊上傳頭像</span>
 								</div>
 							</div>
-							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input">
+							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
 						</div>
 						<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
 					</div>
@@ -41,7 +41,7 @@
 						<label for="restaurant-name">餐廳名稱</label>
 						<div class="input-with-icon">
 							<i class="fas fa-store"></i>
-							<input type="text" id="restaurant-name" name="restaurant-name" placeholder="請輸入餐廳名稱"
+							<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
 								required>
 						</div>
 					</div>
@@ -58,7 +58,7 @@
 						<label for="phone">聯絡電話</label>
 						<div class="input-with-icon">
 							<i class="fas fa-phone"></i>
-							<input type="tel" id="phone" name="phone" placeholder="請輸入聯絡電話" required>
+							<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
 						</div>
 					</div>
 				</div>
@@ -99,14 +99,7 @@
 						<label for="cuisine-type">料理類型</label>
 						<div class="input-with-icon">
 							<i class="fas fa-utensils"></i>
-							<select id="cuisine-type" name="cuisine-type" required>
-								<option value="">請選擇料理類型</option>
-								<option value="chinese">中式料理</option>
-								<option value="japanese">日式料理</option>
-								<option value="western">西式料理</option>
-								<option value="dessert">甜點飲品</option>
-								<option value="other">其他</option>
-							</select>
+							<input type="text" id="cuisineType" name="cuisineType" placeholder="請輸入料理類型" required />
 						</div>
 					</div>
 
@@ -114,7 +107,7 @@
 						<label for="business-hours">營業時間</label>
 						<div class="input-with-icon">
 							<i class="fas fa-clock"></i>
-							<input type="text" id="business-hours" name="business-hours" placeholder="例：11:00-21:00"
+							<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00"
 								required>
 						</div>
 					</div>
@@ -160,6 +153,7 @@
 	</div>
 
 	<script>
+		
 		// 測試 JavaScript 是否正確載入
 		console.log('JavaScript 已載入');
 
@@ -265,7 +259,68 @@
 			// 跳轉到首頁
 			window.location.href = 'index.html';
 		}
-	</script>
+		
+// ⬅️ 新增這個全域變數，專門記住用戶選的照片
+let selectedPhotos = [];
+
+document.getElementById("photo-upload").addEventListener("change", function(e) {
+  selectedPhotos = Array.from(e.target.files);
+  console.log("選了幾張照片：", selectedPhotos.length);
+});
+
+// 表單送出
+document.getElementById("restaurant-signup-form").addEventListener("submit", async function (e) {
+  e.preventDefault(); // 阻止表單預設送出
+
+  const formData = new FormData();
+
+  // 取得單檔：頭像
+  const avatarFile = document.getElementById("avatar-upload").files[0];
+  if (avatarFile) {
+    formData.append("avatar", avatarFile);
+  }
+
+  // ✅ 用 selectedPhotos，不要再用 getElementById 抓一次了！
+  console.log("照片數量（送出時）:", selectedPhotos.length);
+  for (let i = 0; i < selectedPhotos.length; i++) {
+    formData.append("photos", selectedPhotos[i]);
+    console.log("加了照片：", selectedPhotos[i].name);
+  }
+
+  // 抓其他欄位
+  const jsonData = {
+    name: document.getElementById("restaurant-name").value,
+    email: document.getElementById("email").value,
+    phoneNumber: document.getElementById("phone").value,
+    password: document.getElementById("password").value,
+    confirmPassword: document.getElementById("confirm-password").value,
+    address: document.getElementById("address").value,
+    cuisineType: document.getElementById("cuisineType").value,
+    businessHours: document.getElementById("business-hours").value
+  };
+
+  formData.append("data", new Blob([JSON.stringify(jsonData)], { type: "application/json" }));
+
+  try {
+    const response = await fetch("http://localhost:8080/api/merchants/register", {
+      method: "POST",
+      body: formData
+    });
+
+    if (response.ok) {
+      const result = await response.text();
+      alert("註冊成功！伺服器回應：" + result);
+    } else {
+      const errorText = await response.text();
+      alert("發生錯誤：" + response.status + "\n" + errorText);
+    }
+  } catch (error) {
+    console.error("傳送失敗", error);
+    alert("傳送失敗：" + error.message);
+  }
+});
+</script>
+	
 </body>
 
 </html>

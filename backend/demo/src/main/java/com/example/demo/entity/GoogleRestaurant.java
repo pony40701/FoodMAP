@@ -1,21 +1,55 @@
 package com.example.demo.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Data;
 
 @Entity
 @Table(name = "google_restaurants")
+@Data
 public class GoogleRestaurant {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String placeId;
 
-    // 如果只查 id，可以只留這個欄位
-    public Long getId() {
-        return id;
-    }
+    private String name;
+    private String address;
+    private Double rating;
+    
+    @Column(name = "review_count")
+    private Integer reviewCount;
 
-    public void setId(Long id) {
-        this.id = id;
+    @Column(name = "photo_url")
+    private String photoUrl;
+
+    @Column(name = "description")
+    private String description;
+
+    // 保留原有的 lat/lng 欄位，同時添加 latitude/longitude 以保持兼容性
+    private Double lat;
+    private Double lng;
+    
+    @Column(name = "latitude")
+    private Double latitude;
+    
+    @Column(name = "longitude")
+    private Double longitude;
+    
+    @Column(name = "created_at")
+    private java.sql.Timestamp createdAt;
+    
+    @Column(name = "types")
+    private String types;
+    
+    // 新增綜合評分欄位，但不儲存到資料庫
+    @Transient
+    private Double compositeScore;
+    
+    // 添加 getAverageRating 方法以保持與原 Restaurant 的兼容性
+    public Double getAverageRating() {
+        return rating != null ? rating : null;
     }
 }

@@ -73,6 +73,38 @@ async function createRestaurantCard(restaurant) {
         console.error('找不到餐廳ID，無法創建收藏按鈕:', restaurant);
     }
     
+    // 從 json_raw 解析數據
+    if (restaurant.json_raw) {
+        try {
+            const jsonData = JSON.parse(restaurant.json_raw);
+            console.log('成功解析 json_raw 數據:', restaurant.name, {
+                rating: jsonData.rating,
+                user_ratings_total: jsonData.user_ratings_total,
+                opening_hours: jsonData.opening_hours
+            });
+            
+            // 從 JSON 數據中提取評分、評論數
+            if (jsonData.rating) {
+                restaurant.rating = jsonData.rating;
+                restaurant.averageRating = jsonData.rating;
+            }
+            if (jsonData.user_ratings_total) {
+                restaurant.user_ratings_total = jsonData.user_ratings_total;
+                restaurant.reviewCount = jsonData.user_ratings_total;
+                console.log(`設置 ${restaurant.name} 的評論數為: ${jsonData.user_ratings_total}`);
+            } else {
+                console.log(`警告: ${restaurant.name} 沒有 user_ratings_total 欄位`);
+            }
+            
+            // 提取營業時間
+            if (jsonData.opening_hours) {
+                restaurant.opening_hours = jsonData.opening_hours;
+            }
+        } catch (error) {
+            console.error('解析 json_raw 失敗:', error);
+        }
+    }
+    
     // 營業時間判斷
     let isOpen = false;
     let todayHours = '';
@@ -139,6 +171,10 @@ async function createRestaurantCard(restaurant) {
     // 設置圖片URL，優先使用資料庫中的圖片
     const imageUrl = `http://localhost:8080/api/restaurant-images/${restaurantId}/raw`;
     
+    // 確保評分和評論數有默認值，但優先使用從 json_raw 解析出的數據
+    const rating = restaurant.rating || restaurant.averageRating || 0;
+    const reviewCount = restaurant.user_ratings_total || restaurant.reviewCount || 0;
+    
     card.innerHTML = `
         <div class="restaurant-image-wrapper v3">
             <img src="${imageUrl}" alt="${restaurant.name}" onerror="this.src='images/no-image.jpg'">
@@ -151,9 +187,9 @@ async function createRestaurantCard(restaurant) {
                 <h3 class="restaurant-name v3">${restaurant.name}</h3>
             </div>
             <div class="restaurant-rating-row v3">
-                <span class="rating-stars v3">${generateStars(restaurant.rating)}</span>
-                <span class="rating-score v3">${restaurant.rating ? restaurant.rating.toFixed(1) : 'N/A'}</span>
-                <span class="rating-count v3">(${restaurant.user_ratings_total || 0}則評論)</span>
+                <span class="rating-stars v3">${generateStars(rating)}</span>
+                <span class="rating-score v3">${rating ? rating.toFixed(1) : 'N/A'}</span>
+                <span class="rating-count v3">(${reviewCount}則評論)</span>
             </div>
             <div class="restaurant-address-row v3">
                 <i class="fas fa-map-marker-alt"></i>
@@ -306,9 +342,9 @@ window.displayRestaurants = async function(restaurants, isFirstPage = true) {
             }
             
             // 檢查是否已收藏
-            const isFavorited = window.favoriteSystem.isStoreFavorited(placeId);
-            
             try {
+                const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
+                
                 if (isFavorited) {
                     // 如果已收藏，則移除收藏
                     const success = await window.favoriteSystem.removeStore(placeId);
