@@ -58,4 +58,17 @@ public interface MerchantAccountRepository extends JpaRepository<MerchantAccount
         @Param("cuisineType") String cuisineType,
         @Param("paymentMethods") String paymentMethods
     );
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+            UPDATE restaurants r
+            JOIN merchant_accounts ma ON r.id = ma.restaurant_id
+            SET r.description = :description
+            WHERE r.id = :restaurantId
+            """, nativeQuery = true)
+    int updateDescription(
+        @Param("restaurantId") Integer restaurantId,
+        @Param("description") String description
+    );
 }

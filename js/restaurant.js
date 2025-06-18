@@ -580,7 +580,7 @@ async function saveBasicInfo() {
         if (avatarInput.files.length > 0) {
             formData.append('avatar', avatarInput.files[0]);
         }
-        
+
         const token = localStorage.getItem('merchantToken');
         const response = await fetch('http://localhost:8080/api/merchants/restaurant/basic-info', {
             method: 'PUT',
@@ -589,7 +589,7 @@ async function saveBasicInfo() {
             },
             body: formData
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -601,7 +601,7 @@ async function saveBasicInfo() {
         if (updatedData.avatarUrl) {
             updateAvatars(updatedData.avatarUrl);
         }
-        
+
         // 更新基本資料欄位
         const basicInfoSection = document.getElementById('basic-info');
         if (basicInfoSection) {
@@ -610,7 +610,7 @@ async function saveBasicInfo() {
             updateField(basicInfoSection, "聯絡電話", updatedData.phoneNumber);
             updateField(basicInfoSection, "營業地址", updatedData.address);
         }
-        
+
         alert('基本資料更新成功！');
         return true;
         
@@ -688,8 +688,58 @@ async function saveBusinessInfo() {
 }
 
 async function saveDescription() {
-    // TODO: 實作餐廳簡介的儲存邏輯
-    return false;
+    try {
+        const section = document.getElementById('description-info');
+        const data = {
+            description: ''
+        };
+
+        // 使用標籤文字來識別正確的輸入框
+        const inputs = section.querySelectorAll('.info-item');
+        inputs.forEach(item => {
+            const label = item.querySelector('label');
+            const input = item.querySelector('.edit-mode');
+            
+            if (label && input) {
+                switch(label.textContent) {
+                    case '餐廳簡介':
+                        data.description = input.value;
+                        break;
+                }
+            }
+        });
+
+        const token = localStorage.getItem('merchantToken');
+        const response = await fetch('http://localhost:8080/api/merchants/restaurant/description', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // 獲取更新後的資料
+        const updatedData = await response.json();
+        
+        // 更新餐廳簡介欄位
+        const descriptionSection = document.getElementById('description-info');
+        if (descriptionSection) {
+            updateField(descriptionSection, "餐廳簡介", updatedData.description);
+        }
+
+        alert('餐廳簡介更新成功！');
+        return true;
+
+    } catch (error) {
+        console.error('更新餐廳簡介時發生錯誤:', error);
+        alert('更新餐廳簡介失敗，請稍後再試。');
+        return false;
+    }
 }
 
 async function savePhotos() {
