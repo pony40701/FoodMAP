@@ -35,6 +35,16 @@ public class ReviewService {
     public Integer createReview(ReviewRequestDto dto) {
         // 1. 新增評論
         Review review = new Review();
+        
+        // 設置用戶和餐廳
+        User user = new User();
+        user.setId(dto.getUserId().longValue());
+        review.setUser(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(dto.getRestaurantId());
+        review.setRestaurant(restaurant);
+        
         review.setTitle(dto.getTitle());
         review.setContentJson(dto.getContent_json());
         review.setStatus(dto.getStatus());
@@ -116,6 +126,8 @@ public class ReviewService {
         return drafts.stream().map(draft -> {
             ReviewDraftDto dto = new ReviewDraftDto();
             dto.setId(draft.getId().intValue());
+            dto.setUserId(userId);
+            dto.setRestaurantId(draft.getRestaurant().getId());
             dto.setTitle(draft.getTitle());
             dto.setContentJson(draft.getContentJson());
             dto.setStatus(draft.getStatus());
@@ -160,6 +172,8 @@ public class ReviewService {
 
         ReviewRequestDto dto = new ReviewRequestDto();
         dto.setId(review.getId().intValue());
+        dto.setUserId(review.getUser().getId().intValue());
+        dto.setRestaurantId(review.getRestaurant().getId());
         dto.setTitle(review.getTitle());
         dto.setContent_json(review.getContentJson());
         dto.setStatus(review.getStatus());
@@ -204,6 +218,16 @@ public class ReviewService {
 
         // 更新基本資訊
         review.setTitle(dto.getTitle());
+
+        // 設置用戶和餐廳
+        User user = new User();
+        user.setId(dto.getUserId().longValue());
+        review.setUser(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(dto.getRestaurantId());
+        review.setRestaurant(restaurant);
+
         review.setContentJson(dto.getContent_json());
         review.setUpdatedAt(java.time.LocalDateTime.now());
         review = reviewRepository.save(review);
@@ -283,6 +307,8 @@ public class ReviewService {
 
         // 2. 建立新的發布文章
         Review publishedReview = new Review();
+        publishedReview.setUser(draft.getUser());  // 設置用戶
+        publishedReview.setRestaurant(draft.getRestaurant());  // 設置餐廳
         publishedReview.setTitle(draft.getTitle());
         publishedReview.setContentJson(draft.getContentJson());
         publishedReview.setStatus("published");
@@ -342,6 +368,8 @@ public class ReviewService {
         return reviews.stream().map(review -> {
             ReviewRequestDto dto = new ReviewRequestDto();
             dto.setId(review.getId().intValue());
+            dto.setUserId(userId);
+            dto.setRestaurantId(review.getRestaurant().getId());
             dto.setTitle(review.getTitle());
             dto.setContent_json(review.getContentJson());
             dto.setStatus(review.getStatus());
@@ -426,6 +454,8 @@ public class ReviewService {
 
         // 2. 建立新草稿
         Review newDraft = new Review();
+        newDraft.setUser(publishedReview.getUser());
+        newDraft.setRestaurant(publishedReview.getRestaurant());
         newDraft.setTitle(dto.getTitle());
         newDraft.setContentJson(dto.getContent_json());
         newDraft.setStatus("draft");
@@ -492,6 +522,16 @@ public class ReviewService {
 
         // 2. 更新基本資訊
         review.setTitle(dto.getTitle());
+
+        // 設置用戶和餐廳
+        User user = new User();
+        user.setId(dto.getUserId().longValue());
+        review.setUser(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(dto.getRestaurantId());
+        review.setRestaurant(restaurant);
+      
         review.setContentJson(dto.getContent_json());
         review.setUpdatedAt(java.time.LocalDateTime.now());
         review = reviewRepository.save(review);

@@ -8,6 +8,7 @@ import java.util.List;
 public class ReviewRequestDto {
     private Integer id;  // 用於編輯時識別
     private Integer userId; // 用戶ID
+    private Integer restaurantId; // 餐廳ID
     private String title;
     private String content_json;
     private String status; // draft/published

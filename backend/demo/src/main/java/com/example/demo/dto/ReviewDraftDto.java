@@ -7,6 +7,8 @@ import java.util.List;
 @Data
 public class ReviewDraftDto {
     private Integer id;
+    private Integer userId;
+    private Integer restaurantId;
     private String title;
     private String contentJson;
     private String status;
