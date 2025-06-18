@@ -194,17 +194,21 @@ class BusinessHours {
         // 分割日期和時間，只返回時間部分
         const timePart = todayText.split(/：|:/)[1]?.trim();
         
+        // 移除可能存在的秒數
+        const timePartWithoutSeconds = timePart ? timePart.replace(/(\d{1,2}):(\d{2}):(\d{2})/g, '$1:$2') : null;
+        
         // 調試信息
         if (this.DEBUG) {
             console.log('[BusinessHours] 獲取今日營業時間:', {
                 today,
                 index,
                 todayText,
-                timePart
+                timePart,
+                timePartWithoutSeconds
             });
         }
         
-        return timePart || null;
+        return timePartWithoutSeconds || timePart || null;
     }
 }
 

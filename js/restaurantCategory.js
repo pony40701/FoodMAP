@@ -2,14 +2,19 @@
 class RestaurantCategory {
     constructor() {
         this.categories = [
+            { type: 'all', name: '全部餐廳', icon: '🍽️' },
             { type: 'restaurant', name: '中式', icon: '🥢' },
-            { type: 'restaurant', name: '燒烤', icon: '🍖' },
-            { type: 'restaurant', name: '火鍋', icon: '🍲' },
             { type: 'restaurant', name: '日式', icon: '🍣' },
-            { type: 'restaurant', name: '美式', icon: '🍔' },
-            { type: 'restaurant', name: '義式', icon: '🍝' },
+            { type: 'restaurant', name: '韓式', icon: '🍱' },
+            { type: 'restaurant', name: '義式', icon: '🍕' },
+            { type: 'restaurant', name: '法式', icon: '🥐' },
+            { type: 'restaurant', name: '泰式', icon: '🥥' },
+            { type: 'restaurant', name: '火鍋', icon: '🍲' },
             { type: 'restaurant', name: '牛排', icon: '🥩' },
-            { type: 'restaurant', name: '素食', icon: '🥗' }
+            { type: 'restaurant', name: '燒烤', icon: '🍖' },
+            { type: 'restaurant', name: '異國料理', icon: '🌏' },
+            { type: 'restaurant', name: '素食', icon: '🥗' },
+            { type: 'restaurant', name: '美式', icon: '🍔' }
         ];
     }
 
@@ -18,14 +23,17 @@ class RestaurantCategory {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        const categoriesHTML = this.categories.map(category => `
-            <div class="food-type-item" data-type="${category.type}" data-name="${category.name}">
-                <div class="emoji-circle">${category.icon}</div>
-                <span>${category.name}</span>
+        // 新增橫向排列的外層
+        container.innerHTML = `
+            <div class="food-types-row" style="display: flex; flex-wrap: wrap; gap: 16px; overflow-x: auto; padding: 8px 0;">
+                ${this.categories.map(category => `
+                    <div class="food-type-item" data-type="${category.type}" data-name="${category.name}" style="display: flex; flex-direction: column; align-items: center; min-width: 72px; cursor: pointer;">
+                        <div class="emoji-circle" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: #fff6ee; border-radius: 50%; box-shadow: 0 2px 8px rgba(255,107,26,0.08); margin-bottom: 4px;">${category.icon}</div>
+                        <span style="font-size: 15px; color: #444;">${category.name}</span>
+                    </div>
+                `).join('')}
             </div>
-        `).join('');
-
-        container.innerHTML = categoriesHTML;
+        `;
         this.attachEventListeners(container);
     }
 
@@ -33,9 +41,23 @@ class RestaurantCategory {
     attachEventListeners(container) {
         container.querySelectorAll('.food-type-item').forEach(item => {
             item.addEventListener('click', () => {
-                const type = item.dataset.type;
-                const name = item.dataset.name;
-                this.searchByType(type, name);
+                const type = item.dataset.name;
+                if (type === '全部餐廳') {
+                    // 顯示全部餐廳
+                    if (window.mapInit && typeof window.mapInit.displayAllRestaurants === 'function') {
+                        window.mapInit.displayAllRestaurants();
+                    } else if (window.displayRestaurants && window.mapInit && window.mapInit.allRestaurants) {
+                        window.displayRestaurants(window.mapInit.allRestaurants);
+                    }
+                    if (window.updateResultsTitle) {
+                        window.updateResultsTitle(`全部餐廳 (${window.mapInit && window.mapInit.allRestaurants ? window.mapInit.allRestaurants.length : 0} 間)`);
+                    }
+                } else {
+                    // 呼叫 mapInit 的 searchByType，確保分類正確
+                    if (window.mapInit && typeof window.mapInit.searchByType === 'function') {
+                        window.mapInit.searchByType(type);
+                    }
+                }
             });
         });
     }
@@ -77,4 +99,5 @@ class RestaurantCategory {
     }
 }
 
-export default RestaurantCategory; 
+// export default RestaurantCategory;
+window.RestaurantCategory = RestaurantCategory; 
