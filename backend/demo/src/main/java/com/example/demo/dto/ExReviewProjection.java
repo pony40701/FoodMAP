@@ -4,9 +4,9 @@ import java.util.Date;
 
 public interface ExReviewProjection {
     Long getReviewId();
-    Integer getReviewPhotoId();
-    String getReviewImage();
+    byte[] getImage();
     String getAuthorName();
+    String getAuthorAvatar();
     Double getAuthorRating();
     String getReviewTitle();
     String getRestaurantName();

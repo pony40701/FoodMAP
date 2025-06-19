@@ -69,16 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const newArticles = data.map(dto => {
                 let imageUrl = '/images/no-image.jpg'; // Default image
-
-                if (dto.reviewPhotoId) {
-                    imageUrl = `/api/reviews/photos/${dto.reviewPhotoId}`;
-                } else if (dto.reviewImage) {
-                    imageUrl = dto.reviewImage;
+                if (dto.imageBase64) {
+                    imageUrl = `data:image/jpeg;base64,${dto.imageBase64}`;
                 }
+
+                let avatarUrl = dto.authorAvatar || 'https://i.pravatar.cc/40';
 
                 return {
                     id: dto.reviewId,
-                    user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' },
+                    user: { name: dto.authorName, avatar: avatarUrl },
                     rating: dto.authorRating,
                     title: dto.reviewTitle,
                     restaurant: dto.restaurantName,
@@ -155,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         card.innerHTML = `
             <div class="food-image">
-                <img src="${article.imageUrl}" alt="美食照片">
+                <img src="${article.imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
                 <button class="favorite-btn" title="收藏">
                     <i class="${article.favorited ? 'fas' : 'far'} fa-heart"></i>
                 </button>

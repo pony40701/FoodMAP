@@ -4,9 +4,9 @@ import java.util.Date;
 
 public class ExReviewDTO {
     private Long reviewId;
-    private Integer reviewPhotoId;
-    private String reviewImage;
+    private String imageBase64;
     private String authorName;
+    private String authorAvatar;
     private Double authorRating;
     private String reviewTitle;
     private String restaurantName;
@@ -19,12 +19,12 @@ public class ExReviewDTO {
     // Constructors
     public ExReviewDTO() {}
 
-    public ExReviewDTO(Long reviewId, Integer reviewPhotoId, String reviewImage, String authorName, Double authorRating, String reviewTitle,
+    public ExReviewDTO(Long reviewId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
                        String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited) {
         this.reviewId = reviewId;
-        this.reviewPhotoId = reviewPhotoId;
-        this.reviewImage = reviewImage;
+        this.imageBase64 = imageBase64;
         this.authorName = authorName;
+        this.authorAvatar = authorAvatar;
         this.authorRating = authorRating;
         this.reviewTitle = reviewTitle;
         this.restaurantName = restaurantName;
@@ -44,20 +44,12 @@ public class ExReviewDTO {
         this.reviewId = reviewId;
     }
 
-    public Integer getReviewPhotoId() {
-        return reviewPhotoId;
+    public String getImageBase64() {
+        return imageBase64;
     }
 
-    public void setReviewPhotoId(Integer reviewPhotoId) {
-        this.reviewPhotoId = reviewPhotoId;
-    }
-
-    public String getReviewImage() {
-        return reviewImage;
-    }
-
-    public void setReviewImage(String reviewImage) {
-        this.reviewImage = reviewImage;
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
     }
 
     public String getAuthorName() {
@@ -66,6 +58,14 @@ public class ExReviewDTO {
 
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
+    }
+
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
     }
 
     public Double getAuthorRating() {

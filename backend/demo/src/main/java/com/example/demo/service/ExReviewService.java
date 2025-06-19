@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,11 +28,16 @@ public class ExReviewService {
     }
 
     private ExReviewDTO convertToDto(ExReviewProjection projection) {
+        String imageBase64 = null;
+        if (projection.getImage() != null) {
+            imageBase64 = Base64.getEncoder().encodeToString(projection.getImage());
+        }
+
         return new ExReviewDTO(
             projection.getReviewId(),
-            projection.getReviewPhotoId(),
-            projection.getReviewImage(),
+            imageBase64,
             projection.getAuthorName(),
+            projection.getAuthorAvatar(),
             projection.getAuthorRating(),
             projection.getReviewTitle(),
             projection.getRestaurantName(),
