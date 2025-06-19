@@ -294,19 +294,19 @@
                 <div class="user-avatar">
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
-                        <a href="usercenter.html" class="dropdown-item">
+                        <a href="userCenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-                        <a href="usercenter.html#favorites" class="dropdown-item">
+                        <a href="userCenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
                         </a>
-                        <a href="usercenter.html#reviews" class="dropdown-item">
+                        <a href="userCenter.html#reviews" class="dropdown-item">
                             <i class="fas fa-star"></i>
                             <span>我的評論</span>
                         </a>
-                        <a href="usercenter.html#orders" class="dropdown-item">
+                        <a href="userCenter.html#orders" class="dropdown-item">
                             <i class="fas fa-history"></i>
                             <span>瀏覽紀錄</span>
                         </a>
@@ -575,6 +575,7 @@
             });
         };
     </script>
+    <script src="js/toast.js"></script>
     <script src="js/experienceList.js"></script>
     <script src="js/loginModal.js"></script>
     <script>
@@ -675,6 +676,7 @@
                             // 儲存用戶資料
                             localStorage.setItem('user', JSON.stringify(data));
                             localStorage.setItem('isLoggedIn', 'true');
+                            localStorage.setItem('userId', data.id);
                             // 顯示會員頭像
                             const loginSection = document.getElementById('loginSection');
                             const userSection = document.getElementById('userSection');
@@ -736,6 +738,24 @@
                 loginModal.style.display = 'none';
             }
         });
+
+        function logout() {
+            // 清除使用者登入資訊
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('token');
+
+            // 切換 UI 狀態
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            if (loginSection) loginSection.style.display = 'flex';
+            if (userSection) userSection.style.display = 'none';
+
+            showToast('您已成功登出！');
+            // 重新載入頁面以確保狀態完全更新
+            setTimeout(() => window.location.reload(), 1000);
+        }
     </script>
 </body>
 </html> 

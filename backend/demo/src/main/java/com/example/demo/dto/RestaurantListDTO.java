@@ -2,7 +2,6 @@ package com.example.demo.dto;
 
 import java.sql.Timestamp;
 import java.util.List;
-import com.example.demo.dto.GoogleReviewDTO;
 
 public class RestaurantListDTO {
 
