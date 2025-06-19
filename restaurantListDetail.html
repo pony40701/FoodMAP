@@ -378,6 +378,21 @@
       </div>
     </footer>
 
+    <!-- 路線規劃彈出視窗 -->
+    <div id="directionsModal" class="directions-modal-overlay" style="display: none;">
+      <div class="directions-modal-content">
+        <h3>路線規劃</h3>
+        <p>請輸入您的出發地址：</p>
+        <div class="directions-input-container">
+          <input type="text" id="startAddress" class="directions-input" placeholder="" />
+          <div class="directions-buttons">
+            <button class="directions-btn-cancel">取消</button>
+            <button class="directions-btn-confirm">查看路線</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 加入必要的 JavaScript -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="js/restaurantListDetail.js"></script>
