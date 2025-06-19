@@ -811,3 +811,31 @@ body {
     background: rgba(255, 107, 26, 0.1);
     color: #ff8c42;
 }
+
+.info-content {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.info-content .edit-mode {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.info-content .edit-mode:focus {
+    border-color: #ff6b1a;
+    box-shadow: 0 0 5px rgba(255, 107, 26, 0.3);
+    outline: none;
+}
+
+.info-content .view-mode {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+}
