@@ -1,6 +1,6 @@
 // 編輯功能
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 已載入完成');
+    ('DOM 已載入完成');
     
     const editButton = document.getElementById('editButton');
     const cancelButton = document.getElementById('cancelButton');
@@ -9,21 +9,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarInput = document.getElementById('avatar-upload');
     const avatarPreview = document.querySelector('.profile-avatar');
     
-    console.log('編輯按鈕元素：', editButton);
-    console.log('取消按鈕元素：', cancelButton);
-    console.log('儲存按鈕元素：', saveButton);
-    console.log('餐廳資訊元素：', restaurantInfo);
-    console.log('頭像輸入元素：', avatarInput);
-    console.log('頭像預覽元素：', avatarPreview);
+    ('編輯按鈕元素：', editButton);
+    ('取消按鈕元素：', cancelButton);
+    ('儲存按鈕元素：', saveButton);
+    ('餐廳資訊元素：', restaurantInfo);
+    ('頭像輸入元素：', avatarInput);
+    ('頭像預覽元素：', avatarPreview);
 
     // 進入編輯模式
     if (editButton) {
         editButton.onclick = function(e) {
-            console.log('點擊編輯按鈕');
+            ('點擊編輯按鈕');
             e.preventDefault();
             if (restaurantInfo) {
                 restaurantInfo.classList.add('editing');
-                console.log('已進入編輯模式');
+                ('已進入編輯模式');
             }
         };
     }
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 取消編輯
     if (cancelButton) {
         cancelButton.onclick = function(e) {
-            console.log('點擊取消按鈕');
+            ('點擊取消按鈕');
             e.preventDefault();
             if (restaurantInfo) {
                 restaurantInfo.classList.remove('editing');
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.value = input.defaultValue;
                     }
                 });
-                console.log('已取消編輯');
+                ('已取消編輯');
             }
         };
     }
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 儲存編輯
     if (saveButton) {
         saveButton.onclick = function(e) {
-            console.log('點擊儲存按鈕');
+            ('點擊儲存按鈕');
             e.preventDefault();
             if (restaurantInfo) {
                 // 收集所有編輯的資料
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     description: document.querySelector('.info-content .edit-mode')?.value
                 };
 
-                console.log('儲存的資料：', formData);
+                ('儲存的資料：', formData);
 
                 // 更新顯示的資料
                 document.querySelectorAll('.view-mode').forEach((element) => {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 退出編輯模式
                 restaurantInfo.classList.remove('editing');
-                console.log('已儲存並退出編輯模式');
+                ('已儲存並退出編輯模式');
             }
         };
     }
@@ -91,17 +91,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (avatarContainer) {
             avatarContainer.onclick = function(e) {
-                console.log('點擊頭像容器');
+                ('點擊頭像容器');
                 if (restaurantInfo && restaurantInfo.classList.contains('editing')) {
                     e.preventDefault();
                     avatarInput.click();
-                    console.log('觸發頭像上傳');
+                    ('觸發頭像上傳');
                 }
             };
         }
 
         avatarInput.onchange = function(e) {
-            console.log('選擇檔案');
+            ('選擇檔案');
             const file = e.target.files[0];
             if (file) {
                 // 檢查檔案大小（2MB）
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     avatarPreview.src = e.target.result;
-                    console.log('頭像已更新');
+                    ('頭像已更新');
                 };
                 reader.readAsDataURL(file);
             }
@@ -185,12 +185,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 檢查商家是否已登入
 async function checkMerchantAuth() {
-    console.log("開始驗證商家登入狀態");
+    ("開始驗證商家登入狀態");
     const token = localStorage.getItem("merchantToken");
     const email = localStorage.getItem("merchantEmail");
     const restaurantId = localStorage.getItem("restaurantId");
     
-    console.log("登入資訊檢查：", {
+    ("登入資訊檢查：", {
         hasToken: !!token,
         token: token,
         email: email,
@@ -204,20 +204,20 @@ async function checkMerchantAuth() {
     }
 
     try {
-        console.log("發送驗證請求到後端");
+        ("發送驗證請求到後端");
         const response = await fetch("http://localhost:8080/api/merchants/validate", {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
         });
 
-        console.log("驗證請求回應狀態:", response.status);
+        ("驗證請求回應狀態:", response.status);
         if (!response.ok) {
             throw new Error("驗證失敗");
         }
 
         const isValid = await response.json();
-        console.log("Token 驗證結果:", isValid);
+        ("Token 驗證結果:", isValid);
         
         if (!isValid) {
             throw new Error("Token 無效");
@@ -237,16 +237,16 @@ async function checkMerchantAuth() {
 
 // 載入餐廳資料
 async function loadRestaurantInfo() {
-    console.log("開始載入餐廳資料");
+    ("開始載入餐廳資料");
     const token = localStorage.getItem("merchantToken");
     const restaurantId = localStorage.getItem("restaurantId");
-    console.log("當前登入資訊：", {
+    ("當前登入資訊：", {
         token: token,
         restaurantId: restaurantId
     });
     
     try {
-        console.log("發送獲取餐廳資料請求");
+        ("發送獲取餐廳資料請求");
         const response = await fetch("http://localhost:8080/api/merchants/restaurant/info", {
             method: 'GET',
             headers: {
@@ -255,7 +255,7 @@ async function loadRestaurantInfo() {
             }
         });
 
-        console.log("獲取餐廳資料回應狀態:", response.status);
+        ("獲取餐廳資料回應狀態:", response.status);
         if (!response.ok) {
             const errorText = await response.text();
             console.error("回應內容:", errorText);
@@ -263,7 +263,7 @@ async function loadRestaurantInfo() {
         }
 
         const restaurant = await response.json();
-        console.log("獲取到的餐廳資料:", restaurant);
+        ("獲取到的餐廳資料:", restaurant);
         
         if (!restaurant) {
             console.error("餐廳資料為空");
@@ -274,7 +274,7 @@ async function loadRestaurantInfo() {
         updateAvatars(restaurant.avatarUrl);
         
         // 更新基本資料欄位
-        console.log("更新基本資料欄位");
+        ("更新基本資料欄位");
         const basicInfoSection = document.querySelector("#basic-info");
         if (basicInfoSection) {
             // 餐廳名稱
@@ -288,7 +288,7 @@ async function loadRestaurantInfo() {
         }
         
         // 更新營業資訊
-        console.log("更新營業資訊");
+        ("更新營業資訊");
         const businessInfoSection = document.querySelector("#business-info");
         if (businessInfoSection) {
             // 營業時間
@@ -300,7 +300,7 @@ async function loadRestaurantInfo() {
         }
         
         // 更新餐廳簡介
-        console.log("更新餐廳簡介");
+        ("更新餐廳簡介");
         const descriptionSection = document.querySelector("#description-info");
         if (descriptionSection) {
             const viewMode = descriptionSection.querySelector(".view-mode");
@@ -320,15 +320,15 @@ async function loadRestaurantInfo() {
 
 // 更新所有頭像
 function updateAvatars(avatarUrl) {
-    console.log("開始更新頭像");
-    console.log("原始頭像URL:", avatarUrl);
+    ("開始更新頭像");
+    ("原始頭像URL:", avatarUrl);
 
     // 檢查是否為預設頭像
     const isDefaultAvatar = avatarUrl === 'images/default-avatar.png';
     
     // 如果是預設頭像，直接使用路徑；如果不是，確保路徑正確
     const processedAvatarUrl = isDefaultAvatar ? avatarUrl : (avatarUrl.startsWith('/') ? avatarUrl : '/' + avatarUrl);
-    console.log("處理後的頭像URL:", processedAvatarUrl);
+    ("處理後的頭像URL:", processedAvatarUrl);
 
     // 更新所有頭像元素
     const avatarElements = [
@@ -338,14 +338,14 @@ function updateAvatars(avatarUrl) {
 
     avatarElements.forEach((avatarElement, index) => {
         if (avatarElement) {
-            console.log(`更新頭像元素 ${index}:`, avatarElement);
-            console.log(`當前頭像元素 ${index} 的 src:`, avatarElement.src);
+            (`更新頭像元素 ${index}:`, avatarElement);
+            (`當前頭像元素 ${index} 的 src:`, avatarElement.src);
             avatarElement.src = processedAvatarUrl;
-            console.log(`設置後頭像元素 ${index} 的 src:`, avatarElement.src);
+            (`設置後頭像元素 ${index} 的 src:`, avatarElement.src);
 
             // 監聽圖片載入事件
             avatarElement.onload = () => {
-                console.log(`頭像 ${index} 圖片載入成功:`, processedAvatarUrl);
+                (`頭像 ${index} 圖片載入成功:`, processedAvatarUrl);
             };
             avatarElement.onerror = (error) => {
                 console.error(`頭像 ${index} 圖片載入失敗:`, error);
@@ -361,7 +361,7 @@ function updateAvatars(avatarUrl) {
 
 // 載入餐廳照片
 async function loadRestaurantPhotos(restaurantId) {
-    console.log("開始載入餐廳照片");
+    ("開始載入餐廳照片");
     const token = localStorage.getItem("merchantToken");
     
     try {
@@ -378,7 +378,7 @@ async function loadRestaurantPhotos(restaurantId) {
         }
 
         const photoUrls = await response.json();
-        console.log("獲取到的照片 URLs:", photoUrls);
+        ("獲取到的照片 URLs:", photoUrls);
 
         // 清空現有的照片（除了新增照片按鈕）
         const photoGrid = document.querySelector('.photo-grid');
@@ -390,8 +390,8 @@ async function loadRestaurantPhotos(restaurantId) {
         photoUrls.forEach(url => {
             // 確保路徑以斜線開頭
             const imageUrl = url.startsWith('/') ? url.substring(1) : url;
-            console.log("原始照片URL:", url);
-            console.log("處理後的照片URL:", imageUrl);
+            ("原始照片URL:", url);
+            ("處理後的照片URL:", imageUrl);
             
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';

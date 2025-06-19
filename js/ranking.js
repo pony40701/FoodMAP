@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化收藏系統
     if (window.favoriteSystem) {
         window.favoriteSystem.initialize().then(() => {
-            console.log('收藏系統初始化完成');
+            ('收藏系統初始化完成');
             favoriteButtonHandler.initialize(); // 確保初始載入時按鈕狀態正確
         });
     }

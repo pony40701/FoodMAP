@@ -65,7 +65,7 @@ class MapInit {
 
     async init() {
         try {
-            console.log('初始化地圖功能 (使用本地資料模式)');
+            ('初始化地圖功能 (使用本地資料模式)');
             
             // 使用本地資料，不需要初始化真實地圖
             const mapContainer = document.getElementById('map');
@@ -89,7 +89,7 @@ class MapInit {
     // 載入本地資料的方法
     async loadLocalData() {
         try {
-            console.log('開始載入本地餐廳資料...');
+            ('開始載入本地餐廳資料...');
             
             // 顯示載入中提示
             this.updateResultsTitle("載入餐廳資料中...");
@@ -112,7 +112,7 @@ class MapInit {
             }
             
             // 從 restaurantService 獲取所有餐廳
-            console.log('從 restaurantService 獲取餐廳資料...');
+            ('從 restaurantService 獲取餐廳資料...');
             this.allRestaurants = await window.restaurantService.getAllRestaurantsJson();
             
             // 檢查是否成功獲取資料
@@ -125,7 +125,7 @@ class MapInit {
                 return;
             }
             
-            console.log(`成功載入 ${this.allRestaurants.length} 間餐廳`);
+            (`成功載入 ${this.allRestaurants.length} 間餐廳`);
             
             // 更新結果標題
             this.updateResultsTitle(`所有餐廳 (${this.allRestaurants.length} 間)`);
@@ -151,12 +151,12 @@ class MapInit {
     // 新增顯示所有餐廳的方法
     async displayAllRestaurants() {
         try {
-            console.log('開始載入所有餐廳');
+            ('開始載入所有餐廳');
             
             // 獲取餐廳容器
             let container = document.getElementById('restaurants-container');
             if (!container) {
-                console.log('找不到餐廳容器，創建一個新的');
+                ('找不到餐廳容器，創建一個新的');
                 container = document.createElement('div');
                 container.id = 'restaurants-container';
                 container.className = 'restaurants-grid';
@@ -168,7 +168,7 @@ class MapInit {
             if (window.favoriteService && typeof window.favoriteService.getAllRestaurantsJson === 'function') {
                 restaurants = await window.favoriteService.getAllRestaurantsJson();
                 this.allRestaurants = restaurants; // 保存所有餐廳數據
-                console.log(`成功載入 ${restaurants.length} 間餐廳`);
+                (`成功載入 ${restaurants.length} 間餐廳`);
                 
                 // 更新結果標題
                 this.updateResultsTitle(`所有餐廳 (共 ${restaurants.length} 間)`);
@@ -196,7 +196,7 @@ class MapInit {
             return;
         }
         try {
-            console.log(`開始搜尋 ${type} 類型的餐廳（從 restaurantService 取得資料，並解析 json_raw 分類）`);
+            (`開始搜尋 ${type} 類型的餐廳（從 restaurantService 取得資料，並解析 json_raw 分類）`);
             // 直接從 restaurantService 取得所有餐廳資料
             if (!window.restaurantService || typeof window.restaurantService.getAllRestaurantsJson !== 'function') {
                 throw new Error('restaurantService 未初始化或缺少 getAllRestaurantsJson 方法');
@@ -346,7 +346,7 @@ class MapInit {
 
     async searchNearbyRestaurants(lat, lng) {
         try {
-            console.log('開始從本地資料獲取餐廳');
+            ('開始從本地資料獲取餐廳');
             
             // 使用 favoriteService 獲取所有餐廳
             if (window.favoriteService && typeof window.favoriteService.getAllRestaurantsJson === 'function') {
@@ -362,7 +362,7 @@ class MapInit {
                     return;
                 }
                 
-                console.log(`成功從本地資料獲取 ${restaurants.length} 間餐廳`);
+                (`成功從本地資料獲取 ${restaurants.length} 間餐廳`);
                 
                 // 更新結果標題
                 this.updateResultsTitle(`附近餐廳 (${restaurants.length} 間)`);
@@ -397,7 +397,7 @@ class MapInit {
             if (window.favoriteService && typeof window.favoriteService.getRestaurantById === 'function') {
                 const restaurantDetails = await window.favoriteService.getRestaurantById(placeId);
                 if (restaurantDetails) {
-                    console.log(`成功從本地資料獲取餐廳詳情 (ID: ${placeId})`);
+                    (`成功從本地資料獲取餐廳詳情 (ID: ${placeId})`);
                     return restaurantDetails;
                 }
             }
@@ -525,13 +525,13 @@ class MapInit {
         // 如果沒有 ID，但有名稱，生成一個臨時 ID
         if (!restaurant.place_id && !restaurant.id && restaurant.name) {
             restaurant.id = 'temp-id-' + Date.now();
-            console.log('生成臨時 ID:', restaurant.id);
+            ('生成臨時 ID:', restaurant.id);
         }
         
         // 保存當前選中的餐廳，供其他函數使用
         window.currentSelectedRestaurant = restaurant;
         
-        console.log('顯示餐廳詳細資訊:', {
+        ('顯示餐廳詳細資訊:', {
             name: restaurant.name,
             id: restaurant.id,
             place_id: restaurant.place_id
@@ -575,18 +575,18 @@ class MapInit {
         if (restaurantId) {
             // 使用與商家卡片相同的API來源
             photoUrl = `http://localhost:8080/api/restaurant-images/${restaurantId}/raw`;
-            console.log('使用資料庫圖片:', photoUrl, '餐廳ID:', restaurantId);
+            ('使用資料庫圖片:', photoUrl, '餐廳ID:', restaurantId);
         } else {
-            console.log('找不到餐廳ID，使用預設圖片');
+            ('找不到餐廳ID，使用預設圖片');
         }
         
         // 設置圖片
         if (modalImg) {
-            console.log('設置餐廳圖片:', photoUrl);
+            ('設置餐廳圖片:', photoUrl);
             modalImg.src = photoUrl;
             modalImg.alt = restaurant.name;
             modalImg.onerror = function() {
-                console.log('圖片載入失敗，使用預設圖片');
+                ('圖片載入失敗，使用預設圖片');
                 this.src = 'images/no-image.jpg';
             };
         }
@@ -720,13 +720,13 @@ class MapInit {
 
     async loadRestaurants() {
         try {
-            console.log('開始載入餐廳資料 - loadRestaurants()');
+            ('開始載入餐廳資料 - loadRestaurants()');
             
             // 首先清空餐廳容器
             const restaurantsContainer = document.getElementById('restaurants-container');
             if (restaurantsContainer) {
                 restaurantsContainer.innerHTML = '';
-                console.log('已清空餐廳容器');
+                ('已清空餐廳容器');
             } else {
                 console.warn('找不到餐廳容器元素');
                 return;
@@ -736,9 +736,9 @@ class MapInit {
             restaurantsContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
             
             // 獲取餐廳數據
-            console.log('正在從服務獲取餐廳數據...');
+            ('正在從服務獲取餐廳數據...');
             const restaurants = await this.restaurantService.getRestaurants();
-            console.log(`從服務獲取到 ${restaurants ? restaurants.length : 0} 間餐廳`);
+            (`從服務獲取到 ${restaurants ? restaurants.length : 0} 間餐廳`);
             
             // 清空載入中訊息
             restaurantsContainer.innerHTML = '';
@@ -780,13 +780,13 @@ class MapInit {
                 console.warn(`發現 ${duplicates.length} 個重複餐廳:`, duplicates);
             }
             
-            console.log(`去除重複後剩餘 ${uniqueRestaurants.length} 間餐廳（去除 ${restaurants.length - uniqueRestaurants.length} 間）`);
+            (`去除重複後剩餘 ${uniqueRestaurants.length} 間餐廳（去除 ${restaurants.length - uniqueRestaurants.length} 間）`);
             
             // 使用去重後的數據顯示餐廳卡片
             if (typeof this.displayRestaurantCards === 'function') {
                 this.displayRestaurantCards(uniqueRestaurants);
             } else {
-                console.log('顯示餐廳卡片...');
+                ('顯示餐廳卡片...');
                 // 遍歷所有餐廳，創建卡片
                 for (const restaurant of uniqueRestaurants) {
                     const card = this.createRestaurantCard(restaurant);
@@ -794,7 +794,7 @@ class MapInit {
                 }
             }
             
-            console.log('餐廳顯示完成');
+            ('餐廳顯示完成');
             return uniqueRestaurants;
         } catch (error) {
             console.error('載入餐廳失敗:', error);

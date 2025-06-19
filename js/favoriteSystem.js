@@ -24,7 +24,7 @@ class FavoriteSystem {
             return this.initPromise;
         }
         
-        console.log('初始化收藏系統');
+        ('初始化收藏系統');
         
         // 創建初始化Promise
         this.initPromise = new Promise(async (resolve, reject) => {

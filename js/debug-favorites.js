@@ -1,26 +1,26 @@
 // 收藏系統調試腳本
-console.log('開始調試收藏系統...');
+('開始調試收藏系統...');
 
 // 檢查登入狀態
 function checkLoginStatus() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const userId = localStorage.getItem('userId');
-    console.log('登入狀態檢查:', { isLoggedIn, userId });
+    ('登入狀態檢查:', { isLoggedIn, userId });
     return { isLoggedIn, userId };
 }
 
 // 檢查收藏數據
 function checkFavoriteData() {
-    console.log('檢查收藏數據...');
+    ('檢查收藏數據...');
     
     // 從 localStorage 讀取
     try {
         const favoriteStores = JSON.parse(localStorage.getItem('favoriteStores') || '[]');
-        console.log('本地收藏餐廳數據:', favoriteStores);
-        console.log('收藏餐廳數量:', favoriteStores.length);
+        ('本地收藏餐廳數據:', favoriteStores);
+        ('收藏餐廳數量:', favoriteStores.length);
         
         if (favoriteStores.length > 0) {
-            console.log('第一個收藏餐廳:', favoriteStores[0]);
+            ('第一個收藏餐廳:', favoriteStores[0]);
         }
     } catch (error) {
         console.error('解析收藏餐廳數據失敗:', error);
@@ -29,17 +29,17 @@ function checkFavoriteData() {
 
 // 檢查收藏系統對象
 function checkFavoriteSystem() {
-    console.log('檢查收藏系統對象...');
+    ('檢查收藏系統對象...');
     
     if (window.favoriteSystem) {
-        console.log('收藏系統存在:', window.favoriteSystem);
-        console.log('收藏系統已初始化:', window.favoriteSystem.initialized);
-        console.log('API模式:', window.favoriteSystem.useApi);
-        console.log('用戶ID:', window.favoriteSystem.userId);
-        console.log('收藏餐廳數量:', window.favoriteSystem.stores.length);
+        ('收藏系統存在:', window.favoriteSystem);
+        ('收藏系統已初始化:', window.favoriteSystem.initialized);
+        ('API模式:', window.favoriteSystem.useApi);
+        ('用戶ID:', window.favoriteSystem.userId);
+        ('收藏餐廳數量:', window.favoriteSystem.stores.length);
         
         if (window.favoriteSystem.stores.length > 0) {
-            console.log('收藏餐廳列表:', window.favoriteSystem.stores);
+            ('收藏餐廳列表:', window.favoriteSystem.stores);
         }
     } else {
         console.error('收藏系統對象不存在!');
@@ -48,13 +48,13 @@ function checkFavoriteSystem() {
 
 // 檢查餐廳服務
 function checkRestaurantService() {
-    console.log('檢查餐廳服務...');
+    ('檢查餐廳服務...');
     
     if (window.restaurantService) {
-        console.log('餐廳服務存在:', window.restaurantService);
-        console.log('餐廳服務已初始化:', window.restaurantService.initialized);
-        console.log('餐廳數據已加載:', window.restaurantService.dataLoaded);
-        console.log('API數據餐廳數量:', window.restaurantService.apiData.length);
+        ('餐廳服務存在:', window.restaurantService);
+        ('餐廳服務已初始化:', window.restaurantService.initialized);
+        ('餐廳數據已加載:', window.restaurantService.dataLoaded);
+        ('API數據餐廳數量:', window.restaurantService.apiData.length);
     } else {
         console.error('餐廳服務對象不存在!');
     }
@@ -62,7 +62,7 @@ function checkRestaurantService() {
 
 // 創建模擬的餐廳數據
 function createMockRestaurantData() {
-    console.log('創建模擬的餐廳數據...');
+    ('創建模擬的餐廳數據...');
     
     const mockRestaurants = [
         {
@@ -111,7 +111,7 @@ function createMockRestaurantData() {
 
 // 添加模擬數據到收藏系統
 async function addMockDataToFavorites() {
-    console.log('添加模擬數據到收藏系統...');
+    ('添加模擬數據到收藏系統...');
     
     // 檢查收藏系統
     if (!window.favoriteSystem) {
@@ -120,7 +120,7 @@ async function addMockDataToFavorites() {
     }
     
     if (!window.favoriteSystem.initialized) {
-        console.log('收藏系統未初始化，開始初始化...');
+        ('收藏系統未初始化，開始初始化...');
         await window.favoriteSystem.initialize();
     }
     
@@ -143,7 +143,7 @@ async function addMockDataToFavorites() {
     
     // 更新本地存儲
     localStorage.setItem('favoriteStores', JSON.stringify(window.favoriteSystem.stores));
-    console.log('已添加模擬數據到收藏系統，數量:', window.favoriteSystem.stores.length);
+    ('已添加模擬數據到收藏系統，數量:', window.favoriteSystem.stores.length);
     
     // 觸發收藏更改事件
     if (typeof window.favoriteSystem.triggerFavoritesChangedEvent === 'function') {
@@ -153,16 +153,16 @@ async function addMockDataToFavorites() {
 
 // 檢查 renderFavoriteStores 函數
 function checkRenderFunction() {
-    console.log('檢查 renderFavoriteStores 函數...');
+    ('檢查 renderFavoriteStores 函數...');
     
     if (typeof window.renderFavoriteStores === 'function') {
-        console.log('renderFavoriteStores 函數存在');
+        ('renderFavoriteStores 函數存在');
     } else {
         console.error('renderFavoriteStores 函數不存在!');
     }
     
     if (typeof window.loadFavorites === 'function') {
-        console.log('loadFavorites 函數存在');
+        ('loadFavorites 函數存在');
     } else {
         console.error('loadFavorites 函數不存在!');
     }
@@ -170,7 +170,7 @@ function checkRenderFunction() {
 
 // 直接渲染模擬收藏餐廳
 async function directRenderMockFavorites() {
-    console.log('直接渲染模擬收藏餐廳...');
+    ('直接渲染模擬收藏餐廳...');
     
     const mockRestaurants = createMockRestaurantData();
     const storesContainer = document.querySelector('.favorites-stores');
@@ -215,12 +215,12 @@ async function directRenderMockFavorites() {
         `;
     }).join('');
     
-    console.log('已直接渲染模擬收藏餐廳');
+    ('已直接渲染模擬收藏餐廳');
 }
 
 // 執行調試函數
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('調試腳本已載入');
+    ('調試腳本已載入');
     
     // 檢查各項狀態
     checkLoginStatus();
@@ -230,13 +230,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // 等待 2 秒後進行下一步
     setTimeout(async function() {
-        console.log('開始進行模擬數據測試...');
+        ('開始進行模擬數據測試...');
         
         // 添加模擬數據並渲染
         await addMockDataToFavorites();
         checkRenderFunction();
         await directRenderMockFavorites();
         
-        console.log('調試完成');
+        ('調試完成');
     }, 2000);
 }); 

@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (foodQuery || locationQuery) {
                 // 這裡可以實現搜尋邏輯
-                console.log('搜尋:', { food: foodQuery, location: locationQuery });
+                ('搜尋:', { food: foodQuery, location: locationQuery });
                 // 例如: window.location.href = `search-results.html?food=${foodQuery}&location=${locationQuery}`;
             }
         });

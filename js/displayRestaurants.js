@@ -2,14 +2,14 @@
 
 // 顯示餐廳列表
 function displayRestaurants(restaurants) {
-    console.log(`準備顯示 ${restaurants?.length || 0} 間餐廳`);
+    (`準備顯示 ${restaurants?.length || 0} 間餐廳`);
     
     // 檢查是否存在餐廳容器
     let container = document.getElementById('restaurants-container');
     
     // 如果不存在，則創建一個
     if (!container) {
-        console.log('找不到餐廳容器，創建一個新的');
+        ('找不到餐廳容器，創建一個新的');
         container = document.createElement('div');
         container.id = 'restaurants-container';
         container.className = 'restaurants-grid';
@@ -50,7 +50,7 @@ function displayRestaurants(restaurants) {
 // 創建餐廳卡片
 function createRestaurantCard(restaurant) {
     try {
-        console.log('創建餐廳卡片:', restaurant);
+        ('創建餐廳卡片:', restaurant);
         
         const card = document.createElement('div');
         card.className = 'restaurant-card v3';
@@ -65,7 +65,7 @@ function createRestaurantCard(restaurant) {
                     ? JSON.parse(restaurant.json_raw)
                     : restaurant.json_raw;
                 processedRestaurant = { ...processedRestaurant, ...jsonData };
-                console.log('處理後的餐廳資料:', processedRestaurant);
+                ('處理後的餐廳資料:', processedRestaurant);
             } catch (error) {
                 console.warn(`解析 json_raw 失敗: ${error.message}`, restaurant.json_raw);
             }

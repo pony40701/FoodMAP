@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('loginPassword').value;
 
         // 這裡添加登入邏輯
-        console.log('登入嘗試:', { email, password });
+        ('登入嘗試:', { email, password });
         
         // 模擬登入成功
         localStorage.setItem('isLoggedIn', 'true');
@@ -257,11 +257,11 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('註冊響應:', data);
+            ('註冊響應:', data);
             
             if (data.id) {
                 // 註冊成功
-                console.log('註冊成功');
+                ('註冊成功');
                 
                 // 儲存用戶資料
                 localStorage.setItem('isLoggedIn', 'true');
@@ -346,17 +346,17 @@ function socialLogin(platform) {
     switch(platform) {
         case 'google':
             // 實現 Google 登入
-            console.log('使用 Google 登入');
+            ('使用 Google 登入');
             // TODO: 實現 Google OAuth 登入
             break;
         case 'facebook':
             // 實現 Facebook 登入
-            console.log('使用 Facebook 登入');
+            ('使用 Facebook 登入');
             // TODO: 實現 Facebook OAuth 登入
             break;
         case 'line':
             // 實現 Line 登入
-            console.log('使用 Line 登入');
+            ('使用 Line 登入');
             // TODO: 實現 Line OAuth 登入
             break;
     }

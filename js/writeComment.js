@@ -222,7 +222,7 @@ function initSubmitComment() {
             const photos = Array.from(document.querySelectorAll('.photo-preview img')).map(img => img.src);
 
             // 這裡可以發送 AJAX 請求到後端
-            console.log('發佈評論：', {
+            ('發佈評論：', {
                 restaurantId: getRestaurantInfo().id,
                 rating,
                 content,

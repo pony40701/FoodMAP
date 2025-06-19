@@ -14,7 +14,7 @@ class MenuDetail {
     if (restaurantData) {
       try {
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        console.log('獲取到的餐廳資料:', this.restaurantData);
+        ('獲取到的餐廳資料:', this.restaurantData);
         this.renderMenu();
       } catch (error) {
         console.error('解析餐廳資料失敗:', error);
@@ -1192,7 +1192,7 @@ class MenuDetail {
 
   // 渲染菜單內容
   renderMenu() {
-    console.log('renderMenu function called');
+    ('renderMenu function called');
     const menuSectionsContainer = document.querySelector('.menu-sections');
     if (!menuSectionsContainer || !this.restaurantData) {
       console.error('找不到菜單容器或餐廳資料缺失');
