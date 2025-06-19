@@ -9,8 +9,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 將 /uploads/** 映射到本地硬碟的 uploads/ 資料夾
+        // 修正路徑，使其指向專案根目錄下的 uploads 資料夾
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/");
+                .addResourceLocations("file:./uploads/");
     }
 }
