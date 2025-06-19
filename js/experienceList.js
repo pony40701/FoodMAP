@@ -161,13 +161,74 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        card.querySelector('.favorite-btn').addEventListener('click', () => {
+        card.querySelector('.favorite-btn').addEventListener('click', async () => {
              const icon = card.querySelector('.favorite-btn i');
-             icon.classList.toggle('far');
-             icon.classList.toggle('fas');
              const targetArticle = allArticles.find(a => a.id === article.id);
-             if(targetArticle) {
-                targetArticle.favorited = !targetArticle.favorited;
+            const wasFavorited = !!targetArticle?.favorited;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || !user.id) {
+                showToast('請先登入會員才能收藏評論');
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) {
+                    loginModal.style.display = 'block';
+                }
+                return;
+            }
+            const userId = user.id;
+            const reviewId = article.id;
+            const restaurantPlaceId = article.restaurantPlaceId || '';
+
+            // 標記 optimistic UI
+            if (targetArticle) targetArticle.favorited = !wasFavorited;
+            icon.classList.toggle('far', wasFavorited);
+            icon.classList.toggle('fas', !wasFavorited);
+
+            try {
+                if (!wasFavorited) {
+                    // 收藏
+                    const res = await fetch('http://localhost:8080/api/users/favorite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            targetId: reviewId,
+                            targetType: 'review',
+                            restaurantPlaceId: restaurantPlaceId
+                        })
+                    });
+                    const data = await res.json();
+                    if (!(res.ok && data.success)) {
+                        // 失敗還原
+                        if (targetArticle) targetArticle.favorited = wasFavorited;
+                        icon.classList.toggle('far', !wasFavorited);
+                        icon.classList.toggle('fas', wasFavorited);
+                        showToast(data.message || '收藏失敗');
+                    } else {
+                        showToast('收藏成功！');
+                    }
+                } else {
+                    // 取消收藏
+                    const res = await fetch(`http://localhost:8080/api/users/favorite/review/${userId}/${reviewId}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await res.json();
+                    if (!(res.ok && data.success)) {
+                        // 失敗還原
+                        if (targetArticle) targetArticle.favorited = wasFavorited;
+                        icon.classList.toggle('far', !wasFavorited);
+                        icon.classList.toggle('fas', wasFavorited);
+                        showToast(data.message || '取消收藏失敗');
+                    } else {
+                        showToast('取消收藏成功！');
+                    }
+                }
+            } catch (err) {
+                // 失敗還原
+                if (targetArticle) targetArticle.favorited = wasFavorited;
+                icon.classList.toggle('far', !wasFavorited);
+                icon.classList.toggle('fas', wasFavorited);
+                showToast('操作失敗，請稍後再試');
              }
         });
 

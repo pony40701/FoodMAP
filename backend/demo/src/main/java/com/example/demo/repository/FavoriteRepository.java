@@ -1,14 +1,15 @@
 package com.example.demo.repository;
 
-import com.example.demo.entity.Favorite;
-import com.example.demo.entity.FavoriteId;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.example.demo.entity.Favorite;
+import com.example.demo.entity.FavoriteId;
 
 public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> {
     // 預設會有 findAll() 可以查全部資料
@@ -40,4 +41,9 @@ public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> 
            "  AND uf.target_type = 'restaurant' " +
            "ORDER BY uf.favorited_at DESC", nativeQuery = true)
     List<String> findFavoriteJsonRawByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Favorite f WHERE f.userId = :userId AND f.targetId = :targetId AND f.targetType = :targetType")
+    int deleteByUserIdAndTargetIdAndTargetType(@Param("userId") Long userId, @Param("targetId") String targetId, @Param("targetType") String targetType);
 } 
