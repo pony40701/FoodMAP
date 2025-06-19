@@ -95,25 +95,25 @@ function updateMapMarkers(restaurants) {
 
         // 添加彈出視窗
         const popupContent = `
-            <div style="padding: 8px; min-width: 200px;">
-                <h3 style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${restaurant.name}</h3>
-                <p style="margin: 0; color: #666; font-size: 12px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
-                <div style="margin-top: 8px; color: #d32323; font-size: 11px; cursor: pointer;">
-                    點擊查看詳細資訊 →
+            <div class="map-popup-content" data-restaurant-id="${restaurant.placeId || restaurant.id}" style="padding: 10px; min-width: 200px; cursor: pointer;">
+                <h3 style="margin: 0 0 8px 0; color: #333; font-size: 15px; font-weight: 600;">${restaurant.name}</h3>
+                <p style="margin: 0 0 6px 0; color: #666; font-size: 13px;">${restaurant.averageRating} ⭐ (${restaurant.reviewCount} 則評論)</p>
+                <p style="margin: 0 0 8px 0; color: #666; font-size: 12px;">${restaurant.address}</p>
+                <div style="margin-top: 8px; color: #d32323; font-size: 12px; font-weight: 500; text-align: center; padding: 4px 8px; background: rgba(211, 35, 35, 0.1); border-radius: 4px;">
+                    點擊查看完整資訊
                 </div>
             </div>
         `;
 
-        marker.bindPopup(popupContent);
-
-        // 添加點擊事件
-        marker.on('click', function() {
-            // 傳遞完整的餐廳對象
-            if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
-                window.RestaurantModal.showRestaurantDetail(restaurant);
-            } else {
-                // 如果 RestaurantModal 不可用，使用備用方案
-                showRestaurantModal(restaurant);
+        const popup = marker.bindPopup(popupContent);
+        
+        // 當彈出視窗打開時，添加點擊事件
+        marker.on('popupopen', function() {
+            const popupElement = document.querySelector('.map-popup-content');
+            if (popupElement) {
+                popupElement.addEventListener('click', function() {
+                    navigateToDetail(encodeURIComponent(JSON.stringify(restaurant)));
+                });
             }
         });
 
@@ -638,8 +638,26 @@ function renderFilteredCards(pageData, totalCount) {
 
 // 新增導航到詳情頁的函數
 function navigateToDetail(restaurantData) {
-  window.location.href = `restaurantListDetail.html?data=${restaurantData}`;
+  // 解析餐廳資料
+  let restaurant;
+  try {
+    restaurant = JSON.parse(decodeURIComponent(restaurantData));
+  } catch (error) {
+    console.error('解析餐廳資料失敗:', error);
+    return;
+  }
+  
+  // 使用餐廳 ID 跳轉，優先使用 placeId，否則使用 id
+  const restaurantId = restaurant.placeId || restaurant.id;
+  if (restaurantId) {
+    window.location.href = `restaurantListDetail.html?restaurantId=${encodeURIComponent(restaurantId)}`;
+  } else {
+    // 如果沒有 ID，回退到原來的方式
+    window.location.href = `restaurantListDetail.html?data=${restaurantData}`;
+  }
 }
+
+
 
 // 當頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', () => {
