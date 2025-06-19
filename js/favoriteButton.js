@@ -239,7 +239,6 @@ class FavoriteButton {
                 return;
             }
             
-            // 檢查收藏狀態
             const isFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
             
             let success = false;
@@ -248,90 +247,33 @@ class FavoriteButton {
                 // 獲取店家資訊
                 const name = button ? button.getAttribute('data-name') : '未知餐廳';
                 
-                // 嘗試獲取商家圖片
-                let photos = null;
-                if (button) {
-                    const restCard = button.closest('.restaurant-card') || button.closest('.store-card');
-                    if (restCard) {
-                        const imgElement = restCard.querySelector('img');
-                        if (imgElement && imgElement.src) {
-                            photos = imgElement.src;
-                        }
-                    }
-                }
-
-                // 若來自詳情彈窗，尋找彈窗圖片
-                if (!photos && window.currentSelectedRestaurant && window.currentSelectedRestaurant.photos) {
-                    photos = window.currentSelectedRestaurant.photos;
-                }
-                
-                const storeData = {
-                    id: placeId,
+                // 添加收藏
+                success = await window.favoriteSystem.addStore({
                     place_id: placeId,
-                    name: name,
-                    photos: photos,
-                    favoriteTime: new Date().toISOString()
-                };
-                
-                // 更新前端收藏系統
-                success = await window.favoriteSystem.addStore(storeData);
+                    name: name
+                });
+
                 if (success) {
                     this.showToast('已加入收藏');
-                    // 更新按鈕狀態
-                    if (button) {
-                        this.updateButtonUI(button, true);
-                        // 立即將該餐廳卡片移到最前面
-                        this.moveCardToFront(button);
-                    }
-                    
-                    // 觸發自定義事件通知收藏狀態變化
-                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
-                        detail: { type: 'add', id: placeId }
-                    }));
-                    
-                    // 同時觸發favoritesChanged事件以立即更新統計數據
-                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
+                    this.updateButtonUI(button, true);
+                    this.updateAllButtonsWithSameId(placeId, true);
                 } else {
-                    this.showToast('加入收藏失敗，請稍後再試');
+                    this.showToast('無法加入收藏，請稍後再試');
                 }
             } else {
                 // 移除收藏
                 success = await window.favoriteSystem.removeStore(placeId);
+                
                 if (success) {
-                    this.showToast('已取消收藏');
-                    // 更新按鈕狀態
-                    if (button) {
-                        this.updateButtonUI(button, false);
-                    }
-                    
-                    // 觸發自定義事件通知收藏狀態變化
-                    document.dispatchEvent(new CustomEvent('favoriteChanged', {
-                        detail: { type: 'remove', id: placeId }
-                    }));
-                    
-                    // 同時觸發favoritesChanged事件以立即更新統計數據
-                    document.dispatchEvent(new CustomEvent('favoritesChanged'));
+                    this.showToast('已從收藏中移除');
+                    this.updateButtonUI(button, false);
+                    this.updateAllButtonsWithSameId(placeId, false);
                 } else {
-                    this.showToast('取消收藏失敗，請稍後再試');
+                    this.showToast('無法移除收藏，請稍後再試');
                 }
             }
-
-            // 如果操作成功，更新所有相同 ID 的按鈕
-            if (success) {
-                await this.updateAllButtonsWithSameId(placeId);
-            }
-
-            // 如果在收藏頁面，重新載入內容
-            if (window.location.pathname.includes('userCenter.html')) {
-                if (window.favoriteUI && typeof window.favoriteUI.loadContent === 'function') {
-                    await window.favoriteUI.loadContent();
-                }
-            }
-            
-            return success;
         } catch (error) {
-            this.showToast('請先登入會員');
-            return false;
+            this.showToast('操作失敗，請重新整理頁面');
         }
     }
 
