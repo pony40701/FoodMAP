@@ -33,5 +33,12 @@ public class ReviewRequestDto {
         private String fileName;
         private String contentType;
         private byte[] imageData;
+        private ImageSize size; // 新增：圖片大小信息
+    }
+    
+    @Data
+    public static class ImageSize {
+        private String width;
+        private String height;
     }
 } 

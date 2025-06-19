@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -56,14 +57,16 @@ public class ReviewController {
     }
 
     @PutMapping("/drafts/{reviewId}")
-    public ResponseEntity<Integer> updateDraft(
+    public ResponseEntity<?> updateDraft(
             @PathVariable Integer reviewId,
             @RequestBody ReviewRequestDto requestDto) {
         try {
-            log.info("更新草稿：reviewId={}, title={}, contentLength={}", 
+            log.info("更新草稿：reviewId={}, title={}, contentLength={}, newImages={}, existingPhotos={}", 
                 reviewId,
                 requestDto.getTitle(),
-                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0);
+                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0,
+                requestDto.getPhotoData() != null ? requestDto.getPhotoData().size() : 0,
+                requestDto.getPhotos() != null ? requestDto.getPhotos().size() : 0);
             
             if (requestDto.getContent_json() != null && requestDto.getContent_json().length() > 10000) {
                 log.warn("草稿內容過長：{} 字符", requestDto.getContent_json().length());
@@ -72,7 +75,8 @@ public class ReviewController {
             return ResponseEntity.ok(reviewService.updateDraft(reviewId, requestDto));
         } catch (Exception e) {
             log.error("更新草稿時發生錯誤：reviewId={}", reviewId, e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                .body("錯誤詳情: " + e.getMessage() + "\n堆疊追蹤: " + e.getStackTrace()[0]);
         }
     }
 
@@ -175,6 +179,23 @@ public class ReviewController {
             }
         } catch (Exception e) {
             log.error("獲取評論圖片時發生錯誤：photoId={}", photoId, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    // 獲取評論圖片信息（包含大小）
+    @GetMapping("/photos/{photoId}/info")
+    public ResponseEntity<Map<String, Object>> getReviewPhotoInfo(@PathVariable Integer photoId) {
+        try {
+            log.info("獲取評論圖片信息：photoId={}", photoId);
+            Map<String, Object> photoInfo = reviewService.getReviewPhotoInfo(photoId);
+            if (photoInfo != null) {
+                return ResponseEntity.ok(photoInfo);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("獲取評論圖片信息時發生錯誤：photoId={}", photoId, e);
             return ResponseEntity.badRequest().build();
         }
     }
