@@ -666,6 +666,24 @@
                 loginModal.style.display = 'none';
             }
         });
+
+        function logout() {
+            // 清除使用者登入資訊
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId'); // 如果有儲存 userId
+            localStorage.removeItem('token'); // 如果有儲存 token
+
+            // 切換 UI 狀態
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            if (loginSection) loginSection.style.display = 'flex';
+            if (userSection) userSection.style.display = 'none';
+
+            alert('您已成功登出！');
+            // 可以選擇重新載入頁面以確保狀態完全更新
+            window.location.reload();
+        }
     </script>
 </body>
 </html> 
