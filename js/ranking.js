@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const customRestaurantList = document.querySelector('.custom-restaurant-list');
     const loadMoreButton = document.querySelector('.load-more');
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const MAX_SCROLL_ITEMS = 18; // 無限滾動加載的上限為18
-    const INITIAL_PAGE_SIZE = 4; // 初始加載4家
-    const SCROLL_PAGE_SIZE = 5;  // 每次滾動加載5家
+    const MAX_ITEMS_PER_LIST = 15; // 每個列表最多顯示15家
+    const INITIAL_PAGE_SIZE = 6; // 初始加載6家
+    const SCROLL_PAGE_SIZE = 3;  // 每次滾動加載3家
 
     // 初始化收藏按鈕處理器
     const favoriteButtonHandler = new FavoriteButton();
@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 檢查是否達到上限並顯示按鈕
     function checkAndShowLoadMore() {
         const googleItems = googleRestaurantList.querySelectorAll('.restaurant-item').length;
-        if (googleItems >= MAX_SCROLL_ITEMS) {
+        // 當滾動加載的項目達到或超過上限時，就顯示按鈕
+        if (googleItems >= MAX_ITEMS_PER_LIST) {
             if (loadMoreButton) loadMoreButton.style.display = 'block';
         }
     }
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const initialCount = googleRestaurantList.children.length;
 
         for (const [index, restaurant] of restaurants.entries()) {
-            if (initialCount + index >= MAX_SCROLL_ITEMS) {
+            if (initialCount + index >= MAX_ITEMS_PER_LIST) {
                 checkAndShowLoadMore();
                 break;
             }
@@ -109,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fragment = document.createDocumentFragment();
         const initialCount = customRestaurantList.children.length;
         for (const [index, restaurant] of restaurants.entries()) {
-            if (initialCount + index >= MAX_SCROLL_ITEMS) {
+            if (initialCount + index >= MAX_ITEMS_PER_LIST) {
                 checkAndShowLoadMore();
                 break;
             }
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isLoading) return;
 
         const totalItems = googleRestaurantList.querySelectorAll('.restaurant-item').length;
-        if (!isInitialLoad && totalItems >= MAX_SCROLL_ITEMS) {
+        if (!isInitialLoad && totalItems >= MAX_ITEMS_PER_LIST) {
             checkAndShowLoadMore();
             return;
         }
@@ -213,11 +214,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('scroll', () => {
         const totalItems = googleRestaurantList.querySelectorAll('.restaurant-item').length;
-        if (isLoading || totalItems >= MAX_SCROLL_ITEMS) {
+        if (isLoading || totalItems >= MAX_ITEMS_PER_LIST) {
             return;
         }
 
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 150) {
             loadAndRender(SCROLL_PAGE_SIZE);
         }
     });
@@ -236,10 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (window.favoriteSystem) {
         window.favoriteSystem.initialize().then(() => {
-
-            ('收藏系統初始化完成');
+            console.log('收藏系統初始化完成');
             favoriteButtonHandler.initialize(); // 確保初始載入時按鈕狀態正確
-
         });
     }
 });

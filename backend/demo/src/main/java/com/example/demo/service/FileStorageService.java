@@ -12,15 +12,20 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageService {
 
-    private final String uploadDir = "uploads/";
+    private final Path uploadDir = Paths.get("uploads");
+    private final String baseUrl = "http://localhost:8080";
 
     public String storeFile(MultipartFile file) {
         try {
+            // 確保目標目錄存在
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
             String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filepath = Paths.get(uploadDir, filename);
-            Files.createDirectories(filepath.getParent());
+            Path filepath = this.uploadDir.resolve(filename);
             Files.write(filepath, file.getBytes());
-            return "/uploads/" + filename; // 或你要的 URL 路徑
+            return baseUrl + "/uploads/" + filename;
         } catch (IOException e) {
             throw new RuntimeException("檔案儲存失敗", e);
         }
