@@ -90,8 +90,8 @@ class RestaurantDetail {
     this.setupShareModal();
   }
 
-  init() {
-    this.getRestaurantDataFromUrl();
+  async init() {
+    await this.getRestaurantDataFromUrl();
     console.log('上一頁傳來的餐廳資料:', this.restaurantData);
     console.log('googleReviews:', this.restaurantData.googleReviews);
     this.updatePageInfo();
@@ -345,18 +345,67 @@ class RestaurantDetail {
   }
 
   // 從 URL 獲取餐廳資料
-  getRestaurantDataFromUrl() {
-    // 優先從 localStorage 讀取餐廳資料
-    const storedRestaurantData = localStorage.getItem('selectedRestaurant');
+  async getRestaurantDataFromUrl() {
+    // 優先從 URL 參數讀取餐廳 ID 或資料
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('restaurantId');
+    const restaurantData = urlParams.get('data');
     
+    // 如果有餐廳 ID，從 API 獲取資料
+    if (restaurantId) {
+      try {
+        console.log('從 API 載入餐廳資料，ID:', restaurantId);
+        const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
+        if (response.ok) {
+          const apiData = await response.json();
+          this.restaurantData = this.transformApiData(apiData);
+          console.log('從 API 成功載入餐廳資料:', this.restaurantData);
+          return;
+        } else {
+          console.error('API 請求失敗:', response.status);
+        }
+      } catch (error) {
+        console.error('從 API 載入餐廳資料失敗:', error);
+      }
+    }
+    
+    // 如果有 data 參數，解析 URL 中的資料
+    if (restaurantData) {
+      try {
+        this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
+        console.log('從 URL 成功讀取餐廳資料:', this.restaurantData);
+        
+        // 確保 ratingCount 存在
+        if (!this.restaurantData.ratingCount) {
+          this.restaurantData.ratingCount = this.restaurantData.reviewCount || this.restaurantData.user_ratings_total || 0;
+        }
+        
+        // 根據餐廳類型設置圖片
+        if (!this.restaurantData.images) {
+          this.restaurantData.images = this.getImagesByType(this.restaurantData.types || this.restaurantData.tags?.[0] || '中式');
+        }
+        
+        // 設置位置資訊
+        if (!this.restaurantData.location && (this.restaurantData.latitude || this.restaurantData.longitude)) {
+          this.restaurantData.location = {
+            lat: parseFloat(this.restaurantData.latitude),
+            lng: parseFloat(this.restaurantData.longitude)
+          };
+        }
+        
+        return;
+      } catch (error) {
+        console.error('解析 URL 餐廳資料失敗:', error);
+      }
+    }
+    
+    // 次要：從 localStorage 讀取餐廳資料（相容性考慮）
+    const storedRestaurantData = localStorage.getItem('selectedRestaurant');
     if (storedRestaurantData) {
       try {
         this.restaurantData = JSON.parse(storedRestaurantData);
         console.log('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
         console.log('localStorage 中的 googleReviews:', this.restaurantData.googleReviews);
-        
-        // 清除 localStorage 中的資料，避免重複使用
-        localStorage.removeItem('selectedRestaurant');
         
         // 確保 ratingCount 存在
         if (!this.restaurantData.ratingCount) {
@@ -383,42 +432,42 @@ class RestaurantDetail {
       }
     }
     
-    // 如果 localStorage 沒有資料，嘗試從 URL 讀取
-    const urlParams = new URLSearchParams(window.location.search);
-    const restaurantData = urlParams.get('data');
-    
-    if (restaurantData) {
-      try {
-        this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        console.log('從 URL 成功讀取餐廳資料:', this.restaurantData);
-        
-        // 確保 ratingCount 存在
-        if (!this.restaurantData.ratingCount) {
-          this.restaurantData.ratingCount = this.restaurantData.reviewCount || this.restaurantData.user_ratings_total || 0;
-        }
-        
-        // 根據餐廳類型設置圖片
-        if (!this.restaurantData.images) {
-          this.restaurantData.images = this.getImagesByType(this.restaurantData.types || this.restaurantData.tags?.[0] || '中式');
-        }
-        
-        // 設置位置資訊
-        if (!this.restaurantData.location && (this.restaurantData.latitude || this.restaurantData.longitude)) {
-          this.restaurantData.location = {
-            lat: parseFloat(this.restaurantData.latitude),
-            lng: parseFloat(this.restaurantData.longitude)
-          };
-        }
-      } catch (error) {
-        console.error('解析 URL 餐廳資料失敗:', error);
-        // 如果解析失敗，使用預設資料
-        this.restaurantData = this.getDefaultRestaurantData();
+    // 如果沒有任何資料，使用預設資料
+    console.log('沒有找到餐廳資料，使用預設資料');
+    this.restaurantData = this.getDefaultRestaurantData();
+  }
+
+  // 轉換 API 資料格式為前端所需格式
+  transformApiData(apiData) {
+    const transformed = {
+      id: apiData.id || apiData.placeId,
+      placeId: apiData.placeId,
+      name: apiData.name,
+      rating: apiData.rating || apiData.averageRating || 0,
+      reviewCount: apiData.reviewCount || apiData.ratingCount || 0,
+      ratingCount: apiData.reviewCount || apiData.ratingCount || 0,
+      address: apiData.address,
+      latitude: apiData.latitude || apiData.lat,
+      longitude: apiData.longitude || apiData.lng,
+      types: apiData.types,
+      priceLevel: apiData.priceLevel,
+      websiteUrl: apiData.websiteUrl,
+      phoneNumber: apiData.phoneNumber,
+      openingHours: apiData.openingHours,
+      googleReviews: apiData.googleReviews || [],
+      // 設置位置資訊
+      location: {
+        lat: parseFloat(apiData.latitude || apiData.lat),
+        lng: parseFloat(apiData.longitude || apiData.lng)
       }
-    } else {
-      // 如果沒有資料，使用預設資料
-      console.log('沒有找到餐廳資料，使用預設資料');
-      this.restaurantData = this.getDefaultRestaurantData();
+    };
+    
+    // 根據餐廳類型設置圖片
+    if (!transformed.images) {
+      transformed.images = this.getImagesByType(transformed.types || '中式');
     }
+    
+    return transformed;
   }
 
   // 更新頁面資訊
