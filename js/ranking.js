@@ -142,15 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             fragment.appendChild(restaurantItem);
-
-            const detailsBtn = restaurantItem.querySelector('.details-btn');
-            if (detailsBtn) {
-                detailsBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const restaurantId = detailsBtn.dataset.id;
-                    window.location.href = `restaurantListDetail.html?restaurantId=${restaurantId}`;
-                });
-            }
         }
         customRestaurantList.appendChild(fragment);
         favoriteButtonHandler.initialize();

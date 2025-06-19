@@ -17,4 +17,5 @@ public interface RestaurantService {
     Page<RestaurantListDTO> getRestaurantsBySort(String sortBy, Pageable pageable);
     Page<RestaurantListDTO> getRestaurantsWithReviews(Pageable pageable);
     Page<RestaurantListDTO> getRestaurantsBySortWithReviews(String sortBy, Pageable pageable);
+    RestaurantListDTO getRtoLDRestaurantDTOByPlaceId(String placeId);
 }

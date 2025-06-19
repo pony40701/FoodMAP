@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.RestaurantListDTO;
-import com.example.demo.entity.GoogleRestaurant;
 import com.example.demo.service.RestaurantService;
 
 @RestController
@@ -31,8 +30,8 @@ public Page<RestaurantListDTO> getAllRestaurant(
 }
 
 @GetMapping("/{placeId}")
-public GoogleRestaurant getRestaurantByPlaceId(@PathVariable String placeId) {
-	return restaurantService.getRestaurantByPlaceId(placeId);
+public RestaurantListDTO getRestaurantByPlaceId(@PathVariable String placeId) {
+	return restaurantService.getRtoLDRestaurantDTOByPlaceId(placeId);
 }
 
 @GetMapping("/list")
