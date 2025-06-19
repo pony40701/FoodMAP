@@ -731,7 +731,7 @@ class RestaurantDetail {
 
     // 生成評論 HTML
     let reviewsHtml = '';
-    googleReviews.forEach(review => {
+    googleReviews.forEach((review, index) => {
       // 格式化評論時間 (YYYY年M月D日)
       let formattedDate = '';
       if (review.timeCreated) {
@@ -761,6 +761,10 @@ class RestaurantDetail {
         return stars;
       };
 
+      // 檢查評論文字是否需要收合（估算是否超過4行）
+      const reviewText = review.text || '無評論內容';
+      const needsToggle = reviewText.length > 160; // 粗略估算，大約40字一行，4行約160字
+
       reviewsHtml += `
         <div class="review-item">
           <div class="review-header">
@@ -782,7 +786,15 @@ class RestaurantDetail {
             </div>
           </div>
           <div class="review-content">
-            <p class="review-text">${review.text || '無評論內容'}</p>
+            <p class="review-text ${needsToggle ? 'review-text-collapsed' : ''}" data-review-index="${index}">
+              ${reviewText}
+            </p>
+            ${needsToggle ? `
+              <button class="review-toggle-btn" data-review-index="${index}">
+                <span class="toggle-text">...查看更多</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -790,6 +802,38 @@ class RestaurantDetail {
 
     // 插入評論 HTML
     reviewsContainer.innerHTML = reviewsHtml;
+
+    // 添加收合/展開功能的事件監聽器
+    this.initReviewToggleListeners();
+  }
+
+  // 初始化評論收合/展開功能
+  initReviewToggleListeners() {
+    const toggleButtons = document.querySelectorAll('.review-toggle-btn');
+    
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const reviewIndex = button.getAttribute('data-review-index');
+        const reviewText = document.querySelector(`.review-text[data-review-index="${reviewIndex}"]`);
+        const toggleTextSpan = button.querySelector('.toggle-text');
+        const toggleIcon = button.querySelector('i');
+        
+        if (reviewText.classList.contains('review-text-collapsed')) {
+          // 展開評論
+          reviewText.classList.remove('review-text-collapsed');
+          reviewText.classList.add('review-text-expanded');
+          toggleTextSpan.textContent = '顯示較少';
+          button.classList.add('expanded');
+        } else {
+          // 收合評論
+          reviewText.classList.remove('review-text-expanded');
+          reviewText.classList.add('review-text-collapsed');
+          toggleTextSpan.textContent = '...查看更多';
+          button.classList.remove('expanded');
+        }
+      });
+    });
   }
 }
 
