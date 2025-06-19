@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ReviewDraftDto;
 import com.example.demo.dto.ReviewRequestDto;
 import com.example.demo.dto.ReviewStatsDto;
 import com.example.demo.dto.ReviewStatsDetailDto;
@@ -22,13 +23,28 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
-    public ResponseEntity<Integer> createReview(@RequestBody ReviewRequestDto requestDto) {
-        log.info("創建新評論：userId={}", requestDto.getUserId());
-        return ResponseEntity.ok(reviewService.createReview(requestDto));
+    public ResponseEntity<?> createReview(@RequestBody ReviewRequestDto requestDto) {
+        try {
+            log.info("創建新評論：userId={}, title={}, contentLength={}", 
+                requestDto.getUserId(), 
+                requestDto.getTitle(),
+                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0);
+            
+            if (requestDto.getContent_json() != null && requestDto.getContent_json().length() > 10000) {
+                log.warn("評論內容過長：{} 字符", requestDto.getContent_json().length());
+            }
+            
+            Integer result = reviewService.createReview(requestDto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("創建評論時發生錯誤：", e);
+            return ResponseEntity.badRequest()
+                .body("錯誤詳情: " + e.getMessage() + "\n堆疊追蹤: " + e.getStackTrace()[0]);
+        }
     }
 
     @GetMapping("/drafts/{userId}")
-    public ResponseEntity<List<Review>> getDraftsByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<List<ReviewDraftDto>> getDraftsByUserId(@PathVariable Integer userId) {
         log.info("獲取用戶草稿：userId={}", userId);
         return ResponseEntity.ok(reviewService.getDraftsByUserId(userId));
     }
@@ -43,8 +59,21 @@ public class ReviewController {
     public ResponseEntity<Integer> updateDraft(
             @PathVariable Integer reviewId,
             @RequestBody ReviewRequestDto requestDto) {
-        log.info("更新草稿：reviewId={}", reviewId);
-        return ResponseEntity.ok(reviewService.updateDraft(reviewId, requestDto));
+        try {
+            log.info("更新草稿：reviewId={}, title={}, contentLength={}", 
+                reviewId,
+                requestDto.getTitle(),
+                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0);
+            
+            if (requestDto.getContent_json() != null && requestDto.getContent_json().length() > 10000) {
+                log.warn("草稿內容過長：{} 字符", requestDto.getContent_json().length());
+            }
+            
+            return ResponseEntity.ok(reviewService.updateDraft(reviewId, requestDto));
+        } catch (Exception e) {
+            log.error("更新草稿時發生錯誤：reviewId={}", reviewId, e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/drafts/{draftId}/publish")
@@ -129,5 +158,24 @@ public class ReviewController {
         log.info("減少評論收藏次數：reviewId={}", reviewId);
         reviewService.decrementFavoriteCount(reviewId);
         return ResponseEntity.ok().build();
+    }
+
+    // 獲取評論圖片
+    @GetMapping("/photos/{photoId}")
+    public ResponseEntity<byte[]> getReviewPhoto(@PathVariable Integer photoId) {
+        try {
+            log.info("獲取評論圖片：photoId={}", photoId);
+            byte[] imageData = reviewService.getReviewPhotoData(photoId);
+            if (imageData != null && imageData.length > 0) {
+                return ResponseEntity.ok()
+                    .header("Content-Type", "image/jpeg") // 預設為JPEG
+                    .body(imageData);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("獲取評論圖片時發生錯誤：photoId={}", photoId, e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 } 

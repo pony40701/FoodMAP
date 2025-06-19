@@ -4,6 +4,7 @@ import com.example.demo.dto.ReviewRequestDto;
 import com.example.demo.dto.ReviewStatsDto;
 import com.example.demo.dto.UserReviewStatsDto;
 import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.dto.ReviewDraftDto;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,31 +33,61 @@ public class ReviewService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createReview(ReviewRequestDto dto) {
-        // 1. 新增評論
-        Review review = new Review();
-        review.setTitle(dto.getTitle());
-        review.setContentJson(dto.getContent_json());
-        review.setStatus(dto.getStatus());
-        review.setCreatedAt(java.time.LocalDateTime.now());
-        review.setUpdatedAt(java.time.LocalDateTime.now());
-        review = reviewRepository.save(review);
-        log.info("新增評論：id={}, 標題={}, 狀態={}", review.getId(), review.getTitle(), review.getStatus());
+        try {
+            log.info("開始創建評論：userId={}, restaurantId={}, title={}, contentLength={}", 
+                dto.getUserId(), dto.getRestaurantId(), dto.getTitle(),
+                dto.getContent_json() != null ? dto.getContent_json().length() : 0);
+            
+            // 1. 新增評論
+            Review review = new Review();
+            
+            // 設置用戶和餐廳
+            User user = new User();
+            user.setId(dto.getUserId().longValue());
+            review.setUser(user);
+            
+            Restaurant restaurant = new Restaurant();
+            restaurant.setId(dto.getRestaurantId());
+            review.setRestaurant(restaurant);
+            
+            review.setTitle(dto.getTitle());
+            review.setContentJson(dto.getContent_json());
+            review.setStatus(dto.getStatus());
+            review.setCreatedAt(java.time.LocalDateTime.now());
+            review.setUpdatedAt(java.time.LocalDateTime.now());
+            
+            log.info("準備儲存評論到資料庫...");
+            review = reviewRepository.save(review);
+            log.info("評論儲存成功：id={}, 標題={}, 狀態={}", review.getId(), review.getTitle(), review.getStatus());
 
-        // 2. 處理評分
-        saveReviewRating(dto.getRatings(), review);
+            // 2. 處理評分
+            log.info("開始處理評分...");
+            saveReviewRating(dto.getRatings(), review);
 
-        // 3. 處理照片
-        saveReviewPhotos(dto.getPhotos(), review);
+            // 3. 處理照片
+            log.info("開始處理照片...");
+            if (dto.getPhotoData() != null && !dto.getPhotoData().isEmpty()) {
+                saveReviewPhotoData(dto.getPhotoData(), review);
+            } else if (dto.getPhotos() != null && !dto.getPhotos().isEmpty()) {
+                saveReviewPhotos(dto.getPhotos(), review);
+            }
 
-        // 4. 處理標籤
-        saveReviewTags(dto.getTags(), review);
+            // 4. 處理標籤
+            log.info("開始處理標籤...");
+            saveReviewTags(dto.getTags(), review);
 
-        // 5. 如果是發布狀態，建立統計資料
-        if ("published".equals(dto.getStatus())) {
-            createReviewStats(review);
+            // 5. 如果是發布狀態，建立統計資料
+            if ("published".equals(dto.getStatus())) {
+                log.info("建立統計資料...");
+                createReviewStats(review);
+            }
+
+            log.info("評論創建完成：id={}", review.getId().intValue());
+            return review.getId().intValue();
+        } catch (Exception e) {
+            log.error("創建評論時發生錯誤：", e);
+            throw new RuntimeException("創建評論失敗: " + e.getMessage(), e);
         }
-
-        return review.getId().intValue();
     }
 
     private void saveReviewRating(ReviewRequestDto.ReviewRatingsDto ratingsDto, Review review) {
@@ -72,6 +103,7 @@ public class ReviewService {
     }
 
     private void saveReviewPhotos(List<String> photoUrls, Review review) {
+        // 處理舊的URL格式（向後兼容）
         for (String url : photoUrls) {
             ReviewPhoto photo = new ReviewPhoto();
             photo.setReview(review);
@@ -79,6 +111,18 @@ public class ReviewService {
             reviewPhotoRepository.save(photo);
         }
         log.info("儲存評論照片：reviewId={}, 照片數量={}", review.getId(), photoUrls.size());
+    }
+
+    private void saveReviewPhotoData(List<ReviewRequestDto.PhotoData> photoDataList, Review review) {
+        // 處理新的圖片數據格式
+        for (ReviewRequestDto.PhotoData photoData : photoDataList) {
+            ReviewPhoto photo = new ReviewPhoto();
+            photo.setReview(review);
+            photo.setImageUrl(photoData.getFileName()); // 使用檔名作為URL
+            photo.setImage(photoData.getImageData()); // 儲存圖片數據
+            reviewPhotoRepository.save(photo);
+        }
+        log.info("儲存評論圖片數據：reviewId={}, 圖片數量={}", review.getId(), photoDataList.size());
     }
 
     private void saveReviewTags(List<String> tagNames, Review review) {
@@ -108,10 +152,46 @@ public class ReviewService {
     }
 
     // 查詢用戶的草稿列表
-    public List<Review> getDraftsByUserId(Integer userId) {
+    public List<ReviewDraftDto> getDraftsByUserId(Integer userId) {
         List<Review> drafts = reviewRepository.findByUserIdAndStatus(userId.intValue(), "draft");
         log.info("查詢用戶草稿：userId={}, 草稿數量={}", userId, drafts.size());
-        return drafts;
+        
+        return drafts.stream().map(draft -> {
+            ReviewDraftDto dto = new ReviewDraftDto();
+            dto.setId(draft.getId().intValue());
+            dto.setUserId(userId);
+            dto.setRestaurantId(draft.getRestaurant().getId());
+            dto.setTitle(draft.getTitle());
+            dto.setContentJson(draft.getContentJson());
+            dto.setStatus(draft.getStatus());
+            dto.setCreatedAt(draft.getCreatedAt());
+            dto.setUpdatedAt(draft.getUpdatedAt());
+
+            // 設置評分
+            ReviewRating rating = reviewRatingRepository.findById(draft.getId().intValue())
+                    .orElseThrow(() -> new RuntimeException("評分資料不存在"));
+            ReviewDraftDto.ReviewRatingsDto ratingsDto = new ReviewDraftDto.ReviewRatingsDto();
+            ratingsDto.setEnvironmentScore(rating.getEnvironmentScore());
+            ratingsDto.setServiceScore(rating.getServiceScore());
+            ratingsDto.setTasteScore(rating.getTasteScore());
+            ratingsDto.setPriceScore(rating.getPriceScore());
+            ratingsDto.setOverallScore(rating.getOverallScore());
+            dto.setRatings(ratingsDto);
+
+            // 設置照片
+            List<ReviewPhoto> photos = reviewPhotoRepository.findByReviewId(draft.getId().intValue());
+            dto.setPhotos(photos.stream()
+                    .map(ReviewPhoto::getImageUrl)
+                    .collect(Collectors.toList()));
+
+            // 設置標籤
+            List<ReviewTag> tags = reviewTagRepository.findByReviewId(draft.getId().intValue());
+            dto.setTags(tags.stream()
+                    .map(tag -> tag.getTag().getName())
+                    .collect(Collectors.toList()));
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     // 查詢單篇草稿詳細資料
@@ -125,6 +205,8 @@ public class ReviewService {
 
         ReviewRequestDto dto = new ReviewRequestDto();
         dto.setId(review.getId().intValue());
+        dto.setUserId(review.getUser().getId().intValue());
+        dto.setRestaurantId(review.getRestaurant().getId());
         dto.setTitle(review.getTitle());
         dto.setContent_json(review.getContentJson());
         dto.setStatus(review.getStatus());
@@ -169,6 +251,16 @@ public class ReviewService {
 
         // 更新基本資訊
         review.setTitle(dto.getTitle());
+
+        // 設置用戶和餐廳
+        User user = new User();
+        user.setId(dto.getUserId().longValue());
+        review.setUser(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(dto.getRestaurantId());
+        review.setRestaurant(restaurant);
+
         review.setContentJson(dto.getContent_json());
         review.setUpdatedAt(java.time.LocalDateTime.now());
         review = reviewRepository.save(review);
@@ -248,6 +340,8 @@ public class ReviewService {
 
         // 2. 建立新的發布文章
         Review publishedReview = new Review();
+        publishedReview.setUser(draft.getUser());  // 設置用戶
+        publishedReview.setRestaurant(draft.getRestaurant());  // 設置餐廳
         publishedReview.setTitle(draft.getTitle());
         publishedReview.setContentJson(draft.getContentJson());
         publishedReview.setStatus("published");
@@ -307,6 +401,8 @@ public class ReviewService {
         return reviews.stream().map(review -> {
             ReviewRequestDto dto = new ReviewRequestDto();
             dto.setId(review.getId().intValue());
+            dto.setUserId(userId);
+            dto.setRestaurantId(review.getRestaurant().getId());
             dto.setTitle(review.getTitle());
             dto.setContent_json(review.getContentJson());
             dto.setStatus(review.getStatus());
@@ -391,6 +487,8 @@ public class ReviewService {
 
         // 2. 建立新草稿
         Review newDraft = new Review();
+        newDraft.setUser(publishedReview.getUser());
+        newDraft.setRestaurant(publishedReview.getRestaurant());
         newDraft.setTitle(dto.getTitle());
         newDraft.setContentJson(dto.getContent_json());
         newDraft.setStatus("draft");
@@ -457,6 +555,16 @@ public class ReviewService {
 
         // 2. 更新基本資訊
         review.setTitle(dto.getTitle());
+
+        // 設置用戶和餐廳
+        User user = new User();
+        user.setId(dto.getUserId().longValue());
+        review.setUser(user);
+        
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(dto.getRestaurantId());
+        review.setRestaurant(restaurant);
+      
         review.setContentJson(dto.getContent_json());
         review.setUpdatedAt(java.time.LocalDateTime.now());
         review = reviewRepository.save(review);
@@ -631,5 +739,12 @@ public class ReviewService {
             stats.setTotalFavorites(stats.getTotalFavorites() - 1);
             reviewStatsRepository.save(stats);
         }
+    }
+
+    // 獲取評論圖片數據
+    public byte[] getReviewPhotoData(Integer photoId) {
+        ReviewPhoto photo = reviewPhotoRepository.findById(photoId)
+                .orElseThrow(() -> new RuntimeException("圖片不存在"));
+        return photo.getImage();
     }
 }

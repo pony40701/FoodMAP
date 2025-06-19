@@ -15,7 +15,10 @@ public class ReviewPhoto {
     @JoinColumn(name = "review_id")
     private Review review;
     
-    @Column(name = "image_url")
+    @Column(name = "image_url", length = 255)
     private String imageUrl;
-   
+    
+    @Lob
+    @Column(name = "image", columnDefinition = "LONGBLOB")
+    private byte[] image;
 } 
