@@ -1,5 +1,5 @@
 package com.example.demo.entity;
-
+//boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;

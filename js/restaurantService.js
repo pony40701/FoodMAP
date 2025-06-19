@@ -11,7 +11,6 @@ class RestaurantService {
         this.favoriteData = this.loadFavoriteData();
         
         this.initialized = false;
-        console.log('餐廳服務已創建，準備初始化');
         
         // 確保 API_BASE_URL 存在，若不存在則使用預設值
         this.baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
@@ -23,16 +22,12 @@ class RestaurantService {
     // 初始化方法
     async init() {
         try {
-            console.log('開始初始化餐廳服務...');
-            
             // 從 API 載入資料
             await this.preloadRestaurantData();
             
             this.initialized = true;
-            console.log('餐廳服務初始化完成');
             return true;
         } catch (error) {
-            console.error('餐廳服務初始化失敗:', error);
             return false;
         }
     }
@@ -41,11 +36,9 @@ class RestaurantService {
     async preloadRestaurantData() {
         try {
             if (!window.config || !window.config.api) {
-                console.warn('API 配置未找到，使用預設值');
             }
             
             const apiUrl = `${this.baseUrl}${window.config?.api?.endpoints?.restaurants?.all || '/google-restaurants/all'}`;
-            console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -60,17 +53,14 @@ class RestaurantService {
             }
             
             const data = await response.json();
-            console.log(`API 回應資料長度: ${data.length}`);
             
             if (Array.isArray(data) && data.length > 0) {
                 this.apiData = data;
                 this.dataLoaded = true;
-                console.log(`成功從 API 載入 ${data.length} 間餐廳資料`);
             } else {
                 throw new Error('從 API 獲取的資料為空或格式不正確');
             }
         } catch (error) {
-            console.error('從 API 載入餐廳資料失敗:', error);
             throw error; // 向上傳遞錯誤
         }
     }
@@ -91,24 +81,19 @@ class RestaurantService {
             
             return favoriteData;
         } catch (error) {
-            console.error('載入收藏資料失敗:', error);
             return {};
         }
     }
     
     // 獲取附近餐廳列表
     async getNearbyRestaurants(lat, lng, radius = 5000) {
-        console.log(`獲取附近餐廳: 緯度${lat}, 經度${lng}, 半徑${radius}`);
-        
         // 如果已經從 API 載入了資料，直接使用
         if (this.dataLoaded && this.apiData.length > 0) {
-            console.log(`使用已載入的 ${this.apiData.length} 間餐廳資料`);
             return this.apiData;
         }
         
         try {
             const apiUrl = `${this.baseUrl}${window.config?.api?.endpoints?.restaurants?.all || '/google-restaurants/all'}`;
-            console.log(`從 API 獲取餐廳資料: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -123,18 +108,15 @@ class RestaurantService {
             }
             
             const data = await response.json();
-            console.log(`API 回應資料長度: ${data.length}`);
             
             if (Array.isArray(data) && data.length > 0) {
                 this.apiData = data;
                 this.dataLoaded = true;
-                console.log(`成功從 API 載入 ${data.length} 間餐廳資料`);
                 return data;
             } else {
                 throw new Error('從 API 獲取的資料為空或格式不正確');
             }
         } catch (error) {
-            console.error('從 API 載入餐廳資料失敗:', error);
             throw error; // 向上傳遞錯誤
         }
     }
@@ -142,18 +124,13 @@ class RestaurantService {
     // 獲取餐廳詳情
     async getRestaurantDetails(placeId) {
         try {
-            // 確保 API_BASE_URL 存在，若不存在則使用預設值
-            const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
-            
             // 從緩存中獲取數據
             if (this.restaurantCache[placeId]) {
-                console.log(`從緩存獲取餐廳詳情: ${placeId}`);
                 return this.restaurantCache[placeId];
             }
             
             // 從 API 獲取數據
-            console.log(`從 API 獲取餐廳詳情: ${placeId}`);
-            const response = await fetch(`${baseUrl}/google-restaurants/${placeId}`);
+            const response = await fetch(`${this.baseUrl}/google-restaurants/${placeId}`);
             if (!response.ok) {
                 throw new Error(`獲取餐廳詳情失敗: ${response.status}`);
             }
@@ -180,14 +157,7 @@ class RestaurantService {
                         restaurant.businessHours = jsonData.opening_hours.weekday_text;
                         restaurant.opening_hours = jsonData.opening_hours;
                     }
-                    
-                    console.log('從 json_raw 解析的數據:', {
-                        rating: restaurant.rating,
-                        reviewCount: restaurant.reviewCount,
-                        businessHours: restaurant.businessHours ? '已提取' : '無數據'
-                    });
                 } catch (error) {
-                    console.error('解析 json_raw 失敗:', error);
                 }
             }
             
@@ -196,15 +166,12 @@ class RestaurantService {
             
             return restaurant;
         } catch (error) {
-            console.error(`獲取餐廳詳情失敗: ${error}`);
             throw error;
         }
     }
     
     // 獲取用戶收藏的餐廳
     async getFavoriteRestaurants(userId) {
-        console.log(`獲取用戶收藏: ${userId}`);
-        
         try {
             // 檢查是否有舊版收藏資料
             const oldFavoritesJson = localStorage.getItem('googleMapsFavorites');
@@ -222,7 +189,6 @@ class RestaurantService {
                 localStorage.removeItem('googleMapsFavorites');
             }
         } catch (error) {
-            console.error('處理舊版收藏資料失敗:', error);
         }
         
         return this.favoriteData[userId] || [];
@@ -230,8 +196,6 @@ class RestaurantService {
     
     // 添加餐廳收藏
     async addFavorite(userId, placeId) {
-        console.log(`添加收藏: 用戶${userId}, 餐廳${placeId}`);
-        
         if (!userId || !placeId) {
             throw new Error('未提供用戶ID或餐廳ID');
         }
@@ -251,15 +215,13 @@ class RestaurantService {
     
     // 移除餐廳收藏
     async removeFavorite(userId, placeId) {
-        console.log(`移除收藏: 用戶${userId}, 餐廳${placeId}`);
-        
         if (!userId || !placeId) {
             throw new Error('未提供用戶ID或餐廳ID');
         }
         
         try {
             // 使用新的 API 路徑
-            const response = await fetch(`${API_BASE_URL}/users/${userId}/favorites/restaurants/${placeId}`, {
+            const response = await fetch(`${this.baseUrl}/users/${userId}/favorites/restaurants/${placeId}`, {
                 method: 'DELETE',
                 headers: {
                     'Accept': 'application/json'
@@ -271,7 +233,6 @@ class RestaurantService {
             }
             
             const result = await response.json();
-            console.log('API 回應結果:', result);
             
             if (result.success) {
                 // 更新本地收藏數據
@@ -285,11 +246,9 @@ class RestaurantService {
                 }
                 return true;
             } else {
-                console.error('API 移除收藏失敗:', result.message);
                 return false;
             }
         } catch (error) {
-            console.error('移除收藏失敗:', error);
             return false;
         }
     }
@@ -301,10 +260,8 @@ class RestaurantService {
             if (userId && this.favoriteData[userId]) {
                 // 保存完整的收藏資料
                 localStorage.setItem('favoriteStores', JSON.stringify(this.favoriteData[userId]));
-                console.log(`已保存 ${this.favoriteData[userId].length} 個收藏餐廳`);
             }
         } catch (error) {
-            console.error('保存收藏資料失敗:', error);
             throw error;
         }
     }
@@ -320,13 +277,11 @@ class RestaurantService {
     clearCache() {
         this.apiData = [];
         this.dataLoaded = false;
-        console.log('已清除餐廳資料快取');
     }
     
     // 獲取所有餐廳資料
     async getAllRestaurantsJson() {
         if (!this.initialized) {
-            console.log('服務尚未初始化，進行初始化...');
             await this.init();
         }
         
@@ -338,62 +293,17 @@ class RestaurantService {
             await this.preloadRestaurantData();
             return this.apiData;
         } catch (error) {
-            console.error('獲取餐廳資料失敗:', error);
             throw error;
         }
     }
     
     // 添加獲取餐廳的方法 (如果不存在)
     async getRestaurants() {
-        console.log('RestaurantService.getRestaurants() 被調用');
-        
         if (!this.initialized) {
-            console.log('餐廳服務尚未初始化，進行初始化...');
             await this.init();
         }
         
         if (this.dataLoaded && this.apiData.length > 0) {
-            console.log(`返回快取的 ${this.apiData.length} 間餐廳資料`);
-            
-            // 改進：檢查並徹底去除重複數據
-            const uniqueIds = new Map(); // 使用 Map 而不是 Set 來追蹤所有餐廳數據
-            const uniqueRestaurants = [];
-            const duplicateIds = new Set();
-            
-            for (const restaurant of this.apiData) {
-                const id = restaurant.place_id || restaurant.id;
-                
-                if (!id) {
-                    console.warn('跳過缺少ID的餐廳:', restaurant);
-                    continue;
-                }
-                
-                if (!uniqueIds.has(id)) {
-                    uniqueIds.set(id, restaurant);
-                    uniqueRestaurants.push(restaurant);
-                } else {
-                    duplicateIds.add(id);
-                    console.warn(`發現重複餐廳ID: ${id}, 名稱: ${restaurant.name}`);
-                }
-            }
-            
-            if (duplicateIds.size > 0) {
-                console.warn(`發現 ${duplicateIds.size} 個重複餐廳ID`);
-                console.log('重複的餐廳ID:', Array.from(duplicateIds));
-            }
-            
-            if (uniqueRestaurants.length !== this.apiData.length) {
-                console.log(`原始數據中有重複，去重後從 ${this.apiData.length} 減少到 ${uniqueRestaurants.length} 間餐廳`);
-            }
-            
-            return uniqueRestaurants;
-        }
-        
-        try {
-            console.log('從 API 重新載入餐廳資料...');
-            await this.preloadRestaurantData();
-            
-            // 確保返回前檢查並徹底去除重複數據
             const uniqueIds = new Map();
             const uniqueRestaurants = [];
             const duplicateIds = new Set();
@@ -402,7 +312,6 @@ class RestaurantService {
                 const id = restaurant.place_id || restaurant.id;
                 
                 if (!id) {
-                    console.warn('跳過缺少ID的餐廳:', restaurant);
                     continue;
                 }
                 
@@ -411,24 +320,49 @@ class RestaurantService {
                     uniqueRestaurants.push(restaurant);
                 } else {
                     duplicateIds.add(id);
-                    console.warn(`發現重複餐廳ID: ${id}, 名稱: ${restaurant.name}`);
                 }
             }
             
             if (duplicateIds.size > 0) {
-                console.warn(`API數據中發現 ${duplicateIds.size} 個重複餐廳ID`);
             }
             
             if (uniqueRestaurants.length !== this.apiData.length) {
-                console.log(`API數據中有重複，去重後從 ${this.apiData.length} 減少到 ${uniqueRestaurants.length} 間餐廳`);
+            }
+            
+            return uniqueRestaurants;
+        }
+        
+        try {
+            await this.preloadRestaurantData();
+            
+            const uniqueIds = new Map();
+            const uniqueRestaurants = [];
+            const duplicateIds = new Set();
+            
+            for (const restaurant of this.apiData) {
+                const id = restaurant.place_id || restaurant.id;
                 
-                // 更新本地快取為去重後的數據
+                if (!id) {
+                    continue;
+                }
+                
+                if (!uniqueIds.has(id)) {
+                    uniqueIds.set(id, restaurant);
+                    uniqueRestaurants.push(restaurant);
+                } else {
+                    duplicateIds.add(id);
+                }
+            }
+            
+            if (duplicateIds.size > 0) {
+            }
+            
+            if (uniqueRestaurants.length !== this.apiData.length) {
                 this.apiData = uniqueRestaurants;
             }
             
             return uniqueRestaurants;
         } catch (error) {
-            console.error('獲取餐廳數據失敗:', error);
             return [];
         }
     }

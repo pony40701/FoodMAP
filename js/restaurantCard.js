@@ -99,7 +99,7 @@ class RestaurantCard {
         
         // 添加點擊事件
         card.addEventListener('click', () => {
-            console.log('點擊餐廳卡片:', place);
+            ('點擊餐廳卡片:', place);
             // 如果有 RestaurantModal 模組，使用它顯示詳情
             if (window.RestaurantModal && window.RestaurantModal.showRestaurantDetail) {
                 window.RestaurantModal.showRestaurantDetail(place);

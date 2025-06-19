@@ -37,7 +37,7 @@ public GoogleRestaurant getRestaurantByPlaceId(@PathVariable String placeId) {
 
 @GetMapping("/list")
 public List<RestaurantListDTO> getRestaurantList(@RequestParam(required = false) String sort){
-	return restaurantService.getRestaurantList(sort);
+	return restaurantService.getRestaurantList();
 }
 
 @GetMapping("/sort")

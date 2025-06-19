@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/business-hours.css">
   <link rel="stylesheet" href="css/modal-fix.css">
   <link rel="stylesheet" href="css/restaurant-modal.css">
+  <link rel="stylesheet" href="css/restaurant-modal-new.css">
   <!-- 添加 Leaflet 地圖 CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <!-- 添加登入相關功能 -->
@@ -24,7 +25,10 @@
   <script src="js/BusinessHours.js"></script>
   <!-- 核心功能模組 -->
   <script src="js/restaurantService.js"></script>
-  <script src="js/restaurant-modal.js"></script>
+  <script src="js/restaurant-modal-index.js"></script>
+
+  <script src="js/favoriteSystem.js"></script>
+  <script src="js/favoriteButton.js"></script>
 </head>
 <body>
   <!-- 導覽列 -->
@@ -295,7 +299,7 @@
   <script src="js/config.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/BusinessHours.js"></script>
-  <script src="js/restaurant-modal.js"></script>
+  <script src="js/restaurant-modal-index.js"></script>
   <script src="js/favoriteSystem.js"></script>
   <script src="js/favoriteButton.js"></script>
   <script src="js/userCenter.js"></script>
@@ -316,7 +320,6 @@
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-          console.log('登出按鈕被點擊');
           // 執行登出功能
           logout();
           // 登出後跳轉到首頁
@@ -326,23 +329,46 @@
       
       // 初始化 RestaurantModal
       if (typeof RestaurantModal !== 'undefined') {
-        console.log('初始化 RestaurantModal');
         RestaurantModal.init();
         window.RestaurantModal = RestaurantModal;
       }
       
       // 初始化收藏系統
       if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
-        console.log('初始化收藏系統');
         window.favoriteSystem.initialize();
       }
       
       // 初始化用戶中心
       if (typeof initializeUserCenter === 'function') {
-        console.log('初始化用戶中心');
         initializeUserCenter();
       }
+      
+      // 設置餐廳卡片點擊事件
+      setTimeout(setupCardClickEvents, 1000);
     });
+    
+    // 綁定餐廳卡片點擊事件的輔助函數
+    function setupCardClickEvents() {
+      const cards = document.querySelectorAll('.restaurant-card');
+      cards.forEach(card => {
+        const placeId = card.getAttribute('data-id');
+        if (placeId) {
+          card.addEventListener('click', (e) => {
+            // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
+            if (e.target.closest('.favorite-btn')) {
+              e.stopPropagation();
+              return;
+            }
+            // 確保 viewRestaurant 函數存在
+            if (typeof viewRestaurant === 'function') {
+              viewRestaurant(placeId);
+            } else {
+              alert('系統錯誤，無法顯示餐廳詳情');
+            }
+          });
+        }
+      });
+    }
   </script>
   
   <!-- 餐廳詳細資訊彈窗 - 新版 -->
@@ -466,23 +492,8 @@
   
   <!-- Debug 腳本 -->
   <script>
-    // 檢查 RestaurantModal 是否正確初始化
-    console.log('RestaurantModal 狀態檢查:');
-    console.log('window.RestaurantModal 存在:', !!window.RestaurantModal);
-    if (window.RestaurantModal) {
-      console.log('window.RestaurantModal.showRestaurantDetail 存在:', !!window.RestaurantModal.showRestaurantDetail);
-      console.log('window.RestaurantModal.init 存在:', !!window.RestaurantModal.init);
-    }
-    
-    // 檢查必要的 DOM 元素是否存在
-    console.log('DOM 元素檢查:');
-    console.log('restaurantModalNew 元素存在:', !!document.getElementById('restaurantModalNew'));
-    console.log('modal-restaurant-name-new 元素存在:', !!document.getElementById('modal-restaurant-name-new'));
-    console.log('modal-restaurant-img-new 元素存在:', !!document.getElementById('modal-restaurant-img-new'));
-    
     // 綁定餐廳卡片點擊事件的輔助函數
     function setupCardClickEvents() {
-      console.log('設置餐廳卡片點擊事件');
       const cards = document.querySelectorAll('.restaurant-card');
       cards.forEach(card => {
         const placeId = card.getAttribute('data-id');
@@ -493,12 +504,10 @@
               e.stopPropagation();
               return;
             }
-            console.log('卡片被點擊，placeId:', placeId);
             viewRestaurant(placeId);
           });
         }
       });
-      console.log(`已設置 ${cards.length} 張卡片的點擊事件`);
     }
     
     // 頁面載入完成後執行

@@ -814,7 +814,7 @@ function loadUserData() {
         };
         img.onerror = function() {
             // 如果載入失敗，保持預設頭像
-            console.log('頭像載入失敗，使用預設頭像');
+            ('頭像載入失敗，使用預設頭像');
         };
         img.src = userData.avatar;
     }
@@ -1245,7 +1245,7 @@ document.getElementById('blogPostForm')?.addEventListener('submit', function(e) 
         overall: document.querySelector('.overall-rating .rating-value')?.textContent || '0.0'
     };
     
-    console.log('Ratings:', ratings);
+    ('Ratings:', ratings);
 });
 
 // 修改儲存草稿功能
@@ -1975,7 +1975,7 @@ function initColorPicker() {
             e.preventDefault();
             e.stopPropagation();
             const color = this.getAttribute('data-color');
-            console.log('選擇顏色：', color); // 添加調試日誌
+            ('選擇顏色：', color); // 添加調試日誌
             if (color) {
                 handleColorChange(color, false);
             }
@@ -2051,7 +2051,7 @@ function updateColorPreview(color) {
 function handleColorChange(color, isPreview) {
     if (!color) return;
     
-    console.log('處理顏色變更：', color, isPreview); // 添加調試日誌
+    ('處理顏色變更：', color, isPreview); // 添加調試日誌
 
     // 更新預覽
     updateColorPreview(color);
@@ -2076,7 +2076,7 @@ function handleColorChange(color, isPreview) {
 
 // 應用顏色到文字
 function applyColorToText(color) {
-    console.log('應用顏色到文字：', color); // 添加調試日誌
+    ('應用顏色到文字：', color); // 添加調試日誌
     
     const editor = document.getElementById('editor');
     if (!editor) return;

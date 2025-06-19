@@ -7,7 +7,7 @@ class FavoriteServiceLegacy {
         // 直接清除舊版收藏資料
         localStorage.removeItem('googleMapsFavorites');
         this.favorites = this.loadFavorites();
-        console.log('收藏系統初始化完成，已載入收藏:', this.favorites);
+        ('收藏系統初始化完成，已載入收藏:', this.favorites);
     }
     
     /**
@@ -49,7 +49,7 @@ class FavoriteServiceLegacy {
         this.favorites[placeId] = name || placeId;
         this.saveFavorites();
         
-        console.log(`已收藏餐廳: ${name} (ID: ${placeId})`);
+        (`已收藏餐廳: ${name} (ID: ${placeId})`);
         return true;
     }
     
@@ -68,7 +68,7 @@ class FavoriteServiceLegacy {
             delete this.favorites[placeId];
             this.saveFavorites();
             
-            console.log(`已取消收藏餐廳: ${name} (ID: ${placeId})`);
+            (`已取消收藏餐廳: ${name} (ID: ${placeId})`);
             return true;
         }
         
