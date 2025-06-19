@@ -22,7 +22,8 @@ public class Review {
     
     private String title;
     private String status; // draft, published
-    @Column(name = "content_json", columnDefinition = "LONGTEXT")
+    @Lob
+    @Column(name = "content_json", columnDefinition = "LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
     private String contentJson;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
