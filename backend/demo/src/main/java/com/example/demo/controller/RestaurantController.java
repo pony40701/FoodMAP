@@ -27,7 +27,7 @@ public Page<RestaurantListDTO> getAllRestaurant(
     @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurants(pageable);
+    return restaurantService.getRestaurantsWithReviews(pageable);
 }
 
 @GetMapping("/{placeId}")
@@ -46,6 +46,6 @@ public Page<RestaurantListDTO> getRestaurantsBySort(
     @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurantsBySort(sortBy, pageable);
+    return restaurantService.getRestaurantsBySortWithReviews(sortBy, pageable);
 }
 }

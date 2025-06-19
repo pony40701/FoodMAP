@@ -632,72 +632,33 @@ class RestaurantDetail {
   // 設置分享彈出視窗功能
   setupShareModal() {
     const shareBtn = document.querySelector('.action-btn.share');
-    const shareModalOverlay = document.querySelector('.share-modal-overlay');
-    const closeModalBtn = document.querySelector('.close-modal');
-    const shareLinkInput = document.querySelector('.share-link-input');
-    const copyLinkBtn = document.querySelector('.copy-link-btn');
-    const shareTitle = document.querySelector('.share-modal-content h2');
-    const shareIcons = document.querySelectorAll('.share-options .share-icon');
 
-    if (!shareBtn || !shareModalOverlay || !closeModalBtn || !shareLinkInput || !copyLinkBtn || !shareTitle || shareIcons.length === 0) {
-      console.error('分享彈出視窗相關元素未找到');
+    // 由於分享模態框已被移除，只設定分享按鈕的基本功能
+    if (!shareBtn) {
+      console.log('分享按鈕未找到');
       return;
     }
 
-    // 顯示彈出視窗
+    // 簡單的分享功能：複製當前頁面連結
     shareBtn.addEventListener('click', () => {
-      // 更新分享連結和標題
       const currentUrl = window.location.href;
-      shareLinkInput.value = currentUrl; // 暫時使用當前頁面 URL 作為分享連結
-      if (this.restaurantData) {
-         shareTitle.textContent = `分享 ${this.restaurantData.name || '這家餐廳'}`; // 更新標題
+      const restaurantName = this.restaurantData ? this.restaurantData.name : '這家餐廳';
+      
+      // 嘗試使用現代的 Navigator API 複製連結
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(currentUrl)
+          .then(() => {
+            alert(`已複製 ${restaurantName} 的分享連結到剪貼簿！`);
+          })
+          .catch(err => {
+            console.error('複製連結失敗:', err);
+            // 回退方案：顯示連結讓用戶手動複製
+            prompt('請手動複製以下連結：', currentUrl);
+          });
+      } else {
+        // 回退方案：顯示連結讓用戶手動複製
+        prompt('請手動複製以下連結：', currentUrl);
       }
-     
-      shareModalOverlay.classList.add('visible');
-    });
-
-    // 隱藏彈出視窗
-    const hideModal = () => {
-      shareModalOverlay.classList.remove('visible');
-    };
-
-    closeModalBtn.addEventListener('click', hideModal);
-    shareModalOverlay.addEventListener('click', (e) => {
-      // 如果點擊的是覆蓋層本身，則關閉視窗
-      if (e.target === shareModalOverlay) {
-        hideModal();
-      }
-    });
-
-    // 阻止點擊內容區關閉視窗
-    document.querySelector('.share-modal-content').addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-
-    // 複製連結功能
-    copyLinkBtn.addEventListener('click', () => {
-      shareLinkInput.select();
-      shareLinkInput.setSelectionRange(0, 99999); // for mobile devices
-      navigator.clipboard.writeText(shareLinkInput.value)
-        .then(() => {
-          alert('連結已複製到剪貼簿！');
-        })
-        .catch(err => {
-          console.error('複製連結失敗:', err);
-          alert('複製連結失敗！');
-        });
-    });
-
-    // 分享圖標點擊事件 (佔位符)
-    shareIcons.forEach(icon => {
-      icon.addEventListener('click', (e) => {
-        e.preventDefault(); // 阻止預設跳轉
-        const platform = icon.getAttribute('aria-label').replace('分享到 ', '');
-        alert(`即將分享到 ${platform} (功能開發中...)`);
-        // TODO: 實現實際的分享功能，可能需要根據不同平台構建分享連結或調用相應的 SDK
-        // 隱藏小視窗
-        hideModal();
-      });
     });
   }
 
@@ -1060,27 +1021,20 @@ function handleWriteReview() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     
     if (!isLoggedIn) {
-        // 顯示請先登入的 alert 訊息
-        alert('請先登入會員');
-        // 顯示登入彈跳視窗
-        const loginModal = document.getElementById('loginModal');
-        loginModal.style.display = 'block';
-        loginModal.classList.add('show');
-        // 防止事件冒泡
-        event.stopPropagation();
-        // 登入成功後的回調函數 - 只在用戶確實要寫評論時才跳轉
-        window.onLoginSuccess = function() {
-            // 獲取當前餐廳資訊
+        // 顯示請先登入的 alert 訊息，並引導到登入頁面
+        const confirmLogin = confirm('請先登入會員才能寫評論。\n\n點擊「確定」前往登入頁面，點擊「取消」返回。');
+        if (confirmLogin) {
+            // 儲存當前餐廳資訊，以便登入後回來寫評論
             const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
             const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
             
-            // 將餐廳資訊存儲到 localStorage
             localStorage.setItem('restaurant_id', restaurantId);
             localStorage.setItem('restaurant_name', restaurantName);
+            localStorage.setItem('returnToWriteReview', 'true');
             
-            // 跳轉到寫評論頁面
-            window.location.href = 'writeComment.html';
-        };
+            // 跳轉到登入頁面
+            window.location.href = 'userRegister.html';
+        }
     } else {
         // 已登入，獲取當前餐廳資訊並跳轉
         const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
@@ -1095,94 +1049,20 @@ function handleWriteReview() {
     }
 }
 
-// 商家登入彈窗相關函數
-function openRestaurantLoginModal(event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  const modal = document.getElementById('restaurantLoginModal');
-  modal.style.display = 'block';
-  modal.classList.add('show');
-}
-
-function closeRestaurantLoginModal() {
-  const modal = document.getElementById('restaurantLoginModal');
-  modal.style.display = 'none';
-  modal.classList.remove('show');
-}
+// 商家登入相關函數已移除 - 重新導向到相應頁面
 
 // 初始化登入模態框
 function initLoginModals() {
-  // 檢查是否需要自動開啟商家登入彈窗
-  if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
-    sessionStorage.removeItem('openRestaurantLogin');
-    openRestaurantLoginModal();
-  }
-
-  // 登入按鈕點擊事件
+  // 登入按鈕點擊事件 - 重新導向到登入頁面
   const loginBtn = document.querySelector('.btn-login');
   if (loginBtn) {
     loginBtn.addEventListener('click', function(event) {
       event.preventDefault();
       event.stopPropagation();
-      const loginModal = document.getElementById('loginModal');
-      loginModal.style.display = 'block';
-      loginModal.classList.add('show');
+      window.location.href = 'userRegister.html';
     });
   }
 
-  const loginModal = document.getElementById('loginModal');
-  if (loginModal) {
-    // 關閉按鈕事件
-    const closeBtn = loginModal.querySelector('.close');
-    if (closeBtn) {
-      closeBtn.onclick = function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        loginModal.style.display = 'none';
-        loginModal.classList.remove('show');
-      };
-    }
-    // 防止點擊模態框內容時關閉
-    loginModal.querySelector('.modal-content').addEventListener('click', function(event) {
-      event.stopPropagation();
-    });
-  }
-
-  // 初始化商家登入模態框
-  const restaurantLoginModal = document.getElementById('restaurantLoginModal');
-  if (restaurantLoginModal) {
-    // 防止點擊模態框內容時關閉
-    restaurantLoginModal.querySelector('.modal-content').addEventListener('click', function(event) {
-      event.stopPropagation();
-    });
-    // 表單提交事件
-    const restaurantLoginForm = document.getElementById('restaurantLoginForm');
-    if (restaurantLoginForm) {
-      restaurantLoginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const email = document.getElementById('restaurant-email').value;
-        const password = document.getElementById('restaurant-password').value;
-        const remember = document.getElementById('restaurant-remember').checked;
-        // 這裡可以添加實際的登入驗證邏輯
-        ('商家登入:', { email, password, remember });
-        alert('登入成功！');
-        closeRestaurantLoginModal();
-        window.location.href = 'restaurant.html';
-      });
-    }
-  }
-
-  // 點擊模態框外部關閉
-  window.onclick = function(event) {
-    if (event.target === loginModal) {
-      loginModal.style.display = 'none';
-      loginModal.classList.remove('show');
-    }
-    if (event.target === restaurantLoginModal) {
-      closeRestaurantLoginModal();
-    }
-  };
+  // 商家登入相關功能已移除
+  console.log('登入模態框功能已簡化 - 重新導向到登入頁面');
 } 
