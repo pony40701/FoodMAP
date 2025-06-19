@@ -10,8 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化收藏按鈕處理器
     const favoriteButtonHandler = new FavoriteButton();
 
-    let googleCurrentPage = 0;
-    let customCurrentPage = 0;
     let activeFilter = 'all';
     let isLoading = false;
 
@@ -169,21 +167,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         isLoading = true;
+        
+        const googleItemsLoaded = googleRestaurantList.children.length;
+        const customItemsLoaded = customRestaurantList.children.length;
+
+        const googlePage = Math.floor(googleItemsLoaded / pageSize);
+        const customPage = Math.floor(customItemsLoaded / pageSize);
+
         try {
             // Promise.all 會等待兩個請求都完成
             const [googleData, customData] = await Promise.all([
-                fetchGoogleData(googleCurrentPage, activeFilter, pageSize),
-                fetchCustomData(customCurrentPage, activeFilter, pageSize)
+                fetchGoogleData(googlePage, activeFilter, pageSize),
+                fetchCustomData(customPage, activeFilter, pageSize)
             ]);
 
-            // 兩個請求都回來後，才一起渲染
-            if (googleData && googleData.content) {
-                renderGoogleRestaurants(googleData.content);
-                if (!googleData.last) googleCurrentPage++;
+            const googleContent = googleData?.content;
+            const customContent = customData?.content;
+
+            if (googleContent?.length > 0) {
+                renderGoogleRestaurants(googleContent);
             }
-            if (customData && customData.content) {
-                renderCustomRestaurants(customData.content);
-                if (!customData.last) customCurrentPage++;
+            if (customContent?.length > 0) {
+                renderCustomRestaurants(customContent);
             }
 
         } catch (error) {
@@ -196,8 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function resetAndLoad() {
-        googleCurrentPage = 0;
-        customCurrentPage = 0;
         googleRestaurantList.innerHTML = '';
         customRestaurantList.innerHTML = '';
         isLoading = false; 
