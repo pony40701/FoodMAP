@@ -22,6 +22,7 @@ public class Review {
     
     private String title;
     private String status; // draft, published
+    @Column(name = "content_json", columnDefinition = "LONGTEXT")
     private String contentJson;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

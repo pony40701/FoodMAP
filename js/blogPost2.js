@@ -4,7 +4,7 @@ let isEditingPost = false; // 添加編輯模式標記
 let editingPostId = null; // 添加正在編輯的文章ID
 
 // 頁面載入完成後執行
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // 初始化編輯器功能
     initEditor();
     // 初始化星級評分
@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 載入用戶數據
     loadUserData();
     // 載入文章列表
-    loadPosts();
+    await loadPublishedPosts();
     // 初始化統計圖表
-    initStatsChart();
+    await initStatsChart();
     // 初始化字型大小控制
     initFontSize();
     // 初始化顏色選擇器
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initRatingSystem();
     // 如果當前在草稿箱頁面，載入草稿
     if (document.getElementById('drafts-section').classList.contains('active')) {
-        loadDrafts();
+        await loadDrafts();
     }
 });
 
@@ -117,8 +117,15 @@ function initializeNavbar() {
 //     }, 2000);
 // }
 
+// 包裝函數，用於HTML中的onclick事件
+window.showSectionWrapper = function(sectionId) {
+    showSection(sectionId).catch(error => {
+        console.error('切換頁面時發生錯誤：', error);
+    });
+};
+
 // 切換不同區段顯示
-function showSection(sectionId) {
+async function showSection(sectionId) {
     // 隱藏所有區段
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -131,19 +138,27 @@ function showSection(sectionId) {
     document.querySelectorAll('.blog-nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
+    
+    // 找到對應的導覽項目並設置為active
+    const navItems = document.querySelectorAll('.blog-nav-item');
+    navItems.forEach(item => {
+        const onclick = item.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${sectionId}'`)) {
+            item.classList.add('active');
+        }
+    });
 
     // 根據不同區段載入對應內容
     switch (sectionId) {
         case 'drafts':
-            loadDrafts();
+            await loadDrafts();
             break;
         case 'published':
-            loadPublishedPosts();
+            await loadPublishedPosts();
             break;
         case 'stats':
             // 重新初始化統計圖表和排行榜
-            initStatsChart();
+            await initStatsChart();
             break;
     }
 }
@@ -833,60 +848,71 @@ function createPostElement(post) {
 }
 
 // 初始化統計圖表
-function initStatsChart() {
-    // 從 localStorage 獲取已發布文章
-    const publishedPosts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
-    
-    // 計算總觀看次數和讚數
-    const totalStats = publishedPosts.reduce((acc, post) => {
-        acc.views += post.views;
-        acc.likes += post.likes;
-        return acc;
-    }, { views: 0, likes: 0 });
+async function initStatsChart() {
+    try {
+        // 從後端API獲取用戶統計數據
+        const response = await fetch('http://localhost:8080/api/reviews/user/1/overview'); // 暫時使用固定用戶ID
+        if (!response.ok) throw new Error('載入統計數據失敗');
+        const userStats = await response.json();
+        
+        // 更新統計卡片
+        document.getElementById('totalViews').textContent = userStats.totalViews.toLocaleString();
+        document.getElementById('totalLikes').textContent = userStats.totalFavorites.toLocaleString();
 
-    // 更新統計卡片
-    document.getElementById('totalViews').textContent = totalStats.views.toLocaleString();
-    document.getElementById('totalLikes').textContent = totalStats.likes.toLocaleString();
-
-    // 初始化排行榜
-    initRankings();
-    
-    // 原有的圖表邏輯
-    updateViewsChart(publishedPosts);
+        // 初始化排行榜
+        await initRankings();
+        
+        // 更新圖表
+        await updateViewsChart();
+    } catch (error) {
+        console.error('載入統計數據時發生錯誤：', error);
+        // 如果載入失敗，顯示預設值
+        document.getElementById('totalViews').textContent = '0';
+        document.getElementById('totalLikes').textContent = '0';
+    }
 }
 
 // 更新觀看數據圖表
-function updateViewsChart(posts) {
-    // 獲取最近6個月的數據
-    const months = ['一月', '二月', '三月', '四月', '五月', '六月'];
-    const currentDate = new Date();
-    const monthlyViews = new Array(6).fill(0);
-    
-    // 計算每月的觀看次數
-    posts.forEach(post => {
-        const postDate = new Date(post.publishDate);
-        const monthDiff = currentDate.getMonth() - postDate.getMonth() + 
-            (currentDate.getFullYear() - postDate.getFullYear()) * 12;
+async function updateViewsChart() {
+    try {
+        // 從後端API獲取用戶統計數據
+        const response = await fetch('http://localhost:8080/api/reviews/user/1/stats'); // 暫時使用固定用戶ID
+        if (!response.ok) throw new Error('載入圖表數據失敗');
+        const statsList = await response.json();
         
-        if (monthDiff >= 0 && monthDiff < 6) {
-            monthlyViews[5 - monthDiff] += post.views;
-        }
-    });
+        // 獲取最近6個月的數據
+        const months = ['一月', '二月', '三月', '四月', '五月', '六月'];
+        const currentDate = new Date();
+        const monthlyViews = new Array(6).fill(0);
+        
+        // 計算每月的觀看次數
+        statsList.forEach(post => {
+            const postDate = new Date(post.createdAt);
+            const monthDiff = currentDate.getMonth() - postDate.getMonth() + 
+                (currentDate.getFullYear() - postDate.getFullYear()) * 12;
+            
+            if (monthDiff >= 0 && monthDiff < 6) {
+                monthlyViews[5 - monthDiff] += post.totalViews;
+            }
+        });
 
-    const viewsData = {
-        labels: months,
-        data: monthlyViews
-    };
-    
-    // 這裡可以添加實際的圖表繪製代碼
-    console.log('更新圖表數據：', viewsData);
+        const viewsData = {
+            labels: months,
+            data: monthlyViews
+        };
+        
+        // 這裡可以添加實際的圖表繪製代碼
+        console.log('更新圖表數據：', viewsData);
+    } catch (error) {
+        console.error('載入圖表數據時發生錯誤：', error);
+    }
 }
 
 // 初始化排行榜
-function initRankings() {
+async function initRankings() {
     // 綁定排行榜切換事件
     document.querySelectorAll('.ranking-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
+        tab.addEventListener('click', async function() {
             // 更新標籤狀態
             document.querySelectorAll('.ranking-tab').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
@@ -897,72 +923,89 @@ function initRankings() {
             document.getElementById(`${type}Ranking`).classList.add('active');
             
             // 更新排行榜內容
-            updateRankings(type);
+            await updateRankings(type);
         });
     });
 
     // 初始化顯示最多觀看排行榜
-    updateRankings('views');
+    await updateRankings('views');
 }
 
 // 更新排行榜內容
-function updateRankings(type) {
-    // 從 localStorage 獲取已發布文章
-    const publishedPosts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
-    
-    // 根據類型排序文章
-    const sortedPosts = [...publishedPosts].sort((a, b) => b[type] - a[type]).slice(0, 5);
-    
-    // 獲取對應的排行榜容器
-    const rankingList = document.getElementById(`${type}Ranking`);
-    if (!rankingList) return;
-    
-    // 清空現有內容
-    rankingList.innerHTML = '';
-    
-    if (sortedPosts.length === 0) {
-        rankingList.innerHTML = '<div class="no-posts">目前沒有文章</div>';
-        return;
-    }
-
-    // 生成排行榜項目
-    sortedPosts.forEach((post, index) => {
-        const rankingItem = document.createElement('div');
-        rankingItem.className = 'ranking-item';
-        rankingItem.innerHTML = `
-            <div class="ranking-number">${index + 1}</div>
-            <div class="ranking-content">
-                <div class="ranking-title">${escapeHtml(post.title)}</div>
-                <div class="ranking-info">
-                    <i class="fas fa-utensils"></i> ${escapeHtml(post.restaurant)}
-                </div>
-            </div>
-            <div class="ranking-stats">
-                <span><i class="fas fa-eye"></i> ${post.views}</span>
-                <span><i class="fas fa-heart"></i> ${post.likes}</span>
-            </div>
-        `;
+async function updateRankings(type) {
+    try {
+        // 從後端API獲取用戶統計數據
+        const response = await fetch('http://localhost:8080/api/reviews/user/1/stats'); // 暫時使用固定用戶ID
+        if (!response.ok) throw new Error('載入排行榜數據失敗');
+        const statsList = await response.json();
         
-        // 添加點擊事件，高亮對應的文章
-        rankingItem.addEventListener('click', () => {
-            // 切換到已發布文章頁面
-            showSection('published');
-            
-            // 找到並高亮對應的文章卡片
-            const postCard = document.querySelector(`.post-card[data-post-id="${post.id}"]`);
-            if (postCard) {
-                postCard.classList.add('highlight');
-                postCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // 移除高亮效果
-                setTimeout(() => {
-                    postCard.classList.remove('highlight');
-                }, 2000);
+        // 根據類型排序文章
+        const sortedPosts = [...statsList].sort((a, b) => {
+            if (type === 'views') {
+                return b.totalViews - a.totalViews;
+            } else if (type === 'likes') {
+                return b.totalFavorites - a.totalFavorites;
             }
-        });
+            return 0;
+        }).slice(0, 5);
         
-        rankingList.appendChild(rankingItem);
-    });
+        // 獲取對應的排行榜容器
+        const rankingList = document.getElementById(`${type}Ranking`);
+        if (!rankingList) return;
+        
+        // 清空現有內容
+        rankingList.innerHTML = '';
+        
+        if (sortedPosts.length === 0) {
+            rankingList.innerHTML = '<div class="no-posts">目前沒有文章</div>';
+            return;
+        }
+
+        // 生成排行榜項目
+        sortedPosts.forEach((post, index) => {
+            const rankingItem = document.createElement('div');
+            rankingItem.className = 'ranking-item';
+            rankingItem.innerHTML = `
+                <div class="ranking-number">${index + 1}</div>
+                <div class="ranking-content">
+                    <div class="ranking-title">${escapeHtml(post.title)}</div>
+                    <div class="ranking-info">
+                        <i class="fas fa-calendar"></i> ${new Date(post.createdAt).toLocaleDateString('zh-TW')}
+                    </div>
+                </div>
+                <div class="ranking-stats">
+                    <span><i class="fas fa-eye"></i> ${post.totalViews}</span>
+                    <span><i class="fas fa-heart"></i> ${post.totalFavorites}</span>
+                </div>
+            `;
+            
+            // 添加點擊事件，高亮對應的文章
+            rankingItem.addEventListener('click', () => {
+                // 切換到已發布文章頁面
+                showSectionWrapper('published');
+                
+                // 找到並高亮對應的文章卡片
+                const postCard = document.querySelector(`.post-card[data-post-id="${post.reviewId}"]`);
+                if (postCard) {
+                    postCard.classList.add('highlight');
+                    postCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // 移除高亮效果
+                    setTimeout(() => {
+                        postCard.classList.remove('highlight');
+                    }, 2000);
+                }
+            });
+            
+            rankingList.appendChild(rankingItem);
+        });
+    } catch (error) {
+        console.error('載入排行榜數據時發生錯誤：', error);
+        const rankingList = document.getElementById(`${type}Ranking`);
+        if (rankingList) {
+            rankingList.innerHTML = '<div class="error">載入排行榜失敗，請稍後再試</div>';
+        }
+    }
 }
 
 // 生成隨機測試數據
@@ -974,7 +1017,7 @@ function updateRankings(type) {
 // }
 
 // 表單提交處理（發布文章）
-document.getElementById('blogPostForm')?.addEventListener('submit', async function(e) {
+document.getElementById('blogPostFormWrite')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // 驗證必填項目
@@ -994,64 +1037,166 @@ document.getElementById('blogPostForm')?.addEventListener('submit', async functi
         return;
     }
 
-    // 生成測試數據
-    // const testData = generateTestData();
-
     // 準備發布數據
     const postData = {
-        id: isEditingPost ? editingPostId : Date.now(),
+        userId: 1, // TODO: 從登入資訊中獲取
+        restaurantId: 1, // TODO: 從餐廳選擇中獲取
         title: title || '未命名文章',
-        restaurant: restaurant,
-        location: document.getElementById('restaurantLocation').value,
-        content: content,
-        ratings: ratings,
-        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean),
-        publishDate: new Date().toISOString(),
+        content_json: content,
         status: 'published',
-        views: testData.views,  // 使用隨機觀看數
-        likes: testData.likes   // 使用隨機讚數
+        ratings: {
+            environment_score: parseInt(ratings.environment || '0'),
+            service_score: parseInt(ratings.service || '0'),
+            taste_score: parseInt(ratings.taste || '0'),
+            price_score: parseInt(ratings.price || '0'),
+            overall_score: parseFloat(document.querySelector('.overall-rating .rating-value')?.textContent || '0.0')
+        },
+        photos: [], // TODO: 處理圖片上傳
+        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
     try {
-        // 從 localStorage 獲取已發布文章
-        const publishedPosts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
+        // 清理HTML內容，移除可能導致問題的特殊字符
+        const cleanedContent = cleanHtmlContent(content);
+        postData.content_json = cleanedContent;
         
-        if (isEditingPost) {
-            // 如果是從草稿編輯，刪除原草稿
-            const drafts = JSON.parse(localStorage.getItem('blogDrafts') || '[]');
-            const updatedDrafts = drafts.filter(d => d.id !== editingPostId);
-            localStorage.setItem('blogDrafts', JSON.stringify(updatedDrafts));
-            
-            // 更新已發布文章
-            const existingIndex = publishedPosts.findIndex(p => p.id === editingPostId);
-            if (existingIndex !== -1) {
-                // 保留原有的觀看數和讚數
-                postData.views = publishedPosts[existingIndex].views;
-                postData.likes = publishedPosts[existingIndex].likes;
-                publishedPosts[existingIndex] = postData;
-            } else {
-                publishedPosts.push(postData);
-            }
-            showNotification('文章已更新並發布！', 'success');
-        } else {
-            // 發布新文章
-            publishedPosts.push(postData);
-            showNotification(`文章發布成功！\n初始觀看數：${testData.views}\n初始讚數：${testData.likes}`, 'success');
+        console.log('清理後的HTML內容:', cleanedContent);
+        
+        // 呼叫後端 API 發布文章
+        const response = await fetch('http://localhost:8080/api/reviews', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('後端錯誤回應:', errorText);
+            throw new Error(`發布文章失敗: ${response.status} ${response.statusText}`);
         }
-        
-        // 儲存回 localStorage
-        localStorage.setItem('publishedPosts', JSON.stringify(publishedPosts));
+
+        const publishedId = await response.json();
+        console.log('發布文章成功:', publishedId);
+        alert('文章發布成功！');
         
         // 清空表單並重置狀態
         clearForm();
         
         // 更新文章列表並切換到已發布頁面
         loadPublishedPosts();
-        showSection('published');
+        showSectionWrapper('published');
         
     } catch (error) {
         console.error('發布文章時發生錯誤：', error);
-        showNotification('發布文章時發生錯誤，請稍後再試', 'error');
+        alert('發布文章時發生錯誤：' + error.message);
+    }
+});
+
+// 編輯文章表單提交處理
+document.getElementById('blogPostFormEdit')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // 驗證必填項目
+    const title = document.getElementById('postTitleEdit').value;
+    const restaurant = document.getElementById('restaurantNameEdit').value;
+    const content = document.getElementById('editorEdit').innerHTML;
+    
+    if (!restaurant || !content) {
+        alert('請至少填寫餐廳名稱和評論內容');
+        return;
+    }
+
+    // 驗證評分
+    const ratings = collectRatings('#edit-section');
+    if (Object.values(ratings).every(rating => rating === '0')) {
+        alert('請至少給出一個評分項目');
+        return;
+    }
+
+    // 準備發布數據
+    const postData = {
+        userId: window.currentEditingDraft?.userId || window.currentEditingPost?.userId || 1,
+        restaurantId: window.currentEditingDraft?.restaurantId || window.currentEditingPost?.restaurantId || 1,
+        title: title || '未命名文章',
+        content_json: content,
+        status: 'published',
+        ratings: {
+            environment_score: parseInt(ratings.environment || '0'),
+            service_score: parseInt(ratings.service || '0'),
+            taste_score: parseInt(ratings.taste || '0'),
+            price_score: parseInt(ratings.price || '0'),
+            overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
+        },
+        photos: [], // TODO: 處理圖片上傳
+        tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+    };
+
+    try {
+        // 清理HTML內容，移除可能導致問題的特殊字符
+        const cleanedContent = cleanHtmlContent(content);
+        postData.content_json = cleanedContent;
+        
+        console.log('清理後的HTML內容:', cleanedContent);
+        
+        let response;
+        
+        if (window.currentEditingDraftId) {
+            // 如果是從草稿編輯，先刪除草稿再發布
+            const deleteDraft = confirm('發布後是否要刪除草稿？');
+            
+            response = await fetch(`http://localhost:8080/api/reviews/drafts/${window.currentEditingDraftId}/publish?deleteDraft=${deleteDraft}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: postData.userId,
+                    restaurantId: postData.restaurantId
+                })
+            });
+        } else if (window.currentEditingPostId) {
+            // 如果是編輯已發布文章，直接更新
+            response = await fetch(`http://localhost:8080/api/reviews/published/${window.currentEditingPostId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+        } else {
+            // 直接發布新文章
+            response = await fetch('http://localhost:8080/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+        }
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('後端錯誤回應:', errorText);
+            throw new Error(`發布文章失敗: ${response.status} ${response.statusText}`);
+        }
+
+        const publishedId = await response.json();
+        console.log('發布文章成功:', publishedId);
+        alert('文章發布成功！');
+        
+        // 清空表單並重置狀態
+        clearEditForm();
+        
+        // 更新文章列表並切換到已發布頁面
+        loadPublishedPosts();
+        loadDrafts(); // 重新載入草稿列表
+        showSectionWrapper('published');
+        
+    } catch (error) {
+        console.error('發布文章時發生錯誤：', error);
+        alert('發布文章時發生錯誤：' + error.message);
     }
 });
 
@@ -1094,6 +1239,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
             };
 
+            console.log('儲存草稿資料', postData);
+            
             // 驗證必填項目
             if (!postData.content_json) {
                 alert('請至少填寫評論內容');
@@ -1101,6 +1248,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
+                // 清理HTML內容，移除可能導致問題的特殊字符
+                const cleanedContent = cleanHtmlContent(postData.content_json);
+                postData.content_json = cleanedContent;
+                
+                console.log('清理後的HTML內容:', cleanedContent);
+                
                 // 呼叫後端 API 創建草稿
                 const response = await fetch('http://localhost:8080/api/reviews', {
                     method: 'POST',
@@ -1110,10 +1263,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(postData)
                 });
 
+                console.log('後端回應狀態:', response.status);
+                console.log('後端回應標頭:', Object.fromEntries(response.headers.entries()));
+
                 if (!response.ok) {
-                    throw new Error('儲存草稿失敗');
+                    const errorText = await response.text();
+                    console.error('後端錯誤回應:', errorText);
+                    console.error('後端錯誤狀態:', response.status);
+                    console.error('後端錯誤狀態文字:', response.statusText);
+                    throw new Error(`儲存草稿失敗: ${response.status} ${response.statusText}\n詳細錯誤: ${errorText}`);
                 }
 
+                const result = await response.json();
+                console.log('儲存草稿成功:', result);
                 alert('草稿已儲存');
                 
                 // 清空表單
@@ -1125,14 +1287,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // 返回草稿箱頁面
-                showSection('drafts');
+                showSectionWrapper('drafts');
             } catch (error) {
                 console.error('儲存草稿時發生錯誤：', error);
-                alert('儲存草稿失敗，請稍後再試');
+                console.error('錯誤堆疊:', error.stack);
+                alert('儲存草稿失敗：' + error.message);
             }
         });
     }
 });
+
+// 清理HTML內容的函數
+function cleanHtmlContent(htmlContent) {
+    if (!htmlContent) return '';
+    
+    try {
+        console.log('原始HTML內容長度:', htmlContent.length);
+        console.log('原始HTML內容:', htmlContent);
+        
+        // 創建一個臨時的div元素來處理HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        // 移除可能導致問題的零寬字符
+        const textContent = tempDiv.textContent || tempDiv.innerText || '';
+        const cleanedText = textContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
+        
+        // 如果清理後沒有內容，返回原始HTML
+        if (!cleanedText.trim()) {
+            console.log('清理後沒有文字內容，返回原始HTML');
+            return htmlContent;
+        }
+        
+        // 更嚴格的HTML清理
+        let cleanedHtml = htmlContent
+            // 移除零寬字符
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            // 移除可能的控制字符
+            .replace(/[\x00-\x1F\x7F]/g, '')
+            // 確保引號正確
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            // 移除多餘的空格
+            .replace(/\s+/g, ' ')
+            // 移除可能的特殊字符
+            .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '')
+            .trim();
+        
+        // 檢查是否有有效的HTML結構
+        const testDiv = document.createElement('div');
+        testDiv.innerHTML = cleanedHtml;
+        
+        // 如果HTML結構有問題，嘗試修復
+        if (testDiv.innerHTML !== cleanedHtml) {
+            console.log('HTML結構有問題，嘗試修復...');
+            cleanedHtml = testDiv.innerHTML;
+        }
+        
+        console.log('清理後HTML內容長度:', cleanedHtml.length);
+        console.log('清理後HTML內容:', cleanedHtml);
+        
+        return cleanedHtml;
+    } catch (error) {
+        console.error('清理HTML內容時發生錯誤：', error);
+        // 如果清理失敗，返回原始內容
+        return htmlContent;
+    }
+}
 
 // 清空表單函數
 function clearForm() {
@@ -1239,7 +1460,7 @@ async function editDraft(draftId) {
         const draft = await response.json();
         
         // 切換到編輯頁面
-        showSection('edit');
+        showSectionWrapper('edit');
         
         // 填充表單
         document.getElementById('postTitleEdit').value = draft.title;
@@ -1311,6 +1532,12 @@ async function editDraft(draftId) {
                 }
 
                 try {
+                    // 清理HTML內容，移除可能導致問題的特殊字符
+                    const cleanedContent = cleanHtmlContent(postData.content_json);
+                    postData.content_json = cleanedContent;
+                    
+                    console.log('清理後的HTML內容:', cleanedContent);
+                    
                     const response = await fetch(`http://localhost:8080/api/reviews/drafts/${draftId}`, {
                         method: 'PUT',
                         headers: {
@@ -1320,13 +1547,17 @@ async function editDraft(draftId) {
                     });
 
                     if (!response.ok) {
-                        throw new Error('更新草稿失敗');
+                        const errorText = await response.text();
+                        console.error('後端錯誤回應:', errorText);
+                        throw new Error(`更新草稿失敗: ${response.status} ${response.statusText}`);
                     }
 
+                    const result = await response.json();
+                    console.log('更新草稿成功:', result);
                     alert('草稿已更新');
                     clearEditForm();
                     loadDrafts();
-                    showSection('drafts');
+                    showSectionWrapper('drafts');
                 } catch (error) {
                     console.error('更新草稿時發生錯誤：', error);
                     alert('更新草稿失敗：' + error.message);
@@ -1381,6 +1612,7 @@ async function publishDraft(draftId, userId, restaurantId) {
         alert('草稿已成功發布！');
         loadDrafts(); // 重新載入草稿列表
         loadPublishedPosts(); // 重新載入已發布文章列表
+        showSectionWrapper('published');
     } catch (error) {
         console.error('發布草稿時發生錯誤：', error);
         alert('發布草稿失敗：' + error.message);
@@ -1394,7 +1626,7 @@ function editPost(postId) {
     if (!post) return;
     isEditingPost = true;
     editingPostId = post.id;
-    showSection('edit');
+    showSectionWrapper('edit');
     document.getElementById('postTitleEdit').value = post.title;
     document.getElementById('restaurantNameEdit').value = post.restaurant;
     document.getElementById('restaurantLocationEdit').value = post.location;
@@ -1415,29 +1647,37 @@ function editPost(postId) {
 }
 
 // 載入已發布文章
-function loadPublishedPosts() {
+async function loadPublishedPosts() {
     const publishedList = document.getElementById('publishedList');
     if (!publishedList) return;
 
-    // 從 localStorage 獲取已發布文章
-    const publishedPosts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
+    publishedList.innerHTML = '<div class="loading">載入中...</div>';
     
-    // 清空現有內容
-    publishedList.innerHTML = '';
-    
-    if (publishedPosts.length === 0) {
-        publishedList.innerHTML = '<div class="no-posts">目前沒有已發布的文章</div>';
-        return;
+    try {
+        const response = await fetch('http://localhost:8080/api/reviews/user/1/published'); // 暫時使用固定用戶ID
+        if (!response.ok) throw new Error('載入已發布文章失敗');
+        const publishedPosts = await response.json();
+        
+        // 清空現有內容
+        publishedList.innerHTML = '';
+        
+        if (publishedPosts.length === 0) {
+            publishedList.innerHTML = '<div class="no-posts">目前沒有已發布的文章</div>';
+            return;
+        }
+
+        // 按發布時間排序（新的在前）
+        publishedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // 顯示文章列表
+        publishedPosts.forEach(post => {
+            const postElement = createPublishedPostElement(post);
+            publishedList.appendChild(postElement);
+        });
+    } catch (error) {
+        console.error('載入已發布文章時發生錯誤：', error);
+        publishedList.innerHTML = '<div class="error">載入已發布文章失敗，請稍後再試</div>';
     }
-
-    // 按發布時間排序（新的在前）
-    publishedPosts.sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
-
-    // 顯示文章列表
-    publishedPosts.forEach(post => {
-        const postElement = createPublishedPostElement(post);
-        publishedList.appendChild(postElement);
-    });
 }
 
 // 創建已發布文章元素
@@ -1448,11 +1688,12 @@ function createPublishedPostElement(post) {
     
     // 計算總評分
     const ratings = post.ratings;
-    const totalRating = Object.values(ratings).reduce((sum, rating) => sum + Number(rating), 0);
-    const averageRating = (totalRating / Object.keys(ratings).length).toFixed(1);
+    const totalRating = ratings ? 
+        (ratings.environment_score + ratings.service_score + ratings.taste_score + ratings.price_score) : 0;
+    const averageRating = ratings ? (totalRating / 4).toFixed(1) : '0.0';
     
     // 格式化日期
-    const publishDate = new Date(post.publishDate).toLocaleString('zh-TW', {
+    const publishDate = new Date(post.createdAt).toLocaleString('zh-TW', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -1467,8 +1708,7 @@ function createPublishedPostElement(post) {
         </div>
         <div class="post-content">
             <p class="restaurant-info">
-                <i class="fas fa-utensils"></i> ${escapeHtml(post.restaurant)}
-                ${post.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(post.location)}</span>` : ''}
+                <i class="fas fa-utensils"></i> 餐廳ID: ${post.restaurantId}
             </p>
             <div class="post-ratings">
                 <span class="rating-label">總評分</span>
@@ -1479,22 +1719,22 @@ function createPublishedPostElement(post) {
                 </div>
                 <span class="rating-value">${averageRating}</span>
             </div>
-            <p class="post-preview">${truncateText(stripHtml(post.content), 150)}</p>
-            ${post.tags.length > 0 ? `
+            <p class="post-preview">${truncateText(stripHtml(post.content_json), 150)}</p>
+            ${post.tags && post.tags.length > 0 ? `
                 <div class="post-tags">
                     ${post.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
                 </div>
             ` : ''}
         </div>
         <div class="post-stats">
-            <span><i class="fas fa-eye"></i> ${post.views}</span>
-            <span><i class="fas fa-heart"></i> ${post.likes}</span>
+            <span><i class="fas fa-eye"></i> 0</span>
+            <span><i class="fas fa-heart"></i> 0</span>
         </div>
         <div class="post-actions">
-            <button onclick="editPost(${post.id})" class="btn-edit">
+            <button onclick="editPublishedPost(${post.id})" class="btn-edit">
                 <i class="fas fa-edit"></i> 編輯
             </button>
-            <button onclick="deletePost(${post.id})" class="btn-delete">
+            <button onclick="deletePublishedPost(${post.id})" class="btn-delete">
                 <i class="fas fa-trash-alt"></i> 刪除
             </button>
         </div>
@@ -1916,6 +2156,94 @@ function clearEditForm() {
         saveDraftBtn.textContent = '儲存草稿';
     }
     
-    // 清除當前編輯的草稿ID
+    // 清除當前編輯的草稿ID和文章ID
     window.currentEditingDraftId = null;
+    window.currentEditingPostId = null;
+    window.currentEditingDraft = null;
+    window.currentEditingPost = null;
+}
+
+// 編輯已發布文章
+async function editPublishedPost(postId) {
+    try {
+        // 獲取文章詳情
+        const response = await fetch(`http://localhost:8080/api/reviews/user/1/published`);
+        if (!response.ok) throw new Error('載入文章失敗');
+        const publishedPosts = await response.json();
+        const post = publishedPosts.find(p => p.id === postId);
+        
+        if (!post) {
+            alert('文章不存在');
+            return;
+        }
+        
+        // 切換到編輯頁面
+        showSectionWrapper('edit');
+        
+        // 填充表單
+        document.getElementById('postTitleEdit').value = post.title;
+        document.getElementById('editorEdit').innerHTML = post.content_json;
+        document.getElementById('tagsEdit').value = post.tags ? post.tags.join(', ') : '';
+        
+        // 設置評分
+        if (post.ratings) {
+            // 設置各項評分
+            const ratingCategories = {
+                environment: 'environment_score',
+                service: 'service_score',
+                taste: 'taste_score',
+                price: 'price_score'
+            };
+
+            Object.entries(ratingCategories).forEach(([category, scoreKey]) => {
+                const starsContainer = document.querySelector(`#edit-section .stars[data-category="${category}"]`);
+                if (starsContainer && post.ratings[scoreKey]) {
+                    const score = post.ratings[scoreKey];
+                    starsContainer.setAttribute('data-selected-rating', score);
+                    updateStars(starsContainer, score);
+                    const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+                    if (ratingValue) ratingValue.textContent = score + '.0';
+                }
+            });
+
+            // 更新總評分
+            updateOverallRating('#edit-section');
+        }
+        
+        // 儲存當前編輯的文章ID和相關資訊
+        window.currentEditingPostId = postId;
+        window.currentEditingPost = {
+            userId: post.userId,
+            restaurantId: post.restaurantId
+        };
+        
+        // 更新按鈕文字和事件處理
+        const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+        if (saveDraftBtn) {
+            saveDraftBtn.textContent = '更新文章';
+        }
+        
+    } catch (error) {
+        console.error('載入文章時發生錯誤：', error);
+        alert('載入文章失敗：' + error.message);
+    }
+}
+
+// 刪除已發布文章
+async function deletePublishedPost(postId) {
+    if (!confirm('確定要刪除這個文章嗎？')) return;
+    
+    try {
+        const response = await fetch(`http://localhost:8080/api/reviews/published/${postId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error('刪除文章失敗');
+        
+        alert('文章已刪除');
+        loadPublishedPosts(); // 重新載入已發布文章列表
+    } catch (error) {
+        console.error('刪除文章時發生錯誤：', error);
+        alert('刪除文章失敗：' + error.message);
+    }
 }

@@ -33,41 +33,57 @@ public class ReviewService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createReview(ReviewRequestDto dto) {
-        // 1. 新增評論
-        Review review = new Review();
-        
-        // 設置用戶和餐廳
-        User user = new User();
-        user.setId(dto.getUserId().longValue());
-        review.setUser(user);
-        
-        Restaurant restaurant = new Restaurant();
-        restaurant.setId(dto.getRestaurantId());
-        review.setRestaurant(restaurant);
-        
-        review.setTitle(dto.getTitle());
-        review.setContentJson(dto.getContent_json());
-        review.setStatus(dto.getStatus());
-        review.setCreatedAt(java.time.LocalDateTime.now());
-        review.setUpdatedAt(java.time.LocalDateTime.now());
-        review = reviewRepository.save(review);
-        log.info("新增評論：id={}, 標題={}, 狀態={}", review.getId(), review.getTitle(), review.getStatus());
+        try {
+            log.info("開始創建評論：userId={}, restaurantId={}, title={}, contentLength={}", 
+                dto.getUserId(), dto.getRestaurantId(), dto.getTitle(),
+                dto.getContent_json() != null ? dto.getContent_json().length() : 0);
+            
+            // 1. 新增評論
+            Review review = new Review();
+            
+            // 設置用戶和餐廳
+            User user = new User();
+            user.setId(dto.getUserId().longValue());
+            review.setUser(user);
+            
+            Restaurant restaurant = new Restaurant();
+            restaurant.setId(dto.getRestaurantId());
+            review.setRestaurant(restaurant);
+            
+            review.setTitle(dto.getTitle());
+            review.setContentJson(dto.getContent_json());
+            review.setStatus(dto.getStatus());
+            review.setCreatedAt(java.time.LocalDateTime.now());
+            review.setUpdatedAt(java.time.LocalDateTime.now());
+            
+            log.info("準備儲存評論到資料庫...");
+            review = reviewRepository.save(review);
+            log.info("評論儲存成功：id={}, 標題={}, 狀態={}", review.getId(), review.getTitle(), review.getStatus());
 
-        // 2. 處理評分
-        saveReviewRating(dto.getRatings(), review);
+            // 2. 處理評分
+            log.info("開始處理評分...");
+            saveReviewRating(dto.getRatings(), review);
 
-        // 3. 處理照片
-        saveReviewPhotos(dto.getPhotos(), review);
+            // 3. 處理照片
+            log.info("開始處理照片...");
+            saveReviewPhotos(dto.getPhotos(), review);
 
-        // 4. 處理標籤
-        saveReviewTags(dto.getTags(), review);
+            // 4. 處理標籤
+            log.info("開始處理標籤...");
+            saveReviewTags(dto.getTags(), review);
 
-        // 5. 如果是發布狀態，建立統計資料
-        if ("published".equals(dto.getStatus())) {
-            createReviewStats(review);
+            // 5. 如果是發布狀態，建立統計資料
+            if ("published".equals(dto.getStatus())) {
+                log.info("建立統計資料...");
+                createReviewStats(review);
+            }
+
+            log.info("評論創建完成：id={}", review.getId().intValue());
+            return review.getId().intValue();
+        } catch (Exception e) {
+            log.error("創建評論時發生錯誤：", e);
+            throw new RuntimeException("創建評論失敗: " + e.getMessage(), e);
         }
-
-        return review.getId().intValue();
     }
 
     private void saveReviewRating(ReviewRequestDto.ReviewRatingsDto ratingsDto, Review review) {

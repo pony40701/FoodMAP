@@ -23,9 +23,24 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
-    public ResponseEntity<Integer> createReview(@RequestBody ReviewRequestDto requestDto) {
-        log.info("創建新評論：userId={}", requestDto.getUserId());
-        return ResponseEntity.ok(reviewService.createReview(requestDto));
+    public ResponseEntity<?> createReview(@RequestBody ReviewRequestDto requestDto) {
+        try {
+            log.info("創建新評論：userId={}, title={}, contentLength={}", 
+                requestDto.getUserId(), 
+                requestDto.getTitle(),
+                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0);
+            
+            if (requestDto.getContent_json() != null && requestDto.getContent_json().length() > 10000) {
+                log.warn("評論內容過長：{} 字符", requestDto.getContent_json().length());
+            }
+            
+            Integer result = reviewService.createReview(requestDto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("創建評論時發生錯誤：", e);
+            return ResponseEntity.badRequest()
+                .body("錯誤詳情: " + e.getMessage() + "\n堆疊追蹤: " + e.getStackTrace()[0]);
+        }
     }
 
     @GetMapping("/drafts/{userId}")
@@ -44,8 +59,21 @@ public class ReviewController {
     public ResponseEntity<Integer> updateDraft(
             @PathVariable Integer reviewId,
             @RequestBody ReviewRequestDto requestDto) {
-        log.info("更新草稿：reviewId={}", reviewId);
-        return ResponseEntity.ok(reviewService.updateDraft(reviewId, requestDto));
+        try {
+            log.info("更新草稿：reviewId={}, title={}, contentLength={}", 
+                reviewId,
+                requestDto.getTitle(),
+                requestDto.getContent_json() != null ? requestDto.getContent_json().length() : 0);
+            
+            if (requestDto.getContent_json() != null && requestDto.getContent_json().length() > 10000) {
+                log.warn("草稿內容過長：{} 字符", requestDto.getContent_json().length());
+            }
+            
+            return ResponseEntity.ok(reviewService.updateDraft(reviewId, requestDto));
+        } catch (Exception e) {
+            log.error("更新草稿時發生錯誤：reviewId={}", reviewId, e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/drafts/{draftId}/publish")
