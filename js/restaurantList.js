@@ -263,8 +263,11 @@ const debouncedSearch = debounce(handleSearch, 300);
 
 // 添加事件監聽器
 document.addEventListener('DOMContentLoaded', function() {
-  // 初始化頁面
-  renderCards(1);
+  // 初始化地圖
+  initMap();
+  
+  // 初始化頁面 - 從第一頁開始載入分頁資料
+  fetchRestaurants(null, 0);
   
   // 綁定排序按鈕事件
   document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -659,39 +662,36 @@ document.addEventListener('DOMContentLoaded', () => {
 function fetchRestaurants(sortType = null, page = 0) {
     // 確保 API_BASE_URL 存在，若不存在則使用預設值
     const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
-    // 修正：使用正確的 API 端點 /restaurants/list
-    let url = baseUrl + '/restaurants/list';
+    
+    let url;
     const params = new URLSearchParams();
     
     // 添加分頁參數
     params.append('page', page);
     params.append('size', pageSize);
     
-    // 如果有排序參數，添加排序參數到現有的 /restaurants/list API
+    // 如果有排序參數，使用排序 API，否則使用一般分頁 API
     if (sortType) {
+        url = baseUrl + '/restaurants/sort';
         // 將排序類型轉換為後端期望的參數名稱
         let sortBy = '';
         switch (sortType) {
             case 'ratingDesc':
                 sortBy = 'averageRating';
-                params.append('sortBy', sortBy);
-                params.append('sortDir', 'desc');
                 break;
             case 'reviewCountDesc':
                 sortBy = 'reviewCount';
-                params.append('sortBy', sortBy);
-                params.append('sortDir', 'desc');
                 break;
             case 'createdAtDesc':
                 sortBy = 'createdAt';
-                params.append('sortBy', sortBy);
-                params.append('sortDir', 'desc');
                 break;
             default:
                 sortBy = 'averageRating';
-                params.append('sortBy', sortBy);
-                params.append('sortDir', 'desc');
         }
+        params.append('sortBy', sortBy);
+    } else {
+        // 使用一般分頁 API
+        url = baseUrl + '/restaurants';
     }
     
     url += '?' + params.toString();
@@ -709,28 +709,25 @@ function fetchRestaurants(sortType = null, page = 0) {
             
             let restaurants = [];
             
-            // 檢查是否為分頁資料
+            // 檢查是否為分頁資料 (後端 API 回傳的是 Page 物件)
             if (data.content && Array.isArray(data.content)) {
                 // 分頁資料
                 restaurants = data.content;
                 totalPages = data.totalPages;
                 totalElements = data.totalElements;
                 currentPage = data.number;
+                console.log(`分頁資料: 第 ${currentPage + 1} 頁, 共 ${totalPages} 頁, 總共 ${totalElements} 筆`);
             } else if (Array.isArray(data)) {
                 // 非分頁資料（舊的排序查詢）
                 restaurants = data;
                 totalPages = Math.ceil(restaurants.length / pageSize);
                 totalElements = restaurants.length;
                 currentPage = 0;
+                console.log('非分頁資料，資料筆數:', restaurants.length);
             }
             
             // 確保資料格式正確
             const formattedData = restaurants.map((restaurant, index) => {
-                console.log(`處理餐廳 ${index + 1}: ${restaurant.name}`);
-                console.log('原始 googleReviews:', restaurant.googleReviews);
-                console.log('googleReviews 類型:', typeof restaurant.googleReviews);
-                console.log('googleReviews 長度:', Array.isArray(restaurant.googleReviews) ? restaurant.googleReviews.length : 'N/A');
-                
                 return {
                     ...restaurant,
                     // 確保 createdAt 是字串格式
@@ -740,20 +737,22 @@ function fetchRestaurants(sortType = null, page = 0) {
                     reviewCount: restaurant.reviewCount ? Number(restaurant.reviewCount) : 0,
                     latitude: restaurant.latitude ? Number(restaurant.latitude) : null,
                     longitude: restaurant.longitude ? Number(restaurant.longitude) : null,
-                    // 確保保留 googleReviews
+                    // 確保保留 googleReviews (分頁 API 可能沒有這個欄位)
                     googleReviews: restaurant.googleReviews || []
                 };
             });
             
             console.log('Formatted restaurant data:', formattedData); // 添加日誌
-            console.log('第一筆餐廳的 googleReviews:', formattedData[0]?.googleReviews);
             
-            // 更新當前顯示的餐廳列表
+            // 更新當前顯示的餐廳列表（只存當前頁面的資料）
             currentDisplayedRestaurants = formattedData;
+            
             // 渲染餐廳卡片
             renderRestaurants(formattedData);
+            
             // 更新地圖標記
             updateMapMarkers(formattedData);
+            
             // 渲染分頁控制
             renderPaginationControls();
         })

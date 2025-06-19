@@ -103,6 +103,35 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurantPage.map(this::convertToDTO);
     }
 
+    @Override
+    public Page<RestaurantListDTO> getRestaurantsWithReviews(Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage = googleRestaurantRepository.findAll(pageable);
+        return restaurantPage.map(this::convertToDTOWithReviews);
+    }
+
+    @Override
+    public Page<RestaurantListDTO> getRestaurantsBySortWithReviews(String sortBy, Pageable pageable) {
+        Page<GoogleRestaurant> restaurantPage;
+        
+        switch (sortBy) {
+            case "averageRating":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByRatingDesc(pageable);
+                break;
+            case "reviewCount":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByReviewCountDesc(pageable);
+                break;
+            case "createdAt":
+                restaurantPage = googleRestaurantRepository.findAllByOrderByCreatedAtDesc(pageable);
+                break;
+            default:
+                // 預設使用一般分頁查詢
+                restaurantPage = googleRestaurantRepository.findAll(pageable);
+                break;
+        }
+        
+        return restaurantPage.map(this::convertToDTOWithReviews);
+    }
+
     private RestaurantListDTO convertToDTO(GoogleRestaurant restaurant) {
         // 查詢第一張圖片
         String base64Photo = null;
