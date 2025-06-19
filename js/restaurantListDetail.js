@@ -340,7 +340,7 @@ class RestaurantDetail {
     if (storedRestaurantData) {
       try {
         this.restaurantData = JSON.parse(storedRestaurantData);
-        console.log('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
+        ('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
         
         // 清除 localStorage 中的資料，避免重複使用
         localStorage.removeItem('selectedRestaurant');
@@ -377,7 +377,7 @@ class RestaurantDetail {
     if (restaurantData) {
       try {
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        console.log('從 URL 成功讀取餐廳資料:', this.restaurantData);
+        ('從 URL 成功讀取餐廳資料:', this.restaurantData);
         
         // 確保 ratingCount 存在
         if (!this.restaurantData.ratingCount) {
@@ -403,7 +403,7 @@ class RestaurantDetail {
       }
     } else {
       // 如果沒有資料，使用預設資料
-      console.log('沒有找到餐廳資料，使用預設資料');
+      ('沒有找到餐廳資料，使用預設資料');
       this.restaurantData = this.getDefaultRestaurantData();
     }
   }
@@ -510,12 +510,12 @@ class RestaurantDetail {
         icon.classList.remove('far');
         icon.classList.add('fas');
         // TODO: 實現收藏功能
-        console.log('收藏餐廳:', this.restaurantData.name);
+        ('收藏餐廳:', this.restaurantData.name);
       } else {
         icon.classList.remove('fas');
         icon.classList.add('far');
         // TODO: 實現取消收藏功能
-        console.log('取消收藏餐廳:', this.restaurantData.name);
+        ('取消收藏餐廳:', this.restaurantData.name);
       }
     });
 
@@ -925,10 +925,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const reviewContent = document.getElementById('comment').value;
           const uploadedFiles = document.getElementById('photo-upload').files;
 
-          console.log('Submitted Review:');
-          console.log('Rating:', selectedRating);
-          console.log('Comment:', reviewContent);
-          console.log('Uploaded Files:', uploadedFiles);
+          ('Submitted Review:');
+          ('Rating:', selectedRating);
+          ('Comment:', reviewContent);
+          ('Uploaded Files:', uploadedFiles);
 
           // TODO: Add actual review submission logic here (e.g., send to backend)
 
@@ -1170,7 +1170,7 @@ function initLoginModals() {
         const password = document.getElementById('restaurant-password').value;
         const remember = document.getElementById('restaurant-remember').checked;
         // 這裡可以添加實際的登入驗證邏輯
-        console.log('商家登入:', { email, password, remember });
+        ('商家登入:', { email, password, remember });
         alert('登入成功！');
         closeRestaurantLoginModal();
         window.location.href = 'restaurant.html';

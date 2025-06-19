@@ -79,7 +79,7 @@ window.showLoginModal = function() {
                     const restaurantsContainer = document.getElementById('restaurants-container');
                     if (restaurantsContainer) {
                         restaurantsContainer.innerHTML = '';
-                        console.log('已清空餐廳容器，準備重新載入資料');
+                        ('已清空餐廳容器，準備重新載入資料');
                     }
                     
                     // 更新用戶界面狀態
@@ -100,7 +100,7 @@ window.showLoginModal = function() {
                     
                     // 重新加載餐廳資料
                     if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
-                        console.log('準備重新加載餐廳數據');
+                        ('準備重新加載餐廳數據');
                         window.mapInit.loadRestaurants();
                     }
                 } else {

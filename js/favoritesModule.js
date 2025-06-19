@@ -13,9 +13,9 @@ class FavoritesModule {
     // 檢查是否有新版收藏系統
     checkNewFavoriteSystem() {
         if (window.favoriteSystem) {
-            console.log('檢測到新版收藏系統，將使用新版系統');
+            ('檢測到新版收藏系統，將使用新版系統');
         } else {
-            console.log('未檢測到新版收藏系統，使用舊版系統');
+            ('未檢測到新版收藏系統，使用舊版系統');
         }
     }
 

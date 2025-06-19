@@ -156,14 +156,14 @@ function handleAddRevenueSubmit(event) {
 // 編輯營收記錄
 function editRecord(id) {
     // 這裡可以實現編輯功能
-    console.log('編輯記錄:', id);
+    ('編輯記錄:', id);
 }
 
 // 刪除營收記錄
 function deleteRecord(id) {
     if (confirm('確定要刪除這筆營收記錄嗎？')) {
         // 這裡可以實現刪除功能
-        console.log('刪除記錄:', id);
+        ('刪除記錄:', id);
     }
 }
 
@@ -171,7 +171,7 @@ function deleteRecord(id) {
 function handleChartTimeRangeChange(event) {
     const timeRange = event.target.value;
     // 這裡可以根據選擇的時間範圍更新圖表數據
-    console.log('更新圖表時間範圍:', timeRange);
+    ('更新圖表時間範圍:', timeRange);
 }
 
 // 處理表格篩選
@@ -179,7 +179,7 @@ function handleTableFilter(event) {
     const filterType = event.target.name;
     const filterValue = event.target.value;
     // 這裡可以實現表格篩選功能
-    console.log('篩選條件:', filterType, filterValue);
+    ('篩選條件:', filterType, filterValue);
 }
 
 // 初始化分頁
