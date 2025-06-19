@@ -21,4 +21,10 @@ public class ReviewPhoto {
     @Lob
     @Column(name = "image", columnDefinition = "LONGBLOB")
     private byte[] image;
+    
+    @Column(name = "image_width", length = 50)
+    private String imageWidth;
+    
+    @Column(name = "image_height", length = 50)
+    private String imageHeight;
 } 

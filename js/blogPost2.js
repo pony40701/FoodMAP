@@ -455,17 +455,38 @@ async function handleImageUpload(e) {
 }
 
 // 收集編輯器中的圖片數據
-function collectImageData() {
-    const editor = document.getElementById('editor');
+function collectImageData(editorSelector = '#editor') {
+    const editor = document.querySelector(editorSelector);
     const images = editor.querySelectorAll('img');
     const imageData = [];
+    const existingPhotoIds = [];
+    
+    // 獲取編輯器的HTML內容
+    let htmlContent = editor.innerHTML;
+    
+    console.log('開始收集圖片數據，編輯器選擇器:', editorSelector);
+    console.log('找到圖片數量:', images.length);
     
     images.forEach((img, index) => {
-        // 如果圖片有src屬性且是base64格式
+        console.log(`處理圖片 ${index + 1}:`, {
+            src: img.src ? img.src.substring(0, 50) + '...' : 'null',
+            dataPhotoId: img.getAttribute('data-photo-id'),
+            className: img.className
+        });
+        
+        // 如果圖片有src屬性且是base64格式（新上傳的圖片）
         if (img.src && img.src.startsWith('data:image/')) {
+            console.log(`圖片 ${index + 1} 是新上傳的base64圖片`);
             const base64Data = img.src.split(',')[1];
             const contentType = img.src.split(';')[0].split(':')[1];
             const fileName = `image_${Date.now()}_${index}.jpg`;
+            
+            // 檢查base64數據大小（限制為2MB）
+            const sizeInBytes = Math.ceil((base64Data.length * 3) / 4);
+            if (sizeInBytes > 2 * 1024 * 1024) {
+                console.warn('圖片太大，跳過處理:', fileName, '大小:', sizeInBytes / 1024 / 1024, 'MB');
+                return;
+            }
             
             // 將base64轉換為byte array
             const binaryString = atob(base64Data);
@@ -474,15 +495,80 @@ function collectImageData() {
                 bytes[i] = binaryString.charCodeAt(i);
             }
             
+            // 保存圖片大小信息
+            const imageSize = {
+                width: img.style.width || img.offsetWidth + 'px',
+                height: img.style.height || img.offsetHeight + 'px'
+            };
+            
             imageData.push({
                 fileName: fileName,
                 contentType: contentType,
-                imageData: Array.from(bytes)
+                imageData: Array.from(bytes),
+                size: imageSize
             });
+            
+            // 在HTML內容中替換圖片為佔位符
+            const imgContainer = img.closest('.image-container');
+            if (imgContainer) {
+                const imgHtml = imgContainer.outerHTML;
+                const placeholder = `[NEW_IMAGE_PLACEHOLDER_${index}]`;
+                htmlContent = htmlContent.replace(imgHtml, placeholder);
+                console.log(`替換新圖片為佔位符: ${placeholder}`);
+            }
+        }
+        // 如果圖片是從資料庫載入的（有blob URL）
+        else if (img.src && img.src.startsWith('blob:')) {
+            // 從圖片的data屬性獲取圖片ID
+            const photoId = img.getAttribute('data-photo-id');
+            if (photoId) {
+                console.log(`圖片 ${index + 1} 是已載入的圖片，ID: ${photoId}`);
+                existingPhotoIds.push(photoId);
+                
+                // 在HTML內容中替換圖片為佔位符
+                const imgContainer = img.closest('.image-container');
+                if (imgContainer) {
+                    const imgHtml = imgContainer.outerHTML;
+                    const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
+                    htmlContent = htmlContent.replace(imgHtml, placeholder);
+                    console.log(`替換已存在圖片為佔位符: ${placeholder}`);
+                }
+            } else {
+                console.warn('發現blob URL圖片但沒有data-photo-id屬性:', img.src);
+            }
+        }
+        // 其他情況（可能是外部圖片或其他格式）
+        else {
+            console.warn('跳過未知格式的圖片:', img.src);
         }
     });
     
-    return imageData;
+    // 如果沒有找到圖片但內容中有佔位符，從佔位符中提取圖片ID
+    if (images.length === 0 && htmlContent.includes('[IMAGE_PLACEHOLDER_')) {
+        console.log('沒有找到圖片但內容中有佔位符，嘗試從佔位符中提取圖片ID');
+        const placeholderRegex = /\[IMAGE_PLACEHOLDER_(\d+)\]/g;
+        let match;
+        while ((match = placeholderRegex.exec(htmlContent)) !== null) {
+            const photoId = match[1];
+            if (!existingPhotoIds.includes(photoId)) {
+                existingPhotoIds.push(photoId);
+                console.log(`從佔位符中提取圖片ID: ${photoId}`);
+            }
+        }
+    }
+    
+    console.log('收集到的圖片數據:', {
+        newImages: imageData.length,
+        existingPhotoIds: existingPhotoIds,
+        htmlContentLength: htmlContent.length,
+        htmlContentPreview: htmlContent.substring(0, 200) + '...'
+    });
+    
+    return {
+        newImages: imageData,
+        existingPhotoIds: existingPhotoIds,
+        processedHtmlContent: htmlContent
+    };
 }
 
 // 處理圖片（壓縮/調整大小）
@@ -1073,11 +1159,12 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     }
 
     // 準備發布數據
+    const imageData = collectImageData();
     const postData = {
         userId: 1, // TODO: 從登入資訊中獲取
         restaurantId: 1, // TODO: 從餐廳選擇中獲取
         title: title || '未命名文章',
-        content_json: content,
+        content_json: imageData.processedHtmlContent || content,
         status: 'published',
         ratings: {
             environment_score: parseInt(ratings.environment || '0'),
@@ -1086,13 +1173,14 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
             price_score: parseInt(ratings.price || '0'),
             overall_score: parseFloat(document.querySelector('.overall-rating .rating-value')?.textContent || '0.0')
         },
-        photoData: collectImageData(), // 使用新的圖片數據格式
+        photoData: imageData.newImages, // 新圖片數據
+        photos: imageData.existingPhotoIds, // 已存在的圖片ID
         tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
     try {
         // 清理HTML內容，移除可能導致問題的特殊字符
-        const cleanedContent = cleanHtmlContent(content);
+        const cleanedContent = cleanHtmlContent(postData.content_json);
         postData.content_json = cleanedContent;
         
         console.log('清理後的HTML內容:', cleanedContent);
@@ -1151,11 +1239,12 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
     }
 
     // 準備發布數據
+    const imageData = collectImageData('#editorEdit');
     const postData = {
         userId: window.currentEditingDraft?.userId || window.currentEditingPost?.userId || 1,
         restaurantId: window.currentEditingDraft?.restaurantId || window.currentEditingPost?.restaurantId || 1,
         title: title || '未命名文章',
-        content_json: content,
+        content_json: imageData.processedHtmlContent || content,
         status: 'published',
         ratings: {
             environment_score: parseInt(ratings.environment || '0'),
@@ -1164,13 +1253,15 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
             price_score: parseInt(ratings.price || '0'),
             overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
         },
-        photoData: collectImageData(), // 使用新的圖片數據格式
+        photoData: imageData.newImages, // 新圖片數據
+        photos: imageData.existingPhotoIds, // 已存在的圖片ID
         tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
     try {
         // 清理HTML內容，移除可能導致問題的特殊字符
-        const cleanedContent = cleanHtmlContent(content);
+        const contentToClean = imageData.processedHtmlContent || content;
+        const cleanedContent = cleanHtmlContent(contentToClean);
         postData.content_json = cleanedContent;
         
         console.log('清理後的HTML內容:', cleanedContent);
@@ -1257,11 +1348,12 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault(); // 防止表單提交
             
             // 獲取表單數據
+            const imageData = collectImageData('#editor');
             const postData = {
                 userId: 1, // TODO: 從登入資訊中獲取
                 restaurantId: 1, // TODO: 從餐廳選擇中獲取
                 title: document.getElementById('postTitle').value || '未命名草稿',
-                content_json: document.getElementById('editor').innerHTML || '',
+                content_json: imageData.processedHtmlContent || document.getElementById('editor').innerHTML || '',
                 status: 'draft',
                 ratings: {
                     environment_score: parseInt(document.querySelector('.stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0'),
@@ -1270,11 +1362,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     price_score: parseInt(document.querySelector('.stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
                     overall_score: parseFloat(document.querySelector('.overall-rating .rating-value')?.textContent || '0.0')
                 },
-                photoData: collectImageData(), // 使用新的圖片數據格式
+                photoData: imageData.newImages, // 新圖片數據
+                photos: imageData.existingPhotoIds, // 已存在的圖片ID
                 tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
             };
 
-            console.log('儲存草稿資料', postData);
+            console.log('儲存草稿資料', {
+                title: postData.title,
+                contentLength: postData.content_json.length,
+                newImages: postData.photoData.length,
+                existingPhotos: postData.photos.length
+            });
             
             // 驗證必填項目
             if (!postData.content_json) {
@@ -1306,7 +1404,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('後端錯誤回應:', errorText);
                     console.error('後端錯誤狀態:', response.status);
                     console.error('後端錯誤狀態文字:', response.statusText);
-                    throw new Error(`儲存草稿失敗: ${response.status} ${response.statusText}\n詳細錯誤: ${errorText}`);
+                    
+                    // 嘗試解析錯誤信息
+                    let errorMessage = `儲存草稿失敗: ${response.status} ${response.statusText}`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.message) {
+                            errorMessage += `\n詳細錯誤: ${errorJson.message}`;
+                        }
+                    } catch (e) {
+                        errorMessage += `\n詳細錯誤: ${errorText}`;
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
 
                 const result = await response.json();
@@ -1505,6 +1615,11 @@ async function editDraft(draftId) {
         document.getElementById('editorEdit').innerHTML = draft.content_json;
         document.getElementById('tagsEdit').value = draft.tags.join(', ');
         
+        // 載入圖片到編輯器
+        if (draft.photos && draft.photos.length > 0) {
+            await loadImagesToEditor(draft.photos, '#editorEdit');
+        }
+        
         // 設置評分
         if (draft.ratings) {
             // 設置各項評分
@@ -1547,11 +1662,12 @@ async function editDraft(draftId) {
             document.querySelector('#edit-section .btn-save-draft').addEventListener('click', async function(e) {
                 e.preventDefault();
                 
+                const imageData = collectImageData('#editorEdit');
                 const postData = {
                     userId: window.currentEditingDraft.userId,
                     restaurantId: window.currentEditingDraft.restaurantId,
                     title: document.getElementById('postTitleEdit').value || '未命名草稿',
-                    content_json: document.getElementById('editorEdit').innerHTML || '',
+                    content_json: imageData.processedHtmlContent || document.getElementById('editorEdit').innerHTML || '',
                     status: 'draft',
                     ratings: {
                         environment_score: parseInt(document.querySelector('#edit-section .stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0'),
@@ -1560,7 +1676,8 @@ async function editDraft(draftId) {
                         price_score: parseInt(document.querySelector('#edit-section .stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
                         overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
                     },
-                    photoData: collectImageData(), // 使用新的圖片數據格式
+                    photoData: imageData.newImages, // 新圖片數據
+                    photos: imageData.existingPhotoIds, // 已存在的圖片ID
                     tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
                 };
 
@@ -2246,6 +2363,11 @@ async function editPublishedPost(postId) {
         document.getElementById('editorEdit').innerHTML = post.content_json;
         document.getElementById('tagsEdit').value = post.tags ? post.tags.join(', ') : '';
         
+        // 載入圖片到編輯器
+        if (post.photos && post.photos.length > 0) {
+            await loadImagesToEditor(post.photos, '#editorEdit');
+        }
+        
         // 設置評分
         if (post.ratings) {
             // 設置各項評分
@@ -2307,4 +2429,125 @@ async function deletePublishedPost(postId) {
         console.error('刪除文章時發生錯誤：', error);
         alert('刪除文章失敗：' + error.message);
     }
+}
+
+// 載入圖片到編輯器
+async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
+    const editor = document.querySelector(editorSelector);
+    if (!editor || !photoUrls || photoUrls.length === 0) return;
+    
+    // 獲取編輯器的HTML內容
+    let htmlContent = editor.innerHTML;
+    
+    for (let i = 0; i < photoUrls.length; i++) {
+        try {
+            const photoUrl = photoUrls[i];
+            // 如果URL是圖片ID，則從後端獲取圖片
+            if (photoUrl && !photoUrl.startsWith('data:') && !photoUrl.startsWith('http')) {
+                const imageId = parseInt(photoUrl);
+                if (!isNaN(imageId)) {
+                    console.log(`嘗試載入圖片 ID: ${imageId}`);
+                    
+                    const response = await fetch(`http://localhost:8080/api/reviews/photos/${imageId}`);
+                    if (response.ok) {
+                        const imageBlob = await response.blob();
+                        const imageUrl = URL.createObjectURL(imageBlob);
+                        
+                        // 創建完整的圖片容器結構
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'image-wrapper';
+                        
+                        const container = document.createElement('div');
+                        container.className = 'image-container';
+                        
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.setAttribute('data-photo-id', imageId.toString()); // 添加圖片ID屬性
+                        img.style.maxWidth = '100%';
+                        img.style.height = 'auto';
+                        img.draggable = false;
+                        
+                        // 嘗試從後端獲取圖片大小信息
+                        try {
+                            const infoResponse = await fetch(`http://localhost:8080/api/reviews/photos/${imageId}/info`);
+                            if (infoResponse.ok) {
+                                const photoInfo = await infoResponse.json();
+                                if (photoInfo.width && photoInfo.height) {
+                                    img.style.width = photoInfo.width;
+                                    img.style.height = photoInfo.height;
+                                    console.log('應用圖片大小:', photoInfo.width, photoInfo.height);
+                                }
+                            }
+                        } catch (error) {
+                            console.warn(`無法獲取圖片 ${imageId} 大小信息:`, error);
+                        }
+                        
+                        // 添加調整大小的控制點
+                        const handles = ['nw', 'ne', 'sw', 'se'].map(pos => {
+                            const handle = document.createElement('div');
+                            handle.className = `resize-handle resize-handle-${pos}`;
+                            handle.style.cssText = pos.includes('n') ? 
+                                `top: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;` :
+                                `bottom: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;`;
+                            return handle;
+                        });
+                        
+                        // 添加大小資訊顯示
+                        const resizeInfo = document.createElement('div');
+                        resizeInfo.className = 'resize-info';
+                        
+                        container.appendChild(img);
+                        handles.forEach(handle => container.appendChild(handle));
+                        container.appendChild(resizeInfo);
+                        
+                        // 在圖片前後添加換行，確保圖片獨立一行
+                        const breakBefore = document.createElement('br');
+                        const breakAfter = document.createElement('br');
+                        
+                        wrapper.appendChild(breakBefore);
+                        wrapper.appendChild(container);
+                        wrapper.appendChild(breakAfter);
+                        
+                        // 在HTML內容中尋找圖片佔位符並替換
+                        const placeholder = `[IMAGE_PLACEHOLDER_${imageId}]`;
+                        if (htmlContent.includes(placeholder)) {
+                            // 將圖片容器轉換為HTML字符串
+                            const wrapperHtml = wrapper.outerHTML;
+                            htmlContent = htmlContent.replace(placeholder, wrapperHtml);
+                            console.log(`成功替換圖片佔位符: ${placeholder}`);
+                        } else {
+                            // 如果沒有找到佔位符，在內容末尾添加圖片
+                            htmlContent += wrapper.outerHTML;
+                            console.log(`在內容末尾添加圖片 ID: ${imageId}`);
+                        }
+                        
+                        // 初始化圖片縮放功能
+                        setTimeout(() => {
+                            const newContainer = editor.querySelector(`img[data-photo-id="${imageId}"]`)?.closest('.image-container');
+                            if (newContainer) {
+                                const newImg = newContainer.querySelector('img');
+                                const newResizeInfo = newContainer.querySelector('.resize-info');
+                                const newHandles = newContainer.querySelectorAll('.resize-handle');
+                                initializeImageResize(newContainer, newImg, newResizeInfo, Array.from(newHandles));
+                            }
+                        }, 100);
+                    } else {
+                        console.warn(`圖片 ID ${imageId} 載入失敗: ${response.status} ${response.statusText}`);
+                        // 如果圖片載入失敗，保留佔位符，不要中斷流程
+                    }
+                } else {
+                    console.warn(`無效的圖片 ID: ${photoUrl}`);
+                }
+            } else {
+                console.log(`跳過非圖片 ID 的 URL: ${photoUrl}`);
+            }
+        } catch (error) {
+            console.error(`載入圖片時發生錯誤 (ID: ${photoUrls[i]}):`, error);
+            // 繼續處理下一個圖片，不要中斷整個流程
+        }
+    }
+    
+    // 更新編輯器內容
+    editor.innerHTML = htmlContent;
+    console.log('圖片載入完成，編輯器內容已更新');
 }
