@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜尋功能測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-container {
+            position: relative;
+            flex: 1;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .search-btn {
+            padding: 10px 20px;
+            background: #ff6b1a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .search-btn:hover {
+            background: #e55a15;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .result-item h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .result-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>搜尋功能測試</h1>
+        
+        <div class="search-bar">
+            <div class="input-container">
+                <input type="text" class="search-input" placeholder="找美食" id="foodInput">
+            </div>
+            <div class="input-container">
+                <input type="text" class="search-input" placeholder="選擇地點" id="locationInput">
+            </div>
+            <button class="search-btn" id="searchBtn">搜尋</button>
+        </div>
+        
+        <div class="results" id="results">
+            <p>請輸入搜尋條件開始搜尋...</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/restaurantService.js"></script>
+    <script src="js/searchService.js"></script>
+    <script src="js/searchController.js"></script>
+    
+    <script>
+        // 簡單的測試實現
+        class TestSearchController {
+            constructor() {
+                this.searchService = null;
+                this.foodInput = document.getElementById('foodInput');
+                this.locationInput = document.getElementById('locationInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.resultsContainer = document.getElementById('results');
+            }
+            
+            async init() {
+                try {
+                    // 初始化搜尋服務
+                    this.searchService = new SearchService();
+                    await this.searchService.init();
+                    
+                    // 綁定事件
+                    this.searchBtn.addEventListener('click', () => this.performSearch());
+                    this.foodInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') this.performSearch();
+                    });
+                    this.locationInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') this.performSearch();
+                    });
+                    
+                    console.log('測試搜尋控制器初始化完成');
+                } catch (error) {
+                    console.error('測試搜尋控制器初始化失敗:', error);
+                }
+            }
+            
+            async performSearch() {
+                const foodKeyword = this.foodInput.value.trim();
+                const locationKeyword = this.locationInput.value.trim();
+                
+                this.showLoading();
+                
+                try {
+                    const results = await this.searchService.search(foodKeyword, locationKeyword);
+                    this.displayResults(results, foodKeyword, locationKeyword);
+                } catch (error) {
+                    console.error('搜尋失敗:', error);
+                    this.showError('搜尋失敗，請稍後再試');
+                }
+            }
+            
+            showLoading() {
+                this.resultsContainer.innerHTML = '<div class="loading">搜尋中...</div>';
+            }
+            
+            displayResults(results, foodKeyword, locationKeyword) {
+                if (!results || results.length === 0) {
+                    this.resultsContainer.innerHTML = '<div class="no-results">找不到符合條件的餐廳</div>';
+                    return;
+                }
+                
+                const resultsHtml = results.map(restaurant => `
+                    <div class="result-item">
+                        <h3>${restaurant.name}</h3>
+                        <p><strong>地址:</strong> ${restaurant.address}</p>
+                        <p><strong>評分:</strong> ${restaurant.rating || 'N/A'}</p>
+                        <p><strong>評論數:</strong> ${restaurant.user_ratings_total || 0}</p>
+                    </div>
+                `).join('');
+                
+                this.resultsContainer.innerHTML = `
+                    <h2>搜尋結果 (${results.length} 間餐廳)</h2>
+                    ${resultsHtml}
+                `;
+            }
+            
+            showError(message) {
+                this.resultsContainer.innerHTML = `<div class="no-results">${message}</div>`;
+            }
+        }
+        
+        // 初始化測試
+        document.addEventListener('DOMContentLoaded', async () => {
+            const testController = new TestSearchController();
+            await testController.init();
+        });
+    </script>
+</body>
+</html> 
