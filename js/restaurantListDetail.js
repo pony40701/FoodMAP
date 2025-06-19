@@ -132,7 +132,8 @@ class RestaurantDetail {
         lat: 25.0330,
         lng: 121.5654
       },
-      businessHours: '11:00 - 22:00'
+      businessHours: '11:00 - 22:00',
+      googleReviews: [] // 確保預設資料也有 googleReviews
     };
   }
 
@@ -351,7 +352,8 @@ class RestaurantDetail {
     if (storedRestaurantData) {
       try {
         this.restaurantData = JSON.parse(storedRestaurantData);
-        ('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
+        console.log('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
+        console.log('localStorage 中的 googleReviews:', this.restaurantData.googleReviews);
         
         // 清除 localStorage 中的資料，避免重複使用
         localStorage.removeItem('selectedRestaurant');
@@ -388,7 +390,7 @@ class RestaurantDetail {
     if (restaurantData) {
       try {
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        ('從 URL 成功讀取餐廳資料:', this.restaurantData);
+        console.log('從 URL 成功讀取餐廳資料:', this.restaurantData);
         
         // 確保 ratingCount 存在
         if (!this.restaurantData.ratingCount) {
@@ -414,7 +416,7 @@ class RestaurantDetail {
       }
     } else {
       // 如果沒有資料，使用預設資料
-      ('沒有找到餐廳資料，使用預設資料');
+      console.log('沒有找到餐廳資料，使用預設資料');
       this.restaurantData = this.getDefaultRestaurantData();
     }
   }
@@ -697,6 +699,86 @@ class RestaurantDetail {
         hideModal();
       });
     });
+  }
+
+  // 渲染 Google 評論
+  renderGoogleReviews() {
+    const reviewsContainer = document.querySelector('.reviews-container');
+    if (!reviewsContainer) {
+      console.error('找不到評論容器元素');
+      return;
+    }
+
+    const googleReviews = this.restaurantData.googleReviews;
+    console.log('準備渲染的 googleReviews:', googleReviews);
+
+    // 檢查是否有評論資料
+    if (!googleReviews || !Array.isArray(googleReviews) || googleReviews.length === 0) {
+      reviewsContainer.innerHTML = '<div class="no-reviews">目前沒有顧客評論</div>';
+      return;
+    }
+
+    // 生成評論 HTML
+    let reviewsHtml = '';
+    googleReviews.forEach(review => {
+      // 格式化評論時間 (YYYY年M月D日)
+      let formattedDate = '';
+      if (review.timeCreated) {
+        try {
+          const date = new Date(review.timeCreated);
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1; // getMonth() 回傳 0-11
+          const day = date.getDate();
+          formattedDate = `${year}年${month}月${day}日`;
+        } catch (error) {
+          console.error('日期格式化錯誤:', error);
+          formattedDate = review.timeCreated || ''; // 使用原始值或空字串
+        }
+      }
+
+      // 生成星星評分
+      const generateStars = (rating) => {
+        if (!rating || rating < 1 || rating > 5) return '';
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+          if (i <= rating) {
+            stars += '<span class="star filled">★</span>';
+          } else {
+            stars += '<span class="star empty">☆</span>';
+          }
+        }
+        return stars;
+      };
+
+      reviewsHtml += `
+        <div class="review-item">
+          <div class="review-header">
+            <div class="reviewer-info">
+              <img src="${review.profilePhotoUrl || 'images/default-avatar.png'}" 
+                   alt="${review.authorName || '匿名用戶'}" 
+                   class="reviewer-avatar"
+                   onerror="this.src='images/default-avatar.png'">
+              <div class="reviewer-details">
+                <h4 class="reviewer-name">${review.authorName || '匿名用戶'}</h4>
+                <div class="review-meta">
+                  <div class="review-rating">
+                    <div class="stars">${generateStars(review.rating)}</div>
+                    <span class="rating-score">${review.rating || 'N/A'}</span>
+                  </div>
+                  <span class="review-date">${formattedDate}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="review-content">
+            <p class="review-text">${review.text || '無評論內容'}</p>
+          </div>
+        </div>
+      `;
+    });
+
+    // 插入評論 HTML
+    reviewsContainer.innerHTML = reviewsHtml;
   }
 }
 

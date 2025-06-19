@@ -1926,4 +1926,134 @@
 .review-text {
   padding-left: 68px;
   margin-top: 6px;
+}
+
+/* Google 評論區塊樣式 - 2025年1月新增 */
+.reviews-container .no-reviews {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.reviews-container .review-item {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.reviews-container .review-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.reviews-container .review-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.reviews-container .reviewer-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.reviews-container .reviewer-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.reviews-container .reviewer-details {
+  flex: 1;
+}
+
+.reviews-container .reviewer-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.reviews-container .review-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reviews-container .review-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviews-container .review-rating .stars {
+  display: flex;
+  gap: 2px;
+}
+
+.reviews-container .review-rating .star {
+  font-size: 14px;
+}
+
+.reviews-container .review-rating .star.filled {
+  color: #ffd700;
+}
+
+.reviews-container .review-rating .star.empty {
+  color: #ddd;
+}
+
+.reviews-container .review-rating .rating-score {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.reviews-container .review-date {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.reviews-container .review-content {
+  margin-top: 15px;
+}
+
+.reviews-container .review-content .review-text {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.95rem;
+  padding-left: 0; /* 覆蓋原本的左邊距 */
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .reviews-container .review-item {
+    padding: 15px;
+  }
+  
+  .reviews-container .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .reviews-container .reviewer-name {
+    font-size: 1rem;
+  }
+  
+  .reviews-container .review-content .review-text {
+    font-size: 0.9rem;
+  }
 } 

@@ -640,7 +640,7 @@ function navigateToDetail(restaurantData) {
 
 // 當頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', () => {
-    ('頁面載入完成，開始獲取餐廳資料');
+    console.log('頁面載入完成，開始獲取餐廳資料');
     fetchRestaurants(null, 0);  // 使用分頁參數獲取第一頁資料
     
     // 初始化地圖
@@ -659,36 +659,43 @@ document.addEventListener('DOMContentLoaded', () => {
 function fetchRestaurants(sortType = null, page = 0) {
     // 確保 API_BASE_URL 存在，若不存在則使用預設值
     const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
-    let url = baseUrl + '/restaurants';
+    // 修正：使用正確的 API 端點 /restaurants/list
+    let url = baseUrl + '/restaurants/list';
     const params = new URLSearchParams();
     
     // 添加分頁參數
     params.append('page', page);
     params.append('size', pageSize);
     
-    // 如果有排序參數，使用新的分頁排序 API
+    // 如果有排序參數，添加排序參數到現有的 /restaurants/list API
     if (sortType) {
-        url = baseUrl + '/restaurants/sort';
         // 將排序類型轉換為後端期望的參數名稱
         let sortBy = '';
         switch (sortType) {
             case 'ratingDesc':
                 sortBy = 'averageRating';
+                params.append('sortBy', sortBy);
+                params.append('sortDir', 'desc');
                 break;
             case 'reviewCountDesc':
                 sortBy = 'reviewCount';
+                params.append('sortBy', sortBy);
+                params.append('sortDir', 'desc');
                 break;
             case 'createdAtDesc':
                 sortBy = 'createdAt';
+                params.append('sortBy', sortBy);
+                params.append('sortDir', 'desc');
                 break;
             default:
-                sortBy = 'averageRating'; // 預設值
+                sortBy = 'averageRating';
+                params.append('sortBy', sortBy);
+                params.append('sortDir', 'desc');
         }
-        params.append('sortBy', sortBy);
     }
     
     url += '?' + params.toString();
-    ('發送 API 請求到:', url);
+    console.log('發送 API 請求到:', url);
     
     fetch(url)
         .then(response => {
@@ -698,7 +705,7 @@ function fetchRestaurants(sortType = null, page = 0) {
             return response.json();
         })
         .then(data => {
-            ('Received restaurant data:', data); // 添加日誌
+            console.log('Received restaurant data:', data); // 添加日誌
             
             let restaurants = [];
             
@@ -718,18 +725,28 @@ function fetchRestaurants(sortType = null, page = 0) {
             }
             
             // 確保資料格式正確
-            const formattedData = restaurants.map(restaurant => ({
-                ...restaurant,
-                // 確保 createdAt 是字串格式
-                createdAt: restaurant.createdAt ? new Date(restaurant.createdAt).toISOString() : null,
-                // 確保數值型別正確
-                averageRating: restaurant.averageRating ? Number(restaurant.averageRating) : null,
-                reviewCount: restaurant.reviewCount ? Number(restaurant.reviewCount) : 0,
-                latitude: restaurant.latitude ? Number(restaurant.latitude) : null,
-                longitude: restaurant.longitude ? Number(restaurant.longitude) : null
-            }));
+            const formattedData = restaurants.map((restaurant, index) => {
+                console.log(`處理餐廳 ${index + 1}: ${restaurant.name}`);
+                console.log('原始 googleReviews:', restaurant.googleReviews);
+                console.log('googleReviews 類型:', typeof restaurant.googleReviews);
+                console.log('googleReviews 長度:', Array.isArray(restaurant.googleReviews) ? restaurant.googleReviews.length : 'N/A');
+                
+                return {
+                    ...restaurant,
+                    // 確保 createdAt 是字串格式
+                    createdAt: restaurant.createdAt ? new Date(restaurant.createdAt).toISOString() : null,
+                    // 確保數值型別正確
+                    averageRating: restaurant.averageRating ? Number(restaurant.averageRating) : null,
+                    reviewCount: restaurant.reviewCount ? Number(restaurant.reviewCount) : 0,
+                    latitude: restaurant.latitude ? Number(restaurant.latitude) : null,
+                    longitude: restaurant.longitude ? Number(restaurant.longitude) : null,
+                    // 確保保留 googleReviews
+                    googleReviews: restaurant.googleReviews || []
+                };
+            });
             
-            ('Formatted restaurant data:', formattedData); // 添加日誌
+            console.log('Formatted restaurant data:', formattedData); // 添加日誌
+            console.log('第一筆餐廳的 googleReviews:', formattedData[0]?.googleReviews);
             
             // 更新當前顯示的餐廳列表
             currentDisplayedRestaurants = formattedData;
@@ -762,7 +779,7 @@ function renderRestaurants(restaurants) {
         if (restaurant.json_raw) {
             try {
                 const jsonData = JSON.parse(restaurant.json_raw);
-                ('成功解析 json_raw 數據:', restaurant.name, jsonData);
+                console.log('成功解析 json_raw 數據:', restaurant.name, jsonData);
                 
                 // 從 JSON 數據中提取評分、評論數
                 if (jsonData.rating) {
@@ -892,9 +909,36 @@ function renderRestaurants(restaurants) {
 
         // 添加點擊事件處理
         card.addEventListener('click', () => {
-            // 將餐廳資料儲存到 localStorage
-            localStorage.setItem('selectedRestaurant', JSON.stringify(restaurant));
+            console.log('=== 點擊餐廳卡片 ===');
+            console.log('餐廳名稱:', restaurant.name);
+            console.log('點擊前的 restaurant 物件:', restaurant);
+            console.log('點擊前的 googleReviews:', restaurant.googleReviews);
+            console.log('googleReviews 是否為陣列:', Array.isArray(restaurant.googleReviews));
+            console.log('googleReviews 長度:', restaurant.googleReviews?.length);
             
+            // 確保 googleReviews 欄位正確帶入 localStorage
+            const restaurantToSave = { ...restaurant };
+            
+            // 處理 googleReviews 欄位
+            if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
+                console.log('googleReviews 為 undefined 或 null，嘗試使用備用欄位');
+                if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
+                    restaurantToSave.googleReviews = restaurant.google_reviews;
+                    console.log('使用 google_reviews 欄位:', restaurant.google_reviews);
+                } else {
+                    restaurantToSave.googleReviews = []; // 確保不是 null，而是空陣列
+                    console.log('設定為空陣列');
+                }
+            } else {
+                console.log('googleReviews 已存在，保持原值');
+            }
+            
+            console.log('儲存到 localStorage 的餐廳資料:', restaurantToSave);
+            console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
+            console.log('=== 儲存完成，準備跳轉 ===');
+            
+            // 直接存完整物件
+            localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
             // 導頁到餐廳詳情頁面
             window.location.href = 'restaurantListDetail.html';
         });
