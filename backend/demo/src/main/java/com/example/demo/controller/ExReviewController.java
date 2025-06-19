@@ -25,8 +25,9 @@ public class ExReviewController {
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) List<String> cuisineTypes) {
-        List<ExReviewDTO> reviews = exReviewService.getLatestReviews(limit, offset, sort, search, cuisineTypes);
+            @RequestParam(required = false) List<String> cuisineTypes,
+            @RequestParam(required = false) Long userId) {
+        List<ExReviewDTO> reviews = exReviewService.getLatestReviews(limit, offset, sort, search, cuisineTypes, userId);
         return ResponseEntity.ok(reviews);
     }
 } 

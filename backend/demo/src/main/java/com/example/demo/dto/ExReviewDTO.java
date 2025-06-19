@@ -3,6 +3,8 @@ package com.example.demo.dto;
 import java.util.Date;
 
 public class ExReviewDTO {
+    private Long reviewId;
+    private Integer reviewPhotoId;
     private String reviewImage;
     private String authorName;
     private Double authorRating;
@@ -12,12 +14,15 @@ public class ExReviewDTO {
     private Date reviewDate;
     private String cuisineType;
     private Integer viewCount;
+    private boolean isFavorited;
 
     // Constructors
     public ExReviewDTO() {}
 
-    public ExReviewDTO(String reviewImage, String authorName, Double authorRating, String reviewTitle,
-                       String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount) {
+    public ExReviewDTO(Long reviewId, Integer reviewPhotoId, String reviewImage, String authorName, Double authorRating, String reviewTitle,
+                       String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited) {
+        this.reviewId = reviewId;
+        this.reviewPhotoId = reviewPhotoId;
         this.reviewImage = reviewImage;
         this.authorName = authorName;
         this.authorRating = authorRating;
@@ -27,9 +32,26 @@ public class ExReviewDTO {
         this.reviewDate = reviewDate;
         this.cuisineType = cuisineType;
         this.viewCount = viewCount;
+        this.isFavorited = isFavorited;
     }
 
     // Getters and Setters
+    public Long getReviewId() {
+        return reviewId;
+    }
+
+    public void setReviewId(Long reviewId) {
+        this.reviewId = reviewId;
+    }
+
+    public Integer getReviewPhotoId() {
+        return reviewPhotoId;
+    }
+
+    public void setReviewPhotoId(Integer reviewPhotoId) {
+        this.reviewPhotoId = reviewPhotoId;
+    }
+
     public String getReviewImage() {
         return reviewImage;
     }
@@ -100,5 +122,13 @@ public class ExReviewDTO {
 
     public void setViewCount(Integer viewCount) {
         this.viewCount = viewCount;
+    }
+
+    public boolean isFavorited() {
+        return isFavorited;
+    }
+
+    public void setFavorited(boolean favorited) {
+        isFavorited = favorited;
     }
 } 
