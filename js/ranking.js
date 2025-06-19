@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const MAX_ITEMS = 15;
 
+    // 初始化收藏按鈕處理器
+    const favoriteButtonHandler = new FavoriteButton();
+
     let googleCurrentPage = 0;
     let customCurrentPage = 0;
     const pageSize = 10;
@@ -95,6 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (googleRestaurantList.querySelectorAll('.restaurant-item').length >= MAX_ITEMS) {
             loadMoreButton.style.display = 'none';
         }
+        // 新增：渲染後初始化收藏按鈕
+        favoriteButtonHandler.initialize();
     }
 
     function renderCustomRestaurants(restaurants) {
@@ -145,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (customRestaurantList.querySelectorAll('.restaurant-item').length >= MAX_ITEMS) {
             loadMoreButton.style.display = 'none';
         }
+        // 新增：渲染後初始化收藏按鈕
+        favoriteButtonHandler.initialize();
     }
     
     async function resetAndLoad() {
@@ -161,6 +168,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchCustomRestaurants(customCurrentPage, activeFilter)
         ]);
 
+        // 新增：完全重置後初始化收藏按鈕
+        await favoriteButtonHandler.initialize();
         isLoading = false;
     }
     
@@ -191,4 +200,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial load
     resetAndLoad();
+
+    // 初始化收藏系統
+    if (window.favoriteSystem) {
+        window.favoriteSystem.initialize().then(() => {
+            console.log('收藏系統初始化完成');
+            favoriteButtonHandler.initialize(); // 確保初始載入時按鈕狀態正確
+        });
+    }
 });

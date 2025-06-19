@@ -79,102 +79,6 @@
             font-family: "Font Awesome 6 Free" !important;
             font-weight: 900 !important;
         }
-
-        /* 登入視窗樣式 - 極簡版本 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 3000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            animation: fadeIn 0.3s;
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            border-radius: 12px;
-            padding: 15px 15px 20px 15px;
-            border: 1px solid rgba(255, 107, 26, 0.3);
-            width: 90%;
-            max-width: 340px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            animation: slideIn 0.3s;
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .modal-header h2 {
-            font-size: 20px;
-            color: #ff6b1a;
-            margin: 0;
-            flex-grow: 1;
-            text-align: center;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 22px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-            margin-left: auto;
-            position: absolute;
-            right: 15px;
-            top: 12px;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .form-group label {
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            padding: 9px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .btn-primary {
-            background: #ff6b1a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 0;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .form-footer {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 13px;
-        }
     </style>
     <style>
         /* 登入視窗樣式 - 極簡版本 */
@@ -606,6 +510,8 @@
 
     <script src="js/ranking.js"></script>
     <script src="js/loginModal.js"></script>
+    <script src="js/favoriteSystem.js"></script>
+    <script src="js/favoriteButton.js"></script>
     <script>
         // API 基礎路徑
         window.API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080/api';
@@ -622,6 +528,22 @@
 
         // 登入彈窗功能
         document.addEventListener('DOMContentLoaded', function() {
+            // 新增：頁面載入時檢查登入狀態
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (isLoggedIn === 'true' && user) {
+                const loginSection = document.getElementById('loginSection');
+                const userSection = document.getElementById('userSection');
+                if (loginSection) loginSection.style.display = 'none';
+                if (userSection) userSection.style.display = 'flex';
+
+                const userAvatarImg = document.querySelector('#userSection .avatar-img');
+                if (userAvatarImg && (user.image_url || user.avatar_url)) {
+                    userAvatarImg.src = user.image_url || user.avatar_url;
+                }
+            }
+            
             // 會員登入
             const loginModal = document.getElementById('loginModal');
             const loginBtns = document.querySelectorAll('.btn-login');
