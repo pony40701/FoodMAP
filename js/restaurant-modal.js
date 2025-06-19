@@ -40,7 +40,7 @@ const RestaurantModal = (function() {
                 hoursModalCloseBtn: document.querySelector('.weekly-hours-modal-close-new')
             };
             
-            console.log('餐廳彈窗DOM元素:', elements);
+            ('餐廳彈窗DOM元素:', elements);
             
             // 綁定事件
             if (elements.closeBtn) {
@@ -99,7 +99,7 @@ const RestaurantModal = (function() {
                 closeWeeklyHoursModal: closeWeeklyHoursModal
             };
             
-            console.log('餐廳彈窗模組初始化完成，已掛載到 window.RestaurantModal');
+            ('餐廳彈窗模組初始化完成，已掛載到 window.RestaurantModal');
     }
     
     // 顯示餐廳詳情
@@ -109,11 +109,11 @@ const RestaurantModal = (function() {
                 return;
             }
             
-            console.log('顯示餐廳詳情:', restaurant);
+            ('顯示餐廳詳情:', restaurant);
             
             // 確保DOM元素已初始化
             if (!elements.modal) {
-                console.log('DOM元素未初始化，重新獲取');
+                ('DOM元素未初始化，重新獲取');
                 init();
             }
             
@@ -123,7 +123,7 @@ const RestaurantModal = (function() {
             // 確保有餐廳ID
             if (!restaurant.place_id && !restaurant.id && restaurant.name) {
                 restaurant.id = 'temp-id-' + Date.now();
-                console.log('生成臨時 ID:', restaurant.id);
+                ('生成臨時 ID:', restaurant.id);
             }
             
             const restaurantId = restaurant.place_id || restaurant.id;
@@ -137,18 +137,18 @@ const RestaurantModal = (function() {
         if (restaurantId) {
             // 使用統一的 API 端點
             photoUrl = `http://localhost:8080/api/restaurant-images/${restaurantId}/raw`;
-            console.log('使用資料庫圖片:', photoUrl, '餐廳ID:', restaurantId);
+            ('使用資料庫圖片:', photoUrl, '餐廳ID:', restaurantId);
         } else {
-            console.log('找不到餐廳ID，使用預設圖片');
+            ('找不到餐廳ID，使用預設圖片');
             }
             
             // 設置圖片
             if (elements.image) {
-                console.log('設置餐廳圖片:', photoUrl);
+                ('設置餐廳圖片:', photoUrl);
                 elements.image.src = photoUrl;
             elements.image.alt = restaurant.name;
                 elements.image.onerror = function() {
-                    console.log('圖片載入失敗，使用預設圖片');
+                    ('圖片載入失敗，使用預設圖片');
                     this.src = 'images/default-restaurant.jpg';
                 };
             }
@@ -254,7 +254,7 @@ const RestaurantModal = (function() {
             // 顯示彈窗
         if (elements.modal) {
             elements.modal.classList.add('active');
-            console.log('彈窗已顯示');
+            ('彈窗已顯示');
         } else {
             console.error('找不到彈窗元素');
         }
@@ -349,7 +349,7 @@ const RestaurantModal = (function() {
             // 添加彈出視窗
             modalMarker.bindPopup(`<b>${restaurantName}</b>`);
             
-            console.log('地圖初始化成功');
+            ('地圖初始化成功');
         } catch (error) {
             console.error('初始化地圖失敗:', error);
             throw error;
@@ -583,6 +583,6 @@ const RestaurantModal = (function() {
 
 // 頁面加載完成後初始化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('頁面載入完成，初始化 RestaurantModal');
+    ('頁面載入完成，初始化 RestaurantModal');
     RestaurantModal.init();
 }); 

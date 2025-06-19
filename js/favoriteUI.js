@@ -18,7 +18,7 @@ class FavoriteUI {
             // 載入收藏內容
             await this.loadContent();
 
-            console.log('收藏UI初始化成功');
+            ('收藏UI初始化成功');
             return true;
         } catch (error) {
             console.error('收藏UI初始化失敗:', error);
@@ -149,7 +149,7 @@ class FavoriteUI {
                 imageUrl = store.photos.url;
             }
             
-            console.log(`店家卡片圖片: ${imageUrl} (店家ID: ${store.id})`);
+            (`店家卡片圖片: ${imageUrl} (店家ID: ${store.id})`);
         }
         
         const rating = store.rating || 0;
@@ -326,7 +326,7 @@ class FavoriteUI {
             return;
         }
         
-        console.log(`顯示店家詳情:`, store);
+        (`顯示店家詳情:`, store);
         
         // 直接調用我們的方法，避免被userCenter.js覆蓋
         this.showRestaurantDetail(store);
@@ -342,7 +342,7 @@ class FavoriteUI {
             return;
         }
         
-        console.log('彈窗存在，準備顯示餐廳詳情', restaurant);
+        ('彈窗存在，準備顯示餐廳詳情', restaurant);
 
         // 獲取內容容器
         const content = modal.querySelector('.restaurant-modal-content');
@@ -384,7 +384,7 @@ class FavoriteUI {
             }
         }
         
-        console.log(`餐廳圖片URL: ${imageUrl}`);
+        (`餐廳圖片URL: ${imageUrl}`);
         
         // 處理評分與評論數
         const rating = restaurant.rating || 0;
@@ -451,7 +451,7 @@ class FavoriteUI {
         modal.classList.add('active');
         
         // 輸出確認信息
-        console.log('彈窗已顯示', modal.style.display, modal.classList);
+        ('彈窗已顯示', modal.style.display, modal.classList);
         
         // 保存當前選中的餐廳
         window.currentSelectedRestaurant = restaurant;
@@ -484,7 +484,7 @@ class FavoriteUI {
         if (modal) {
             modal.style.display = 'none';
             modal.classList.remove('active');
-            console.log('彈窗已關閉', modal.style.display, modal.classList);
+            ('彈窗已關閉', modal.style.display, modal.classList);
         }
     }
     
@@ -501,7 +501,7 @@ window.favoriteUI = new FavoriteUI();
 // 覆蓋 userCenter.js 中的 showRestaurantModal 方法
 // 這是為了確保我們的方法不被 userCenter.js 的同名方法覆蓋
 window.showRestaurantModal = function(placeId) {
-    console.log('使用 favoriteUI 的彈窗方法');
+    ('使用 favoriteUI 的彈窗方法');
     if (window.favoriteUI) {
         window.favoriteUI.viewStoreDetail(placeId);
     }
@@ -510,7 +510,7 @@ window.showRestaurantModal = function(placeId) {
 // 在 DOM 加載完成後自動初始化
 document.addEventListener('DOMContentLoaded', async function() {
     try {
-        console.log('正在初始化 FavoriteUI...');
+        ('正在初始化 FavoriteUI...');
         
         // 確保收藏系統已初始化
         if (window.favoriteSystem && !window.favoriteSystem.initialized) {
@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 直接為店家卡片添加點擊事件
             const addCardClickHandlers = () => {
                 document.querySelectorAll('.store-card').forEach(card => {
-                    console.log('為店家卡片添加點擊事件');
+                    ('為店家卡片添加點擊事件');
                     card.addEventListener('click', function(e) {
                         // 如果點擊的是收藏按鈕或查看詳情按鈕，不處理
                         if (e.target.closest('.favorite-btn') || e.target.closest('.btn-secondary')) {

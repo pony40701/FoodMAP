@@ -128,7 +128,7 @@ function initializePagination() {
 // 更新評論列表
 function updateCommentsList(page) {
     // 這裡可以添加 AJAX 請求來獲取新的評論數據
-    console.log(`Loading page ${page}...`);
+    (`Loading page ${page}...`);
 }
 
 // 處理回覆提交
@@ -142,7 +142,7 @@ function handleReplySubmit(form) {
     }
 
     // 這裡可以添加 AJAX 請求來提交回覆
-    console.log(`Submitting reply for comment ${commentId}: ${textarea.value}`);
+    (`Submitting reply for comment ${commentId}: ${textarea.value}`);
 
     // 模擬提交成功
     const replyContent = document.createElement('div');
