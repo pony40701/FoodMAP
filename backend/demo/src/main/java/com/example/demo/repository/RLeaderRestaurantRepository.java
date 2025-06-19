@@ -14,37 +14,40 @@ public interface RLeaderRestaurantRepository extends JpaRepository<RLeaderRestau
 
     // 綜合排行: 使用原生 SQL 和介面投影
     @Query(value = "SELECT r.id as restaurantId, r.name, r.address, r.average_rating as averageRating, r.review_count as reviewCount, " +
-                   "CASE " +
+                   "MIN(CASE " +
                    "    WHEN rp.image_url LIKE 'http%' THEN rp.image_url " +
                    "    ELSE CONCAT('http://localhost:8080', CASE WHEN rp.image_url NOT LIKE '/%' THEN '/' ELSE '' END, rp.image_url) " +
-                   "END as photoUrl " +
+                   "END) as photoUrl " +
                    "FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id " +
-                   "ORDER BY COALESCE(r.average_rating, 0) * LOG10(COALESCE(r.review_count, 0) + 1) DESC",
-           countQuery = "SELECT count(*) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
+                   "GROUP BY r.id, r.name, r.address, r.average_rating, r.review_count " +
+                   "ORDER BY COALESCE(r.average_rating, 0) * LOG10(COALESCE(r.review_count, 0) + 1) DESC, r.id ASC",
+           countQuery = "SELECT count(DISTINCT r.id) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
            nativeQuery = true)
     Page<RLeaderRankingDTO> findAllByCompositeScore(Pageable pageable);
 
     // 熱門排行: 使用原生 SQL 和介面投影
     @Query(value = "SELECT r.id as restaurantId, r.name, r.address, r.average_rating as averageRating, r.review_count as reviewCount, " +
-                   "CASE " +
+                   "MIN(CASE " +
                    "    WHEN rp.image_url LIKE 'http%' THEN rp.image_url " +
                    "    ELSE CONCAT('http://localhost:8080', CASE WHEN rp.image_url NOT LIKE '/%' THEN '/' ELSE '' END, rp.image_url) " +
-                   "END as photoUrl " +
+                   "END) as photoUrl " +
                    "FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id " +
-                   "ORDER BY COALESCE(r.review_count, 0) DESC",
-           countQuery = "SELECT count(*) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
+                   "GROUP BY r.id, r.name, r.address, r.average_rating, r.review_count " +
+                   "ORDER BY COALESCE(r.review_count, 0) DESC, r.id ASC",
+           countQuery = "SELECT count(DISTINCT r.id) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
            nativeQuery = true)
     Page<RLeaderRankingDTO> findAllByWeekly(Pageable pageable);
 
     // 新店排行: 使用原生 SQL 和介面投影 (暫用綜合排行邏輯)
     @Query(value = "SELECT r.id as restaurantId, r.name, r.address, r.average_rating as averageRating, r.review_count as reviewCount, " +
-                   "CASE " +
+                   "MIN(CASE " +
                    "    WHEN rp.image_url LIKE 'http%' THEN rp.image_url " +
                    "    ELSE CONCAT('http://localhost:8080', CASE WHEN rp.image_url NOT LIKE '/%' THEN '/' ELSE '' END, rp.image_url) " +
-                   "END as photoUrl " +
+                   "END) as photoUrl " +
                    "FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id " +
-                   "ORDER BY COALESCE(r.average_rating, 0) * LOG10(COALESCE(r.review_count, 0) + 1) DESC",
-           countQuery = "SELECT count(*) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
+                   "GROUP BY r.id, r.name, r.address, r.average_rating, r.review_count " +
+                   "ORDER BY COALESCE(r.average_rating, 0) * LOG10(COALESCE(r.review_count, 0) + 1) DESC, r.id ASC",
+           countQuery = "SELECT count(DISTINCT r.id) FROM restaurants r JOIN restaurant_photos rp ON r.id = rp.restaurant_id",
            nativeQuery = true)
     Page<RLeaderRankingDTO> findAllByNew(Pageable pageable);
 } 
