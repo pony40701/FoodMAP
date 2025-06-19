@@ -410,90 +410,93 @@ class RestaurantDetail {
 
   // 更新頁面資訊
   updatePageInfo() {
-    console.log('開始更新頁面資訊，餐廳資料:', this.restaurantData);
-    
-    // 更新餐廳名稱
+    // 1. 餐廳名稱
     const restaurantNameElement = document.querySelector('.restaurant-name');
     if (restaurantNameElement) {
       restaurantNameElement.textContent = this.restaurantData.name || '餐廳名稱';
     }
-
-    // 更新評分和評論數
+    // 2. 評分與評論數
     const ratingScore = document.querySelector('.rating-score');
     const reviewCount = document.querySelector('.review-count');
-    
     if (ratingScore) {
       const rating = this.restaurantData.rating || this.restaurantData.averageRating || 0;
       ratingScore.textContent = rating.toFixed(1);
     }
-    
     if (reviewCount) {
-      // 確保評論數顯示正確，支援多種資料結構
-      const count = this.restaurantData.ratingCount || 
-                   this.restaurantData.reviewCount || 
-                   this.restaurantData.user_ratings_total || 0;
+      const count = this.restaurantData.reviewCount || this.restaurantData.ratingCount || this.restaurantData.user_ratings_total || 0;
       reviewCount.textContent = `${count} 則評論`;
     }
-
-    // 更新認證標籤
-    const verifiedBadge = document.querySelector('.verified-badge');
-    if (verifiedBadge) {
-      verifiedBadge.style.display = this.restaurantData.isVerified ? 'flex' : 'none';
+    // 3. 地址
+    const addressEl = document.querySelector('.address');
+    if (addressEl) {
+      addressEl.textContent = this.restaurantData.address || '';
     }
-
-    // 更新價格範圍和標籤
-    const price = document.querySelector('.price');
-    const tags = document.querySelector('.tags');
-    
-    if (price) {
-      price.textContent = this.restaurantData.priceRange || this.restaurantData.price || '$$';
-    }
-    
-    if (tags) {
-      // 處理標籤資料，支援多種資料結構
-      let tagText = '';
-      if (this.restaurantData.tags && Array.isArray(this.restaurantData.tags)) {
-        tagText = this.restaurantData.tags.join(', ');
-      } else if (this.restaurantData.types) {
-        tagText = this.restaurantData.types;
-      } else if (typeof this.restaurantData.tags === 'string') {
-        tagText = this.restaurantData.tags;
-      }
-      tags.textContent = tagText || '餐廳';
-    }
-
-    // 更新營業狀態
+    // 4. 營業時間與營業中判斷
     const status = document.querySelector('.status');
     const hours = document.querySelector('.hours');
-    
-    if (status) {
-      const isOpen = this.restaurantData.isOpen || this.restaurantData.opening_hours?.open_now || false;
-      status.textContent = isOpen ? '營業中' : '休息中';
-      status.className = `status ${isOpen ? 'open' : 'closed'}`;
-    }
-    
-    if (hours) {
-      // 處理營業時間資料
-      let businessHoursText = '營業時間資訊';
-      if (this.restaurantData.businessHours) {
-        if (Array.isArray(this.restaurantData.businessHours)) {
-          businessHoursText = this.restaurantData.businessHours[0] || '營業時間資訊';
-        } else {
-          businessHoursText = this.restaurantData.businessHours;
+    let businessHoursText = '暫無營業時間資料';
+    let isOpen = false;
+    function isOpenNow(businessHoursText) {
+      if (!businessHoursText) return false;
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const normalized = businessHoursText.replace(/：/g, ':').replace(/[－–—~]/g, '-');
+      const periods = normalized.split(',').map(p => p.trim());
+      for (const period of periods) {
+        const match = period.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+        if (match) {
+          const [_, start, end] = match;
+          const [startH, startM] = start.split(':').map(Number);
+          const [endH, endM] = end.split(':').map(Number);
+          const startMin = startH * 60 + startM;
+          let endMin = endH * 60 + endM;
+          if (endMin < startMin) endMin += 24 * 60;
+          if ((nowMinutes >= startMin && nowMinutes <= endMin) || (endMin > 24 * 60 && nowMinutes <= endMin - 24 * 60)) {
+            return true;
+          }
         }
-      } else if (this.restaurantData.opening_hours?.weekday_text) {
+      }
+      return false;
+    }
+    let openingHoursArr = this.restaurantData.openingHours;
+    if (typeof openingHoursArr === 'string' && openingHoursArr.startsWith('[')) {
+      try {
+        openingHoursArr = JSON.parse(openingHoursArr);
+      } catch (e) {
+        openingHoursArr = null;
+      }
+    }
+    if (Array.isArray(openingHoursArr) && openingHoursArr.length === 7) {
+      const today = new Date().getDay();
+      const index = today === 0 ? 6 : today - 1;
+      const todayText = openingHoursArr[index] || '暫無營業時間資料';
+      const timePart = todayText.split(/：|:/).slice(1).join(':').trim();
+      businessHoursText = timePart ? timePart : todayText;
+      isOpen = isOpenNow(businessHoursText);
+    } else if (typeof openingHoursArr === 'string' && openingHoursArr.length > 0) {
+      businessHoursText = openingHoursArr;
+    } else if (this.restaurantData.opening_hours) {
+      isOpen = this.restaurantData.opening_hours.open_now || false;
+      if (this.restaurantData.opening_hours.weekday_text && Array.isArray(this.restaurantData.opening_hours.weekday_text)) {
         const today = new Date().getDay();
         const index = today === 0 ? 6 : today - 1;
         if (this.restaurantData.opening_hours.weekday_text[index]) {
           const todayText = this.restaurantData.opening_hours.weekday_text[index];
           const timeMatch = todayText.match(/:\s*(.+)$/);
-          businessHoursText = timeMatch ? timeMatch[1].trim() : '營業時間資訊';
+          businessHoursText = timeMatch ? timeMatch[1].trim() : '暫無營業時間資料';
+          isOpen = isOpenNow(businessHoursText);
         }
+      } else if (this.restaurantData.businessHours && Array.isArray(this.restaurantData.businessHours)) {
+        businessHoursText = this.restaurantData.businessHours[0] || '暫無營業時間資料';
       }
+    }
+    if (status) {
+      status.textContent = isOpen ? '營業中' : '休息中';
+      status.className = `status ${isOpen ? 'open' : 'closed'}`;
+    }
+    if (hours) {
       hours.textContent = businessHoursText;
     }
-    
-    console.log('頁面資訊更新完成');
   }
 
   // 設置操作按鈕功能
