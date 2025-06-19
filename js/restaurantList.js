@@ -199,7 +199,7 @@ function debounce(func, wait) {
 
 // 將 handleSearch 函數移到文件頂部，確保它在被調用前已定義
 function handleSearch() {
-  console.log('Search function triggered');
+  ('Search function triggered');
 
   const foodSearchInput = document.getElementById("food-search");
   const locationSearchInput = document.getElementById("location-search");
@@ -212,7 +212,7 @@ function handleSearch() {
   const foodSearch = (foodSearchInput.value || '').toLowerCase();
   const locationSearch = (locationSearchInput.value || '').toLowerCase();
   
-  console.log('Search terms:', { foodSearch, locationSearch });
+  ('Search terms:', { foodSearch, locationSearch });
 
   // 使用 currentDisplayedRestaurants 作為搜尋基礎
   let filtered = currentDisplayedRestaurants.filter(restaurant => {
@@ -237,7 +237,7 @@ function handleSearch() {
     return matchesFood && matchesLocation;
   });
 
-  console.log('Filtered results:', filtered.length);
+  ('Filtered results:', filtered.length);
 
   // 儲存搜尋結果
   currentDisplayedRestaurants = filtered;
@@ -565,7 +565,7 @@ function showRestaurantModal(restaurant) {
 
 // 修改 renderFilteredCards 函數中的卡片渲染部分
 function renderFilteredCards(pageData, totalCount) {
-  console.log(`Rendering page with ${pageData.length} items. Total count: ${totalCount}`);
+  (`Rendering page with ${pageData.length} items. Total count: ${totalCount}`);
   
   const cardsContainer = document.getElementById('restaurant-cards');
   if (!cardsContainer) return;
@@ -640,7 +640,7 @@ function navigateToDetail(restaurantData) {
 
 // 當頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('頁面載入完成，開始獲取餐廳資料');
+    ('頁面載入完成，開始獲取餐廳資料');
     fetchRestaurants(null, 0);  // 使用分頁參數獲取第一頁資料
     
     // 初始化地圖
@@ -688,7 +688,7 @@ function fetchRestaurants(sortType = null, page = 0) {
     }
     
     url += '?' + params.toString();
-    console.log('發送 API 請求到:', url);
+    ('發送 API 請求到:', url);
     
     fetch(url)
         .then(response => {
@@ -698,7 +698,7 @@ function fetchRestaurants(sortType = null, page = 0) {
             return response.json();
         })
         .then(data => {
-            console.log('Received restaurant data:', data); // 添加日誌
+            ('Received restaurant data:', data); // 添加日誌
             
             let restaurants = [];
             
@@ -729,7 +729,7 @@ function fetchRestaurants(sortType = null, page = 0) {
                 longitude: restaurant.longitude ? Number(restaurant.longitude) : null
             }));
             
-            console.log('Formatted restaurant data:', formattedData); // 添加日誌
+            ('Formatted restaurant data:', formattedData); // 添加日誌
             
             // 更新當前顯示的餐廳列表
             currentDisplayedRestaurants = formattedData;
@@ -762,7 +762,7 @@ function renderRestaurants(restaurants) {
         if (restaurant.json_raw) {
             try {
                 const jsonData = JSON.parse(restaurant.json_raw);
-                console.log('成功解析 json_raw 數據:', restaurant.name, jsonData);
+                ('成功解析 json_raw 數據:', restaurant.name, jsonData);
                 
                 // 從 JSON 數據中提取評分、評論數
                 if (jsonData.rating) {

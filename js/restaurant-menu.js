@@ -44,7 +44,7 @@ function editMenuItem(id) {
 function deleteMenuItem(id) {
     if (confirm('確定要刪除此菜品嗎？')) {
         // 這裡可以實現刪除功能
-        console.log('刪除菜品:', id);
+        ('刪除菜品:', id);
     }
 }
 
@@ -55,7 +55,7 @@ function submitMenuItem() {
     const itemId = document.getElementById('item-id').value;
     
     // 這裡可以實現提交功能
-    console.log('提交菜品資料:', Object.fromEntries(formData));
+    ('提交菜品資料:', Object.fromEntries(formData));
     
     // 提交後關閉彈窗
     hideAddMenuItemModal();
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (categoryFilter) {
         categoryFilter.addEventListener('change', function() {
             // 這裡可以實現分類篩選功能
-            console.log('選擇分類:', this.value);
+            ('選擇分類:', this.value);
         });
     }
 
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchFilter) {
         searchFilter.addEventListener('input', function() {
             // 這裡可以實現搜尋功能
-            console.log('搜尋關鍵字:', this.value);
+            ('搜尋關鍵字:', this.value);
         });
     }
 
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sortFilter) {
         sortFilter.addEventListener('change', function() {
             // 這裡可以實現排序功能
-            console.log('排序方式:', this.value);
+            ('排序方式:', this.value);
         });
     }
 }); 

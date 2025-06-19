@@ -155,10 +155,10 @@
 	<script>
 		
 		// 測試 JavaScript 是否正確載入
-		console.log('JavaScript 已載入');
+		('JavaScript 已載入');
 
 		document.addEventListener('DOMContentLoaded', function () {
-			console.log('DOM 已載入完成');
+			('DOM 已載入完成');
 
 			// 頭像上傳功能
 			const avatarInput = document.getElementById('avatar-upload');
@@ -265,7 +265,7 @@ let selectedPhotos = [];
 
 document.getElementById("photo-upload").addEventListener("change", function(e) {
   selectedPhotos = Array.from(e.target.files);
-  console.log("選了幾張照片：", selectedPhotos.length);
+  ("選了幾張照片：", selectedPhotos.length);
 });
 
 // 表單送出
@@ -281,10 +281,10 @@ document.getElementById("restaurant-signup-form").addEventListener("submit", asy
   }
 
   // ✅ 用 selectedPhotos，不要再用 getElementById 抓一次了！
-  console.log("照片數量（送出時）:", selectedPhotos.length);
+  ("照片數量（送出時）:", selectedPhotos.length);
   for (let i = 0; i < selectedPhotos.length; i++) {
     formData.append("photos", selectedPhotos[i]);
-    console.log("加了照片：", selectedPhotos[i].name);
+    ("加了照片：", selectedPhotos[i].name);
   }
 
   // 抓其他欄位

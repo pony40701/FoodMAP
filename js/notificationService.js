@@ -8,11 +8,11 @@ const NotificationService = {
     initialize: function() {
         if (this.initialized) return;
         
-        console.log('初始化通知服務...');
+        ('初始化通知服務...');
         
         // 檢查用戶是否已登入
         if (!localStorage.getItem('isLoggedIn') || !localStorage.getItem('userId')) {
-            console.log('用戶未登入，無法初始化通知服務');
+            ('用戶未登入，無法初始化通知服務');
             return false;
         }
         
@@ -30,13 +30,13 @@ const NotificationService = {
         }
         
         this.initialized = true;
-        console.log('通知服務初始化完成');
+        ('通知服務初始化完成');
         return true;
     },
     
     // 測試用：立即顯示通知徽章
     showTestNotification: function() {
-        console.log('顯示測試通知徽章');
+        ('顯示測試通知徽章');
         this.updateNotificationBadge(1);
     },
     
@@ -53,7 +53,7 @@ const NotificationService = {
             
             // 檢查是否需要使用模擬數據
             if (localStorage.getItem('useMockData') === 'true' || true) {
-                console.log('使用模擬通知數據');
+                ('使用模擬通知數據');
                 const mockUnreadCount = 3; // 模擬3個未讀通知
                 this.updateNotificationBadge(mockUnreadCount);
                 return mockUnreadCount;
@@ -75,7 +75,7 @@ const NotificationService = {
             const data = await response.json();
             const unreadCount = data.count || 0;
             
-            console.log(`檢測到 ${unreadCount} 個未讀通知`);
+            (`檢測到 ${unreadCount} 個未讀通知`);
             
             // 更新通知計數顯示
             this.updateNotificationBadge(unreadCount);
@@ -85,7 +85,7 @@ const NotificationService = {
             console.error('檢查未讀通知時發生錯誤:', error);
             
             // 如果API請求失敗，使用模擬數據
-            console.log('API請求失敗，使用模擬通知數據');
+            ('API請求失敗，使用模擬通知數據');
             const mockUnreadCount = 2; // 模擬2個未讀通知
             this.updateNotificationBadge(mockUnreadCount);
             return mockUnreadCount;
@@ -94,7 +94,7 @@ const NotificationService = {
     
     // 更新通知徽章顯示
     updateNotificationBadge: function(count) {
-        console.log(`更新通知徽章：${count}個未讀通知`);
+        (`更新通知徽章：${count}個未讀通知`);
         
         // 更新下拉選單中的通知徽章
         const badgeElement = document.getElementById('notification-count');
@@ -102,10 +102,10 @@ const NotificationService = {
             if (count > 0) {
                 badgeElement.textContent = count > 99 ? '99+' : count;
                 badgeElement.style.display = 'flex';
-                console.log('顯示下拉選單通知徽章');
+                ('顯示下拉選單通知徽章');
             } else {
                 badgeElement.style.display = 'none';
-                console.log('隱藏下拉選單通知徽章');
+                ('隱藏下拉選單通知徽章');
             }
         } else {
             console.warn('找不到下拉選單通知徽章元素');
@@ -116,7 +116,7 @@ const NotificationService = {
         if (avatarBadge) {
             if (count > 0) {
                 avatarBadge.style.display = 'flex';
-                console.log('顯示頭像通知徽章');
+                ('顯示頭像通知徽章');
                 
                 // 確保徽章可見 - 強制重新計算樣式
                 setTimeout(() => {
@@ -127,7 +127,7 @@ const NotificationService = {
                 }, 10);
             } else {
                 avatarBadge.style.display = 'none';
-                console.log('隱藏頭像通知徽章');
+                ('隱藏頭像通知徽章');
             }
         } else {
             console.warn('找不到頭像通知徽章元素');
