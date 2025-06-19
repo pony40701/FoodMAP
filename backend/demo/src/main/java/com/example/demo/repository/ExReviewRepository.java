@@ -16,9 +16,9 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
     @Query(value = """
         SELECT
             r.id as reviewId,
-            rp.id as reviewPhotoId,
-            rp.image_url AS reviewImage,
+            rp.image as image,
             u.name AS authorName,
+            u.avatar_url AS authorAvatar,
             rr.overall_score AS authorRating,
             r.title AS reviewTitle,
             rest.name AS restaurantName,
@@ -29,11 +29,11 @@ public interface ExReviewRepository extends JpaRepository<User, Long> {
             rest.place_id as restaurantPlaceId,
             CASE WHEN uf.user_id IS NOT NULL THEN 1 ELSE 0 END AS isFavorited
         FROM reviews r
-        JOIN restaurants rest ON r.restaurant_id = rest.id
-        JOIN review_ratings rr ON rr.review_id = r.id
+        LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
+        LEFT JOIN review_ratings rr ON rr.review_id = r.id
         LEFT JOIN review_photos rp ON rp.review_id = r.id AND rp.id = (SELECT MIN(id) FROM review_photos WHERE review_id = r.id)
-        JOIN review_stats rs ON rs.review_id = r.id
-        JOIN users u ON r.user_id = u.id
+        LEFT JOIN review_stats rs ON rs.review_id = r.id
+        LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN user_favorites uf ON uf.target_id = r.id AND uf.target_type = 'review' AND uf.user_id = :userId
         WHERE r.status = 'published'
         AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%'))
