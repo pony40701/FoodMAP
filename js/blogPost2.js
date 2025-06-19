@@ -1173,7 +1173,7 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
         },
         photoData: imageData.newImages, // 新圖片數據
         photos: imageData.existingPhotoIds, // 已存在的圖片ID
-        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
+        tags: document.getElementById('tags').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
     };
 
     try {
@@ -1252,7 +1252,7 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
         },
         photoData: imageData.newImages, // 新圖片數據
         photos: imageData.existingPhotoIds, // 已存在的圖片ID
-        tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+        tags: document.getElementById('tagsEdit').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
     };
 
     try {
@@ -1361,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 photoData: imageData.newImages, // 新圖片數據
                 photos: imageData.existingPhotoIds, // 已存在的圖片ID
-                tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                tags: document.getElementById('tags').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
             };
 
             console.log('儲存草稿資料', {
@@ -1669,7 +1669,7 @@ async function editDraft(draftId) {
                     },
                     photoData: imageData.newImages, // 新圖片數據
                     photos: imageData.existingPhotoIds, // 已存在的圖片ID
-                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                    tags: document.getElementById('tagsEdit').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
                 };
 
                 if (!postData.content_json) {
@@ -1734,7 +1734,7 @@ async function editDraft(draftId) {
                     },
                     photoData: imageData.newImages, // 新圖片數據
                     photos: imageData.existingPhotoIds, // 已存在的圖片ID
-                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                    tags: document.getElementById('tagsEdit').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
                 };
 
                 if (!updateData.content_json) {
@@ -2578,7 +2578,7 @@ async function editPublishedPost(postId) {
                     },
                     photoData: imageData.newImages, // 新圖片數據
                     photos: imageData.existingPhotoIds, // 已存在的圖片ID
-                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                    tags: document.getElementById('tagsEdit').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
                 };
 
                 if (!postData.content_json) {
@@ -2640,7 +2640,7 @@ async function editPublishedPost(postId) {
                     },
                     photoData: imageData.newImages, // 新圖片數據
                     photos: imageData.existingPhotoIds, // 已存在的圖片ID
-                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                    tags: document.getElementById('tagsEdit').value.split(/[,，、]/).map(tag => tag.trim()).filter(Boolean)
                 };
 
                 if (!postData.content_json) {
