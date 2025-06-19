@@ -7,8 +7,8 @@ let editingPostId = null; // 添加正在編輯的文章ID
 document.addEventListener('DOMContentLoaded', async function() {
     // 初始化編輯器功能
     initEditor();
-    // 初始化星級評分
-    initRating();
+    // 初始化評分系統
+    initRatingSystem();
     // 載入用戶數據
     loadUserData();
     // 載入文章列表
@@ -21,8 +21,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     initColorPicker();
     // 初始化導覽列
     initializeNavbar();
-    // 初始化評分系統
-    initRatingSystem();
     // 如果當前在草稿箱頁面，載入草稿
     if (document.getElementById('drafts-section').classList.contains('active')) {
         await loadDrafts();
@@ -1152,7 +1150,7 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     }
 
     // 驗證評分
-    const ratings = collectRatings();
+    const ratings = collectRatings('#write-section');
     if (Object.values(ratings).every(rating => rating === '0')) {
         alert('請至少給出一個評分項目');
         return;
@@ -2044,12 +2042,35 @@ function truncateText(text, maxLength) {
 
 function collectRatings(sectionSelector = '') {
     const ratings = {};
-    document.querySelectorAll(`${sectionSelector} .stars`).forEach(starsContainer => {
+    
+    // 如果沒有指定區塊選擇器，自動檢測當前活動的區塊
+    if (!sectionSelector) {
+        const activeSection = document.querySelector('.content-section.active');
+        if (activeSection) {
+            if (activeSection.id === 'edit-section') {
+                sectionSelector = '#edit-section';
+            } else if (activeSection.id === 'new-post-section') {
+                sectionSelector = '#new-post-section';
+            }
+        }
+    }
+    
+    const starsElements = document.querySelectorAll(`${sectionSelector} .stars`);
+    
+    console.log(`收集評分：sectionSelector="${sectionSelector}", 找到 ${starsElements.length} 個評分元素`);
+    
+    starsElements.forEach((starsContainer, index) => {
         const category = starsContainer.dataset.category;
+        const selectedRating = starsContainer.getAttribute('data-selected-rating') || '0';
+        
+        console.log(`評分元素 ${index + 1}: category="${category}", selectedRating="${selectedRating}"`);
+        
         if (category) {
-            ratings[category] = starsContainer.getAttribute('data-selected-rating') || '0';
+            ratings[category] = selectedRating;
         }
     });
+    
+    console.log('收集到的評分數據:', ratings);
     return ratings;
 }
 // ========== 更新總評分（支援區塊選擇器） ==========
@@ -2353,18 +2374,30 @@ function applyColorToText(color) {
 // 評分系統相關代碼
 function initRatingSystem() {
     const starsGroups = document.querySelectorAll('.stars');
-    if (!starsGroups.length) return;
+    console.log(`初始化評分系統：找到 ${starsGroups.length} 個評分組`);
+    
+    if (!starsGroups.length) {
+        console.warn('沒有找到評分元素，請檢查 HTML 結構');
+        return;
+    }
 
-    starsGroups.forEach(group => {
+    starsGroups.forEach((group, index) => {
+        const category = group.dataset.category;
         const stars = group.querySelectorAll('i');
         const ratingValue = group.parentElement.querySelector('.rating-value');
+        
+        console.log(`初始化評分組 ${index + 1}: category="${category}", stars數量=${stars.length}`);
 
         // 初始化評分
         group.setAttribute('data-selected-rating', '0');
 
-        stars.forEach(star => {
+        stars.forEach((star, starIndex) => {
+            const rating = star.getAttribute('data-rating');
+            console.log(`  星星 ${starIndex + 1}: data-rating="${rating}"`);
+            
             star.addEventListener('click', function() {
                 const rating = this.getAttribute('data-rating');
+                console.log(`點擊星星：category="${category}", rating="${rating}"`);
                 updateStars(group, rating);
                 group.setAttribute('data-selected-rating', rating);
                 if (ratingValue) {
@@ -2386,6 +2419,8 @@ function initRatingSystem() {
             updateStars(group, selectedRating);
         });
     });
+    
+    console.log('評分系統初始化完成');
 }
 
 function updateStars(group, rating) {
