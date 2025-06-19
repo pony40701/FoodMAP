@@ -29,15 +29,19 @@ class FavoriteSystem {
         // 創建初始化Promise
         this.initPromise = new Promise(async (resolve, reject) => {
             try {
-                // 如果已經初始化，直接返回
-                if (this.initialized) {
+                // 檢查登入狀態和用戶ID
+                const currentLoginState = this.checkLoginStatus();
+                const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+                
+                // 如果已經初始化且用戶ID沒變，直接返回
+                if (this.initialized && this.userId === currentUserId) {
                     resolve(true);
                     return;
                 }
                 
-                // 檢查登入狀態和用戶ID
-                this.isLoggedIn = this.checkLoginStatus();
-                this.userId = parseInt(localStorage.getItem('userId') || '0');
+                // 更新登入狀態和用戶ID
+                this.isLoggedIn = currentLoginState;
+                this.userId = currentUserId;
                 
                 // 檢查是否使用API
                 this.useApi = true; // 直接使用 API 模式
@@ -227,6 +231,11 @@ class FavoriteSystem {
     async isStoreFavorited(storeId) {
         if (!this.initialized) {
             await this.initialize();
+        }
+        
+        // 檢查用戶是否登入
+        if (!localStorage.getItem('isLoggedIn') || !localStorage.getItem('userId')) {
+            return false;
         }
         
         if (!storeId) {

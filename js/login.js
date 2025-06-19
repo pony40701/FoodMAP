@@ -131,6 +131,11 @@ function initLogin() {
                     
                     // 顯示成功訊息
                     window.showToast('登入成功！');
+                    
+                    // 登入成功後重新整理頁面以更新收藏狀態
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     throw new Error(data.message || '登入失敗');
                 }
@@ -195,6 +200,13 @@ function updateLoginStatus(isLoggedIn) {
         
         // 清除本地儲存的用戶資訊
         localStorage.clear();
+        
+        // 登出時重置所有收藏按鈕狀態
+        setTimeout(() => {
+            if (window.favoriteButton && typeof window.favoriteButton.initializeAllButtons === 'function') {
+                window.favoriteButton.initializeAllButtons();
+            }
+        }, 100);
     }
 }
 
@@ -206,6 +218,11 @@ window.logout = function() {
     localStorage.removeItem('userId');
     updateLoginStatus(false);
     showMessage('已成功登出', 'success');
+    
+    // 無論在哪個頁面，登出後都重新整理頁面
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
     
     // 如果在會員中心，則跳轉到首頁
     if (window.location.pathname.includes('userCenter.html')) {
@@ -232,6 +249,18 @@ function checkLoginStatus() {
     
     if (isLoggedIn && user) {
         updateLoginStatus(true);
+        
+        // 確保收藏按鈕狀態更新
+        setTimeout(async () => {
+            if (window.favoriteButton && typeof window.favoriteButton.initialize === 'function') {
+                await window.favoriteButton.initialize(true); // 強制重新初始化
+            }
+            
+            // 如果在首頁，重新排序已收藏餐廳
+            if (window.favoriteButton && typeof window.favoriteButton.reorderRestaurantsByFavorite === 'function') {
+                await window.favoriteButton.reorderRestaurantsByFavorite();
+            }
+        }, 300);
         
         // 如果在會員中心頁面且未登入，則跳轉到首頁
         if (window.location.pathname.includes('userCenter.html') && !isLoggedIn) {
