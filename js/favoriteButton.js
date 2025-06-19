@@ -9,10 +9,10 @@ class FavoriteButton {
     }
 
     // 初始化收藏按鈕
-    async initialize() {
+    async initialize(forceRefresh = false) {
         try {
             // 確保收藏系統已初始化
-            if (!window.favoriteSystem?.initialized) {
+            if (!window.favoriteSystem?.initialized || forceRefresh) {
                 await window.favoriteSystem?.initialize();
             }
 
@@ -139,6 +139,10 @@ class FavoriteButton {
     // 初始化所有收藏按鈕
     async initializeAllButtons() {
         try {
+            // 檢查用戶登錄狀態
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userId = localStorage.getItem('userId');
+            
             // 找到所有收藏按鈕
             const buttons = document.querySelectorAll('.favorite-btn');
             
@@ -149,7 +153,13 @@ class FavoriteButton {
 
                 if (placeId) {
                     // 設置店家收藏按鈕狀態
-                    await this.updateStoreButtonState(button, placeId);
+                    if (isLoggedIn && userId) {
+                        await this.updateStoreButtonState(button, placeId);
+                    } else {
+                        // 用戶未登錄，重置按鈕狀態
+                        this.updateButtonUI(button, false);
+                    }
+                    
                     // 添加點擊事件
                     button.onclick = (e) => {
                         e.preventDefault();
@@ -158,7 +168,13 @@ class FavoriteButton {
                     };
                 } else if (reviewId) {
                     // 設置評論收藏按鈕狀態
-                    this.updateReviewButtonState(button, reviewId);
+                    if (isLoggedIn && userId) {
+                        this.updateReviewButtonState(button, reviewId);
+                    } else {
+                        // 用戶未登錄，重置按鈕狀態
+                        this.updateButtonUI(button, false);
+                    }
+                    
                     // 添加點擊事件
                     button.onclick = (e) => {
                         e.preventDefault();
