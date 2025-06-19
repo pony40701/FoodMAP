@@ -677,6 +677,7 @@
                             localStorage.setItem('user', JSON.stringify(data));
                             localStorage.setItem('isLoggedIn', 'true');
                             localStorage.setItem('userId', data.id);
+                            localStorage.setItem('authToken', data.token);
                             // 顯示會員頭像
                             const loginSection = document.getElementById('loginSection');
                             const userSection = document.getElementById('userSection');

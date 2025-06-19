@@ -38,11 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isLoading || !hasMore) return;
         isLoading = true;
 
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userId = user ? user.id : null;
+
         const params = new URLSearchParams({
             limit: limit,
             offset: offset,
             sort: currentFilters.sort
         });
+        if (userId) {
+            params.append('userId', userId);
+        }
         if (currentFilters.search) {
             params.append('search', currentFilters.search);
         }
@@ -61,19 +67,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 hasMore = false;
             }
 
-            const newArticles = data.map(dto => ({
-                id: dto.reviewId || `temp-${Math.random()}`,
-                user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' },
-                rating: dto.authorRating,
-                title: dto.reviewTitle,
-                restaurant: dto.restaurantName,
-                imageUrl: dto.reviewImage || '/images/default-food.jpg',
-                excerpt: extractExcerpt(dto.contentJson),
-                date: new Date(dto.reviewDate).toISOString().split('T')[0],
-                category: dto.cuisineType,
-                views: dto.viewCount,
-                favorited: false
-            }));
+            const newArticles = data.map(dto => {
+                let imageUrl = '/images/no-image.jpg'; // Default image
+
+                if (dto.reviewPhotoId) {
+                    imageUrl = `/api/reviews/photos/${dto.reviewPhotoId}`;
+                } else if (dto.reviewImage) {
+                    imageUrl = dto.reviewImage;
+                }
+
+                return {
+                    id: dto.reviewId,
+                    user: { name: dto.authorName, avatar: 'https://i.pravatar.cc/40' },
+                    rating: dto.authorRating,
+                    title: dto.reviewTitle,
+                    restaurant: dto.restaurantName,
+                    imageUrl: imageUrl,
+                    excerpt: extractExcerpt(dto.contentJson),
+                    date: new Date(dto.reviewDate).toISOString().split('T')[0],
+                    category: dto.cuisineType,
+                    views: dto.viewCount,
+                    favorited: dto.favorited,
+                    restaurantPlaceId: dto.restaurantPlaceId
+                };
+            });
 
             if (append) {
                 allArticles.push(...newArticles);
@@ -95,20 +112,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function extractExcerpt(contentJson, maxLength = 50) {
         if (!contentJson) return '';
+        let text = '';
         try {
+            // First, try to parse as JSON (Editor.js format)
             const content = JSON.parse(contentJson);
             if (content && content.blocks && content.blocks.length > 0) {
                 for (const block of content.blocks) {
                     if (block.type === 'paragraph' && block.data && block.data.text) {
-                        const text = block.data.text;
-                        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                        text += block.data.text + ' ';
                     }
                 }
             }
         } catch (error) {
-            console.error('Error parsing content_json:', error);
+            // If parsing fails, assume it's an HTML string
+            text = contentJson;
+            console.warn('Could not parse content_json, treating as plain text. Content:', contentJson);
         }
-        return '';
+
+        // Strip HTML tags from the text
+        const doc = new DOMParser().parseFromString(text, 'text/html');
+        const plainText = doc.body.textContent || "";
+        
+        return plainText.trim().length > maxLength ? plainText.trim().substring(0, maxLength) + '...' : plainText.trim();
     }
 
     // --- Rendering ---
@@ -162,8 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         card.querySelector('.favorite-btn').addEventListener('click', async () => {
-             const icon = card.querySelector('.favorite-btn i');
-             const targetArticle = allArticles.find(a => a.id === article.id);
+            const icon = card.querySelector('.favorite-btn i');
+            const targetArticle = allArticles.find(a => a.id === article.id);
             const wasFavorited = !!targetArticle?.favorited;
 
             const user = JSON.parse(localStorage.getItem('user'));
@@ -177,59 +202,47 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const userId = user.id;
             const reviewId = article.id;
-            const restaurantPlaceId = article.restaurantPlaceId || '';
+            const restaurantPlaceId = article.restaurantPlaceId;
 
-            // 標記 optimistic UI
+            // Optimistic UI update
             if (targetArticle) targetArticle.favorited = !wasFavorited;
             icon.classList.toggle('far', wasFavorited);
             icon.classList.toggle('fas', !wasFavorited);
 
             try {
-                if (!wasFavorited) {
-                    // 收藏
-                    const res = await fetch('http://localhost:8080/api/users/favorite', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: userId,
-                            targetId: reviewId,
-                            targetType: 'review',
-                            restaurantPlaceId: restaurantPlaceId
-                        })
-                    });
-                    const data = await res.json();
-                    if (!(res.ok && data.success)) {
-                        // 失敗還原
-                        if (targetArticle) targetArticle.favorited = wasFavorited;
-                        icon.classList.toggle('far', !wasFavorited);
-                        icon.classList.toggle('fas', wasFavorited);
-                        showToast(data.message || '收藏失敗');
-                    } else {
-                        showToast('收藏成功！');
-                    }
+                const url = new URL('http://localhost:8080/api/users/favorite/toggle');
+                url.searchParams.append('userId', userId);
+                url.searchParams.append('reviewId', reviewId);
+                if (restaurantPlaceId) {
+                    url.searchParams.append('restaurantPlaceId', restaurantPlaceId);
+                }
+
+                const res = await fetch(url.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    // Update favorite state from response
+                    if (targetArticle) targetArticle.favorited = data.isFavorited;
+                    icon.classList.toggle('far', !data.isFavorited);
+                    icon.classList.toggle('fas', data.isFavorited);
+                    showToast(data.message);
                 } else {
-                    // 取消收藏
-                    const res = await fetch(`http://localhost:8080/api/users/favorite/review/${userId}/${reviewId}`, {
-                        method: 'DELETE'
-                    });
-                    const data = await res.json();
-                    if (!(res.ok && data.success)) {
-                        // 失敗還原
-                        if (targetArticle) targetArticle.favorited = wasFavorited;
-                        icon.classList.toggle('far', !wasFavorited);
-                        icon.classList.toggle('fas', wasFavorited);
-                        showToast(data.message || '取消收藏失敗');
-                    } else {
-                        showToast('取消收藏成功！');
-                    }
+                    // Revert UI on failure
+                    if (targetArticle) targetArticle.favorited = wasFavorited;
+                    icon.classList.toggle('far', wasFavorited);
+                    icon.classList.toggle('fas', !wasFavorited);
+                    showToast(data.message || '操作失敗');
                 }
             } catch (err) {
-                // 失敗還原
+                // Revert UI on error
                 if (targetArticle) targetArticle.favorited = wasFavorited;
-                icon.classList.toggle('far', !wasFavorited);
-                icon.classList.toggle('fas', wasFavorited);
+                icon.classList.toggle('far', wasFavorited);
+                icon.classList.toggle('fas', !wasFavorited);
                 showToast('操作失敗，請稍後再試');
-             }
+            }
         });
 
         return card;

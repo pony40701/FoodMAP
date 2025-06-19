@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.entity.Favorite;
@@ -38,6 +40,9 @@ public class FavoriteController {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @GetMapping("/restaurants")
     public ResponseEntity<List<Favorite>> getAllRestaurants() {
@@ -286,5 +291,45 @@ public class FavoriteController {
         } else {
             return ResponseEntity.status(404).body(Map.of("success", false, "message", "未找到收藏紀錄"));
         }
+    }
+
+    @PostMapping("/favorite/toggle")
+    @Transactional
+    public ResponseEntity<?> toggleReviewFavorite(
+            @RequestParam Long userId, 
+            @RequestParam Long reviewId,
+            @RequestParam(required = false) String restaurantPlaceId) {
+        // First, check if the favorite already exists
+        String checkSql = "SELECT COUNT(*) FROM user_favorites WHERE user_id = ? AND target_id = ? AND target_type = 'review'";
+        Integer count = jdbcTemplate.queryForObject(checkSql, new Object[]{userId, reviewId}, Integer.class);
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (count != null && count > 0) {
+            // Favorite exists, so delete it
+            String deleteSql = "DELETE FROM user_favorites WHERE user_id = ? AND target_id = ? AND target_type = 'review'";
+            int deletedRows = jdbcTemplate.update(deleteSql, userId, reviewId);
+            if (deletedRows > 0) {
+                response.put("success", true);
+                response.put("message", "取消收藏成功");
+                response.put("isFavorited", false);
+            } else {
+                response.put("success", false);
+                response.put("message", "取消收藏失敗");
+            }
+        } else {
+            // Favorite does not exist, so add it
+            String insertSql = "INSERT INTO user_favorites (user_id, target_id, target_type, favorited_at, restaurant_place_id) VALUES (?, ?, 'review', NOW(), ?)";
+            int insertedRows = jdbcTemplate.update(insertSql, userId, reviewId, restaurantPlaceId);
+            if (insertedRows > 0) {
+                response.put("success", true);
+                response.put("message", "收藏成功");
+                response.put("isFavorited", true);
+            } else {
+                response.put("success", false);
+                response.put("message", "收藏失敗");
+            }
+        }
+        return ResponseEntity.ok(response);
     }
 }

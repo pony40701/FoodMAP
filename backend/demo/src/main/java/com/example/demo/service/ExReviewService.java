@@ -16,11 +16,11 @@ public class ExReviewService {
     @Autowired
     private ExReviewRepository exReviewRepository;
 
-    public List<ExReviewDTO> getLatestReviews(int limit, int offset, String sort, String search, List<String> cuisineTypes) {
+    public List<ExReviewDTO> getLatestReviews(int limit, int offset, String sort, String search, List<String> cuisineTypes, Long userId) {
         List<String> effectiveCuisineTypes = (cuisineTypes == null || cuisineTypes.isEmpty()) ? null : cuisineTypes;
         String effectiveSearch = (search == null || search.trim().isEmpty()) ? null : search;
 
-        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, sort, effectiveSearch, effectiveCuisineTypes);
+        List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, sort, effectiveSearch, effectiveCuisineTypes, userId);
         return projections.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -28,6 +28,8 @@ public class ExReviewService {
 
     private ExReviewDTO convertToDto(ExReviewProjection projection) {
         return new ExReviewDTO(
+            projection.getReviewId(),
+            projection.getReviewPhotoId(),
             projection.getReviewImage(),
             projection.getAuthorName(),
             projection.getAuthorRating(),
@@ -36,7 +38,8 @@ public class ExReviewService {
             projection.getContentJson(),
             projection.getReviewDate(),
             projection.getCuisineType(),
-            projection.getViewCount()
+            projection.getViewCount(),
+            projection.getIsFavorited() != null && projection.getIsFavorited() == 1
         );
     }
 } 
