@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
                     <div class="actions">
-                         <button class="favorite-btn" data-id="${restaurant.placeId}"><i class="far fa-heart"></i> 收藏</button>
+                         <button class="favorite-btn" data-place-id="${restaurant.placeId}"><i class="far fa-heart"></i> 收藏</button>
                          <button class="details-btn" data-id="${restaurant.placeId}">查看詳情</button>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
                     <div class="actions">
-                         <button class="favorite-btn" data-id="${restaurant.restaurantId}"><i class="far fa-heart"></i> 收藏</button>
+                         <button class="favorite-btn" data-place-id="${restaurant.restaurantId}"><i class="far fa-heart"></i> 收藏</button>
                          <button class="details-btn" data-id="${restaurant.restaurantId}">查看詳情</button>
                     </div>
                 </div>
