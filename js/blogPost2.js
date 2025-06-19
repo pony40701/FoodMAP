@@ -454,6 +454,37 @@ async function handleImageUpload(e) {
     e.target.value = '';
 }
 
+// 收集編輯器中的圖片數據
+function collectImageData() {
+    const editor = document.getElementById('editor');
+    const images = editor.querySelectorAll('img');
+    const imageData = [];
+    
+    images.forEach((img, index) => {
+        // 如果圖片有src屬性且是base64格式
+        if (img.src && img.src.startsWith('data:image/')) {
+            const base64Data = img.src.split(',')[1];
+            const contentType = img.src.split(';')[0].split(':')[1];
+            const fileName = `image_${Date.now()}_${index}.jpg`;
+            
+            // 將base64轉換為byte array
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            imageData.push({
+                fileName: fileName,
+                contentType: contentType,
+                imageData: Array.from(bytes)
+            });
+        }
+    });
+    
+    return imageData;
+}
+
 // 處理圖片（壓縮/調整大小）
 function processImage(file) {
     return new Promise((resolve, reject) => {
@@ -965,10 +996,14 @@ async function updateRankings(type) {
         sortedPosts.forEach((post, index) => {
             const rankingItem = document.createElement('div');
             rankingItem.className = 'ranking-item';
+            
+            // 限制標題長度
+            const titlePreview = truncateText(post.title, 30);
+            
             rankingItem.innerHTML = `
                 <div class="ranking-number">${index + 1}</div>
                 <div class="ranking-content">
-                    <div class="ranking-title">${escapeHtml(post.title)}</div>
+                    <div class="ranking-title">${escapeHtml(titlePreview)}</div>
                     <div class="ranking-info">
                         <i class="fas fa-calendar"></i> ${new Date(post.createdAt).toLocaleDateString('zh-TW')}
                     </div>
@@ -1051,7 +1086,7 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
             price_score: parseInt(ratings.price || '0'),
             overall_score: parseFloat(document.querySelector('.overall-rating .rating-value')?.textContent || '0.0')
         },
-        photos: [], // TODO: 處理圖片上傳
+        photoData: collectImageData(), // 使用新的圖片數據格式
         tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
@@ -1129,7 +1164,7 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
             price_score: parseInt(ratings.price || '0'),
             overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
         },
-        photos: [], // TODO: 處理圖片上傳
+        photoData: collectImageData(), // 使用新的圖片數據格式
         tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
@@ -1235,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     price_score: parseInt(document.querySelector('.stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
                     overall_score: parseFloat(document.querySelector('.overall-rating .rating-value')?.textContent || '0.0')
                 },
-                photos: [], // TODO: 處理圖片上傳
+                photoData: collectImageData(), // 使用新的圖片數據格式
                 tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(Boolean)
             };
 
@@ -1423,13 +1458,16 @@ function createDraftElement(draft) {
         minute: '2-digit'
     });
 
+    // 限制內容顯示長度
+    const contentPreview = truncateText(stripHtml(draft.contentJson), 80);
+
     div.innerHTML = `
         <div class="draft-header">
             <h3>${escapeHtml(draft.title)}</h3>
             <span class="draft-date">最後修改：${lastModified}</span>
         </div>
         <div class="draft-content">
-            <p class="draft-preview">${truncateText(stripHtml(draft.contentJson), 100)}</p>
+            <p class="draft-preview">${contentPreview}</p>
             ${draft.tags && draft.tags.length > 0 ? `
                 <div class="draft-tags">
                     ${draft.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
@@ -1522,7 +1560,7 @@ async function editDraft(draftId) {
                         price_score: parseInt(document.querySelector('#edit-section .stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
                         overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
                     },
-                    photos: [], // TODO: 處理圖片上傳
+                    photoData: collectImageData(), // 使用新的圖片數據格式
                     tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
                 };
 
@@ -1701,6 +1739,9 @@ function createPublishedPostElement(post) {
         minute: '2-digit'
     });
 
+    // 限制內容顯示長度
+    const contentPreview = truncateText(stripHtml(post.content_json), 120);
+
     div.innerHTML = `
         <div class="post-header">
             <h3>${escapeHtml(post.title)}</h3>
@@ -1719,7 +1760,7 @@ function createPublishedPostElement(post) {
                 </div>
                 <span class="rating-value">${averageRating}</span>
             </div>
-            <p class="post-preview">${truncateText(stripHtml(post.content_json), 150)}</p>
+            <p class="post-preview">${contentPreview}</p>
             ${post.tags && post.tags.length > 0 ? `
                 <div class="post-tags">
                     ${post.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
@@ -1768,8 +1809,28 @@ function stripHtml(html) {
 }
 
 function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+    if (!text) return '';
+    
+    // 移除HTML標籤
+    const plainText = stripHtml(text);
+    
+    if (plainText.length <= maxLength) return plainText;
+    
+    // 在適當的位置截斷（避免截斷在單字中間）
+    let truncated = plainText.substring(0, maxLength);
+    
+    // 嘗試在句號、逗號或空格處截斷
+    const lastPeriod = truncated.lastIndexOf('。');
+    const lastComma = truncated.lastIndexOf('，');
+    const lastSpace = truncated.lastIndexOf(' ');
+    
+    let cutPoint = Math.max(lastPeriod, lastComma, lastSpace);
+    
+    if (cutPoint > maxLength * 0.7) { // 如果找到的截斷點在70%之後，使用它
+        truncated = truncated.substring(0, cutPoint + 1);
+    }
+    
+    return truncated + '...';
 }
 
 function collectRatings(sectionSelector = '') {

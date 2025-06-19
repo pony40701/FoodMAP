@@ -159,4 +159,23 @@ public class ReviewController {
         reviewService.decrementFavoriteCount(reviewId);
         return ResponseEntity.ok().build();
     }
+
+    // 獲取評論圖片
+    @GetMapping("/photos/{photoId}")
+    public ResponseEntity<byte[]> getReviewPhoto(@PathVariable Integer photoId) {
+        try {
+            log.info("獲取評論圖片：photoId={}", photoId);
+            byte[] imageData = reviewService.getReviewPhotoData(photoId);
+            if (imageData != null && imageData.length > 0) {
+                return ResponseEntity.ok()
+                    .header("Content-Type", "image/jpeg") // 預設為JPEG
+                    .body(imageData);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("獲取評論圖片時發生錯誤：photoId={}", photoId, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
 } 

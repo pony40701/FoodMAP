@@ -66,7 +66,11 @@ public class ReviewService {
 
             // 3. 處理照片
             log.info("開始處理照片...");
-            saveReviewPhotos(dto.getPhotos(), review);
+            if (dto.getPhotoData() != null && !dto.getPhotoData().isEmpty()) {
+                saveReviewPhotoData(dto.getPhotoData(), review);
+            } else if (dto.getPhotos() != null && !dto.getPhotos().isEmpty()) {
+                saveReviewPhotos(dto.getPhotos(), review);
+            }
 
             // 4. 處理標籤
             log.info("開始處理標籤...");
@@ -99,6 +103,7 @@ public class ReviewService {
     }
 
     private void saveReviewPhotos(List<String> photoUrls, Review review) {
+        // 處理舊的URL格式（向後兼容）
         for (String url : photoUrls) {
             ReviewPhoto photo = new ReviewPhoto();
             photo.setReview(review);
@@ -106,6 +111,18 @@ public class ReviewService {
             reviewPhotoRepository.save(photo);
         }
         log.info("儲存評論照片：reviewId={}, 照片數量={}", review.getId(), photoUrls.size());
+    }
+
+    private void saveReviewPhotoData(List<ReviewRequestDto.PhotoData> photoDataList, Review review) {
+        // 處理新的圖片數據格式
+        for (ReviewRequestDto.PhotoData photoData : photoDataList) {
+            ReviewPhoto photo = new ReviewPhoto();
+            photo.setReview(review);
+            photo.setImageUrl(photoData.getFileName()); // 使用檔名作為URL
+            photo.setImage(photoData.getImageData()); // 儲存圖片數據
+            reviewPhotoRepository.save(photo);
+        }
+        log.info("儲存評論圖片數據：reviewId={}, 圖片數量={}", review.getId(), photoDataList.size());
     }
 
     private void saveReviewTags(List<String> tagNames, Review review) {
@@ -722,5 +739,12 @@ public class ReviewService {
             stats.setTotalFavorites(stats.getTotalFavorites() - 1);
             reviewStatsRepository.save(stats);
         }
+    }
+
+    // 獲取評論圖片數據
+    public byte[] getReviewPhotoData(Integer photoId) {
+        ReviewPhoto photo = reviewPhotoRepository.findById(photoId)
+                .orElseThrow(() -> new RuntimeException("圖片不存在"));
+        return photo.getImage();
     }
 }
