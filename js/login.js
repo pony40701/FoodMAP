@@ -1,5 +1,4 @@
 // 登入模組
-console.log('登入模組已載入');
 
 // 檢查必要的 DOM 元素
 const loginElements = {
@@ -12,24 +11,12 @@ const loginElements = {
     userSection: document.getElementById('userSection')
 };
 
-console.log('登入元素檢查:', {
-    loginForm: !!loginElements.loginForm,
-    loginModal: !!loginElements.loginModal,
-    closeBtn: !!loginElements.closeBtn,
-    loginBtn: !!loginElements.loginBtn,
-    loginButton: !!loginElements.loginButton,
-    loginSection: !!loginElements.loginSection,
-    userSection: !!loginElements.userSection
-});
-
 // 初始化登入功能
 function initLogin() {
-    console.log('初始化登入功能');
     
     // 綁定登入按鈕點擊事件
     if (loginElements.loginBtn) {
         loginElements.loginBtn.addEventListener('click', () => {
-            console.log('點擊登入按鈕');
             if (loginElements.loginModal) {
                 loginElements.loginModal.style.display = 'block';
                 // 應用樣式修復
@@ -41,7 +28,6 @@ function initLogin() {
     // 綁定登入按鈕點擊事件（使用 id）
     if (loginElements.loginButton) {
         loginElements.loginButton.addEventListener('click', () => {
-            console.log('點擊登入按鈕（id）');
             if (loginElements.loginModal) {
                 loginElements.loginModal.style.display = 'block';
                 // 應用樣式修復
@@ -53,7 +39,6 @@ function initLogin() {
     // 綁定關閉按鈕點擊事件
     if (loginElements.closeBtn) {
         loginElements.closeBtn.addEventListener('click', () => {
-            console.log('點擊關閉按鈕');
             if (loginElements.loginModal) {
                 loginElements.loginModal.style.display = 'none';
             }
@@ -120,14 +105,10 @@ function initLogin() {
                     const userAvatarImg = document.querySelector('.avatar-img');
                     if (userAvatarImg) {
                         const avatarUrl = userData.image_url || userData.avatar_url;
-                        console.log('頭像URL:', avatarUrl);
                         
                         if (avatarUrl) {
                             userAvatarImg.src = avatarUrl;
                             userAvatarImg.alt = userData.username || '會員頭像';
-                            console.log('設置用戶頭像:', avatarUrl);
-                        } else {
-                            console.log('用戶沒有頭像URL');
                         }
                     }
                     
@@ -145,10 +126,7 @@ function initLogin() {
                     
                     // 初始化通知服務
                     if (window.NotificationService && typeof window.NotificationService.initialize === 'function') {
-                        console.log('初始化通知服務');
                         window.NotificationService.initialize();
-                    } else {
-                        console.warn('找不到 NotificationService 或 initialize 方法');
                     }
                     
                     // 顯示成功訊息
@@ -157,7 +135,6 @@ function initLogin() {
                     throw new Error(data.message || '登入失敗');
                 }
             } catch (error) {
-                console.error('登入失敗:', error);
                 window.showToast(error.message || '登入失敗，請稍後再試');
             }
         });
@@ -166,7 +143,6 @@ function initLogin() {
 
 // 在 DOM 加載完成後初始化
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM 加載完成，初始化登入功能');
     initLogin();
     // 立即修復樣式
     fixLoginModalStyles();
@@ -174,26 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 暴露全局登入彈窗函數
 window.showLoginModal = function() {
-    console.log('顯示登入彈窗');
     if (loginElements.loginModal) {
         loginElements.loginModal.style.display = 'block';
         // 應用樣式修復
         fixLoginModalStyles();
-    } else {
-        console.error('找不到登入彈窗元素');
     }
 };
 
 // 更新登入狀態
 function updateLoginStatus(isLoggedIn) {
-    console.log('更新登入狀態:', isLoggedIn);
     
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');
     
     if (isLoggedIn) {
         const userData = JSON.parse(localStorage.getItem('user'));
-        console.log('用戶資訊:', userData);
         
         // 隱藏登入按鈕，顯示用戶區域
         if (loginSection) loginSection.style.display = 'none';
@@ -210,14 +181,10 @@ function updateLoginStatus(isLoggedIn) {
             const userAvatarImg = document.querySelector('.avatar-img');
             if (userAvatarImg) {
                 const avatarUrl = userData.image_url || userData.avatar_url;
-                console.log('頭像URL:', avatarUrl);
                 
                 if (avatarUrl) {
                     userAvatarImg.src = avatarUrl;
                     userAvatarImg.alt = userData.username || '會員頭像';
-                    console.log('設置用戶頭像:', avatarUrl);
-                } else {
-                    console.log('用戶沒有頭像URL');
                 }
             }
         }
@@ -233,7 +200,6 @@ function updateLoginStatus(isLoggedIn) {
 
 // 登出功能
 window.logout = function() {
-    console.log('執行登出');
     localStorage.removeItem('user');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('authToken');
@@ -261,12 +227,10 @@ function showMessage(message, type = 'info') {
 
 // 檢查是否已登入
 function checkLoginStatus() {
-    console.log('檢查登入狀態');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const user = localStorage.getItem('user');
     
     if (isLoggedIn && user) {
-        console.log('用戶已登入');
         updateLoginStatus(true);
         
         // 如果在會員中心頁面且未登入，則跳轉到首頁
@@ -274,7 +238,6 @@ function checkLoginStatus() {
             window.location.href = 'index.html';
         }
     } else {
-        console.log('用戶未登入');
         updateLoginStatus(false);
     }
 }
@@ -300,7 +263,6 @@ function socialLogin(platform) {
 
 // 顯示提示訊息
 function showToast(message) {
-    console.log('顯示提示訊息:', message);
     
     // 檢查是否已存在 toast 元素
     let toast = document.getElementById('toast-notification');
@@ -349,8 +311,6 @@ function showToast(message) {
 function fixLoginModalStyles() {
     const loginModal = document.getElementById('loginModal');
     if (!loginModal) return;
-    
-    console.log('修復登入視窗樣式');
     
     const modalContent = loginModal.querySelector('.modal-content');
     const modalHeader = loginModal.querySelector('.modal-header');
@@ -449,14 +409,12 @@ function fixLoginModalStyles() {
 
 // 登入成功處理
 function handleLoginSuccess(userData) {
-    console.log('處理登入成功:', userData);
     
     // 取得登入相關元素
     const loginElements = getLoginElements();
     
     // 檢查元素是否存在
     if (!loginElements.loginModal) {
-        console.error('找不到登入模態視窗元素');
         return;
     }
     
@@ -470,7 +428,6 @@ function handleLoginSuccess(userData) {
     const restaurantsContainer = document.getElementById('restaurants-container');
     if (restaurantsContainer) {
         restaurantsContainer.innerHTML = '';
-        console.log('已清空餐廳容器，準備重新載入資料');
     }
     
     // 隱藏登入按鈕，顯示會員頭像區域
@@ -488,14 +445,12 @@ function handleLoginSuccess(userData) {
         const avatarUrl = userData.avatar_url || userData.image_url;
         const userAvatarImg = document.querySelector('.avatar-img');
         if (userAvatarImg) {
-            console.log('設置用戶頭像:', avatarUrl);
             userAvatarImg.src = avatarUrl;
         }
     }
     
     // 初始化通知服務並立即顯示通知徽章
     if (window.NotificationService) {
-        console.log('初始化通知服務');
         window.NotificationService.initialize();
         
         // 立即顯示通知徽章 (測試用)
@@ -504,11 +459,8 @@ function handleLoginSuccess(userData) {
             const avatarBadge = document.getElementById('avatar-notification-badge');
             if (avatarBadge) {
                 avatarBadge.style.display = 'flex';
-                console.log('登入後顯示通知徽章');
             }
         }, 500);
-    } else {
-        console.warn('找不到 NotificationService');
     }
     
     // 顯示登入成功訊息
@@ -516,10 +468,7 @@ function handleLoginSuccess(userData) {
     
     // 重新加載餐廳數據
     if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
-        console.log('準備重新加載餐廳數據');
         window.mapInit.loadRestaurants();
-    } else {
-        console.warn('找不到 mapInit.loadRestaurants 方法');
     }
 }
 
@@ -532,7 +481,6 @@ window.login = {
     
     // 測試通知徽章功能
     testNotificationBadge: function() {
-        console.log('測試通知徽章功能');
         
         // 設置調試模式
         localStorage.setItem('debugMode', 'true');
@@ -542,11 +490,8 @@ window.login = {
         if (window.NotificationService && window.NotificationService.initialized) {
             window.NotificationService.showTestNotification();
         } else {
-            console.log('通知服務未初始化，嘗試初始化...');
             if (window.NotificationService) {
                 window.NotificationService.initialize();
-            } else {
-                console.error('找不到通知服務模組');
             }
         }
     }
@@ -561,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const avatarBadge = document.getElementById('avatar-notification-badge');
             if (avatarBadge) {
                 avatarBadge.style.display = 'flex';
-                console.log('從本地存儲恢復通知徽章顯示');
             }
         }
     }, 1500); // 延遲一點時間，確保DOM已完全載入
