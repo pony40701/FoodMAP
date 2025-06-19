@@ -10,6 +10,7 @@
     />
     <link rel="stylesheet" href="css/restaurantList.css" />
     <link rel="stylesheet" href="css/restaurantDetail.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   </head>
   <body>
     <!-- 導覽列（header） -->
@@ -298,81 +299,7 @@
           <!-- 評論區塊 -->
           <div class="reviews-section">
             <h2 class="menu-title">顧客評論</h2>
-            <div class="reviews-container">
-              <!-- 評論 1 -->
-              <div class="review-card">
-                <div class="review-header">
-                  <div class="reviewer-info">
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="評論者頭像" class="reviewer-avatar">
-                    <div class="reviewer-details">
-                      <h4 class="reviewer-name">航航</h4>
-                      <div class="review-date">2024年3月15日</div>
-                    </div>
-                  </div>
-                  <div class="review-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-score">5.0</span>
-                  </div>
-                </div>
-                <div class="review-content">
-                  <p>這家餐廳的菜色非常道地，尤其是宮保雞丁和麻婆豆腐，味道非常正宗。服務人員態度親切，環境整潔舒適。價格雖然稍高，但品質絕對值得。強烈推薦給喜歡川菜的朋友！</p>
-                </div>
-                <div class="review-photos">
-                  <img src="https://images.pexels.com/photos/6940977/pexels-photo-6940977.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                  <img src="https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                </div>
-              </div>
-
-              <!-- 評論 2 -->
-              <div class="review-card">
-                <div class="review-header">
-                  <div class="reviewer-info">
-                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="評論者頭像" class="reviewer-avatar">
-                    <div class="reviewer-details">
-                      <h4 class="reviewer-name">晨晨</h4>
-                      <div class="review-date">2024年3月10日</div>
-                    </div>
-                  </div>
-                  <div class="review-rating">
-                    <span class="stars">★★★★☆</span>
-                    <span class="rating-score">4.0</span>
-                  </div>
-                </div>
-                <div class="review-content">
-                  <p>餐廳的裝潢很有特色，氣氛很好。菜品的份量適中，味道也不錯。不過有些菜偏辣，建議不太能吃辣的朋友可以請服務生調整辣度。整體來說是個不錯的用餐選擇。</p>
-                </div>
-                <div class="review-photos">
-                  <img src="https://images.pexels.com/photos/6940991/pexels-photo-6940991.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                </div>
-              </div>
-
-              <!-- 評論 3 -->
-              <div class="review-card">
-                <div class="review-header">
-                  <div class="reviewer-info">
-                    <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="評論者頭像" class="reviewer-avatar">
-                    <div class="reviewer-details">
-                      <h4 class="reviewer-name">衡衡
-                        
-                      </h4>
-                      <div class="review-date">2024年3月5日</div>
-                    </div>
-                  </div>
-                  <div class="review-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-score">4.5</span>
-                  </div>
-                </div>
-                <div class="review-content">
-                  <p>這是我第三次來這家餐廳了，每次都有不同的驚喜。這次嘗試了他們的新菜色，糖醋排骨和蝦仁炒飯都很出色。服務人員很專業，會主動介紹特色菜。唯一的建議是希望可以增加一些不辣的菜色選擇。</p>
-                </div>
-                <div class="review-photos">
-                  <img src="https://images.pexels.com/photos/6940985/pexels-photo-6940985.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                  <img src="https://images.pexels.com/photos/6940988/pexels-photo-6940988.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                  <img src="https://images.pexels.com/photos/6940995/pexels-photo-6940995.jpeg?auto=compress&cs=tinysrgb&w=200" alt="評論照片">
-                </div>
-              </div>
-            </div>
+            <div class="reviews-container"></div>
           </div>
 
           <!-- 推薦餐廳區塊 -->
@@ -398,14 +325,7 @@
         <!-- Google Maps 靜態地圖 -->
         <div class="map-section">
           <div id="map" class="map-container"></div>
-          <p class="address">
-            <i class="fas fa-map-marker-alt"></i>
-            台北市信義區信義路五段7號
-          </p>
-          <p class="business-hours">
-            <i class="far fa-clock"></i>
-            營業時間：11:00 - 22:00
-          </p>
+          <p class="address"></p>
           <button class="directions-btn">
             <i class="fas fa-directions"></i>
             查看路線
@@ -459,11 +379,8 @@
     </footer>
 
     <!-- 加入必要的 JavaScript -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6_6-dHTpnaLn6NKtn6OhmCFUqf1B4YN4&callback=initMap"></script>
-    <script src="js/restaurantList.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="js/restaurantListDetail.js"></script>
-    <script src="js/login.js"></script>
-    <script src="js/dishModal.js"></script>
 
     <!-- 分享彈出視窗 -->
     <div class="share-modal-overlay">
@@ -490,18 +407,6 @@
         </div>
       </div>
     </div>
-
-    <script>
-      (function() {
-        var mapDiv = document.getElementById("map");
-        if (mapDiv) {
-          var lat = 25.0330; // 餐廳緯度，請替換成實際值
-          var lng = 121.5654; // 餐廳經度，請替換成實際值
-          var myMap = new google.maps.Map(mapDiv, { center: { lat: lat, lng: lng }, zoom: 15 });
-          var marker = new google.maps.Marker({ position: { lat: lat, lng: lng }, map: myMap, title: "餐廳位置" });
-        }
-      })();
-    </script>
 
     <!-- 登入模態框 -->
     <div id="loginModal" class="modal">

@@ -86,19 +86,30 @@ class RestaurantDetail {
     this.init();
     this.setupActionButtons();
     this.setupMenuScroll();
-    this.setupMap();
     this.setupFullMenuButton();
     this.setupShareModal();
   }
 
   init() {
-    // 從 URL 獲取餐廳資料
     this.getRestaurantDataFromUrl();
-    // 更新頁面資訊
+    console.log('上一頁傳來的餐廳資料:', this.restaurantData);
+    console.log('googleReviews:', this.restaurantData.googleReviews);
     this.updatePageInfo();
-    // 初始化輪播圖
     new RestaurantCarousel(this.restaurantData);
-    // 地圖初始化將在 initMap 回調中，通過調用 initMapInDetail 處理
+
+    // Leaflet 地圖初始化，只顯示單一餐廳 marker
+    const lat = this.restaurantData.latitude;
+    const lng = this.restaurantData.longitude;
+    console.log('Detail page lat/lng:', lat, lng);
+    if (lat && lng && window.L) {
+      const map = L.map('map').setView([lat, lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map);
+    }
+
+    this.renderGoogleReviews();
   }
 
   // 預設餐廳資料
@@ -497,6 +508,12 @@ class RestaurantDetail {
     if (hours) {
       hours.textContent = businessHoursText;
     }
+
+    // 地圖下方 address
+    const mapAddressEl = document.querySelector('.map-section .address');
+    if (mapAddressEl) {
+      mapAddressEl.textContent = this.restaurantData.address || '';
+    }
   }
 
   // 設置操作按鈕功能
@@ -610,94 +627,6 @@ class RestaurantDetail {
     }
   }
 
-  setupMap() {
-    // 這個方法不再直接初始化地圖，而是等待 initMap 調用
-    // 這裡可以放置一些準備工作，如果需要的話
-  }
-
-  // 在 RestaurantDetail 內部初始化地圖的方法
-  async initMapInDetail() {
-    // 檢查是否有位置資訊
-    if (!this.restaurantData || !this.restaurantData.location) {
-      console.error('無法獲取餐廳位置資訊');
-      return;
-    }
-
-    const { lat, lng } = this.restaurantData.location;
-    const center = { lat: lat, lng: lng };
-
-    // 創建地圖實例
-    const mapElement = document.getElementById('map');
-    if (!mapElement) {
-      console.error('找不到地圖容器元素');
-      return;
-    }
-
-    const map = new google.maps.Map(mapElement, {
-      zoom: 15,
-      center: center,
-      mapTypeControl: false, // 隱藏地圖類型控制項
-      streetViewControl: false, // 隱藏街景控制項
-      fullscreenControl: false // 隱藏全螢幕控制項
-    });
-
-    // 在餐廳位置添加標記
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-
-    const markerContent = document.createElement('div');
-    markerContent.className = 'restaurant-pin';
-    markerContent.style.cssText = `
-        background-color: #FF6B1A;
-        width: 24px;
-        height: 24px;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    `;
-
-    const icon = document.createElement('div');
-    icon.innerHTML = '🍽️';
-    icon.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(45deg);
-        font-size: 12px;
-    `;
-
-    markerContent.appendChild(icon);
-
-    new AdvancedMarkerElement({
-      map: map,
-      position: center,
-      title: this.restaurantData.name,
-      content: markerContent
-    });
-
-    // 設置路線按鈕點擊事件 (保留在地圖初始化後設置)
-    const directionsBtn = document.querySelector('.directions-btn');
-    if (directionsBtn && this.restaurantData.location) {
-      directionsBtn.addEventListener('click', () => {
-        const { lat, lng } = this.restaurantData.location;
-        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-        window.open(directionsUrl, '_blank');
-      });
-    }
-
-    // 更新地圖資訊 (地址和營業時間) - 確保在獲取資料後更新
-    const address = document.querySelector('.address');
-    const businessHours = document.querySelector('.business-hours');
-
-    if (address) {
-      address.innerHTML = `<i class="fas fa-map-marker-alt"></i>${this.restaurantData.address || '地址資訊未提供'}`;
-    }
-
-    if (businessHours) {
-      businessHours.innerHTML = `<i class="far fa-clock"></i>營業時間：${this.restaurantData.businessHours || '營業時間未提供'}`;
-    }
-  }
-
   // 設置分享彈出視窗功能
   setupShareModal() {
     const shareBtn = document.querySelector('.action-btn.share');
@@ -771,24 +700,10 @@ class RestaurantDetail {
   }
 }
 
-// Google Map 初始化
-// 這個函數會在 Google Maps API 腳本載入完成後自動執行
-let restaurantDetailInstance = null; // 定義一個變數來保存 RestaurantDetail 實例
-
-window.initMap = function() {
-  // 在 DOMContentLoaded 中已經創建了 RestaurantDetail 實例
-  // 在這裡呼叫它的地圖初始化方法
-  if (restaurantDetailInstance) {
-    restaurantDetailInstance.initMapInDetail();
-  } else {
-    console.error('RestaurantDetail 實例未準備好，無法初始化地圖。');
-  }
-};
-
 // 當 DOM 加載完成後初始化
 document.addEventListener('DOMContentLoaded', () => {
   // 在 DOMContentLoaded 時創建並保存 RestaurantDetail 實例
-  restaurantDetailInstance = new RestaurantDetail();
+  const restaurantDetailInstance = new RestaurantDetail();
 
   // 初始化登入模態框
   initLoginModals();
