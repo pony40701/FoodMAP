@@ -112,7 +112,38 @@ function updateMapMarkers(restaurants) {
             const popupElement = document.querySelector('.map-popup-content');
             if (popupElement) {
                 popupElement.addEventListener('click', function() {
-                    navigateToDetail(encodeURIComponent(JSON.stringify(restaurant)));
+                    console.log('=== 點擊地圖圖釘視窗 ===');
+                    console.log('餐廳名稱:', restaurant.name);
+                    console.log('點擊前的 restaurant 物件:', restaurant);
+                    console.log('點擊前的 googleReviews:', restaurant.googleReviews);
+                    console.log('googleReviews 是否為陣列:', Array.isArray(restaurant.googleReviews));
+                    console.log('googleReviews 長度:', restaurant.googleReviews?.length);
+                    
+                    // 確保 googleReviews 欄位正確帶入 localStorage (與餐廳卡片點擊邏輯一致)
+                    const restaurantToSave = { ...restaurant };
+                    
+                    // 處理 googleReviews 欄位
+                    if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
+                        console.log('googleReviews 為 undefined 或 null，嘗試使用備用欄位');
+                        if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
+                            restaurantToSave.googleReviews = restaurant.google_reviews;
+                            console.log('使用 google_reviews 欄位:', restaurant.google_reviews);
+                        } else {
+                            restaurantToSave.googleReviews = []; // 確保不是 null，而是空陣列
+                            console.log('設定為空陣列');
+                        }
+                    } else {
+                        console.log('googleReviews 已存在，保持原值');
+                    }
+                    
+                    console.log('儲存到 localStorage 的餐廳資料:', restaurantToSave);
+                    console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
+                    console.log('=== 儲存完成，準備跳轉 ===');
+                    
+                    // 直接存完整物件 (與餐廳卡片點擊邏輯一致)
+                    localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
+                    // 導頁到餐廳詳情頁面
+                    window.location.href = 'restaurantListDetail.html';
                 });
             }
         });
