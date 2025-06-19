@@ -154,7 +154,7 @@
           <div class="pagination"></div>
         </section>
         <aside class="map-placeholder">
-          <div id="map"></div>
+          <div id="map" class="map-container"></div>
         </aside>
       </div>
     </main>
@@ -373,6 +373,10 @@
           }
         };
       });
+
+      console.log('地圖初始化', lat, lng, document.querySelectorAll('#map').length);
+
+      localStorage.clear();
     </script>
   </body>
 </html> 
