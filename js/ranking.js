@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 將 fetch 邏輯簡化，只負責獲取數據
     async function fetchGoogleData(page, filter, pageSize) {
         try {
-            const response = await fetch(`http://localhost:8080/api/lleader/ranking/google?page=${page}&size=${pageSize}&filter=${filter}`);
+            const timestamp = new Date().getTime();
+            const response = await fetch(`http://localhost:8080/api/lleader/ranking/google?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
@@ -44,7 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function fetchCustomData(page, filter, pageSize) {
         try {
-            const response = await fetch(`http://localhost:8080/api/rleader/ranking/restaurants?page=${page}&size=${pageSize}&filter=${filter}`);
+            const timestamp = new Date().getTime();
+            const response = await fetch(`http://localhost:8080/api/rleader/ranking/restaurants?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
