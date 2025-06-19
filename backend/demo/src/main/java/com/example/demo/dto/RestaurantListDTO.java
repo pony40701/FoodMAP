@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
 import java.sql.Timestamp;
+import java.util.List;
+import com.example.demo.dto.GoogleReviewDTO;
 
 public class RestaurantListDTO {
 
@@ -16,6 +18,7 @@ public class RestaurantListDTO {
 	private Double latitude;
 	private Double longitude;
 	private String openingHours;
+	private List<GoogleReviewDTO> googleReviews;
 	
 	public RestaurantListDTO() {}
 	
@@ -131,5 +134,13 @@ public class RestaurantListDTO {
 
 	public void setOpeningHours(String openingHours) {
 		this.openingHours = openingHours;
+	}
+
+	public List<GoogleReviewDTO> getGoogleReviews() {
+		return googleReviews;
+	}
+
+	public void setGoogleReviews(List<GoogleReviewDTO> googleReviews) {
+		this.googleReviews = googleReviews;
 	}
 }

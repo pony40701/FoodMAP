@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.example.demo.dto.RestaurantListDTO;
 import com.example.demo.entity.GoogleRestaurant;
@@ -15,6 +16,10 @@ import com.example.demo.repository.GoogleRestaurantRepository;
 import com.example.demo.repository.LLeaderGoogleRestaurantPhotoRepository;
 import com.example.demo.entity.LLeaderGoogleRestaurantPhoto;
 import com.example.demo.service.RestaurantService;
+import com.example.demo.dto.GoogleReviewDTO;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
 
 @Service
 public class RestaurantServiceImpl implements RestaurantService {
@@ -24,6 +29,9 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Autowired
     private LLeaderGoogleRestaurantPhotoRepository photoRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     public List<GoogleRestaurant> getAllRestaurants() {
@@ -39,7 +47,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     public List<RestaurantListDTO> getRestaurantList() {
         List<GoogleRestaurant> restaurants = googleRestaurantRepository.findAll();
         return restaurants.stream()
-                .map(this::convertToDTO)
+                .map(this::convertToDTOWithReviews)
                 .collect(Collectors.toList());
     }
 
@@ -121,5 +129,24 @@ public class RestaurantServiceImpl implements RestaurantService {
                 restaurant.getLongitude() != null ? restaurant.getLongitude() : restaurant.getLng(),
                 restaurant.getOpeningHours()
         );
+    }
+
+    private RestaurantListDTO convertToDTOWithReviews(GoogleRestaurant restaurant) {
+        RestaurantListDTO dto = convertToDTO(restaurant);
+        String placeId = restaurant.getPlaceId();
+        String sql = "SELECT author_name, rating, text, time_created, profile_photo_url FROM google_reviews WHERE restaurant_place_id = ?";
+        List<GoogleReviewDTO> googleReviews = jdbcTemplate.query(sql, new Object[]{placeId}, (rs, rowNum) -> mapGoogleReview(rs));
+        dto.setGoogleReviews(googleReviews);
+        return dto;
+    }
+
+    private GoogleReviewDTO mapGoogleReview(ResultSet rs) throws SQLException {
+        GoogleReviewDTO review = new GoogleReviewDTO();
+        review.setAuthorName(rs.getString("author_name"));
+        review.setRating(rs.getDouble("rating"));
+        review.setText(rs.getString("text"));
+        review.setTimeCreated(rs.getTimestamp("time_created"));
+        review.setProfilePhotoUrl(rs.getString("profile_photo_url"));
+        return review;
     }
 } 
