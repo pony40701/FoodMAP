@@ -1179,11 +1179,10 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     };
 
     try {
-        // 清理HTML內容，移除可能導致問題的特殊字符
-        const cleanedContent = cleanHtmlContent(postData.content_json);
-        postData.content_json = cleanedContent;
+        // 直接使用原始HTML內容，不進行清理，保留所有文字格式
+        postData.content_json = imageData.processedHtmlContent || content;
         
-        console.log('清理後的HTML內容:', cleanedContent);
+        console.log('使用的HTML內容:', postData.content_json);
         
         // 呼叫後端 API 發布文章
         const response = await fetch('http://localhost:8080/api/reviews', {
@@ -1381,11 +1380,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
-                // 清理HTML內容，移除可能導致問題的特殊字符
-                const cleanedContent = cleanHtmlContent(postData.content_json);
-                postData.content_json = cleanedContent;
-                
-                console.log('清理後的HTML內容:', cleanedContent);
+                // 直接使用原始HTML內容，不進行清理，保留所有文字格式
+                console.log('儲存草稿的HTML內容:', postData.content_json);
                 
                 // 呼叫後端 API 創建草稿
                 const response = await fetch('http://localhost:8080/api/reviews', {
@@ -1464,19 +1460,14 @@ function cleanHtmlContent(htmlContent) {
             return htmlContent;
         }
         
-        // 更嚴格的HTML清理
+        // 更溫和的HTML清理，保留文字格式
         let cleanedHtml = htmlContent
             // 移除零寬字符
             .replace(/[\u200B-\u200D\uFEFF]/g, '')
-            // 移除可能的控制字符
-            .replace(/[\x00-\x1F\x7F]/g, '')
-            // 確保引號正確
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            // 移除多餘的空格
-            .replace(/\s+/g, ' ')
-            // 移除可能的特殊字符
-            .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '')
+            // 移除可能的控制字符（但保留換行符和製表符）
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+            // 移除多餘的連續空格（但保留單個空格）
+            .replace(/[ ]{2,}/g, ' ')
             .trim();
         
         // 檢查是否有有效的HTML結構
@@ -1651,6 +1642,8 @@ async function editDraft(draftId) {
             userId: draft.userId,
             restaurantId: draft.restaurantId
         };
+        window.currentEditingPostId = null; // 清除已發布文章ID
+        window.currentEditingPost = null; // 清除已發布文章資訊
         
         // 更新按鈕文字和事件處理
         const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
@@ -1687,12 +1680,6 @@ async function editDraft(draftId) {
                 }
 
                 try {
-                    // 清理HTML內容，移除可能導致問題的特殊字符
-                    const cleanedContent = cleanHtmlContent(postData.content_json);
-                    postData.content_json = cleanedContent;
-                    
-                    console.log('清理後的HTML內容:', cleanedContent);
-                    
                     const response = await fetch(`http://localhost:8080/api/reviews/drafts/${draftId}`, {
                         method: 'PUT',
                         headers: {
@@ -1716,6 +1703,102 @@ async function editDraft(draftId) {
                 } catch (error) {
                     console.error('更新草稿時發生錯誤：', error);
                     alert('更新草稿失敗：' + error.message);
+                }
+            });
+        }
+        
+        // 添加發布按鈕事件處理（先更新草稿再發布）
+        const publishBtn = document.querySelector('#edit-section .btn-publish');
+        if (publishBtn) {
+            publishBtn.textContent = '發布文章';
+            // 移除舊的事件監聽器
+            publishBtn.replaceWith(publishBtn.cloneNode(true));
+            // 添加新的事件監聽器
+            document.querySelector('#edit-section .btn-publish').addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                console.log('從草稿編輯頁面發布，先更新草稿再發布...');
+                
+                // 先執行更新草稿功能
+                const imageData = collectImageData('#editorEdit');
+                const updateData = {
+                    userId: window.currentEditingDraft.userId,
+                    restaurantId: window.currentEditingDraft.restaurantId,
+                    title: document.getElementById('postTitleEdit').value || '未命名草稿',
+                    content_json: imageData.processedHtmlContent || document.getElementById('editorEdit').innerHTML || '',
+                    status: 'draft',
+                    ratings: {
+                        environment_score: parseInt(document.querySelector('#edit-section .stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0'),
+                        service_score: parseInt(document.querySelector('#edit-section .stars[data-category="service"]')?.getAttribute('data-selected-rating') || '0'),
+                        taste_score: parseInt(document.querySelector('#edit-section .stars[data-category="taste"]')?.getAttribute('data-selected-rating') || '0'),
+                        price_score: parseInt(document.querySelector('#edit-section .stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
+                        overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
+                    },
+                    photoData: imageData.newImages, // 新圖片數據
+                    photos: imageData.existingPhotoIds, // 已存在的圖片ID
+                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                };
+
+                if (!updateData.content_json) {
+                    alert('請至少填寫評論內容');
+                    return;
+                }
+
+                try {
+                    // 第一步：更新草稿
+                    console.log('第一步：更新草稿...');
+                    const updateResponse = await fetch(`http://localhost:8080/api/reviews/drafts/${draftId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        console.error('更新草稿失敗:', errorText);
+                        throw new Error(`更新草稿失敗: ${updateResponse.status} ${updateResponse.statusText}`);
+                    }
+
+                    const updateResult = await updateResponse.json();
+                    console.log('草稿更新成功:', updateResult);
+
+                    // 第二步：發布草稿
+                    console.log('第二步：發布草稿...');
+                    const deleteDraft = confirm('發布後是否要刪除草稿？');
+                    
+                    const publishResponse = await fetch(`http://localhost:8080/api/reviews/drafts/${draftId}/publish?deleteDraft=${deleteDraft}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: window.currentEditingDraft.userId,
+                            restaurantId: window.currentEditingDraft.restaurantId
+                        })
+                    });
+
+                    if (!publishResponse.ok) {
+                        const errorText = await publishResponse.text();
+                        console.error('發布草稿失敗:', errorText);
+                        throw new Error(`發布草稿失敗: ${publishResponse.status} ${publishResponse.statusText}`);
+                    }
+
+                    const publishedId = await publishResponse.json();
+                    console.log('發布成功，新文章ID:', publishedId);
+                    alert('草稿已成功發布！');
+                    
+                    // 清除編輯狀態
+                    clearEditForm();
+                    
+                    loadDrafts(); // 重新載入草稿列表
+                    loadPublishedPosts(); // 重新載入已發布文章列表
+                    showSectionWrapper('published');
+                    
+                } catch (error) {
+                    console.error('發布過程中發生錯誤：', error);
+                    alert('發布失敗：' + error.message);
                 }
             });
         }
@@ -1747,8 +1830,11 @@ async function deleteDraft(draftId) {
 // 發布草稿
 async function publishDraft(draftId, userId, restaurantId) {
     try {
+        console.log('從草稿列表直接發布草稿:', { draftId, userId, restaurantId });
+        
         // 詢問是否要刪除草稿
         const deleteDraft = confirm('發布後是否要刪除草稿？');
+        console.log('刪除草稿選項:', deleteDraft);
         
         const response = await fetch(`http://localhost:8080/api/reviews/drafts/${draftId}/publish?deleteDraft=${deleteDraft}`, {
             method: 'POST',
@@ -1761,10 +1847,16 @@ async function publishDraft(draftId, userId, restaurantId) {
             })
         });
         
-        if (!response.ok) throw new Error('發布草稿失敗');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('發布草稿失敗:', errorText);
+            throw new Error(`發布草稿失敗: ${response.status} ${response.statusText}`);
+        }
         
         const publishedId = await response.json();
+        console.log('發布成功，新文章ID:', publishedId);
         alert('草稿已成功發布！');
+        
         loadDrafts(); // 重新載入草稿列表
         loadPublishedPosts(); // 重新載入已發布文章列表
         showSectionWrapper('published');
@@ -1965,6 +2057,7 @@ function updateOverallRating(sectionSelector = '') {
     const categories = ['environment', 'service', 'taste', 'price'];
     let totalRating = 0;
     let validRatings = 0;
+    
     categories.forEach(category => {
         const starsContainer = document.querySelector(`${sectionSelector} .stars[data-category="${category}"]`);
         if (starsContainer) {
@@ -1975,16 +2068,26 @@ function updateOverallRating(sectionSelector = '') {
             }
         }
     });
+    
     const averageRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : '0.0';
+    
+    // 更新總評分顯示
     const overallStars = document.querySelector(`${sectionSelector} .overall-rating .stars`);
     const overallValue = document.querySelector(`${sectionSelector} .overall-rating .rating-value`);
+    
     if (overallStars && overallValue) {
         const stars = overallStars.querySelectorAll('i');
         const ratingNum = parseFloat(averageRating);
+        
+        // 更新星星顯示
         stars.forEach((star, index) => {
             star.classList.toggle('active', index < Math.floor(ratingNum));
         });
+        
+        // 更新數值顯示
         overallValue.textContent = averageRating;
+        
+        console.log(`更新總評分: ${averageRating} (${validRatings} 個有效評分)`);
     }
 }
 
@@ -2267,7 +2370,9 @@ function initRatingSystem() {
                 if (ratingValue) {
                     ratingValue.textContent = rating + '.0';
                 }
-                updateOverallRating();
+                // 更新總評分（支援編輯頁面）
+                const sectionSelector = group.closest('#edit-section') ? '#edit-section' : '';
+                updateOverallRating(sectionSelector);
             });
 
             star.addEventListener('mouseover', function() {
@@ -2330,8 +2435,18 @@ function clearEditForm() {
     
     // 重置按鈕文字
     const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+    const publishBtn = document.querySelector('#edit-section .btn-publish');
+    
     if (saveDraftBtn) {
         saveDraftBtn.textContent = '儲存草稿';
+        // 移除舊的事件監聽器
+        saveDraftBtn.replaceWith(saveDraftBtn.cloneNode(true));
+    }
+    
+    if (publishBtn) {
+        publishBtn.textContent = '發布';
+        // 移除舊的事件監聽器
+        publishBtn.replaceWith(publishBtn.cloneNode(true));
     }
     
     // 清除當前編輯的草稿ID和文章ID
@@ -2399,13 +2514,132 @@ async function editPublishedPost(postId) {
             userId: post.userId,
             restaurantId: post.restaurantId
         };
+        window.currentEditingDraftId = null; // 清除草稿ID
+        window.currentEditingDraft = null; // 清除草稿資訊
         
         // 更新按鈕文字和事件處理
         const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
         if (saveDraftBtn) {
-            saveDraftBtn.textContent = '更新文章';
+            saveDraftBtn.textContent = '儲存成新草稿';
+            // 移除舊的事件監聽器
+            saveDraftBtn.replaceWith(saveDraftBtn.cloneNode(true));
+            // 添加新的事件監聽器
+            document.querySelector('#edit-section .btn-save-draft').addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                const imageData = collectImageData('#editorEdit');
+                const postData = {
+                    userId: window.currentEditingPost.userId,
+                    restaurantId: window.currentEditingPost.restaurantId,
+                    title: document.getElementById('postTitleEdit').value || '未命名草稿',
+                    content_json: imageData.processedHtmlContent || document.getElementById('editorEdit').innerHTML || '',
+                    status: 'draft',
+                    ratings: {
+                        environment_score: parseInt(document.querySelector('#edit-section .stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0'),
+                        service_score: parseInt(document.querySelector('#edit-section .stars[data-category="service"]')?.getAttribute('data-selected-rating') || '0'),
+                        taste_score: parseInt(document.querySelector('#edit-section .stars[data-category="taste"]')?.getAttribute('data-selected-rating') || '0'),
+                        price_score: parseInt(document.querySelector('#edit-section .stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
+                        overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
+                    },
+                    photoData: imageData.newImages, // 新圖片數據
+                    photos: imageData.existingPhotoIds, // 已存在的圖片ID
+                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                };
+
+                if (!postData.content_json) {
+                    alert('請至少填寫評論內容');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('http://localhost:8080/api/reviews', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(postData)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('後端錯誤回應:', errorText);
+                        throw new Error(`儲存草稿失敗: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('儲存新草稿成功:', result);
+                    alert('已儲存成新草稿');
+                    clearEditForm();
+                    loadDrafts();
+                    showSectionWrapper('drafts');
+                } catch (error) {
+                    console.error('儲存草稿時發生錯誤：', error);
+                    alert('儲存草稿失敗：' + error.message);
+                }
+            });
         }
         
+        // 添加更新文章按鈕
+        const updatePostBtn = document.querySelector('#edit-section .btn-publish');
+        if (updatePostBtn) {
+            updatePostBtn.textContent = '更新文章';
+            // 移除舊的事件監聽器
+            updatePostBtn.replaceWith(updatePostBtn.cloneNode(true));
+            // 添加新的事件監聽器
+            document.querySelector('#edit-section .btn-publish').addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                const imageData = collectImageData('#editorEdit');
+                const postData = {
+                    userId: window.currentEditingPost.userId,
+                    restaurantId: window.currentEditingPost.restaurantId,
+                    title: document.getElementById('postTitleEdit').value || '未命名文章',
+                    content_json: imageData.processedHtmlContent || document.getElementById('editorEdit').innerHTML || '',
+                    status: 'published',
+                    ratings: {
+                        environment_score: parseInt(document.querySelector('#edit-section .stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0'),
+                        service_score: parseInt(document.querySelector('#edit-section .stars[data-category="service"]')?.getAttribute('data-selected-rating') || '0'),
+                        taste_score: parseInt(document.querySelector('#edit-section .stars[data-category="taste"]')?.getAttribute('data-selected-rating') || '0'),
+                        price_score: parseInt(document.querySelector('#edit-section .stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0'),
+                        overall_score: parseFloat(document.querySelector('#edit-section .overall-rating .rating-value')?.textContent || '0.0')
+                    },
+                    photoData: imageData.newImages, // 新圖片數據
+                    photos: imageData.existingPhotoIds, // 已存在的圖片ID
+                    tags: document.getElementById('tagsEdit').value.split(',').map(tag => tag.trim()).filter(Boolean)
+                };
+
+                if (!postData.content_json) {
+                    alert('請至少填寫評論內容');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:8080/api/reviews/published/${postId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(postData)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('後端錯誤回應:', errorText);
+                        throw new Error(`更新文章失敗: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('更新文章成功:', result);
+                    alert('文章已更新');
+                    clearEditForm();
+                    loadPublishedPosts();
+                    showSectionWrapper('published');
+                } catch (error) {
+                    console.error('更新文章時發生錯誤：', error);
+                    alert('更新文章失敗：' + error.message);
+                }
+            });
+        }
     } catch (error) {
         console.error('載入文章時發生錯誤：', error);
         alert('載入文章失敗：' + error.message);
