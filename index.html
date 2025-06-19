@@ -28,6 +28,8 @@
     <script src="js/favoriteButton.js"></script>
     <script src="js/notificationService.js"></script>
     <script src="js/displayRestaurants.js"></script>
+    <script src="js/searchService.js"></script>
+    <script src="js/searchController.js"></script>
     <style>
         .modal {
             display: none;
@@ -932,6 +934,135 @@
             right: 15px !important;
             top: 10px !important;
         }
+
+        /* 搜尋欄樣式 */
+        .search-bar {
+            position: relative;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            display: none;
+            z-index: 10;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .clear-search-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+            color: #666;
+        }
+
+        .search-input {
+            padding-right: 35px !important;
+        }
+
+        /* 搜尋結果樣式 */
+        .search-tips {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 16px;
+            grid-column: 1 / -1;
+        }
+
+        .no-results i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .no-results p {
+            margin: 10px 0;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 16px;
+            grid-column: 1 / -1;
+        }
+
+        .loading-message i {
+            font-size: 24px;
+            color: #ff6b1a;
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 搜尋建議樣式 */
+        .suggestion-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 搜尋欄容器樣式 */
+        .search-section {
+            position: relative;
+        }
+
+        .input-container {
+            position: relative;
+        }
     </style>
 </head>
 
@@ -1343,17 +1474,21 @@
                 } else {
                     console.error('RestaurantModal 未定義或缺少 init 方法');
                 }
+                
+                // 初始化搜尋控制器
+                if (window.SearchController) {
+                    window.searchController = new SearchController();
+                    await window.searchController.init();
+                } else {
+                    console.error('SearchController 未定義');
+                }
+                
                 // 初始化地圖和餐廳數據
-
                 window.mapInit = new MapInit();
                 await window.mapInit.init();
 
-
                 // 設置餐廳卡片點擊事件
                 setTimeout(setupCardClickEvents, 1000);
-
-
-
 
             } catch (error) {
                 console.error('服務初始化失敗:', error);

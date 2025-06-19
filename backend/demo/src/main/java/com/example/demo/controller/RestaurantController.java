@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.RestaurantListDTO;
-import com.example.demo.entity.GoogleRestaurant;
 import com.example.demo.service.RestaurantService;
 
 @RestController
@@ -27,12 +26,12 @@ public Page<RestaurantListDTO> getAllRestaurant(
     @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurants(pageable);
+    return restaurantService.getRestaurantsWithReviews(pageable);
 }
 
 @GetMapping("/{placeId}")
-public GoogleRestaurant getRestaurantByPlaceId(@PathVariable String placeId) {
-	return restaurantService.getRestaurantByPlaceId(placeId);
+public RestaurantListDTO getRestaurantByPlaceId(@PathVariable String placeId) {
+	return restaurantService.getRtoLDRestaurantDTOByPlaceId(placeId);
 }
 
 @GetMapping("/list")
@@ -46,6 +45,6 @@ public Page<RestaurantListDTO> getRestaurantsBySort(
     @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurantsBySort(sortBy, pageable);
+    return restaurantService.getRestaurantsBySortWithReviews(sortBy, pageable);
 }
 }

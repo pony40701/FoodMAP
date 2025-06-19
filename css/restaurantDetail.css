@@ -795,9 +795,14 @@
   background-color: #fff;
   border: 1px solid #e6e6e6;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible; /* 改為 visible 避免內容被裁切造成淡出效果 */
   margin-bottom: 24px;
   height: auto; /* 讓高度自適應內容 */
+  /* 確保沒有視覺效果造成淡出 */
+  box-shadow: none;
+  filter: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .map-title {
@@ -811,14 +816,46 @@
 
 .map-container {
   padding: 16px;
+  /* 確保容器沒有造成淡出效果 */
+  background: #fff;
+  box-shadow: none;
+  filter: none;
+  opacity: 1;
+  overflow: visible; /* 確保內容不被裁切 */
 }
 
 /* Google Maps JavaScript API 地圖容器樣式 */
 #map {
   width: 100%;
-  height: 200px; /* 設定一個高度，您可以根據需要調整 */
+  height: 400px; /* 將高度加高一倍，從 200px 改為 400px */
   border-radius: 4px;
   margin-bottom: 16px;
+  /* 移除可能的淡出效果 */
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+  /* 確保地圖完全不透明 */
+  background: #fff;
+  /* 清除可能的漸層背景 */
+  background-image: none !important;
+}
+
+/* 確保 Leaflet 地圖容器沒有淡出效果 */
+#map .leaflet-container {
+  background: #fff !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 移除 Leaflet 可能的陰影或淡出效果 */
+#map .leaflet-control-container,
+#map .leaflet-tile,
+#map .leaflet-tile-pane {
+  filter: none !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
 }
 
 .static-map {
@@ -999,6 +1036,147 @@
 
 .copy-link-btn:hover {
   background-color: #ddd;
+}
+
+/* 路線規劃彈出視窗樣式 */
+.directions-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.directions-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.directions-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.directions-modal-overlay.show .directions-modal-content {
+  transform: scale(1);
+}
+
+.directions-modal-content h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.directions-modal-content p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.directions-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.directions-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e6e6e6;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.directions-input:focus {
+  border-color: #FF6B35;
+}
+
+.directions-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.directions-btn-cancel,
+.directions-btn-confirm {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 120px;
+}
+
+.directions-btn-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.directions-btn-cancel:hover {
+  background-color: #e6e6e6;
+  color: #333;
+}
+
+.directions-btn-confirm {
+  background-color: #FF6B35;
+  color: #fff;
+}
+
+.directions-btn-confirm:hover {
+  background-color: #e55a2b;
+}
+
+.directions-btn-confirm:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .directions-modal-content {
+    padding: 24px 20px;
+    max-width: 350px;
+  }
+  
+  .directions-modal-content h3 {
+    font-size: 18px;
+  }
+  
+  .directions-input {
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+  
+  .directions-buttons {
+    flex-direction: column;
+  }
+  
+  .directions-btn-cancel,
+  .directions-btn-confirm {
+    max-width: none;
+  }
 }
 
 /* 響應式調整 */
@@ -1926,4 +2104,134 @@
 .review-text {
   padding-left: 68px;
   margin-top: 6px;
+}
+
+/* Google 評論區塊樣式 - 2025年1月新增 */
+.reviews-container .no-reviews {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.reviews-container .review-item {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.reviews-container .review-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.reviews-container .review-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.reviews-container .reviewer-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.reviews-container .reviewer-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.reviews-container .reviewer-details {
+  flex: 1;
+}
+
+.reviews-container .reviewer-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.reviews-container .review-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reviews-container .review-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviews-container .review-rating .stars {
+  display: flex;
+  gap: 2px;
+}
+
+.reviews-container .review-rating .star {
+  font-size: 14px;
+}
+
+.reviews-container .review-rating .star.filled {
+  color: #ffd700;
+}
+
+.reviews-container .review-rating .star.empty {
+  color: #ddd;
+}
+
+.reviews-container .review-rating .rating-score {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.reviews-container .review-date {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.reviews-container .review-content {
+  margin-top: 15px;
+}
+
+.reviews-container .review-content .review-text {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.95rem;
+  padding-left: 0; /* 覆蓋原本的左邊距 */
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .reviews-container .review-item {
+    padding: 15px;
+  }
+  
+  .reviews-container .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .reviews-container .reviewer-name {
+    font-size: 1rem;
+  }
+  
+  .reviews-container .review-content .review-text {
+    font-size: 0.9rem;
+  }
 } 
