@@ -12,8 +12,9 @@ public class RestaurantPhoto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Lob
+    @Column(name = "image", columnDefinition = "LONGBLOB")
+    private byte[] image;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")

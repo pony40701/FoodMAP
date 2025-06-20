@@ -7,12 +7,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
 
 import com.example.demo.dto.MerchantRestaurantDTO;
 import com.example.demo.repository.MerchantAccountRepository;
+import com.example.demo.repository.MerchantProfileRepository;
 import com.example.demo.security.MerchantJwtService;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
+import com.example.demo.entity.MerchantProfile;
 import com.example.demo.repository.RestaurantPhotoRepository;
 import com.example.demo.repository.LocalRestaurantRepository;
 
@@ -44,6 +49,7 @@ public class MerchantRestaurantController {
     private final MerchantJwtService merchantJwtService;
     private final LocalRestaurantRepository restaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
+    private final MerchantProfileRepository merchantProfileRepository;
 
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
@@ -104,11 +110,15 @@ public class MerchantRestaurantController {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new RuntimeException("Restaurant not found"));
 
-        List<String> photoUrls = restaurant.getPhotos().stream()
-                .map(RestaurantPhoto::getImageUrl)
-                .collect(Collectors.toList());
+        List<String> photoBase64List = new ArrayList<>();
+        for (RestaurantPhoto photo : restaurant.getPhotos()) {
+            if (photo.getImage() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(photo.getImage());
+                photoBase64List.add("data:image/jpeg;base64," + base64Image);
+            }
+        }
 
-        return ResponseEntity.ok(photoUrls);
+        return ResponseEntity.ok(photoBase64List);
     }
 
     @PutMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -135,17 +145,9 @@ public class MerchantRestaurantController {
 
         try {
             // 處理頭像上傳
-            String avatarUrl = null;
+            byte[] avatarBytes = null;
             if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
-                String fileName = UUID.randomUUID().toString() + "_" + request.getAvatar().getOriginalFilename();
-                Path uploadPath = Paths.get("uploads");
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-                Path filePath = uploadPath.resolve(fileName);
-                Files.copy(request.getAvatar().getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                avatarUrl = "/uploads/" + fileName;
-                logger.info("頭像上傳成功: {}", avatarUrl);
+                avatarBytes = request.getAvatar().getBytes();
             }
 
             // 更新資料庫
@@ -154,9 +156,20 @@ public class MerchantRestaurantController {
                 request.getName(),
                 request.getEmail(),
                 request.getPhoneNumber(),
-                request.getAddress(),
-                avatarUrl
+                request.getAddress()
             );
+
+            // 如果有新的頭像，更新 MerchantProfile
+            if (avatarBytes != null) {
+                MerchantProfile profile = merchantProfileRepository.findById(restaurantId)
+                    .orElseGet(() -> {
+                        MerchantProfile newProfile = new MerchantProfile();
+                        newProfile.setId(restaurantId);
+                        return newProfile;
+                    });
+                profile.setAvatar(avatarBytes);
+                merchantProfileRepository.save(profile);
+            }
 
             if (updatedRows > 0) {
                 logger.info("基本資料更新成功");
@@ -171,9 +184,9 @@ public class MerchantRestaurantController {
                 logger.warn("找不到要更新的餐廳資料");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要更新的餐廳資料");
             }
-        } catch (Exception e) {
-            logger.error("更新基本資料時發生錯誤", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新基本資料失敗: " + e.getMessage());
+        } catch (IOException e) {
+            logger.error("處理頭像時發生錯誤", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "處理頭像時發生錯誤");
         }
     }
 
