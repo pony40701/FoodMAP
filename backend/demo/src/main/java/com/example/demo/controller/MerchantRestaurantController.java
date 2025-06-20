@@ -112,8 +112,8 @@ public class MerchantRestaurantController {
 
         List<String> photoBase64List = new ArrayList<>();
         for (RestaurantPhoto photo : restaurant.getPhotos()) {
-            if (photo.getImage() != null) {
-                String base64Image = Base64.getEncoder().encodeToString(photo.getImage());
+            if (photo.getImageUrl() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(photo.getImageUrl());
                 photoBase64List.add("data:image/jpeg;base64," + base64Image);
             }
         }
@@ -167,7 +167,7 @@ public class MerchantRestaurantController {
                         newProfile.setId(restaurantId);
                         return newProfile;
                     });
-                profile.setAvatar(avatarBytes);
+                profile.setAvatarUrl(avatarBytes);
                 merchantProfileRepository.save(profile);
             }
 
