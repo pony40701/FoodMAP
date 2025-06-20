@@ -681,15 +681,50 @@ input[type="text"]::placeholder {
     border: 1px solid #ddd;
     border-radius: 0 0 4px 4px;
     background: white;
+    font-size: 16px;
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.3s ease;
     overflow-y: auto;
     line-height: 1.6;
     resize: none;
+    word-break: break-word;       /* 長英文、網址會換行 */
+    white-space: normal;          /* 保證會自動換行 */
+    overflow-wrap: break-word;    /* 舊瀏覽器支援（等同 word-break） */
 }
 
 .rich-editor:focus {
-    outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 5px rgba(255, 107, 26, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.1);
+}
+
+/* 空段落樣式 - 讓空段落即使沒有文字也能看見游標 */
+#editor p:empty::before,
+#editor div:empty::before,
+#editorEdit p:empty::before,
+#editorEdit div:empty::before,
+.rich-editor p:empty::before,
+.rich-editor div:empty::before {
+    content: "\200B"; /* zero-width space */
+    display: inline-block;
+}
+
+/* 確保編輯器內的空段落有最小高度 */
+#editor p:empty,
+#editor div:empty,
+#editorEdit p:empty,
+#editorEdit div:empty,
+.rich-editor p:empty,
+.rich-editor div:empty {
+    min-height: 1.2em;
+}
+
+/* 工具列樣式 */
+.toolbar-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
 /* 移除不必要的工具列分隔線 */

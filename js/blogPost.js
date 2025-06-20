@@ -33,6 +33,46 @@ function initEditor() {
                     break;
             }
         }
+        
+        // 處理 Enter 鍵，為空段落添加零寬空白字元
+        if (e.key === 'Enter') {
+            setTimeout(() => {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0) {
+                    const range = sel.getRangeAt(0);
+                    const container = range.startContainer;
+                    
+                    // 檢查是否為空段落或只包含 <br> 的段落
+                    if (container.nodeType === 1) {
+                        const element = container;
+                        if (element.innerHTML === '' || element.innerHTML === '<br>') {
+                            // 添加零寬空白字元
+                            element.innerHTML = '\u200B';
+                            
+                            // 將游標移動到零寬空白字元後面
+                            const newRange = document.createRange();
+                            newRange.setStart(element.firstChild, 1);
+                            newRange.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(newRange);
+                            
+                            console.log('為空段落添加零寬空白字元');
+                        }
+                    } else if (container.nodeType === 3) {
+                        // 如果是文字節點且為空
+                        const parent = container.parentNode;
+                        if (container.textContent === '' && parent.innerHTML === '\u200B') {
+                            // 將游標移動到零寬空白字元後面
+                            const newRange = document.createRange();
+                            newRange.setStart(container, 1);
+                            newRange.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(newRange);
+                        }
+                    }
+                }
+            }, 0);
+        }
     });
 
     // 處理圖片拖放
@@ -52,6 +92,12 @@ function initEditor() {
         const files = e.dataTransfer.files;
         handleImageFiles(files);
     });
+    
+    // 初始化時為編輯器添加零寬空白字元（如果編輯器為空）
+    if (editor.innerHTML === '' || editor.innerHTML === '<br>') {
+        editor.innerHTML = '\u200B';
+        console.log('初始化編輯器：添加零寬空白字元');
+    }
 }
 
 // 初始化評分系統
