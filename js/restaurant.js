@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     avatarPreview.src = e.target.result;
+                    document.querySelector('.avatar-img').src = e.target.result;
                     ('頭像已更新');
                 };
                 reader.readAsDataURL(file);
@@ -319,16 +320,15 @@ async function loadRestaurantInfo() {
 }
 
 // 更新所有頭像
-function updateAvatars(avatarUrl) {
+function updateAvatars(avatarData) {
     ("開始更新頭像");
-    ("原始頭像URL:", avatarUrl);
+    ("頭像數據:", avatarData);
 
     // 檢查是否為預設頭像
-    const isDefaultAvatar = avatarUrl === 'images/default-avatar.png';
+    const isDefaultAvatar = avatarData === 'images/default-avatar.png';
     
-    // 如果是預設頭像，直接使用路徑；如果不是，確保路徑正確
-    const processedAvatarUrl = isDefaultAvatar ? avatarUrl : (avatarUrl.startsWith('/') ? avatarUrl : '/' + avatarUrl);
-    ("處理後的頭像URL:", processedAvatarUrl);
+    // 如果是預設頭像，直接使用路徑；如果不是，使用 base64 數據
+    const avatarSrc = isDefaultAvatar ? avatarData : avatarData;
 
     // 更新所有頭像元素
     const avatarElements = [
@@ -339,17 +339,14 @@ function updateAvatars(avatarUrl) {
     avatarElements.forEach((avatarElement, index) => {
         if (avatarElement) {
             (`更新頭像元素 ${index}:`, avatarElement);
-            (`當前頭像元素 ${index} 的 src:`, avatarElement.src);
-            avatarElement.src = processedAvatarUrl;
-            (`設置後頭像元素 ${index} 的 src:`, avatarElement.src);
+            avatarElement.src = avatarSrc;
 
             // 監聽圖片載入事件
             avatarElement.onload = () => {
-                (`頭像 ${index} 圖片載入成功:`, processedAvatarUrl);
+                (`頭像 ${index} 圖片載入成功`);
             };
             avatarElement.onerror = (error) => {
                 console.error(`頭像 ${index} 圖片載入失敗:`, error);
-                console.error(`頭像 ${index} 失敗的URL:`, processedAvatarUrl);
                 // 載入失敗時使用預設圖片
                 avatarElement.src = "images/default-avatar.png";
             };
@@ -377,8 +374,8 @@ async function loadRestaurantPhotos(restaurantId) {
             throw new Error(`獲取餐廳照片失敗: ${response.status}`);
         }
 
-        const photoUrls = await response.json();
-        ("獲取到的照片 URLs:", photoUrls);
+        const photoBase64List = await response.json();
+        ("獲取到的照片數據:", photoBase64List.length);
 
         // 清空現有的照片（除了新增照片按鈕）
         const photoGrid = document.querySelector('.photo-grid');
@@ -387,16 +384,11 @@ async function loadRestaurantPhotos(restaurantId) {
         photoGrid.appendChild(addPhotoButton);
 
         // 添加所有照片
-        photoUrls.forEach(url => {
-            // 確保路徑以斜線開頭
-            const imageUrl = url.startsWith('/') ? url.substring(1) : url;
-            ("原始照片URL:", url);
-            ("處理後的照片URL:", imageUrl);
-            
+        photoBase64List.forEach(base64Image => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
             photoItem.innerHTML = `
-                <img src="${imageUrl}" alt="餐廳照片" onerror="this.src='images/default-restaurant.jpg'">
+                <img src="${base64Image}" alt="餐廳照片" onerror="this.src='images/default-restaurant.jpg'">
                 <div class="photo-overlay">
                     <button class="delete-photo"><i class="fas fa-trash"></i></button>
                 </div>
