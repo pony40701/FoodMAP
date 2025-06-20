@@ -16,7 +16,7 @@ public interface MerchantAccountRepository extends JpaRepository<MerchantAccount
 
     @Query(value = "SELECT r.name, r.email, r.phone_number, r.address, " +
            "r.business_hours, r.cuisine_type, r.payment_methods, r.description, " +
-           "CASE WHEN mp.avatar IS NOT NULL THEN CONCAT('data:image/jpeg;base64,', TO_BASE64(mp.avatar)) " +
+           "CASE WHEN mp.avatar_url IS NOT NULL THEN CONCAT('data:image/jpeg;base64,', TO_BASE64(mp.avatar_url)) " +
            "ELSE 'images/default-avatar.png' END as avatar_url " +
            "FROM restaurants r " +
            "JOIN merchant_accounts ma ON r.id = ma.restaurant_id " +
