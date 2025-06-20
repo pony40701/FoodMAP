@@ -19,6 +19,10 @@ public class MerchantProfile {
     @Column(name = "description")
     private String description;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "merchant_id")
