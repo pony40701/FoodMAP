@@ -297,111 +297,28 @@ async function loadFavorites(type = 'stores') {
         }
     } else if (type === 'reviews') {
         // 顯示載入中狀態
-        reviewsContainer.innerHTML = '<div class="loading">載入收藏評論中...</div>';
-        
+        reviewsContainer.innerHTML = '<div class="loading">載入收藏心得中...</div>';
+
         try {
-            // 從API獲取收藏評論列表
-            const response = await fetch(`${API_BASE_URL}/user/${userId}/favorites?type=review`);
-            
+            // 從 API 獲取收藏心得列表
+            const response = await fetch(`${API_BASE_URL}/users/${userId}/favorites/reviews`);
+
             if (!response.ok) {
                 throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
             }
-            
-            const data = await response.json();
-            ('從API獲取的收藏評論資料:', data);
-            
-            // 檢查是否有收藏評論
-            if (!data || !data.favorites || data.favorites.length === 0) {
-                reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何評論</div>';
+
+            const reviews = await response.json();
+
+            if (reviews.length === 0) {
+                reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何心得</div>';
                 return;
             }
-            
-            // 處理收藏評論數據
-            const favoriteReviews = data.favorites.map(item => {
-                // 檢查是否已經包含評論詳情
-                if (item.review) {
-                    return {
-                        id: item.target_id,
-                        reviewId: item.target_id,
-                        author: item.review.author || item.review.user_name || '匿名',
-                        storeName: item.review.restaurant_name || '未知餐廳',
-                        content: item.review.content,
-                        rating: item.review.rating || 5,
-                        date: new Date(item.review.created_at || item.favorited_at).toLocaleDateString()
-                    };
-                }
-                
-                // 如果API只返回基本ID信息
-                return {
-                    id: item.target_id,
-                    reviewId: item.target_id,
-                    author: '載入中...',
-                    storeName: '載入中...',
-                    content: '載入中...',
-                    rating: 0,
-                    date: new Date(item.favorited_at).toLocaleDateString()
-                };
-            });
-            
-            // 渲染收藏評論列表
-            renderFavoriteReviews(favoriteReviews);
-            
-            // 如果需要獲取評論詳情
-            const needDetailsReviews = favoriteReviews.filter(review => review.author === '載入中...');
-            if (needDetailsReviews.length > 0) {
-                ('需要獲取評論詳情的項目數:', needDetailsReviews.length);
-                
-                // 為每個評論獲取詳情
-                const promises = needDetailsReviews.map(async (review) => {
-                    try {
-                        const detailResponse = await fetch(`${API_BASE_URL}/reviews/${review.id}`);
-                        if (detailResponse.ok) {
-                            const detailData = await detailResponse.json();
-                            // 更新評論數據
-                            review.author = detailData.author || detailData.user_name || '匿名';
-                            review.storeName = detailData.restaurant_name || '未知餐廳';
-                            review.content = detailData.content;
-                            review.rating = detailData.rating || 5;
-                            review.date = new Date(detailData.created_at || review.date).toLocaleDateString();
-                        }
-                    } catch (detailError) {
-                        console.error(`獲取評論 ${review.id} 詳情失敗:`, detailError);
-                    }
-                });
-                
-                // 等待所有詳情獲取完成
-                await Promise.all(promises);
-                
-                // 重新渲染收藏評論列表
-                renderFavoriteReviews(favoriteReviews);
-            }
-            
-            // 存儲最新的收藏評論到localStorage作為快取
-            localStorage.setItem('favoriteReviews', JSON.stringify(favoriteReviews));
-            
+
+            // 渲染收藏的心得
+            renderFavoriteReviews(reviews);
         } catch (error) {
-            console.error('載入收藏評論失敗:', error);
-            
-            // 嘗試從localStorage讀取快取資料
-            try {
-                const cachedData = localStorage.getItem('favoriteReviews');
-                if (cachedData) {
-                    const favoriteReviews = JSON.parse(cachedData);
-                    ('使用快取的收藏評論資料:', favoriteReviews);
-                    
-                    if (favoriteReviews.length > 0) {
-                        renderFavoriteReviews(favoriteReviews);
-                        reviewsContainer.insertAdjacentHTML('beforeend', 
-                            '<div class="cache-notice">顯示的是快取資料，連線到伺服器失敗</div>');
-                        return;
-                    }
-                }
-            } catch (cacheError) {
-                console.error('讀取快取評論資料失敗:', cacheError);
-            }
-            
-            reviewsContainer.innerHTML = `<div class="error">載入收藏評論失敗，請稍後再試</div>
-                <div style="margin-top: 20px;">錯誤詳情: ${error.message || '未知錯誤'}</div>`;
+            console.error('獲取收藏心得失敗:', error);
+            reviewsContainer.innerHTML = `<div class="error">無法載入收藏心得: ${error.message}</div>`;
         }
     }
 }
@@ -607,59 +524,78 @@ async function renderFavoriteStores(stores) {
 
 // 渲染收藏評論列表
 function renderFavoriteReviews(reviews) {
-    const reviewsContainer = document.querySelector('.favorites-reviews');
-    
-    if (!reviewsContainer) {
-        console.error('找不到收藏評論容器');
-        return;
-    }
-    
+    const container = document.querySelector('.favorites-reviews');
+    if (!container) return;
+
     if (!reviews || reviews.length === 0) {
-        reviewsContainer.innerHTML = '<div class="no-data">還沒有收藏任何心得</div>';
+        container.innerHTML = '<div class="no-data">還沒有收藏任何心得</div>';
         return;
     }
-    
-    reviewsContainer.innerHTML = reviews.map(review => {
-        // 處理使用者頭像 - 使用後端資料
-        let avatarUrl = '';
-        const userId = review.userId || review.user_id;
-        
-        if (review.avatar || review.userAvatar || review.avatarUrl) {
-            avatarUrl = review.avatar || review.userAvatar || review.avatarUrl;
-        } else if (userId) {
-            // 使用後端API獲取用戶頭像
-            avatarUrl = `${window.API_BASE_URL || 'http://localhost:8080/api'}/users/${userId}/avatar`;
-        }
-        
-        // 如果沒有有效的頭像URL，使用預設頭像
-        if (!avatarUrl) {
-            avatarUrl = `${window.API_BASE_URL || 'http://localhost:8080/api'}/default-avatar`;
-        }
-        
+
+    const html = reviews.map(review => {
+        const imageUrl = review.image ? `data:image/jpeg;base64,${review.image}` : '/images/no-image.jpg';
+        const authorAvatar = review.authorAvatar || '/images/default-avatar.png';
+        const excerpt = extractExcerpt(review.contentJson, 50) || '點擊查看更多...';
+
         return `
-        <div class="review-card">
-            <div class="review-header">
-                <img src="${avatarUrl}" 
-                     alt="${review.author || review.reviewerName || review.userName || '匿名'}" 
-                     class="reviewer-avatar" 
-                     onerror="this.onerror=null; this.src='${window.API_BASE_URL}/default-avatar';">
-                <div>
-                    <div class="reviewer-name">${review.author || review.reviewerName || review.userName || '匿名'}</div>
-                    <div class="store-name">${review.storeName || review.restaurantName}</div>
+            <article class="food-card" data-id="${review.reviewId}" data-date="${review.reviewDate}" data-views="${review.viewCount}" data-category="${review.cuisineType}">
+                <div class="food-image">
+                    <img src="${imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
+                    <button class="favorite-btn" title="取消收藏" onclick="removeFavoriteReview(${review.reviewId})">
+                        <i class="fas fa-heart"></i>
+                    </button>
                 </div>
-                <span class="favorite-tag">已收藏</span>
-            </div>
-            <div class="review-content">${review.content}</div>
-            <div class="review-footer">
-                <div class="review-rating">${'★'.repeat(review.rating)}</div>
-                <div class="review-date">${review.date || new Date(review.time || review.createdAt || Date.now()).toLocaleDateString()}</div>
-            </div>
-            <div class="review-actions">
-                <button onclick="viewReviewDetail(${review.id || review.reviewId})" class="btn-secondary">查看詳情</button>
-                <button onclick="removeFavoriteReview(${review.id || review.reviewId})" class="btn-secondary">取消收藏</button>
-            </div>
-        </div>
-    `}).join('');
+                <div class="food-content">
+                    <div class="user-info">
+                        <img src="${authorAvatar}" alt="用戶頭像" class="avatar">
+                        <div class="user-details">
+                            <span class="username">${review.authorName}</span>
+                            <div class="rating">${generateStars(review.authorRating)}</div>
+                        </div>
+                    </div>
+                    <div class="restaurant-info">
+                        <h2>${review.reviewTitle}</h2>
+                        <div class="restaurant-name">
+                            <i class="fas fa-store"></i>
+                            <span>${review.restaurantName}</span>
+                        </div>
+                    </div>
+                    <p class="excerpt">${excerpt}</p>
+                    <div class="meta">
+                        <div class="meta-left">
+                            <span class="date">${new Date(review.reviewDate).toISOString().split('T')[0]}</span>
+                            <span class="category">${review.cuisineType}</span>
+                        </div>
+                        <span class="views">${review.viewCount} 次瀏覽</span>
+                    </div>
+                </div>
+            </article>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+
+    // 重新綁定事件
+    setupCardClickEvents();
+}
+
+function extractExcerpt(contentJson, maxLength = 50) {
+    if (!contentJson) return '';
+    let text = '';
+    try {
+        const content = JSON.parse(contentJson);
+        if (content && content.blocks && content.blocks.length > 0) {
+            for (const block of content.blocks) {
+                if (block.type === 'paragraph' && block.data && block.data.text) {
+                    text += block.data.text + ' ';
+                }
+            }
+        }
+    } catch (error) {
+        text = contentJson;
+    }
+    const plainText = text.replace(/<[^>]*>/g, '').trim();
+    return plainText.length > maxLength ? plainText.substring(0, maxLength) + '...' : plainText;
 }
 
 // 使用 Google Places API 獲取收藏店家的詳細資訊
@@ -899,66 +835,43 @@ function showToast(message, type = 'info') {
 
 // 移除收藏評論
 async function removeFavoriteReview(reviewId) {
-    if (!reviewId) {
-        console.error('移除收藏評論失敗: 缺少評論 ID');
-        showToast('無法移除收藏評論: 缺少評論 ID');
-        return;
+    const confirmed = await showConfirmationModal(
+        '您確定要移除這篇收藏心得嗎？',
+        '移除收藏'
+    );
+
+    if (!confirmed) {
+        return; // 使用者點擊取消
     }
-    
-    // 獲取用戶ID
+
     const userId = localStorage.getItem('userId');
     if (!userId) {
-        console.error('移除收藏評論失敗: 未找到用戶ID');
-        showToast('請先登入後再操作');
+        showToast('請先登入', 'error');
         return;
     }
-    
+
     try {
-        // 先顯示載入狀態
-        const removeBtn = document.querySelector(`button[onclick="removeFavoriteReview(${reviewId})"]`);
-        if (removeBtn) {
-            const originalText = removeBtn.innerHTML;
-            removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 移除中...';
-            removeBtn.disabled = true;
-        }
-        
-        // 發送API請求移除收藏評論
-        const response = await fetch(`${API_BASE_URL}/user/${userId}/favorites`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                target_id: reviewId,
-                target_type: 'review'
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
-        }
-        
-        // 同時更新localStorage的快取資料
-        const storedReviews = localStorage.getItem('favoriteReviews');
-        if (storedReviews) {
-            let favoriteReviews = JSON.parse(storedReviews);
-            
-            // 過濾掉要移除的評論
-            favoriteReviews = favoriteReviews.filter(review => {
-                const id = review.id || review.reviewId;
-                return id != reviewId; // 使用!=而非!==以處理數字和字符串的比較
+        const response = await fetch(`${API_BASE_URL}/users/favorite/review/${userId}/${reviewId}`, {
+            method: 'DELETE'
             });
-            
-            // 保存回localStorage
-            localStorage.setItem('favoriteReviews', JSON.stringify(favoriteReviews));
+
+            if (!response.ok) {
+            throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
+            }
+
+        const body = await response.json();
+        if (!body.success) {
+            throw new Error(body.message || '移除收藏評論失敗');
         }
-        
-        // 顯示成功訊息
-        showToast('已從收藏評論中移除');
-        
-        // 重新載入收藏評論列表
-        await loadFavorites('reviews');
-    } catch (error) {
+            
+        showToast('已取消收藏心得', 'success');
+                // 從 DOM 中移除卡片
+        const card = document.querySelector(`.food-card[data-id="${reviewId}"]`);
+        if (card) {
+            card.remove();
+        }
+        // 可以在此處更新收藏計數
+        } catch (error) {
         console.error('移除收藏評論失敗:', error);
         
         // 回復按鈕狀態
@@ -994,6 +907,56 @@ async function removeFavoriteReview(reviewId) {
             console.error('從本地快取移除收藏評論失敗:', localError);
         }
     }
+}
+
+/**
+ * 顯示自訂確認彈窗
+ * @param {string} message - 要顯示的訊息
+ * @param {string} title - 彈窗標題
+ * @returns {Promise<boolean>} - 回傳一個 Promise，使用者點擊確定時解析為 true，否則為 false
+ */
+function showConfirmationModal(message, title = '確認操作') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const modalTitle = document.getElementById('confirmModalTitle');
+        const modalMessage = document.getElementById('confirmModalMessage');
+        const okButton = document.getElementById('confirmModalOk');
+        const cancelButton = document.getElementById('confirmModalCancel');
+
+        if (!modal || !modalTitle || !modalMessage || !okButton || !cancelButton) {
+            console.error('找不到確認彈窗的必要元素');
+            return resolve(false); // 避免 Promise 卡住
+        }
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+
+        // 為了避免重複綁定事件，先複製再取代按鈕
+        const newOkButton = okButton.cloneNode(true);
+        okButton.parentNode.replaceChild(newOkButton, okButton);
+        
+        const newCancelButton = cancelButton.cloneNode(true);
+        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+
+        newOkButton.onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+        };
+
+        newCancelButton.onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+
+        // 點擊背景關閉
+        modal.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                resolve(false);
+            }
+        };
+    });
 }
 
 // 查看餐廳詳情
@@ -1807,16 +1770,18 @@ function updateUserDisplay(userData) {
     // 更新用戶頭像 - 檢查 image_url 和 avatar_url
     const userAvatarImg = document.querySelector('.avatar-img');
     if (userAvatarImg) {
-        const avatarUrl = userData.avatar_url;
-        
-        
-        if (avatarUrl) {
-            userAvatarImg.src = avatarUrl;  // 直接使用返回的 base64 URL
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            userAvatarImg.src = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
             userAvatarImg.alt = userData.username || '會員頭像';
-            
+
+            userAvatarImg.onerror = function() {
+                this.onerror = null;
+                this.src = 'images/default-avatar.png';
+                this.alt = '預設頭像';
+            };
         } else {
-            
-            userAvatarImg.src = 'images/default-avatar.jpg';
+            userAvatarImg.src = 'images/default-avatar.png';
             userAvatarImg.alt = '預設頭像';
         }
     }

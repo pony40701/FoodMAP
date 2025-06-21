@@ -6,6 +6,7 @@
   <title>會員中心 - 食力派ChowCrew</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="css/userCenter.css">
+  <link rel="stylesheet" href="css/experienceList.css">
   <!-- 添加餐廳卡片相關的樣式 -->
   <link rel="stylesheet" href="css/food-categories.css">
   <link rel="stylesheet" href="css/restaurant-card-v2.css">
@@ -272,6 +273,18 @@
     </div>
   </div>
 
+  </div>
+
+  <!-- 確認對話框 -->
+  <div id="customConfirmModal" class="modal" style="display: none; justify-content: center; align-items: center;">
+    <div class="confirm-modal-content">
+        <h2 id="confirmModalTitle" class="confirm-modal-title"></h2>
+        <p id="confirmModalMessage" class="confirm-modal-message"></p>
+        <div class="confirm-modal-actions">
+            <button id="confirmModalCancel" class="btn-cancel">取消</button>
+            <button id="confirmModalOk" class="btn-confirm">確定</button>
+        </div>
+    </div>
   </div>
 
   <!-- 餐廳詳情彈窗 -->

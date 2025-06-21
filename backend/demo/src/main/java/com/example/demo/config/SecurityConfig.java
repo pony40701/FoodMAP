@@ -1,8 +1,8 @@
 package com.example.demo.config;
-import java.util.List;
 import java.util.Arrays;
-import java.util.Collections; // 如果你也用到了 Collections.emptyList()
-import org.springframework.context.annotation.Bean;
+import java.util.List;
+
+import org.springframework.context.annotation.Bean; // 如果你也用到了 Collections.emptyList()
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -39,7 +39,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("*"));
+
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
