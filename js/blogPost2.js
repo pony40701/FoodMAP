@@ -3,13 +3,31 @@ let editor;
 let isEditingPost = false; // 添加編輯模式標記
 let editingPostId = null; // 添加正在編輯的文章ID
 let savedRange = null; // 保存游標範圍
+let updateToolbarTimeout = null; // 防抖計時器
+
+// 防抖版本的 updateToolbarState
+function debouncedUpdateToolbarState() {
+    if (updateToolbarTimeout) {
+        clearTimeout(updateToolbarTimeout);
+    }
+    updateToolbarTimeout = setTimeout(() => {
+        updateToolbarState();
+        updateToolbarTimeout = null;
+    }, 10); // 10ms 的防抖延遲
+}
 
 // 保存當前游標範圍
 function saveRange() {
     const selection = window.getSelection();
     if (selection.rangeCount > 0) {
-        savedRange = selection.getRangeAt(0).cloneRange();
-        console.log('保存游標範圍');
+        const range = selection.getRangeAt(0);
+        const editor = document.getElementById('editor');
+        if (editor && editor.contains(range.commonAncestorContainer)) {
+            savedRange = range.cloneRange();
+            console.log('✅ 已保存游標範圍');
+        } else {
+            console.log('⚠️ 游標不在編輯器內，未保存');
+        }
     }
 }
 
@@ -19,10 +37,12 @@ function restoreRange() {
         const selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(savedRange);
-        console.log('還原游標範圍');
-        return true;
+        const editor = document.getElementById('editor');
+        if (editor) editor.focus(); // ✅ 還原後強制 focus
+        console.log('✅ 還原游標範圍');
+        return savedRange;
     }
-    return false;
+    return null;
 }
 
 // 頁面載入完成後執行
@@ -200,13 +220,36 @@ function initEditor() {
     initColorPicker();
 
     // 監聽選取範圍變化
-    document.addEventListener('selectionchange', updateToolbarState);
+    document.addEventListener('selectionchange', function() {
+        // 只有在編輯器內有選取範圍變化時才更新工具列
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const editor = document.getElementById('editor');
+            if (editor && editor.contains(range.commonAncestorContainer)) {
+                // ✅ [FIX] 檢查是否有選中的圖片容器，如果有則不觸發 updateToolbarState
+                // 因為圖片點擊事件會自己處理工具列更新
+                const selectedImageContainers = document.querySelectorAll('.image-container.selected');
+                if (selectedImageContainers.length === 0) {
+                    debouncedUpdateToolbarState();
+                } else {
+                    console.log('selectionchange: 檢測到選中的圖片容器，跳過 updateToolbarState');
+                    // ✅ [DEBUG] 添加調試信息
+                    console.log('selectionchange: 選中的圖片容器數量:', selectedImageContainers.length);
+                    console.log('selectionchange: 選中的圖片容器:', selectedImageContainers[0]?.className);
+                }
+            }
+        }
+    });
 
     // 監聽輸入事件
-    editor.addEventListener('input', updateToolbarState);
+    editor.addEventListener('input', debouncedUpdateToolbarState);
+
+    // 監聽 blur 事件以保存游標
+    editor.addEventListener('blur', saveRange);
 
     // 監聽鍵盤事件
-    editor.addEventListener('keyup', updateToolbarState);
+    editor.addEventListener('keyup', debouncedUpdateToolbarState);
     editor.addEventListener('keydown', function(e) {
         if (e.ctrlKey) {
             switch(e.key.toLowerCase()) {
@@ -222,6 +265,159 @@ function initEditor() {
                     e.preventDefault();
                     formatText('underline');
                     break;
+            }
+        }
+        
+        // ✅ [FIXED] 處理點擊圖片後按 Enter 的情況
+        if (e.key === 'Enter') {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                
+                // ✅ [DEBUG] 添加調試信息
+                console.log('Enter 鍵處理 - 調試信息:', {
+                    startContainer: range.startContainer.nodeType === 1 ? range.startContainer.tagName : 'TEXT_NODE',
+                    startContainerClass: range.startContainer.nodeType === 1 ? range.startContainer.className : 'N/A',
+                    startOffset: range.startOffset,
+                    collapsed: range.collapsed
+                });
+                
+                // ✅ [FIX] 檢查游標是否在圖片後面的文字節點中（優先處理）
+                if (range.startContainer.nodeType === 3) { // TEXT_NODE
+                    const parentElement = range.startContainer.parentNode;
+                    console.log('Enter 鍵處理 - 文字節點父元素:', {
+                        tagName: parentElement?.tagName,
+                        className: parentElement?.className,
+                        innerHTML: parentElement?.innerHTML?.substring(0, 50)
+                    });
+                    
+                    if (parentElement && parentElement.tagName === 'P') {
+                        const previousElement = parentElement.previousElementSibling;
+                        console.log('Enter 鍵處理 - 文字節點前一個元素:', {
+                            tagName: previousElement?.tagName,
+                            className: previousElement?.className,
+                            isImageWrapper: previousElement?.classList.contains('image-wrapper')
+                        });
+                        
+                        if (previousElement && previousElement.classList.contains('image-wrapper')) {
+                            // 游標在圖片後面的段落中的文字節點，按 Enter 創建新段落
+                            e.preventDefault();
+                            
+                            const newParagraph = document.createElement('p');
+                            newParagraph.innerHTML = '&#8203;'; // 零寬空白字元
+                            
+                            // 將新段落插入到當前段落後面
+                            parentElement.parentNode.insertBefore(newParagraph, parentElement.nextSibling);
+                            
+                            // 將游標移動到新段落中
+                            const newRange = document.createRange();
+                            newRange.setStart(newParagraph, 0);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                            
+                            console.log('✅ 已處理在圖片後面文字節點中按 Enter 的情況');
+                            return; // 阻止執行後續的 Enter 處理邏輯
+                        }
+                    }
+                }
+                
+                // 更穩固的判斷：只要游標在圖片容器內，就進行處理
+                const container = range.commonAncestorContainer;
+                
+                // ✅ [FIX] 更精確地檢測游標是否真的在圖片容器內
+                let imageWrapper = null;
+                let isInsideImageContainer = false;
+                
+                if (container.nodeType === 1) {
+                    // 如果容器是元素節點，檢查它是否是圖片容器或其子元素
+                    if (container.classList.contains('image-wrapper') || 
+                        container.classList.contains('image-container') ||
+                        container.classList.contains('resize-handle')) {
+                        imageWrapper = container.closest('.image-wrapper');
+                        isInsideImageContainer = true;
+                    }
+                } else if (container.nodeType === 3) {
+                    // 如果容器是文字節點，檢查其父元素
+                    const parentElement = container.parentNode;
+                    if (parentElement && (
+                        parentElement.classList.contains('image-wrapper') || 
+                        parentElement.classList.contains('image-container') ||
+                        parentElement.classList.contains('resize-handle'))) {
+                        imageWrapper = parentElement.closest('.image-wrapper');
+                        isInsideImageContainer = true;
+                    }
+                }
+                
+                console.log('Enter 鍵處理 - 圖片容器檢測:', {
+                    containerType: container.nodeType === 1 ? 'ELEMENT' : 'TEXT_NODE',
+                    containerClass: container.nodeType === 1 ? container.className : 'N/A',
+                    isInsideImageContainer: isInsideImageContainer,
+                    imageWrapper: imageWrapper ? 'found' : 'not found'
+                });
+
+                if (isInsideImageContainer && imageWrapper) {
+                    e.preventDefault();
+                    
+                    const newParagraph = document.createElement('p');
+                    newParagraph.innerHTML = '&#8203;'; // 零寬空白字元，確保游標可以定位
+                    
+                    // 將新段落插入到 image-wrapper 的後面
+                    imageWrapper.parentNode.insertBefore(newParagraph, imageWrapper.nextSibling);
+                    
+                    // 將游標移動到新段落中
+                    const newRange = document.createRange();
+                    newRange.setStart(newParagraph, 0);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                    
+                    console.log('✅ 已處理在圖片上按 Enter 的情況');
+                    return; // 阻止執行後續的 Enter 處理邏輯
+                }
+                
+                // ✅ [FIX] 檢查游標是否在圖片後面的空段落中
+                const currentElement = range.startContainer.nodeType === 1 ? 
+                    range.startContainer : range.startContainer.parentNode;
+                
+                console.log('Enter 鍵處理 - 當前元素:', {
+                    tagName: currentElement?.tagName,
+                    className: currentElement?.className,
+                    innerHTML: currentElement?.innerHTML?.substring(0, 50)
+                });
+                
+                // ✅ [FIX] 檢查游標是否在圖片後面的段落中（包括文字節點的情況）
+                if (currentElement && currentElement.tagName === 'P') {
+                    const previousElement = currentElement.previousElementSibling;
+                    console.log('Enter 鍵處理 - 前一個元素:', {
+                        tagName: previousElement?.tagName,
+                        className: previousElement?.className,
+                        isImageWrapper: previousElement?.classList.contains('image-wrapper')
+                    });
+                    
+                    if (previousElement && previousElement.classList.contains('image-wrapper')) {
+                        // 游標在圖片後面的段落中，按 Enter 創建新段落
+                        e.preventDefault();
+                        
+                        const newParagraph = document.createElement('p');
+                        newParagraph.innerHTML = '&#8203;'; // 零寬空白字元
+                        
+                        // 將新段落插入到當前段落後面
+                        currentElement.parentNode.insertBefore(newParagraph, currentElement.nextSibling);
+                        
+                        // 將游標移動到新段落中
+                        const newRange = document.createRange();
+                        newRange.setStart(newParagraph, 0);
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                        
+                        console.log('✅ 已處理在圖片後面按 Enter 的情況');
+                        return; // 阻止執行後續的 Enter 處理邏輯
+                    }
+                }
+                
+                console.log('Enter 鍵處理 - 未匹配任何特殊情況，使用默認處理');
             }
         }
         
@@ -273,13 +469,27 @@ function initEditor() {
         });
     });
 
-    // 監聽編輯器的點擊事件，處理圖片選取
+    // ✅ [REFACTORED] 統一的點擊事件處理，確保圖片選取可靠
     editor.addEventListener('click', function(e) {
-        // 檢查是否點擊了圖片
-        if (e.target.tagName === 'IMG') {
-            console.log('檢測到圖片點擊');
-            // 將選擇移動到 image-wrapper 容器，確保之後樣式正確
-            const wrapper = e.target.closest('.image-wrapper');
+        const clickedImageContainer = e.target.closest('.image-container');
+
+        // 如果點擊了某個圖片容器，就選中它
+        if (clickedImageContainer) {
+            console.log('檢測到圖片容器點擊');
+            
+            // 阻止事件冒泡，防止文檔點擊事件清除 .selected 類別
+            e.stopPropagation();
+            
+            // 首先，移除所有圖片的 .selected 狀態
+            document.querySelectorAll('.image-container.selected').forEach(container => {
+                container.classList.remove('selected');
+            });
+            
+            // 然後，選中當前點擊的圖片容器
+            clickedImageContainer.classList.add('selected');
+            
+            // 將選擇範圍設定為 image-wrapper，以利於後續的樣式判斷
+            const wrapper = clickedImageContainer.closest('.image-wrapper');
             if (wrapper) {
                 const range = document.createRange();
                 range.selectNode(wrapper);
@@ -288,62 +498,50 @@ function initEditor() {
                 sel.addRange(range);
                 console.log('圖片點擊：選擇 image-wrapper 容器');
                 
-                // 立即更新工具列狀態
+                // ✅ 直接調用 updateToolbarState，確保工具列立即更新
                 setTimeout(() => {
                     updateToolbarState();
                 }, 0);
             }
-        }
-        
-        // 檢查是否點擊了圖片容器
-        const imageContainer = e.target.closest('.image-container');
-        if (imageContainer) {
-            console.log('檢測到圖片容器點擊');
-            // 移除所有圖片的選中狀態
-            document.querySelectorAll('.image-container').forEach(container => {
-                if (container !== imageContainer) {
-                    container.classList.remove('selected');
-                }
-            });
-            
-            // 選中當前圖片
-            imageContainer.classList.add('selected');
-            
-            // 將選擇移動到 image-wrapper 容器
-            const wrapper = imageContainer.closest('.image-wrapper');
-            if (wrapper) {
-                const range = document.createRange();
-                range.selectNode(wrapper);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                console.log('圖片容器點擊：選擇 image-wrapper 容器');
-                
-                // 立即更新工具列狀態
-                setTimeout(() => {
-                    updateToolbarState();
-                }, 0);
-            }
-            
-            // 不阻止事件冒泡，讓 updateToolbarState 能正常執行
-            // e.stopPropagation();
-            // e.preventDefault();
-            // return false;
         } else {
-            // 如果點擊的不是圖片，移除所有圖片的選中狀態
-            document.querySelectorAll('.image-container').forEach(container => {
+            // 如果點擊的不是圖片容器，清除所有選中狀態
+            document.querySelectorAll('.image-container.selected').forEach(container => {
                 container.classList.remove('selected');
             });
         }
     });
 
-    // 監聽文檔點擊事件，取消圖片選中
+    // 監聽文檔點擊事件，取消圖片選中（但排除編輯器內的點擊）
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.editor')) {
-            document.querySelectorAll('.image-container').forEach(container => {
-                container.classList.remove('selected');
-            });
+        // 如果點擊的是編輯器內的元素，不處理
+        if (e.target.closest('.editor')) {
+            return;
         }
+        
+        // 如果點擊的是圖片容器，不處理（由編輯器點擊事件處理）
+        if (e.target.closest('.image-container')) {
+            return;
+        }
+        
+        // ✅ [FIX] 如果點擊的是對齊按鈕，不處理（避免在對齊操作時清除 .selected 類別）
+        if (e.target.closest('button[onclick*="justify"]') || 
+            e.target.closest('button[onclick*="formatText"]') ||
+            e.target.closest('.toolbar-group') ||
+            e.target.closest('.editor-toolbar')) {
+            console.log('文檔點擊: 檢測到工具列按鈕點擊，跳過清除 .selected 類別');
+            return;
+        }
+        
+        // ✅ [DEBUG] 添加調試信息
+        const selectedBefore = document.querySelectorAll('.image-container.selected').length;
+        if (selectedBefore > 0) {
+            console.log(`文檔點擊: 即將清除 ${selectedBefore} 個選中的圖片容器`);
+        }
+        
+        // 只有在點擊編輯器外部時才清除選中狀態
+        document.querySelectorAll('.image-container.selected').forEach(container => {
+            container.classList.remove('selected');
+        });
     });
 
     // 處理圖片上傳
@@ -368,18 +566,28 @@ function updateToolbarState() {
     const range = selection.getRangeAt(0);
     let container = range.commonAncestorContainer;
     
-    // 確保選取範圍在編輯器內
-    if (!editor.contains(container)) return;
-    
-    // 如果選中的是文字節點，獲取其父節點
-    if (container.nodeType === 3) {
-        container = container.parentNode;
-    } else if (container.nodeName === 'IMG') {
-        // 當點選圖片時，從圖片往外找 image-wrapper
-        const wrapper = container.closest('.image-wrapper');
-        if (wrapper) {
-            container = wrapper;
-            console.log('updateToolbarState: 檢測到圖片點擊，選擇 image-wrapper 容器');
+    // ✅ [FIX] 如果有選中的圖片容器，直接使用它作為容器
+    const selectedImageContainers = document.querySelectorAll('.image-container.selected');
+    console.log('updateToolbarState: 調試 - selectedImageContainers.length:', selectedImageContainers.length);
+    if (selectedImageContainers.length > 0) {
+        container = selectedImageContainers[0];
+        console.log('updateToolbarState: 使用選中的圖片容器作為當前容器');
+    } else {
+        console.log('updateToolbarState: 沒有找到選中的圖片容器，使用選擇範圍的容器');
+        
+        // 確保選取範圍在編輯器內（只有在沒有選中圖片容器時才檢查）
+        if (!editor.contains(container)) return;
+        
+        // 如果選中的是文字節點，獲取其父節點
+        if (container.nodeType === 3) {
+            container = container.parentNode;
+        } else if (container.nodeName === 'IMG') {
+            // 當點選圖片時，從圖片往外找 image-wrapper
+            const wrapper = container.closest('.image-wrapper');
+            if (wrapper) {
+                container = wrapper;
+                console.log('updateToolbarState: 檢測到圖片點擊，選擇 image-wrapper 容器');
+            }
         }
     }
 
@@ -387,7 +595,8 @@ function updateToolbarState() {
         tagName: container.tagName,
         className: container.className,
         isImageWrapper: container.classList.contains('image-wrapper'),
-        isImageContainer: container.classList.contains('image-container')
+        isImageContainer: container.classList.contains('image-container'),
+        isResizeHandle: container.classList.contains('resize-handle')
     });
 
     // 獲取當前游標位置的樣式
@@ -462,53 +671,58 @@ function updateToolbarState() {
     // 增強圖片包裝器查找邏輯
     let imageWrapper = null;
     
-    // 方法1：檢查當前容器是否為圖片包裝器
-    if (container.classList.contains('image-wrapper')) {
-        imageWrapper = container;
-        console.log('updateToolbarState: 方法1 - 當前容器是 image-wrapper');
-    }
-    // 方法2：直接查找最近的圖片包裝器
-    else {
-        imageWrapper = container.closest('.image-wrapper');
-        if (imageWrapper) {
-            console.log('updateToolbarState: 方法2 - 找到最近的 image-wrapper');
-        }
-    }
-    
-    // 方法3：如果沒有找到，檢查是否在圖片容器內
-    if (!imageWrapper) {
-        const imageContainer = container.closest('.image-container');
-        if (imageContainer) {
-            imageWrapper = imageContainer.parentElement;
-            console.log('updateToolbarState: 方法3 - 從 image-container 找到 image-wrapper');
-        }
-    }
-    
-    // 方法4：如果容器本身就是圖片容器
-    if (!imageWrapper && container.classList.contains('image-container')) {
-        imageWrapper = container.parentElement;
-        console.log('updateToolbarState: 方法4 - 容器本身是 image-container');
-    }
-    
-    // 方法5：檢查選中的元素是否包含圖片
-    if (!imageWrapper) {
-        const selectedImages = container.querySelectorAll('img');
-        if (selectedImages.length > 0) {
-            const img = selectedImages[0];
-            const imageContainer = img.closest('.image-container');
+    // ✅ [FIX] 優先檢查 .selected 圖片容器，這是最可靠的方法
+    if (selectedImageContainers.length > 0) {
+        imageWrapper = selectedImageContainers[0].parentElement;
+        console.log('updateToolbarState: 方法6 (優先) - 從選中的圖片容器找到 image-wrapper');
+    } else if (!imageWrapper) {
+        // ✅ 新增方法0：檢查是否為調整大小的控制點
+        if (container.classList.contains('resize-handle')) {
+            const imageContainer = container.closest('.image-container');
             if (imageContainer) {
                 imageWrapper = imageContainer.parentElement;
-                console.log('updateToolbarState: 方法5 - 從選中圖片找到 image-wrapper');
+                console.log('updateToolbarState: 方法0 - 從 resize-handle 找到 image-wrapper');
             }
         }
-    }
-    
-    // 方法6：檢查選中的圖片容器（當圖片被選中時）
-    if (!imageWrapper) {
-        const selectedImageContainers = document.querySelectorAll('.image-container.selected');
-        if (selectedImageContainers.length > 0) {
-            imageWrapper = selectedImageContainers[0].parentElement;
-            console.log('updateToolbarState: 方法6 - 從選中的圖片容器找到 image-wrapper');
+        // 方法1：檢查當前容器是否為圖片包裝器
+        else if (container.classList.contains('image-wrapper')) {
+            imageWrapper = container;
+            console.log('updateToolbarState: 方法1 - 當前容器是 image-wrapper');
+        }
+        // 方法2：直接查找最近的圖片包裝器
+        else {
+            imageWrapper = container.closest('.image-wrapper');
+            if (imageWrapper) {
+                console.log('updateToolbarState: 方法2 - 找到最近的 image-wrapper');
+            }
+        }
+        
+        // 方法3：如果沒有找到，檢查是否在圖片容器內
+        if (!imageWrapper) {
+            const imageContainer = container.closest('.image-container');
+            if (imageContainer) {
+                imageWrapper = imageContainer.parentElement;
+                console.log('updateToolbarState: 方法3 - 從 image-container 找到 image-wrapper');
+            }
+        }
+        
+        // 方法4：如果容器本身就是圖片容器
+        if (!imageWrapper && container.classList.contains('image-container')) {
+            imageWrapper = container.parentElement;
+            console.log('updateToolbarState: 方法4 - 容器本身是 image-container');
+        }
+        
+        // 方法5：檢查選中的元素是否包含圖片 (這是比較籠統的方法)
+        if (!imageWrapper) {
+            const selectedImages = container.querySelectorAll('img');
+            if (selectedImages.length > 0) {
+                const img = selectedImages[0];
+                const imageContainer = img.closest('.image-container');
+                if (imageContainer) {
+                    imageWrapper = imageContainer.parentElement;
+                    console.log('updateToolbarState: 方法5 - 從選中圖片找到 image-wrapper');
+                }
+            }
         }
     }
     
@@ -616,45 +830,54 @@ window.formatText = function(command, value = null) {
         // 增強圖片包裝器查找邏輯，包括縮放後的圖片
         let imageWrapper = null;
         
-        // 方法1：檢查當前容器是否為圖片包裝器
-        if (container.classList.contains('image-wrapper')) {
-            imageWrapper = container;
+        // ✅ [FIX] 優先檢查 .selected 圖片容器，這是最可靠的方法
+        const selectedImageContainers = document.querySelectorAll('.image-container.selected');
+        if (selectedImageContainers.length > 0) {
+            imageWrapper = selectedImageContainers[0].parentElement;
+            console.log('formatText: 方法6 (優先) - 從選中的圖片容器找到 image-wrapper');
         }
-        // 方法2：直接查找最近的圖片包裝器
-        else {
-            imageWrapper = container.closest('.image-wrapper');
-        }
-        
-        // 方法3：如果沒有找到，檢查是否在圖片容器內
+
         if (!imageWrapper) {
-            const imageContainer = container.closest('.image-container');
-            if (imageContainer) {
-                imageWrapper = imageContainer.parentElement;
+            // ✅ 新增方法0：檢查是否為調整大小的控制點
+            if (container.classList.contains('resize-handle')) {
+                const imageContainer = container.closest('.image-container');
+                if (imageContainer) {
+                    imageWrapper = imageContainer.parentElement;
+                    console.log('formatText: 方法0 - 從 resize-handle 找到 image-wrapper');
+                }
             }
-        }
-        
-        // 方法4：如果容器本身就是圖片容器
-        if (!imageWrapper && container.classList.contains('image-container')) {
-            imageWrapper = container.parentElement;
-        }
-        
-        // 方法5：檢查選中的元素是否包含圖片
-        if (!imageWrapper) {
-            const selectedImages = container.querySelectorAll('img');
-            if (selectedImages.length > 0) {
-                const img = selectedImages[0];
-                const imageContainer = img.closest('.image-container');
+            // 方法1：檢查當前容器是否為圖片包裝器
+            else if (container.classList.contains('image-wrapper')) {
+                imageWrapper = container;
+            }
+            // 方法2：直接查找最近的圖片包裝器
+            else {
+                imageWrapper = container.closest('.image-wrapper');
+            }
+            
+            // 方法3：如果沒有找到，檢查是否在圖片容器內
+            if (!imageWrapper) {
+                const imageContainer = container.closest('.image-container');
                 if (imageContainer) {
                     imageWrapper = imageContainer.parentElement;
                 }
             }
-        }
-        
-        // 方法6：檢查選中的圖片容器（當圖片被選中時）
-        if (!imageWrapper) {
-            const selectedImageContainers = document.querySelectorAll('.image-container.selected');
-            if (selectedImageContainers.length > 0) {
-                imageWrapper = selectedImageContainers[0].parentElement;
+            
+            // 方法4：如果容器本身就是圖片容器
+            if (!imageWrapper && container.classList.contains('image-container')) {
+                imageWrapper = container.parentElement;
+            }
+            
+            // 方法5：檢查選中的元素是否包含圖片 (這是比較籠統的方法)
+            if (!imageWrapper) {
+                const selectedImages = container.querySelectorAll('img');
+                if (selectedImages.length > 0) {
+                    const img = selectedImages[0];
+                    const imageContainer = img.closest('.image-container');
+                    if (imageContainer) {
+                        imageWrapper = imageContainer.parentElement;
+                    }
+                }
             }
         }
         
@@ -685,8 +908,17 @@ window.formatText = function(command, value = null) {
                     break;
             }
             
-            // 立即更新工具列狀態
-            updateToolbarState();
+            // ✅ [DEBUG] 檢查 .selected 類別狀態
+            const selectedBefore = document.querySelectorAll('.image-container.selected').length;
+            console.log(`formatText: 對齊設置前，選中的圖片容器數量: ${selectedBefore}`);
+            
+            // ✅ [FIX] 直接調用 updateToolbarState，不使用防抖版本
+            // 這樣可以確保工具列立即更新，並且 .selected 類別不會被清除
+            setTimeout(() => {
+                const selectedAfter = document.querySelectorAll('.image-container.selected').length;
+                console.log(`formatText: 對齊設置後，選中的圖片容器數量: ${selectedAfter}`);
+                updateToolbarState();
+            }, 0);
             return;
         }
     }
@@ -695,7 +927,7 @@ window.formatText = function(command, value = null) {
     document.execCommand(command, false, value);
     
     // 立即更新工具列狀態
-    updateToolbarState();
+    debouncedUpdateToolbarState();
 };
 
 // 插入圖片功能
@@ -1050,21 +1282,26 @@ function insertImageToEditor(imageFile, editor) {
         
         console.log('開始插入圖片到編輯器');
         
-        // 在插入圖片前還原游標範圍
-        const rangeRestored = restoreRange();
-        
         const reader = new FileReader();
         
         reader.onload = function(e) {
             try {
                 const selection = window.getSelection();
-                let range = null;
                 
-                // 如果有還原的範圍，使用它；否則創建新的範圍
-                if (rangeRestored && selection.rangeCount > 0) {
-                    range = selection.getRangeAt(0).cloneRange();
-                } else {
-                    range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+                // ✅ 修正問題一：直接使用 restoreRange() 回傳的範圍物件
+                let range = restoreRange() || (selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null);
+                
+                // ✅ 修正問題二：檢查游標是否在編輯器內或位於圖片容器中
+                const editorContainsRange = range && editor.contains(range.commonAncestorContainer);
+                const insideImage = range && range.commonAncestorContainer.closest?.('.image-container, .image-wrapper');
+                
+                if (!editorContainsRange || insideImage) {
+                    console.warn('游標不在編輯器內或位於圖片容器中，強制將游標移動至編輯器末尾');
+                    range = document.createRange();
+                    range.selectNodeContents(editor);
+                    range.collapse(false); // 尾端
+                    selection.removeAllRanges();
+                    selection.addRange(range);
                 }
 
                 // 創建圖片容器結構
@@ -1073,6 +1310,7 @@ function insertImageToEditor(imageFile, editor) {
                 
                 const container = document.createElement('div');
                 container.className = 'image-container';
+                container.style.position = 'relative'; // ✅ 新增：確保容器有相對定位
                 
                 const img = document.createElement('img');
                 img.src = e.target.result;
@@ -1082,6 +1320,7 @@ function insertImageToEditor(imageFile, editor) {
                 const handles = ['nw', 'ne', 'sw', 'se'].map(pos => {
                     const handle = document.createElement('div');
                     handle.className = `resize-handle resize-handle-${pos}`;
+                    handle.contentEditable = false; // ✅ 新增：防止在控制點中輸入文字
                     handle.style.cssText = pos.includes('n') ? 
                         `top: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;` :
                         `bottom: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;`;
@@ -1102,23 +1341,46 @@ function insertImageToEditor(imageFile, editor) {
                 // 插入圖片到游標位置
                 if (range) {
                     range.insertNode(wrapper);
-                    // 將游標移動到圖片後面
-                    range.setStartAfter(wrapper);
-                    range.collapse(true);
+
+                    // ✅ [FIX] Un-nest the image from any containing <p> tag.
+                    // This ensures the DOM structure is clean and predictable.
+                    if (wrapper.parentNode.nodeName === 'P') {
+                        const p = wrapper.parentNode;
+                        p.parentNode.insertBefore(wrapper, p.nextSibling);
+
+                        // If the <p> is now empty (or only has whitespace), remove it.
+                        if (p.textContent.trim() === '') {
+                            p.remove();
+                        }
+                    }
+
+                    // ✅ [FIX] 創建一個新段落來放置游標，確保游標在可編輯的文字區域
+                    const newParagraph = document.createElement('p');
+                    newParagraph.innerHTML = '&#8203;'; // 零寬空白字元，確保游標可以定位
+                    
+                    // 將新段落插入到圖片後面
+                    wrapper.parentNode.insertBefore(newParagraph, wrapper.nextSibling);
+                    
+                    // 將游標移動到新段落中
+                    const newRange = document.createRange();
+                    newRange.setStart(newParagraph, 0);
+                    newRange.collapse(true);
                     selection.removeAllRanges();
-                    selection.addRange(range);
+                    selection.addRange(newRange);
+                    
+                    console.log('✅ 圖片插入後，游標已移動到新段落中');
                 } else {
                     // 如果沒有選取範圍，在編輯器末尾添加圖片
-                    const beforeBreak = document.createElement('br');
-                    const afterBreak = document.createElement('br');
+                    // ✅ [FIX] 改進游標處理，避免游標被困在換行符之間
+                    const newParagraph = document.createElement('p');
+                    newParagraph.innerHTML = '&#8203;'; // 零寬空白字元，確保游標可以定位
                     
-                    editor.appendChild(beforeBreak);
                     editor.appendChild(wrapper);
-                    editor.appendChild(afterBreak);
+                    editor.appendChild(newParagraph);
                     
-                    // 將游標移動到圖片後面的換行符後面
+                    // 將游標移動到新段落中
                     const newRange = document.createRange();
-                    newRange.setStartAfter(afterBreak);
+                    newRange.setStart(newParagraph, 0);
                     newRange.collapse(true);
                     selection.removeAllRanges();
                     selection.addRange(newRange);
@@ -1168,41 +1430,6 @@ function initializeImageResize(container, img, resizeInfo, handles) {
     let startX, startY, startWidth, startHeight;
     let savedAlignment = null; // 保存對齊信息
 
-    // 點擊圖片容器時選中它
-    container.addEventListener('mousedown', function(e) {
-        if (!e.target.classList.contains('resize-handle')) {
-            // 移除其他圖片的選中狀態
-            document.querySelectorAll('.image-container').forEach(cont => {
-                if (cont !== container) {
-                    cont.classList.remove('selected');
-                }
-            });
-            // 選中當前圖片
-            container.classList.add('selected');
-            
-            // 將選擇移動到 image-wrapper 容器
-            const wrapper = container.closest('.image-wrapper');
-            if (wrapper) {
-                const range = document.createRange();
-                range.selectNode(wrapper);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                console.log('圖片容器 mousedown: 選擇 image-wrapper 容器');
-                
-                // 立即更新工具列狀態
-                setTimeout(() => {
-                    updateToolbarState();
-                }, 0);
-            }
-            
-            // 不阻止事件冒泡，讓編輯器的點擊事件處理器也能執行
-            // e.preventDefault();
-            // e.stopPropagation();
-            // return false;
-        }
-    });
-
     // 為每個控制點添加事件監聽
     handles.forEach(handle => {
         handle.addEventListener('mousedown', function(e) {
@@ -1217,13 +1444,12 @@ function initializeImageResize(container, img, resizeInfo, handles) {
         container.classList.add('resizing');
 
         // 保存當前的對齊信息
-        const imageWrapper = container.closest('.image-wrapper');
-        if (imageWrapper) {
-            if (imageWrapper.classList.contains('align-left')) {
+        if (container.closest('.image-wrapper')) {
+            if (container.closest('.image-wrapper').classList.contains('align-left')) {
                 savedAlignment = 'align-left';
-            } else if (imageWrapper.classList.contains('align-center')) {
+            } else if (container.closest('.image-wrapper').classList.contains('align-center')) {
                 savedAlignment = 'align-center';
-            } else if (imageWrapper.classList.contains('align-right')) {
+            } else if (container.closest('.image-wrapper').classList.contains('align-right')) {
                 savedAlignment = 'align-right';
             } else {
                 savedAlignment = null;
@@ -1327,7 +1553,7 @@ function initializeImageResize(container, img, resizeInfo, handles) {
         }, 1500);
         
         // 更新工具列狀態以反映當前的對齊狀態
-        updateToolbarState();
+        debouncedUpdateToolbarState();
     }
 
     function updateResizeInfo(width, height) {
@@ -1341,90 +1567,90 @@ function initializeImageResize(container, img, resizeInfo, handles) {
 }
 
 // 創建圖片操作按鈕
-function createImageButton(text, onClick) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-    };
-    return button;
-}
+// function createImageButton(text, onClick) {
+//     const button = document.createElement('button');
+//     button.textContent = text;
+//     button.onclick = (e) => {
+//         e.preventDefault();
+//         e.stopPropagation();
+//         onClick();
+//     };
+//     return button;
+// }
 
 // 包裝選中的文字
-function wrapSelectedText(element) {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+// function wrapSelectedText(element) {
+//     const selection = window.getSelection();
+//     if (!selection.rangeCount) return;
 
-    const range = selection.getRangeAt(0);
-    const content = range.extractContents();
-    element.appendChild(content);
-    range.insertNode(element);
-}
+//     const range = selection.getRangeAt(0);
+//     const content = range.extractContents();
+//     element.appendChild(content);
+//     range.insertNode(element);
+// }
 
 // 初始化星級評分
-function initRating() {
-    const starsContainers = document.querySelectorAll('.stars');
-    if (!starsContainers.length) return;
+// function initRating() {
+//     const starsContainers = document.querySelectorAll('.stars');
+//     if (!starsContainers.length) return;
 
-    starsContainers.forEach(container => {
-        const stars = container.querySelectorAll('i');
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                const rating = this.getAttribute('data-rating');
-                updateStars(container, rating);
-            });
+//     starsContainers.forEach(container => {
+//         const stars = container.querySelectorAll('i');
+//         stars.forEach(star => {
+//             star.addEventListener('click', function() {
+//                 const rating = this.getAttribute('data-rating');
+//                 updateStars(container, rating);
+//             });
 
-            star.addEventListener('mouseover', function() {
-                const rating = this.getAttribute('data-rating');
-                highlightStars(container, rating);
-            });
-        });
+//             star.addEventListener('mouseover', function() {
+//                 const rating = this.getAttribute('data-rating');
+//                 highlightStars(container, rating);
+//             });
+//         });
 
-        container.addEventListener('mouseleave', function() {
-            const selectedRating = this.getAttribute('data-selected-rating') || 0;
-            updateStars(container, selectedRating);
-        });
-    });
-}
+//         container.addEventListener('mouseleave', function() {
+//             const selectedRating = this.getAttribute('data-selected-rating') || 0;
+//             updateStars(container, selectedRating);
+//         });
+//     });
+// }
 
 // 更新星星顯示
-function updateStars(starsContainer, rating) {
-    if (typeof starsContainer === 'string') {
-        rating = starsContainer;
-        starsContainer = document.querySelector('.stars');
-    }
+// function updateStars(starsContainer, rating) {
+//     if (typeof starsContainer === 'string') {
+//         rating = starsContainer;
+//         starsContainer = document.querySelector('.stars');
+//     }
     
-    const stars = starsContainer.querySelectorAll('i');
-    stars.forEach((star, index) => {
-        star.classList.toggle('active', index < rating);
-    });
+//     const stars = starsContainer.querySelectorAll('i');
+//     stars.forEach((star, index) => {
+//         star.classList.toggle('active', index < rating);
+//     });
     
-    // 更新評分數值顯示
-    const ratingValueElement = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
-    if (ratingValueElement) {
-        ratingValueElement.textContent = rating + '.0';
-    }
+//     // 更新評分數值顯示
+//     const ratingValueElement = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+//     if (ratingValueElement) {
+//         ratingValueElement.textContent = rating + '.0';
+//     }
     
-    starsContainer.setAttribute('data-selected-rating', rating);
+//     starsContainer.setAttribute('data-selected-rating', rating);
     
-    // 更新總評分
-    updateOverallRating();
-}
+//     // 更新總評分
+//     updateOverallRating();
+// }
 
 // 高亮星星
-function highlightStars(starsContainer, rating) {
-    if (typeof starsContainer === 'string') {
-        rating = starsContainer;
-        starsContainer = document.querySelector('.stars');
-    }
+// function highlightStars(starsContainer, rating) {
+//     if (typeof starsContainer === 'string') {
+//         rating = starsContainer;
+//         starsContainer = document.querySelector('.stars');
+//     }
     
-    const stars = starsContainer.querySelectorAll('i');
-    stars.forEach((star, index) => {
-        star.classList.toggle('active', index < rating);
-    });
-}
+//     const stars = starsContainer.querySelectorAll('i');
+//     stars.forEach((star, index) => {
+//         star.classList.toggle('active', index < rating);
+//     });
+// }
 
 // 載入用戶數據
 function loadUserData() {
@@ -1453,69 +1679,69 @@ function loadUserData() {
         };
         img.onerror = function() {
             // 如果載入失敗，保持預設頭像
-            ('頭像載入失敗，使用預設頭像');
+            console.log('頭像載入失敗，使用預設頭像');
         };
         img.src = userData.avatar;
     }
 }
 
 // 載入文章列表
-function loadPosts() {
-    // 這裡應該從後端 API 獲取文章列表
-    // 目前使用模擬數據
-    const posts = [
-        {
-            id: 1,
-            title: '台北最佳日式料理推薦',
-            status: 'published',
-            date: '2024-03-15',
-            views: 156,
-            likes: 23
-        },
-        {
-            id: 2,
-            title: '隱藏版美食小店分享',
-            status: 'draft',
-            date: '2024-03-14',
-            views: 0,
-            likes: 0
-        }
-    ];
+// function loadPosts() {
+//     // 這裡應該從後端 API 獲取文章列表
+//     // 目前使用模擬數據
+//     const posts = [
+//         {
+//             id: 1,
+//             title: '台北最佳日式料理推薦',
+//             status: 'published',
+//             date: '2024-03-15',
+//             views: 156,
+//             likes: 23
+//         },
+//         {
+//             id: 2,
+//             title: '隱藏版美食小店分享',
+//             status: 'draft',
+//             date: '2024-03-14',
+//             views: 0,
+//             likes: 0
+//         }
+//     ];
 
-    // 更新已發布文章列表
-    const publishedList = document.getElementById('publishedList');
-    const draftsList = document.getElementById('draftsList');
+//     // 更新已發布文章列表
+//     const publishedList = document.getElementById('publishedList');
+//     const draftsList = document.getElementById('draftsList');
 
-    if (publishedList && draftsList) {
-        posts.forEach(post => {
-            const postElement = createPostElement(post);
-            if (post.status === 'published') {
-                publishedList.appendChild(postElement);
-            } else {
-                draftsList.appendChild(postElement);
-            }
-        });
-    }
-}
+//     if (publishedList && draftsList) {
+//         posts.forEach(post => {
+//             const postElement = createPostElement(post);
+//             if (post.status === 'published') {
+//                 publishedList.appendChild(postElement);
+//             } else {
+//                 draftsList.appendChild(postElement);
+//             }
+//         });
+//     }
+// }
 
 // 創建文章元素
-function createPostElement(post) {
-    const div = document.createElement('div');
-    div.className = 'post-card';
-    div.innerHTML = `
-        <h3>${post.title}</h3>
-        <p>發布日期：${post.date}</p>
-        <p>觀看次數：${post.views} | 讚數：${post.likes}</p>
-        <div class="button-group">
-            <button onclick="editPost(${post.id})" class="btn-save-draft">編輯</button>
-            ${post.status === 'draft' ? 
-                `<button onclick="publishPost(${post.id})" class="btn-publish">發布</button>` :
-                `<button onclick="deletePost(${post.id})" class="btn-save-draft">刪除</button>`
-            }
-        </div>
-    `;
-    return div;
-}
+// function createPostElement(post) {
+//     const div = document.createElement('div');
+//     div.className = 'post-card';
+//     div.innerHTML = `
+//         <h3>${post.title}</h3>
+//         <p>發布日期：${post.date}</p>
+//         <p>觀看次數：${post.views} | 讚數：${post.likes}</p>
+//         <div class="button-group">
+//             <button onclick="editPost(${post.id})" class="btn-save-draft">編輯</button>
+//             ${post.status === 'draft' ? 
+//                 `<button onclick="publishPost(${post.id})" class="btn-publish">發布</button>` :
+//                 `<button onclick="deletePost(${post.id})" class="btn-save-draft">刪除</button>`
+//             }
+//         </div>
+//     `;
+//     return div;
+// }
 
 // 初始化統計圖表
 async function initStatsChart() {
@@ -1877,17 +2103,17 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
 });
 
 // 當表單提交時，收集所有評分數據
-document.getElementById('blogPostForm')?.addEventListener('submit', function(e) {
-    const ratings = {
-        environment: document.querySelector('.stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0',
-        service: document.querySelector('.stars[data-category="service"]')?.getAttribute('data-selected-rating') || '0',
-        taste: document.querySelector('.stars[data-category="taste"]')?.getAttribute('data-selected-rating') || '0',
-        price: document.querySelector('.stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0',
-        overall: document.querySelector('.overall-rating .rating-value')?.textContent || '0.0'
-    };
+// document.getElementById('blogPostForm')?.addEventListener('submit', function(e) {
+//     const ratings = {
+//         environment: document.querySelector('.stars[data-category="environment"]')?.getAttribute('data-selected-rating') || '0',
+//         service: document.querySelector('.stars[data-category="service"]')?.getAttribute('data-selected-rating') || '0',
+//         taste: document.querySelector('.stars[data-category="taste"]')?.getAttribute('data-selected-rating') || '0',
+//         price: document.querySelector('.stars[data-category="price"]')?.getAttribute('data-selected-rating') || '0',
+//         overall: document.querySelector('.overall-rating .rating-value')?.textContent || '0.0'
+//     };
     
-    ('Ratings:', ratings);
-});
+//     ('Ratings:', ratings);
+// });
 
 // 修改儲存草稿功能
 document.addEventListener('DOMContentLoaded', function() {
@@ -1991,57 +2217,57 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 清理HTML內容的函數
-function cleanHtmlContent(htmlContent) {
-    if (!htmlContent) return '';
+// function cleanHtmlContent(htmlContent) {
+//     if (!htmlContent) return '';
     
-    try {
-        console.log('原始HTML內容長度:', htmlContent.length);
-        console.log('原始HTML內容:', htmlContent);
+//     try {
+//         console.log('原始HTML內容長度:', htmlContent.length);
+//         console.log('原始HTML內容:', htmlContent);
         
-        // 創建一個臨時的div元素來處理HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlContent;
+//         // 創建一個臨時的div元素來處理HTML
+//         const tempDiv = document.createElement('div');
+//         tempDiv.innerHTML = htmlContent;
         
-        // 移除可能導致問題的零寬字符
-        const textContent = tempDiv.textContent || tempDiv.innerText || '';
-        const cleanedText = textContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
+//         // 移除可能導致問題的零寬字符
+//         const textContent = tempDiv.textContent || tempDiv.innerText || '';
+//         const cleanedText = textContent.replace(/[\u200B-\u200D\uFEFF]/g, '');
         
-        // 如果清理後沒有內容，返回原始HTML
-        if (!cleanedText.trim()) {
-            console.log('清理後沒有文字內容，返回原始HTML');
-            return htmlContent;
-        }
+//         // 如果清理後沒有內容，返回原始HTML
+//         if (!cleanedText.trim()) {
+//             console.log('清理後沒有文字內容，返回原始HTML');
+//             return htmlContent;
+//         }
         
-        // 更溫和的HTML清理，保留文字格式
-        let cleanedHtml = htmlContent
-            // 移除零寬字符
-            .replace(/[\u200B-\u200D\uFEFF]/g, '')
-            // 移除可能的控制字符（但保留換行符和製表符）
-            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-            // 移除多餘的連續空格（但保留單個空格）
-            .replace(/[ ]{2,}/g, ' ')
-            .trim();
+//         // 更溫和的HTML清理，保留文字格式
+//         let cleanedHtml = htmlContent
+//             // 移除零寬字符
+//             .replace(/[\u200B-\u200D\uFEFF]/g, '')
+//             // 移除可能的控制字符（但保留換行符和製表符）
+//             .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+//             // 移除多餘的連續空格（但保留單個空格）
+//             .replace(/[ ]{2,}/g, ' ')
+//             .trim();
         
-        // 檢查是否有有效的HTML結構
-        const testDiv = document.createElement('div');
-        testDiv.innerHTML = cleanedHtml;
+//         // 檢查是否有有效的HTML結構
+//         const testDiv = document.createElement('div');
+//         testDiv.innerHTML = cleanedHtml;
         
-        // 如果HTML結構有問題，嘗試修復
-        if (testDiv.innerHTML !== cleanedHtml) {
-            console.log('HTML結構有問題，嘗試修復...');
-            cleanedHtml = testDiv.innerHTML;
-        }
+//         // 如果HTML結構有問題，嘗試修復
+//         if (testDiv.innerHTML !== cleanedHtml) {
+//             console.log('HTML結構有問題，嘗試修復...');
+//             cleanedHtml = testDiv.innerHTML;
+//         }
         
-        console.log('清理後HTML內容長度:', cleanedHtml.length);
-        console.log('清理後HTML內容:', cleanedHtml);
+//         console.log('清理後HTML內容長度:', cleanedHtml.length);
+//         console.log('清理後HTML內容:', cleanedHtml);
         
-        return cleanedHtml;
-    } catch (error) {
-        console.error('清理HTML內容時發生錯誤：', error);
-        // 如果清理失敗，返回原始內容
-        return htmlContent;
-    }
-}
+//         return cleanedHtml;
+//     } catch (error) {
+//         console.error('清理HTML內容時發生錯誤：', error);
+//         // 如果清理失敗，返回原始內容
+//         return htmlContent;
+//     }
+// }
 
 // 清空表單函數
 function clearForm() {
@@ -2479,31 +2705,31 @@ async function publishDraft(draftId, userId, restaurantId) {
 }
 
 // ========== 編輯文章/草稿時切換到 edit-section 並帶入資料 ==========
-function editPost(postId) {
-    const posts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    isEditingPost = true;
-    editingPostId = post.id;
-    showSectionWrapper('edit');
-    document.getElementById('postTitleEdit').value = post.title;
-    document.getElementById('restaurantNameEdit').value = post.restaurant;
-    document.getElementById('restaurantLocationEdit').value = post.location;
-    document.getElementById('editorEdit').innerHTML = post.content;
-    document.getElementById('tagsEdit').value = post.tags.join(', ');
-    Object.entries(post.ratings).forEach(([category, rating]) => {
-        const starsContainer = document.querySelector('#edit-section .stars[data-category="' + category + '"]');
-        if (starsContainer) {
-            starsContainer.setAttribute('data-selected-rating', rating);
-            updateStars(starsContainer, rating);
-            const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
-            if (ratingValue) ratingValue.textContent = rating + '.0';
-        }
-    });
-    updateOverallRating('#edit-section');
-    const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
-    if (saveDraftBtn) saveDraftBtn.textContent = '更新草稿';
-}
+// function editPost(postId) {
+//     const posts = JSON.parse(localStorage.getItem('publishedPosts') || '[]');
+//     const post = posts.find(p => p.id === postId);
+//     if (!post) return;
+//     isEditingPost = true;
+//     editingPostId = post.id;
+//     showSectionWrapper('edit');
+//     document.getElementById('postTitleEdit').value = post.title;
+//     document.getElementById('restaurantNameEdit').value = post.restaurant;
+//     document.getElementById('restaurantLocationEdit').value = post.location;
+//     document.getElementById('editorEdit').innerHTML = post.content;
+//     document.getElementById('tagsEdit').value = post.tags.join(', ');
+//     Object.entries(post.ratings).forEach(([category, rating]) => {
+//         const starsContainer = document.querySelector('#edit-section .stars[data-category="' + category + '"]');
+//         if (starsContainer) {
+//             starsContainer.setAttribute('data-selected-rating', rating);
+//             updateStars(starsContainer, rating);
+//             const ratingValue = starsContainer.closest('.stars-container')?.querySelector('.rating-value');
+//             if (ratingValue) ratingValue.textContent = rating + '.0';
+//         }
+//     });
+//     updateOverallRating('#edit-section');
+//     const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
+//     if (saveDraftBtn) saveDraftBtn.textContent = '更新草稿';
+// }
 
 // 載入已發布文章
 async function loadPublishedPosts() {
@@ -2606,15 +2832,15 @@ function createPublishedPostElement(post) {
 }
 
 // 獲取評分類別標籤
-function getRatingLabel(category) {
-    const labels = {
-        environment: '用餐環境',
-        service: '服務品質',
-        taste: '餐點美味',
-        price: '價格合理'
-    };
-    return labels[category] || category;
-}
+// function getRatingLabel(category) {
+//     const labels = {
+//         environment: '用餐環境',
+//         service: '服務品質',
+//         taste: '餐點美味',
+//         price: '價格合理'
+//     };
+//     return labels[category] || category;
+// }
 
 // 輔助函數
 function escapeHtml(text) {
@@ -2729,42 +2955,42 @@ function updateOverallRating(sectionSelector = '') {
 // 字型大小控制
 let currentFontSize = 16;
 
-function setFontSize(size) {
-    size = parseInt(size);
-    currentFontSize = size;
+// function setFontSize(size) {
+//     size = parseInt(size);
+//     currentFontSize = size;
     
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+//     const selection = window.getSelection();
+//     if (!selection.rangeCount) return;
     
-    const range = selection.getRangeAt(0);
-    
-    // 如果有選取文字
-    if (!range.collapsed) {
-        const span = document.createElement('span');
-        span.style.fontSize = `${size}px`;
-        const content = range.extractContents();
-        span.appendChild(content);
-        range.insertNode(span);
+//     const range = selection.getRangeAt(0);
+
+//     // 如果有選取文字
+//     if (!range.collapsed) {
+//         const span = document.createElement('span');
+//         span.style.fontSize = `${size}px`;
+//         const content = range.extractContents();
+//         span.appendChild(content);
+//         range.insertNode(span);
         
-        // 保持選取狀態
-        selection.removeAllRanges();
-        selection.addRange(range);
-    } else {
-        // 如果是游標位置，更新當前字體大小
-        const span = document.createElement('span');
-        span.style.fontSize = `${size}px`;
-        span.appendChild(document.createTextNode('\u200B'));
+//         // 保持選取狀態
+//         selection.removeAllRanges();
+//         selection.addRange(range);
+//     } else {
+//         // 如果是游標位置，更新當前字體大小
+//         const span = document.createElement('span');
+//         span.style.fontSize = `${size}px`;
+//         span.appendChild(document.createTextNode('\u200B'));
         
-        range.insertNode(span);
-        range.setStart(span.firstChild, 1);
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
+//         range.insertNode(span);
+//         range.setStart(span.firstChild, 1);
+//         range.collapse(true);
+//         selection.removeAllRanges();
+//         selection.addRange(range);
+//     }
     
-    // 立即更新工具列狀態
-    updateToolbarState();
-}
+//     // 立即更新工具列狀態
+//     updateToolbarState();
+// }
 
 // 初始化字型大小
 function initFontSize() {
@@ -2830,7 +3056,7 @@ function initColorPicker() {
             e.preventDefault();
             e.stopPropagation();
             const color = this.getAttribute('data-color');
-            ('選擇顏色：', color); // 添加調試日誌
+            console.log('選擇顏色：', color);
             if (color) {
                 handleColorChange(color, false);
             }
@@ -2906,7 +3132,7 @@ function updateColorPreview(color) {
 function handleColorChange(color, isPreview) {
     if (!color) return;
     
-    ('處理顏色變更：', color, isPreview); // 添加調試日誌
+    console.log('處理顏色變更：', color, isPreview);
 
     // 更新預覽
     updateColorPreview(color);
@@ -2923,7 +3149,7 @@ function handleColorChange(color, isPreview) {
     applyColorToText(color);
 
     // 更新工具列狀態
-    updateToolbarState();
+    debouncedUpdateToolbarState();
 
     // 關閉調色板
     closeColorPalette();
@@ -2931,7 +3157,7 @@ function handleColorChange(color, isPreview) {
 
 // 應用顏色到文字
 function applyColorToText(color) {
-    ('應用顏色到文字：', color); // 添加調試日誌
+    console.log('應用顏色到文字：', color); // 修正：將 console.log 改為正確的語法
     
     const editor = document.getElementById('editor');
     if (!editor) return;
@@ -2975,7 +3201,7 @@ function applyColorToText(color) {
         }
 
         // 更新工具列狀態
-        updateToolbarState();
+        debouncedUpdateToolbarState();
 
         // 恢復原始選擇範圍
         selection.removeAllRanges();
@@ -3394,6 +3620,7 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                         
                         const container = document.createElement('div');
                         container.className = 'image-container';
+                        container.style.position = 'relative'; // ✅ 新增：確保容器有相對定位
                         
                         const img = document.createElement('img');
                         img.src = imageUrl;
@@ -3429,6 +3656,7 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                         const handles = ['nw', 'ne', 'sw', 'se'].map(pos => {
                             const handle = document.createElement('div');
                             handle.className = `resize-handle resize-handle-${pos}`;
+                            handle.contentEditable = false; // ✅ 新增：防止在控制點中輸入文字
                             handle.style.cssText = pos.includes('n') ? 
                                 `top: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;` :
                                 `bottom: -5px; ${pos.includes('w') ? 'left: -5px' : 'right: -5px'}; cursor: ${pos}-resize;`;
