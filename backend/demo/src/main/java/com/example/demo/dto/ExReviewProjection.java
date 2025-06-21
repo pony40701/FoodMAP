@@ -16,4 +16,8 @@ public interface ExReviewProjection {
     Integer getViewCount();
     Integer getIsFavorited();
     String getRestaurantPlaceId();
+    Integer getEnvironmentScore();
+    Integer getServiceScore();
+    Integer getTasteScore();
+    Integer getPriceScore();
 } 

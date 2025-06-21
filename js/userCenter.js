@@ -538,10 +538,10 @@ function renderFavoriteReviews(reviews) {
         const excerpt = extractExcerpt(review.contentJson, 50) || '點擊查看更多...';
 
         return `
-            <article class="food-card" data-id="${review.reviewId}" data-date="${review.reviewDate}" data-views="${review.viewCount}" data-category="${review.cuisineType}">
+            <article class="food-card" data-id="${review.reviewId}" data-date="${review.reviewDate}" data-views="${review.viewCount}" data-category="${review.cuisineType}" onclick="viewReviewDetail(${review.reviewId})">
                 <div class="food-image">
                     <img src="${imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
-                    <button class="favorite-btn" title="取消收藏" onclick="removeFavoriteReview(${review.reviewId})">
+                    <button class="favorite-btn" title="取消收藏" onclick="event.stopPropagation(); removeFavoriteReview(${review.reviewId})">
                         <i class="fas fa-heart"></i>
                     </button>
                 </div>
@@ -1387,7 +1387,7 @@ function openGoogleMaps(address) {
 // 查看心得詳情
 function viewReviewDetail(reviewId) {
     // 跳轉到心得詳情頁面
-    window.location.href = `foodReviewList.html?review_id=${reviewId}`;
+    window.location.href = `experienceDetail.html?id=${reviewId}`;
 }
 
 // 收藏心得功能
