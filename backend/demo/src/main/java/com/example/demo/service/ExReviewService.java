@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,13 @@ public class ExReviewService {
                 .collect(Collectors.toList());
     }
 
+    public ExReviewDTO getReviewById(Long id, Long userId) {
+        // userId can be null if the user is not logged in.
+        // The repository query is designed to handle a null userId.
+        Optional<ExReviewProjection> projection = exReviewRepository.findDetailsById(id, userId);
+        return projection.map(this::convertToDto).orElse(null);
+    }
+
     private ExReviewDTO convertToDto(ExReviewProjection projection) {
         String imageBase64 = null;
         if (projection.getImage() != null) {
@@ -45,7 +53,12 @@ public class ExReviewService {
             projection.getReviewDate(),
             projection.getCuisineType(),
             projection.getViewCount(),
-            projection.getIsFavorited() != null && projection.getIsFavorited() == 1
+            projection.getIsFavorited() != null && projection.getIsFavorited() == 1,
+            projection.getRestaurantPlaceId(),
+            projection.getEnvironmentScore(),
+            projection.getServiceScore(),
+            projection.getTasteScore(),
+            projection.getPriceScore()
         );
     }
 } 

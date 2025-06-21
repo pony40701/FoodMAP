@@ -151,6 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.date = article.date;
         card.dataset.views = article.views;
         card.dataset.category = article.category;
+        // Make card clickable
+        card.style.cursor = 'pointer';
 
         card.innerHTML = `
             <div class="food-image">
@@ -185,7 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        card.querySelector('.favorite-btn').addEventListener('click', async () => {
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.favorite-btn')) {
+                window.location.href = `experienceDetail.html?id=${article.id}&fav=${article.favorited}`;
+            }
+        });
+
+        card.querySelector('.favorite-btn').addEventListener('click', async (e) => {
+            e.stopPropagation(); // Prevent card click event from firing
             const icon = card.querySelector('.favorite-btn i');
             const targetArticle = allArticles.find(a => a.id === article.id);
             const wasFavorited = !!targetArticle?.favorited;
