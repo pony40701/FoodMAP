@@ -1048,9 +1048,25 @@ function collectImageData(editorSelector = '#editor') {
             
             // 保存圖片大小信息
             const imageSize = {
-                width: img.style.width || img.offsetWidth + 'px',
-                height: img.style.height || img.offsetHeight + 'px'
+                width: img.style.width || (img.naturalWidth ? img.naturalWidth + 'px' : '300px'),
+                height: img.style.height || (img.naturalHeight ? img.naturalHeight + 'px' : '200px')
             };
+            
+            // 如果圖片沒有設置樣式大小，但有自然尺寸，使用自然尺寸
+            if (!img.style.width && img.naturalWidth) {
+                imageSize.width = img.naturalWidth + 'px';
+            }
+            if (!img.style.height && img.naturalHeight) {
+                imageSize.height = img.naturalHeight + 'px';
+            }
+            
+            // 如果還是沒有尺寸，使用預設值
+            if (!imageSize.width || imageSize.width === '0px') {
+                imageSize.width = '300px';
+            }
+            if (!imageSize.height || imageSize.height === '0px') {
+                imageSize.height = '200px';
+            }
             
             // 保存對齊信息
             let alignment = 'none';
@@ -1079,11 +1095,22 @@ function collectImageData(editorSelector = '#editor') {
                 imgContainer.parentNode.replaceChild(placeholderNode, imgContainer);
                 console.log(`替換新圖片容器為佔位符: ${placeholder}`);
             } else {
-                // 如果沒有找到容器，直接替換圖片
-                const placeholder = `[NEW_IMAGE_PLACEHOLDER_${index}]`;
-                const placeholderNode = document.createTextNode(placeholder);
-                img.parentNode.replaceChild(placeholderNode, img);
-                console.log(`替換新圖片為佔位符: ${placeholder}`);
+                // 如果沒有找到容器，檢查是否有 image-wrapper
+                const imageWrapper = img.closest('.image-wrapper');
+                if (imageWrapper) {
+                    // 保留 image-wrapper 的對齊類別，只替換內容
+                    const placeholder = `[NEW_IMAGE_PLACEHOLDER_${index}]`;
+                    const placeholderNode = document.createTextNode(placeholder);
+                    imageWrapper.innerHTML = '';
+                    imageWrapper.appendChild(placeholderNode);
+                    console.log(`替換新圖片為佔位符（保留對齊結構）: ${placeholder}`);
+                } else {
+                    // 如果沒有找到容器，直接替換圖片
+                    const placeholder = `[NEW_IMAGE_PLACEHOLDER_${index}]`;
+                    const placeholderNode = document.createTextNode(placeholder);
+                    img.parentNode.replaceChild(placeholderNode, img);
+                    console.log(`替換新圖片為佔位符: ${placeholder}`);
+                }
             }
         }
         // 如果圖片是從資料庫載入的（有blob URL）
@@ -1111,9 +1138,25 @@ function collectImageData(editorSelector = '#editor') {
                 
                 // 保存圖片大小信息
                 const imageSize = {
-                    width: img.style.width || img.offsetWidth + 'px',
-                    height: img.style.height || img.offsetHeight + 'px'
+                    width: img.style.width || (img.naturalWidth ? img.naturalWidth + 'px' : '300px'),
+                    height: img.style.height || (img.naturalHeight ? img.naturalHeight + 'px' : '200px')
                 };
+                
+                // 如果圖片沒有設置樣式大小，但有自然尺寸，使用自然尺寸
+                if (!img.style.width && img.naturalWidth) {
+                    imageSize.width = img.naturalWidth + 'px';
+                }
+                if (!img.style.height && img.naturalHeight) {
+                    imageSize.height = img.naturalHeight + 'px';
+                }
+                
+                // 如果還是沒有尺寸，使用預設值
+                if (!imageSize.width || imageSize.width === '0px') {
+                    imageSize.width = '300px';
+                }
+                if (!imageSize.height || imageSize.height === '0px') {
+                    imageSize.height = '200px';
+                }
                 
                 // 將圖片信息添加到現有圖片ID中
                 existingPhotoIds.push(photoId); // 只保存圖片ID，不保存額外信息
@@ -1125,11 +1168,22 @@ function collectImageData(editorSelector = '#editor') {
                     imgContainer.parentNode.replaceChild(placeholderNode, imgContainer);
                     console.log(`替換已存在圖片容器為佔位符: ${placeholder}`);
                 } else {
-                    // 如果沒有找到容器，直接替換圖片
-                    const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
-                    const placeholderNode = document.createTextNode(placeholder);
-                    img.parentNode.replaceChild(placeholderNode, img);
-                    console.log(`替換已存在圖片為佔位符: ${placeholder}`);
+                    // 如果沒有找到容器，檢查是否有 image-wrapper
+                    const imageWrapper = img.closest('.image-wrapper');
+                    if (imageWrapper) {
+                        // 保留 image-wrapper 的對齊類別，只替換內容
+                        const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
+                        const placeholderNode = document.createTextNode(placeholder);
+                        imageWrapper.innerHTML = '';
+                        imageWrapper.appendChild(placeholderNode);
+                        console.log(`替換已存在圖片為佔位符（保留對齊結構）: ${placeholder}`);
+                    } else {
+                        // 如果沒有找到容器，直接替換圖片
+                        const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
+                        const placeholderNode = document.createTextNode(placeholder);
+                        img.parentNode.replaceChild(placeholderNode, img);
+                        console.log(`替換已存在圖片為佔位符: ${placeholder}`);
+                    }
                 }
             } else {
                 console.warn('發現blob URL圖片但沒有data-photo-id屬性:', img.src);
@@ -3358,6 +3412,15 @@ async function editPublishedPost(postId) {
             return;
         }
         
+        console.log('載入已發布文章詳情:', {
+            id: post.id,
+            title: post.title,
+            contentLength: post.content_json?.length || 0,
+            photosCount: post.photos?.length || 0,
+            hasContent: !!post.content_json,
+            contentPreview: post.content_json?.substring(0, 100) + '...'
+        });
+        
         // 切換到編輯頁面
         showSectionWrapper('edit');
         
@@ -3368,16 +3431,47 @@ async function editPublishedPost(postId) {
         // 先清空編輯器內容
         document.getElementById('editorEdit').innerHTML = '';
         
-        // 載入圖片到編輯器（如果沒有圖片，則直接設置內容）
-        if (post.photos && post.photos.length > 0) {
-            await loadImagesToEditor(post.photos, '#editorEdit');
+        // 載入內容到編輯器
+        if (post.content_json) {
+            console.log('載入已發布文章HTML內容到編輯器');
+            document.getElementById('editorEdit').innerHTML = post.content_json;
+            
+            // 檢查內容是否包含佔位符
+            const hasPlaceholders = post.content_json.includes('[IMAGE_PLACEHOLDER_') || 
+                                  post.content_json.includes('[NEW_IMAGE_PLACEHOLDER_');
+            
+            console.log('內容分析:', {
+                hasPlaceholders: hasPlaceholders,
+                contentLength: post.content_json.length,
+                placeholderCount: (post.content_json.match(/\[IMAGE_PLACEHOLDER_\d+\]/g) || []).length +
+                                (post.content_json.match(/\[NEW_IMAGE_PLACEHOLDER_\d+\]/g) || []).length
+            });
+            
+            // 如果有圖片且內容包含佔位符，則載入圖片
+            if (post.photos && post.photos.length > 0 && hasPlaceholders) {
+                console.log('檢測到圖片和佔位符，開始載入圖片');
+                await loadImagesToEditor(post.photos, '#editorEdit');
+            } else if (post.photos && post.photos.length > 0 && !hasPlaceholders) {
+                console.log('檢測到圖片但沒有佔位符，在內容末尾添加圖片');
+                // 如果沒有佔位符，在內容末尾添加圖片
+                await loadImagesToEditor(post.photos, '#editorEdit');
+            } else {
+                console.log('沒有圖片或佔位符，直接使用HTML內容');
+            }
         } else {
-            // 如果沒有圖片，直接設置HTML內容
-            document.getElementById('editorEdit').innerHTML = post.content_json || '';
+            console.log('文章沒有內容，清空編輯器');
+            document.getElementById('editorEdit').innerHTML = '';
+            
+            // 如果沒有內容但有圖片，直接載入圖片
+            if (post.photos && post.photos.length > 0) {
+                console.log('文章沒有內容但有圖片，直接載入圖片');
+                await loadImagesToEditor(post.photos, '#editorEdit');
+            }
         }
         
         // 設置評分
         if (post.ratings) {
+            console.log('設置評分:', post.ratings);
             // 設置各項評分
             const ratingCategories = {
                 environment: 'environment_score',
@@ -3409,6 +3503,8 @@ async function editPublishedPost(postId) {
         };
         window.currentEditingDraftId = null; // 清除草稿ID
         window.currentEditingDraft = null; // 清除草稿資訊
+        
+        console.log('已發布文章載入完成，編輯器內容長度:', document.getElementById('editorEdit').innerHTML.length);
         
         // 更新按鈕文字和事件處理
         const saveDraftBtn = document.querySelector('#edit-section .btn-save-draft');
@@ -3567,6 +3663,7 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
     }
     
     console.log(`開始載入 ${photoUrls.length} 張圖片到編輯器: ${editorSelector}`);
+    console.log('圖片URL列表:', photoUrls);
     
     // 檢查編輯器是否已經有內容
     const hasContent = editor.innerHTML.trim().length > 0;
@@ -3598,6 +3695,13 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
         console.log('編輯器為空，將直接添加圖片');
     }
     
+    let successCount = 0;
+    let failCount = 0;
+    let skippedCount = 0;
+    
+    // 詳細記錄每個圖片的處理狀態
+    const imageStatus = [];
+    
     for (let i = 0; i < photoUrls.length; i++) {
         try {
             const photoUrl = photoUrls[i];
@@ -3609,9 +3713,36 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                 if (!isNaN(imageId)) {
                     console.log(`嘗試載入圖片 ID: ${imageId}`);
                     
-                    const response = await fetch(`http://localhost:8080/api/reviews/photos/${imageId}`);
-                    if (response.ok) {
-                        const imageBlob = await response.blob();
+                    // 添加重試機制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let imageBlob = null;
+                    
+                    while (retryCount < maxRetries && !imageBlob) {
+                        try {
+                            const response = await fetch(`http://localhost:8080/api/reviews/photos/${imageId}`);
+                            console.log(`圖片 ${imageId} 請求狀態:`, response.status, response.statusText);
+                            
+                            if (response.ok) {
+                                imageBlob = await response.blob();
+                                console.log(`圖片 ${imageId} 載入成功，大小:`, imageBlob.size, 'bytes');
+                            } else {
+                                console.warn(`圖片 ${imageId} 載入失敗 (嘗試 ${retryCount + 1}/${maxRetries}):`, response.status, response.statusText);
+                                retryCount++;
+                                if (retryCount < maxRetries) {
+                                    await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒後重試
+                                }
+                            }
+                        } catch (fetchError) {
+                            console.error(`圖片 ${imageId} 請求錯誤 (嘗試 ${retryCount + 1}/${maxRetries}):`, fetchError);
+                            retryCount++;
+                            if (retryCount < maxRetries) {
+                                await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒後重試
+                            }
+                        }
+                    }
+                    
+                    if (imageBlob) {
                         const imageUrl = URL.createObjectURL(imageBlob);
                         
                         // 創建完整的圖片容器結構
@@ -3629,27 +3760,124 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                         img.style.height = 'auto';
                         img.draggable = false;
                         
+                        // 添加圖片載入錯誤處理
+                        img.onerror = function() {
+                            console.error(`圖片 ${imageId} 顯示失敗:`, img.src);
+                            // 可以考慮顯示一個錯誤佔位符
+                            img.style.border = '2px solid red';
+                            img.style.backgroundColor = '#f0f0f0';
+                            img.alt = `圖片載入失敗 (ID: ${imageId})`;
+                        };
+                        
+                        img.onload = function() {
+                            console.log(`圖片 ${imageId} 顯示成功:`, img.naturalWidth, 'x', img.naturalHeight);
+                        };
+                        
                         // 嘗試從後端獲取圖片大小和對齊信息
                         try {
                             const infoResponse = await fetch(`http://localhost:8080/api/reviews/photos/${imageId}/info`);
                             if (infoResponse.ok) {
                                 const photoInfo = await infoResponse.json();
+                                console.log(`圖片 ${imageId} 信息:`, photoInfo);
                                 
                                 // 應用圖片大小
-                                if (photoInfo.width && photoInfo.height) {
+                                if (photoInfo.width && photoInfo.height && 
+                                    photoInfo.width !== '0px' && photoInfo.height !== '0px') {
                                     img.style.width = photoInfo.width;
                                     img.style.height = photoInfo.height;
                                     console.log('應用圖片大小:', photoInfo.width, photoInfo.height);
+                                } else {
+                                    // 如果後端返回的大小無效，使用圖片的自然尺寸
+                                    if (img.naturalWidth && img.naturalHeight) {
+                                        img.style.width = img.naturalWidth + 'px';
+                                        img.style.height = img.naturalHeight + 'px';
+                                        console.log('使用圖片自然尺寸:', img.naturalWidth + 'px', img.naturalHeight + 'px');
+                                    } else {
+                                        // 如果沒有自然尺寸，使用預設值
+                                        img.style.width = '300px';
+                                        img.style.height = '200px';
+                                        console.log('使用預設圖片尺寸: 300px x 200px');
+                                    }
                                 }
                                 
-                                // 應用對齊狀態
-                                if (photoInfo.alignment && photoInfo.alignment !== 'none') {
-                                    wrapper.classList.add(`align-${photoInfo.alignment}`);
-                                    console.log('應用圖片對齊:', photoInfo.alignment);
+                                // 從 HTML 中提取對齊信息
+                                const placeholder = `[IMAGE_PLACEHOLDER_${imageId}]`;
+                                // 更靈活的正則表達式，匹配包含對齊類別的 image-wrapper
+                                const placeholderRegex = new RegExp(`<div[^>]*class="[^"]*image-wrapper[^"]*align-([^"\\s>]+)[^"]*"[^>]*>[^<]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*</div>`, 'i');
+                                const match = tempContainer.innerHTML.match(placeholderRegex);
+                                
+                                if (match) {
+                                    const alignment = match[1]; // 提取對齊方式 (left, center, right)
+                                    wrapper.classList.add(`align-${alignment}`);
+                                    console.log('從 HTML 中提取並應用對齊:', alignment);
+                                } else {
+                                    // 如果沒有找到，嘗試更寬鬆的匹配
+                                    const looseRegex = new RegExp(`align-([^"\\s>]+)[^>]*>[^<]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                                    const looseMatch = tempContainer.innerHTML.match(looseRegex);
+                                    if (looseMatch) {
+                                        const alignment = looseMatch[1];
+                                        wrapper.classList.add(`align-${alignment}`);
+                                        console.log('從寬鬆匹配中提取並應用對齊:', alignment);
+                                    } else {
+                                        console.log('未找到對齊信息，使用預設對齊');
+                                    }
+                                }
+                            } else {
+                                console.warn(`無法獲取圖片 ${imageId} 信息:`, infoResponse.status, infoResponse.statusText);
+                                // 如果無法獲取信息，使用圖片的自然尺寸
+                                if (img.naturalWidth && img.naturalHeight) {
+                                    img.style.width = img.naturalWidth + 'px';
+                                    img.style.height = img.naturalHeight + 'px';
+                                    console.log('無法獲取圖片信息，使用自然尺寸:', img.naturalWidth + 'px', img.naturalHeight + 'px');
+                                } else {
+                                    img.style.width = '300px';
+                                    img.style.height = '200px';
+                                    console.log('無法獲取圖片信息，使用預設尺寸: 300px x 200px');
+                                }
+                                
+                                // 即使無法獲取圖片信息，也嘗試從 HTML 中提取對齊信息
+                                const placeholder = `[IMAGE_PLACEHOLDER_${imageId}]`;
+                                const placeholderRegex = new RegExp(`<div[^>]*class="[^"]*image-wrapper[^"]*align-([^"\\s>]+)[^"]*"[^>]*>[^<]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*</div>`, 'i');
+                                const match = tempContainer.innerHTML.match(placeholderRegex);
+                                
+                                if (match) {
+                                    const alignment = match[1];
+                                    wrapper.classList.add(`align-${alignment}`);
+                                    console.log('從 HTML 中提取並應用對齊:', alignment);
+                                } else {
+                                    // 如果沒有找到，嘗試更寬鬆的匹配
+                                    const looseRegex = new RegExp(`align-([^"\\s>]+)[^>]*>[^<]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                                    const looseMatch = tempContainer.innerHTML.match(looseRegex);
+                                    if (looseMatch) {
+                                        const alignment = looseMatch[1];
+                                        wrapper.classList.add(`align-${alignment}`);
+                                        console.log('從寬鬆匹配中提取並應用對齊:', alignment);
+                                    }
                                 }
                             }
                         } catch (error) {
                             console.warn(`無法獲取圖片 ${imageId} 信息:`, error);
+                            // 如果發生錯誤，使用圖片的自然尺寸
+                            if (img.naturalWidth && img.naturalHeight) {
+                                img.style.width = img.naturalWidth + 'px';
+                                img.style.height = img.naturalHeight + 'px';
+                                console.log('獲取圖片信息失敗，使用自然尺寸:', img.naturalWidth + 'px', img.naturalHeight + 'px');
+                            } else {
+                                img.style.width = '300px';
+                                img.style.height = '200px';
+                                console.log('獲取圖片信息失敗，使用預設尺寸: 300px x 200px');
+                            }
+                            
+                            // 即使發生錯誤，也嘗試從 HTML 中提取對齊信息
+                            const placeholder = `[IMAGE_PLACEHOLDER_${imageId}]`;
+                            const placeholderRegex = new RegExp(`<div[^>]*class="[^"]*image-wrapper[^"]*align-([^"\\s>]+)[^"]*"[^>]*>[^<]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*</div>`, 'i');
+                            const match = tempContainer.innerHTML.match(placeholderRegex);
+                            
+                            if (match) {
+                                const alignment = match[1];
+                                wrapper.classList.add(`align-${alignment}`);
+                                console.log('從 HTML 中提取並應用對齊:', alignment);
+                            }
                         }
                         
                         // 添加調整大小的控制點
@@ -3720,11 +3948,19 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                                 parent.removeChild(textNode);
                                 
                                 console.log(`成功替換圖片佔位符: ${placeholder}`);
+                                successCount++;
+                                imageStatus.push({ id: imageId, status: 'success', method: 'replace' });
+                            } else {
+                                console.warn(`佔位符 ${placeholder} 在文本節點中未找到`);
+                                failCount++;
+                                imageStatus.push({ id: imageId, status: 'failed', method: 'replace', reason: 'placeholder_not_found' });
                             }
                         } else {
                             // 如果沒有找到佔位符，在內容末尾添加圖片
                             tempContainer.appendChild(wrapper);
                             console.log(`在內容末尾添加圖片 ID: ${imageId}`);
+                            successCount++;
+                            imageStatus.push({ id: imageId, status: 'success', method: 'append' });
                         }
                         
                         // 立即初始化圖片縮放功能
@@ -3735,17 +3971,25 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
                             console.warn(`圖片縮放功能初始化失敗:`, error);
                         }
                     } else {
-                        console.warn(`圖片 ID ${imageId} 載入失敗: ${response.status} ${response.statusText}`);
+                        console.error(`圖片 ID ${imageId} 載入失敗，已重試 ${maxRetries} 次`);
+                        failCount++;
+                        imageStatus.push({ id: imageId, status: 'failed', method: 'fetch', reason: 'max_retries_exceeded' });
                         // 如果圖片載入失敗，保留佔位符，不要中斷流程
                     }
                 } else {
                     console.warn(`無效的圖片 ID: ${photoUrl}`);
+                    failCount++;
+                    imageStatus.push({ id: photoUrl, status: 'failed', method: 'parse', reason: 'invalid_id' });
                 }
             } else {
                 console.log(`跳過非圖片 ID 的 URL: ${photoUrl}`);
+                skippedCount++;
+                imageStatus.push({ id: photoUrl, status: 'skipped', method: 'url_check', reason: 'not_image_id' });
             }
         } catch (error) {
             console.error(`載入圖片時發生錯誤 (ID: ${photoUrls[i]}):`, error);
+            failCount++;
+            imageStatus.push({ id: photoUrls[i], status: 'failed', method: 'exception', reason: error.message });
             // 繼續處理下一個圖片，不要中斷整個流程
         }
     }
@@ -3756,7 +4000,40 @@ async function loadImagesToEditor(photoUrls, editorSelector = '#editor') {
         editor.appendChild(tempContainer.firstChild);
     }
     
-    console.log('圖片載入完成，編輯器內容已更新');
+    // 詳細的載入統計
+    console.log('圖片載入完成統計:', {
+        總數: photoUrls.length,
+        成功: successCount,
+        失敗: failCount,
+        跳過: skippedCount,
+        成功率: `${((successCount / photoUrls.length) * 100).toFixed(1)}%`
+    });
+    
+    // 詳細的圖片狀態報告
+    console.log('詳細圖片狀態報告:', imageStatus);
+    
     console.log('最終編輯器內容長度:', editor.innerHTML.length);
     console.log('最終編輯器文字內容:', editor.textContent?.substring(0, 100) + '...');
+    
+    // 檢查最終編輯器中的圖片數量
+    const finalImages = editor.querySelectorAll('img');
+    console.log('最終編輯器中的圖片數量:', finalImages.length);
+    finalImages.forEach((img, index) => {
+        console.log(`最終圖片 ${index + 1}:`, {
+            src: img.src ? img.src.substring(0, 50) + '...' : 'null',
+            dataPhotoId: img.getAttribute('data-photo-id'),
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight
+        });
+    });
+    
+    // 如果所有圖片都載入失敗，顯示警告
+    if (successCount === 0 && photoUrls.length > 0) {
+        console.warn('所有圖片載入失敗，請檢查後端服務和圖片ID是否正確');
+    }
+    
+    // 如果成功數量與預期不符，顯示警告
+    if (successCount !== photoUrls.length) {
+        console.warn(`圖片載入數量不符：預期 ${photoUrls.length} 張，實際成功 ${successCount} 張`);
+    }
 }

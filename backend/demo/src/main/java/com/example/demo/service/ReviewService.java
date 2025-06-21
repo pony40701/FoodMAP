@@ -345,10 +345,7 @@ public class ReviewService {
             photoDataList != null ? photoDataList.size() : 0,
             photoUrls != null ? photoUrls.size() : 0);
         
-        // 刪除舊照片
-        reviewPhotoRepository.deleteByReviewId(reviewId.intValue());
-        
-        // 新增新照片
+        // 獲取當前草稿
         Review review = reviewRepository.findById(reviewId.intValue())
             .orElseThrow(() -> new RuntimeException("草稿不存在"));
         
@@ -360,6 +357,13 @@ public class ReviewService {
         if (contentJson != null) {
             log.info("原始內容預覽：{}", contentJson.substring(0, Math.min(200, contentJson.length())));
         }
+        
+        // 獲取當前草稿的所有照片
+        List<ReviewPhoto> existingPhotos = reviewPhotoRepository.findByReviewId(reviewId.intValue());
+        log.info("當前草稿照片數量：{}", existingPhotos.size());
+        
+        // 創建一個集合來跟踪需要保留的照片ID
+        Set<Integer> photosToKeep = new HashSet<>();
         
         // 處理新的圖片數據
         if (photoDataList != null && !photoDataList.isEmpty()) {
@@ -378,6 +382,7 @@ public class ReviewService {
                 }
                 
                 ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                photosToKeep.add(savedPhoto.getId());
                 
                 // 在HTML內容中插入圖片佔位符
                 if (contentJson != null) {
@@ -409,6 +414,7 @@ public class ReviewService {
                         photo.setImageWidth(originalPhoto.getImageWidth()); // 複製圖片寬度
                         photo.setImageHeight(originalPhoto.getImageHeight()); // 複製圖片高度
                         ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                        photosToKeep.add(savedPhoto.getId());
                         
                         // 替換已存在圖片的佔位符
                         if (contentJson != null) {
@@ -432,6 +438,14 @@ public class ReviewService {
                 } else {
                     log.warn("無效的圖片ID格式：{}", photoId);
                 }
+            }
+        }
+        
+        // 刪除不再需要的舊照片
+        for (ReviewPhoto existingPhoto : existingPhotos) {
+            if (!photosToKeep.contains(existingPhoto.getId())) {
+                reviewPhotoRepository.delete(existingPhoto);
+                log.info("刪除不再需要的舊照片：photoId={}", existingPhoto.getId());
             }
         }
         
