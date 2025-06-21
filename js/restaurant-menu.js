@@ -6,6 +6,8 @@ let currentEditId = null;
 document.addEventListener('DOMContentLoaded', function() {
     // 檢查登入狀態
     checkLoginStatus();
+    // 載入商家資料
+    loadMerchantInfo();
     // 載入菜單項目
     loadMenuItems();
     // 設置搜尋功能
@@ -36,6 +38,45 @@ async function checkLoginStatus() {
     } catch (error) {
         console.error('驗證失敗:', error);
         window.location.href = 'index.html';
+    }
+}
+
+// 載入商家資料
+async function loadMerchantInfo() {
+    try {
+        const token = localStorage.getItem('merchantToken');
+        const response = await fetch('http://localhost:8080/api/merchants/restaurant/info', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('獲取商家資料失敗');
+        }
+
+        const merchantInfo = await response.json();
+        updateMerchantAvatar(merchantInfo.avatarUrl);
+    } catch (error) {
+        console.error('載入商家資料失敗:', error);
+    }
+}
+
+// 更新商家頭像
+function updateMerchantAvatar(avatarUrl) {
+    const avatarImg = document.querySelector('.avatar-img');
+    if (avatarImg) {
+        if (avatarUrl && avatarUrl !== 'images/default-avatar.png') {
+            // 如果是 Base64 圖片，確保有正確的前綴
+            if (avatarUrl.startsWith('data:image')) {
+                avatarImg.src = avatarUrl;
+            } else {
+                avatarImg.src = `data:image/jpeg;base64,${avatarUrl}`;
+            }
+        } else {
+            avatarImg.src = 'images/default-avatar.png';
+        }
     }
 }
 
