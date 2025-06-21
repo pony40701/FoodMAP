@@ -34,6 +34,10 @@ public class MerchantRegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
 
+    public boolean isEmailExists(String email) {
+        return merchantAccountRepository.findByEmail(email).isPresent();
+    }
+
     public void registerMerchant(RegisterRequest request, MultipartFile avatar, List<MultipartFile> photos) throws IOException {
         logger.info("開始註冊商家流程");
         logger.info("收到的照片數量: {}", photos != null ? photos.size() : 0);
