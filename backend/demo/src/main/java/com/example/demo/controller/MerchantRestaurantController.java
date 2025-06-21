@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -18,6 +19,7 @@ import com.example.demo.security.MerchantJwtService;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
 import com.example.demo.entity.MerchantProfile;
+import com.example.demo.entity.MerchantAccount;
 import com.example.demo.repository.RestaurantPhotoRepository;
 import com.example.demo.repository.LocalRestaurantRepository;
 
@@ -31,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/merchants/restaurant")
@@ -112,8 +115,8 @@ public class MerchantRestaurantController {
 
         List<String> photoBase64List = new ArrayList<>();
         for (RestaurantPhoto photo : restaurant.getPhotos()) {
-            if (photo.getImage() != null) {
-                String base64Image = Base64.getEncoder().encodeToString(photo.getImage());
+            if (photo.getImageUrl() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(photo.getImageUrl());
                 photoBase64List.add("data:image/jpeg;base64," + base64Image);
             }
         }
@@ -122,6 +125,7 @@ public class MerchantRestaurantController {
     }
 
     @PutMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
     public ResponseEntity<?> updateBasicInfo(
             @RequestHeader("Authorization") String authHeader,
             @ModelAttribute MerchantRestaurantDTO.UpdateBasicInfoRequest request) {
@@ -161,13 +165,21 @@ public class MerchantRestaurantController {
 
             // 如果有新的頭像，更新 MerchantProfile
             if (avatarBytes != null) {
-                MerchantProfile profile = merchantProfileRepository.findById(restaurantId)
+                // 先通過 email 找到商家帳號
+                MerchantAccount merchantAccount = merchantAccountRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("商家帳號不存在"));
+
+                // 獲取或創建 MerchantProfile
+                MerchantProfile profile = merchantProfileRepository.findById(merchantAccount.getId())
                     .orElseGet(() -> {
                         MerchantProfile newProfile = new MerchantProfile();
-                        newProfile.setId(restaurantId);
+                        newProfile.setId(merchantAccount.getId());
+                        newProfile.setMerchantAccount(merchantAccount);
                         return newProfile;
                     });
-                profile.setAvatar(avatarBytes);
+
+                // 設置頭像
+                profile.setAvatarUrl(avatarBytes);
                 merchantProfileRepository.save(profile);
             }
 
@@ -184,9 +196,9 @@ public class MerchantRestaurantController {
                 logger.warn("找不到要更新的餐廳資料");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要更新的餐廳資料");
             }
-        } catch (IOException e) {
-            logger.error("處理頭像時發生錯誤", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "處理頭像時發生錯誤");
+        } catch (Exception e) {
+            logger.error("更新基本資料時發生錯誤", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新基本資料失敗: " + e.getMessage());
         }
     }
 
