@@ -10,10 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMerchantInfo();
     // 載入菜單項目
     loadMenuItems();
-    // 設置搜尋功能
-    setupSearch();
-    // 設置圖片預覽
-    setupImagePreview();
+    // 初始化圖片預覽
+    initializeImagePreview();
 });
 
 // 檢查登入狀態
@@ -131,35 +129,31 @@ function displayMenuItems(menuItems) {
     });
 }
 
-// 設置搜尋功能
-function setupSearch() {
-    const searchInput = document.getElementById('search-filter');
-    searchInput.addEventListener('input', function() {
-        const searchText = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-
-        rows.forEach(row => {
-            const name = row.children[1].textContent.toLowerCase();
-            const description = row.children[2].textContent.toLowerCase();
-            if (name.includes(searchText) || description.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-}
-
-// 設置圖片預覽
-function setupImagePreview() {
+// 初始化圖片預覽功能
+function initializeImagePreview() {
+    console.log('Initializing image preview...');
     const imageInput = document.getElementById('item-image');
+    if (!imageInput) {
+        console.error('Image input element not found');
+        return;
+    }
+
     imageInput.addEventListener('change', function(e) {
+        console.log('File input changed');
         const file = e.target.files[0];
         if (file) {
+            console.log('File selected:', file.name);
             const reader = new FileReader();
             reader.onload = function(e) {
+                console.log('File loaded, updating preview');
                 const currentImage = document.getElementById('current-image');
-                currentImage.innerHTML = `<img src="${e.target.result}" alt="預覽圖片">`;
+                if (currentImage) {
+                    currentImage.innerHTML = `
+                        <img src="${e.target.result}" 
+                             alt="預覽圖片" 
+                             style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px;">
+                    `;
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -168,25 +162,47 @@ function setupImagePreview() {
 
 // 顯示新增菜品彈窗
 function showAddMenuItemModal() {
+    console.log('Opening add menu item modal');
     currentMode = 'add';
     currentEditId = null;
-    document.getElementById('modalTitle').textContent = '新增菜品';
-    document.getElementById('addMenuItemForm').reset();
-    document.getElementById('current-image').innerHTML = '';
-    document.getElementById('addMenuItemModal').style.display = 'block';
-}
-
-// 隱藏彈窗
-function hideAddMenuItemModal() {
-    document.getElementById('addMenuItemModal').style.display = 'none';
+    
+    // 重置表單
+    const form = document.getElementById('addMenuItemForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // 清空圖片預覽
+    const currentImage = document.getElementById('current-image');
+    if (currentImage) {
+        currentImage.innerHTML = '';
+    }
+    
+    // 清空檔案輸入
+    const imageInput = document.getElementById('item-image');
+    if (imageInput) {
+        imageInput.value = '';
+    }
+    
+    // 更新標題
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) {
+        modalTitle.textContent = '新增菜品';
+    }
+    
+    // 顯示 Modal
+    const modal = document.getElementById('addMenuItemModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
 }
 
 // 編輯菜品
 async function editMenuItem(id) {
+    console.log('Editing menu item:', id);
     currentMode = 'edit';
     currentEditId = id;
-    document.getElementById('modalTitle').textContent = '編輯菜品';
-
+    
     try {
         const token = localStorage.getItem('merchantToken');
         const response = await fetch(`http://localhost:8080/api/merchants/menu/${id}`, {
@@ -201,25 +217,61 @@ async function editMenuItem(id) {
         }
 
         const item = await response.json();
+        console.log('Fetched item data:', item);
         
         // 填充表單
         document.getElementById('item-name').value = item.itemName;
         document.getElementById('item-price').value = item.price;
         document.getElementById('item-description').value = item.description || '';
         
-        // 顯示現有圖片
-        if (item.menuImage) {
-            document.getElementById('current-image').innerHTML = `
-                <img src="data:image/jpeg;base64,${item.menuImage}" alt="${item.itemName}">
-            `;
-        } else {
-            document.getElementById('current-image').innerHTML = '';
+        // 清空檔案輸入
+        const imageInput = document.getElementById('item-image');
+        if (imageInput) {
+            imageInput.value = '';
+        }
+        
+        // 更新圖片預覽
+        const currentImage = document.getElementById('current-image');
+        if (currentImage) {
+            if (item.menuImage) {
+                console.log('Updating preview with existing image');
+                currentImage.innerHTML = `
+                    <img src="data:image/jpeg;base64,${item.menuImage}" 
+                         alt="${item.itemName}"
+                         style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px;">
+                `;
+            } else {
+                console.log('Setting default image preview');
+                currentImage.innerHTML = `
+                    <img src="images/no-image.jpg" 
+                         alt="無圖片"
+                         style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px;">
+                `;
+            }
         }
 
-        document.getElementById('addMenuItemModal').style.display = 'block';
+        // 更新標題
+        const modalTitle = document.getElementById('modalTitle');
+        if (modalTitle) {
+            modalTitle.textContent = '編輯菜品';
+        }
+
+        // 顯示 Modal
+        const modal = document.getElementById('addMenuItemModal');
+        if (modal) {
+            modal.classList.add('show');
+        }
     } catch (error) {
         console.error('載入菜品資料失敗:', error);
         alert('載入菜品資料失敗，請稍後再試');
+    }
+}
+
+// 隱藏彈窗
+function hideAddMenuItemModal() {
+    const modal = document.getElementById('addMenuItemModal');
+    if (modal) {
+        modal.classList.remove('show');
     }
 }
 
