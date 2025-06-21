@@ -17,25 +17,12 @@
         align-items: center;
         padding: 15px;
         border-bottom: 1px solid #eee;
-        gap: 20px;
       }
       .menu-item-content {
         flex: 1;
         display: flex;
         justify-content: space-between;
         align-items: center;
-      }
-      .menu-item-image {
-        width: 120px;
-        height: 120px;
-        border-radius: 8px;
-        overflow: hidden;
-        flex-shrink: 0;
-      }
-      .menu-item-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
       }
     </style>
   </head>
@@ -121,14 +108,7 @@
       </div>
     </nav>
 
-    <!-- 麵包屑導航 -->
-    <div class="breadcrumb-container">
-      <div class="breadcrumb">
-        <a href="#" id="restaurant-link" class="breadcrumb-link">餐廳列表</a>
-        <span class="breadcrumb-separator">></span>
-        <span class="breadcrumb-current">完整菜單</span>
-      </div>
-    </div>
+
 
     <!-- 主要內容區域 -->
     <main>
@@ -137,93 +117,371 @@
         <h1 class="menu-restaurant-name" id="menuRestaurantName">完整菜單</h1>
         
         <div class="menu-items">
-          <!-- 菜單項目將由商家上傳 -->
+          <!-- 前菜／開胃小點 -->
+          <h2 class="menu-category">前菜／開胃小點</h2>
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">招牌牛肉麵</h3>
-                <p class="menu-item-description">使用特選牛腱肉，搭配手工拉麵，湯頭濃郁</p>
+                <h3 class="menu-item-name">炸豬耳附酸豆美乃滋</h3>
               </div>
-              <div class="menu-item-price">NT$ 180</div>
+              <div class="menu-item-price">NT$189</div>
             </div>
-            <div class="menu-item-image" data-food-type="beef-noodle"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">紅燒排骨飯</h3>
-                <p class="menu-item-description">嚴選豬肋排，搭配特製醬汁，附贈時令蔬菜</p>
+                <h3 class="menu-item-name">薯條附松露美乃滋</h3>
               </div>
-              <div class="menu-item-price">NT$ 150</div>
+              <div class="menu-item-price">NT$189</div>
             </div>
-            <div class="menu-item-image" data-food-type="pork-rib-rice"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">黃金炸雞排</h3>
-                <p class="menu-item-description">外酥內嫩，搭配特製胡椒鹽，附贈飲料</p>
+                <h3 class="menu-item-name">清炒綜合時蔬</h3>
               </div>
-              <div class="menu-item-price">NT$ 120</div>
+              <div class="menu-item-price">NT$189</div>
             </div>
-            <div class="menu-item-image" data-food-type="fried-chicken"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">鮮蝦炒飯</h3>
-                <p class="menu-item-description">使用新鮮蝦仁，搭配蛋炒飯，香氣四溢</p>
+                <h3 class="menu-item-name">炸花枝圈附檸檬美奶滋</h3>
               </div>
-              <div class="menu-item-price">NT$ 160</div>
+              <div class="menu-item-price">NT$189</div>
             </div>
-            <div class="menu-item-image" data-food-type="shrimp-fried-rice"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">台式滷肉飯</h3>
-                <p class="menu-item-description">傳統台式風味，肥瘦適中，搭配滷蛋</p>
+                <h3 class="menu-item-name">綜合生菜燻鮭魚沙拉（特調油醋）</h3>
               </div>
-              <div class="menu-item-price">NT$ 80</div>
+              <div class="menu-item-price">NT$289</div>
             </div>
-            <div class="menu-item-image" data-food-type="lu-rou-fan"></div>
+          </div>
+
+          <!-- 義大利麵 Pasta -->
+          <h2 class="menu-category">義大利麵 Pasta</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">番茄野菇豬肉丸布拉塔起司義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$379</div>
+            </div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">珍珠奶茶</h3>
-                <p class="menu-item-description">使用台灣茶葉，搭配手工珍珠</p>
+                <h3 class="menu-item-name">特製火腿蛋黃奶油義大利麵附溫泉蛋</h3>
               </div>
-              <div class="menu-item-price">NT$ 60</div>
+              <div class="menu-item-price">NT$329</div>
             </div>
-            <div class="menu-item-image" data-food-type="bubble-tea"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">檸檬紅茶</h3>
-                <p class="menu-item-description">新鮮檸檬片，搭配紅茶</p>
+                <h3 class="menu-item-name">香蒜辣椒豬肉義大利麵</h3>
               </div>
-              <div class="menu-item-price">NT$ 50</div>
+              <div class="menu-item-price">NT$329</div>
             </div>
-            <div class="menu-item-image" data-food-type="lemon-tea"></div>
           </div>
 
           <div class="menu-item">
             <div class="menu-item-content">
               <div class="menu-item-info">
-                <h3 class="menu-item-name">水果茶</h3>
-                <p class="menu-item-description">使用當季新鮮水果，清爽解膩</p>
+                <h3 class="menu-item-name">海洋風味奶油蛤蜊義大利麵</h3>
               </div>
-              <div class="menu-item-price">NT$ 70</div>
+              <div class="menu-item-price">NT$220</div>
             </div>
-            <div class="menu-item-image" data-food-type="fruit-tea"></div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">豬跳舞羅勒青醬小卷義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$190</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">起司燻鮭魚義大利麵（含鮭魚卵）</h3>
+              </div>
+              <div class="menu-item-price">NT$379</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">香蒜橄欖油綜合時蔬義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$160</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">爆炒XO風味油菜花香腸義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$190</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">奶油韓風泡菜豬肉丸子義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$220</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">番茄紐西蘭貽貝義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$190</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">蕃茄有蝦有貽貝海鮮義大利麵</h3>
+              </div>
+              <div class="menu-item-price">NT$379</div>
+            </div>
+          </div>
+
+          <!-- 燉飯 Risotto -->
+          <h2 class="menu-category">燉飯 Risotto</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">松露燉飯附微辣熔岩起司雞腿</h3>
+              </div>
+              <div class="menu-item-price">NT$379</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">油封鴨腿燉飯</h3>
+              </div>
+              <div class="menu-item-price">NT$379</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">奶油川味椒麻燉飯附烤厚切豬梅花</h3>
+              </div>
+              <div class="menu-item-price">NT$359</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">愛一直閃亮薑黃貽貝燉飯</h3>
+              </div>
+              <div class="menu-item-price">NT$…</div>
+            </div>
+          </div>
+
+          <!-- 披薩 8 吋 -->
+          <h2 class="menu-category">披薩 8 吋</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">野菇培根黃金蛋披薩</h3>
+              </div>
+              <div class="menu-item-price">NT$309</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">德式蒜味香腸披薩</h3>
+              </div>
+              <div class="menu-item-price">NT$309</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">瑪格麗特披薩</h3>
+              </div>
+              <div class="menu-item-price">NT$309</div>
+            </div>
+          </div>
+
+          <!-- 主餐／肉食系列 -->
+          <h2 class="menu-category">主餐／肉食系列</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">青春肉體烤全雞</h3>
+              </div>
+              <div class="menu-item-price">NT$599</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">義式葡萄醋烤煙燻肋排（5 根）</h3>
+              </div>
+              <div class="menu-item-price">NT$599</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">爐烤綜合肉腸</h3>
+              </div>
+              <div class="menu-item-price">NT$499</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">碳烤 10oz 台灣豬里肌緣側（附青蔥醬）</h3>
+              </div>
+              <div class="menu-item-price">NT$399</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">開心脆皮豬腳</h3>
+              </div>
+              <div class="menu-item-price">NT$699</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">特製烤乳豬</h3>
+              </div>
+              <div class="menu-item-price">NT$799</div>
+            </div>
+          </div>
+
+          <!-- 分享餐／套餐組合 -->
+          <h2 class="menu-category">分享餐／套餐組合</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">雙人豪華組合</h3>
+              </div>
+              <div class="menu-item-price">NT$849</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">雙人 Pizza 分享組合</h3>
+              </div>
+              <div class="menu-item-price">NT$649</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">EZTABLE 單人饗宴</h3>
+              </div>
+              <div class="menu-item-price">NT$358</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">EZTABLE 雙人主餐套餐</h3>
+              </div>
+              <div class="menu-item-price">NT$998</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">EZTABLE 招牌雙主餐套餐</h3>
+              </div>
+              <div class="menu-item-price">NT$1,288</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">EZTABLE 豪華饗宴</h3>
+              </div>
+              <div class="menu-item-price">NT$1,688</div>
+            </div>
+          </div>
+
+          <!-- 飲料／氣泡／酒類 -->
+          <h2 class="menu-category">飲料／氣泡／酒類</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">漂浮可樂（可樂＋荔枝冰淇淋）</h3>
+              </div>
+              <div class="menu-item-price">NT$120</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">藍柑泡泡（含酒或無酒精氣泡飲）</h3>
+              </div>
+              <div class="menu-item-price">NT$130</div>
+            </div>
+          </div>
+
+          <!-- 甜點 -->
+          <h2 class="menu-category">甜點</h2>
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">夢幻焦糖鮮奶酪</h3>
+              </div>
+              <div class="menu-item-price">NT$119</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-content">
+              <div class="menu-item-info">
+                <h3 class="menu-item-name">豬跳舞季節冰淇淋</h3>
+              </div>
+              <div class="menu-item-price">NT$119</div>
+            </div>
           </div>
         </div>
       </div>
@@ -338,7 +596,7 @@
       </div>
     </div>
 
-    <script src="JS/menuDetail.js"></script>
+    <script src="js/menuDetail.js"></script>
     <script src="js/login.js"></script>
     <script>
       // 處理寫食記按鈕點擊

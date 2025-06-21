@@ -1192,60 +1192,16 @@ class MenuDetail {
 
   // 渲染菜單內容
   renderMenu() {
-    ('renderMenu function called');
-    const menuSectionsContainer = document.querySelector('.menu-sections');
-    if (!menuSectionsContainer || !this.restaurantData) {
-      console.error('找不到菜單容器或餐廳資料缺失');
-      return;
-    }
-
-    // 根據餐廳類型獲取菜單資料
-    const menuData = this.getMenuDataByType(this.restaurantData.tags?.[0]);
-
-    let menuHTML = '';
-    const conversionRate = 30; // Placeholder: 1 USD = 30 NTD
-
-    if (menuData.length === 0) {
-      menuHTML += '<p>抱歉，目前沒有該餐廳的菜單資料。</p>';
-    } else {
-      menuData.forEach(category => {
-        menuHTML += `<h2 class="menu-category-title">${category.category}</h2>`;
-        menuHTML += `<div class="menu-items-list">`;
-        category.items.forEach(item => {
-          // Convert USD price to NTD and format
-          const priceNTD = Math.round(item.price * conversionRate); // Round to nearest integer
-          const formattedPrice = `NT$ ${priceNTD}`;
-
-          menuHTML += `
-            <div class="menu-item">
-              <div class="menu-item-details">
-                <div class="menu-item-name">${item.name}</div>
-                ${item.description ? `<div class="menu-item-description">${item.description}</div>` : ''}
-                <div class="menu-item-price">${formattedPrice}</div>
-                <div class="menu-item-meta">
-                  ${item.reviewCount > 0 ? `<span class="menu-item-reviews">${item.reviewCount} 則評論</span>` : ''}
-                  ${item.photoCount > 0 ? `<span class="menu-item-photos">${item.photoCount} 張照片</span>` : ''}
-                </div>
-              </div>
-              ${item.image ? `
-                <div class="menu-item-image">
-                  <img src="${item.image}" alt="${item.name}">
-                </div>
-              ` : ''}
-            </div>
-          `;
-        });
-        menuHTML += `</div>`;
-      });
-    }
-
-    menuSectionsContainer.innerHTML = menuHTML;
-
+    console.log('renderMenu function called');
+    
     // 更新餐廳名稱標題
     const menuRestaurantName = document.querySelector('.menu-restaurant-name');
     if (menuRestaurantName && this.restaurantData) {
-      menuRestaurantName.textContent = `${this.restaurantData.name || '未知餐廳'} 完整菜單`;
+      menuRestaurantName.textContent = `${this.restaurantData.name || '未知餐廳'} - 完整菜單`;
     }
+    
+    // 保持靜態菜單內容，不進行動態替換
+    console.log('使用靜態菜單內容，餐廳名稱已更新');
   }
 }
 
