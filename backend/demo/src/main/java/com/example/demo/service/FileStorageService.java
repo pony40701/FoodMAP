@@ -1,10 +1,6 @@
 package com.example.demo.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,22 +8,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageService {
 
-    private final Path uploadDir = Paths.get("uploads");
-    private final String baseUrl = "http://localhost:8080";
-
-    public String storeFile(MultipartFile file) {
+    public byte[] store(MultipartFile file) {
         try {
-            // 確保目標目錄存在
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
+            if (file.isEmpty()) {
+                throw new RuntimeException("無法儲存空檔案");
             }
-
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filepath = this.uploadDir.resolve(filename);
-            Files.write(filepath, file.getBytes());
-            return baseUrl + "/uploads/" + filename;
+            return file.getBytes();
         } catch (IOException e) {
-            throw new RuntimeException("檔案儲存失敗", e);
+            throw new RuntimeException("檔案讀取失敗", e);
         }
     }
 }
