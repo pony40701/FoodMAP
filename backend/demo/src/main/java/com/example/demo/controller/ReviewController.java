@@ -1,20 +1,31 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ReviewDraftDto;
-import com.example.demo.dto.ReviewRequestDto;
-import com.example.demo.dto.ReviewStatsDto;
-import com.example.demo.dto.ReviewStatsDetailDto;
-import com.example.demo.dto.UserReviewStatsDto;
-import com.example.demo.entity.Review;
-import com.example.demo.service.ReviewService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.demo.dto.ReviewDraftDto;
+import com.example.demo.dto.ReviewRequestDto;
+import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.dto.ReviewStatsDto;
+import com.example.demo.dto.UserReviewStatsDto;
+import com.example.demo.entity.ReviewPhoto;
+import com.example.demo.service.ReviewService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -196,6 +207,24 @@ public class ReviewController {
             }
         } catch (Exception e) {
             log.error("獲取評論圖片信息時發生錯誤：photoId={}", photoId, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // 上傳單張評論圖片
+    @PostMapping("/photos/upload")
+    public ResponseEntity<Map<String, String>> uploadReviewPhoto(@RequestParam("image") MultipartFile imageFile) {
+        try {
+            log.info("上傳評論圖片: {}", imageFile.getOriginalFilename());
+            ReviewPhoto savedPhoto = reviewService.saveSinglePhoto(imageFile);
+            String location = "/api/reviews/photos/" + savedPhoto.getId();
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("location", location);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("上傳圖片時發生錯誤:", e);
             return ResponseEntity.badRequest().build();
         }
     }

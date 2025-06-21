@@ -54,39 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let contentHtml = '';
         if (review.contentJson) {
-            try {
-                const content = JSON.parse(review.contentJson);
-                if (content.blocks) {
-                    content.blocks.forEach(block => {
-                        switch (block.type) {
-                            case 'header':
-                                contentHtml += `<h${block.data.level}>${block.data.text}</h${block.data.level}>`;
-                                break;
-                            case 'paragraph':
-                                contentHtml += `<p>${block.data.text}</p>`;
-                                break;
-                            case 'image':
-                                contentHtml += `<img src="${block.data.file.url}" alt="${block.data.caption || '文章圖片'}">`;
-                                break;
-                            case 'list':
-                                const listTag = block.data.style === 'ordered' ? 'ol' : 'ul';
-                                contentHtml += `<${listTag}>`;
-                                block.data.items.forEach(item => {
-                                    contentHtml += `<li>${item}</li>`;
-                                });
-                                contentHtml += `</${listTag}>`;
-                                break;
-                            case 'quote':
-                                 contentHtml += `<blockquote>${block.data.text}</blockquote>`;
-                                break;
-                            default:
-                                console.warn('Unhandled block type:', block.type);
-                        }
-                    });
-                }
-            } catch (e) {
-                contentHtml = review.contentJson.replace(/<p>|<\/p>/g, ""); // Basic sanitization
-            }
+            // The content from the backend is already an HTML string.
+            // No need to parse it as JSON.
+            contentHtml = review.contentJson;
+        }
+        
+        // 檢查是否有封面圖片
+        let coverImageHtml = '';
+        if (review.imageBase64) {
+            coverImageHtml = `
+                <div class="experience-cover-image">
+                    <img src="data:image/jpeg;base64,${review.imageBase64}" alt="${review.reviewTitle || '心得封面圖片'}">
+                </div>
+            `;
         }
         
         const breadcrumbHtml = `
@@ -133,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="publish-date">${publishDate}</div>
                 </div>
                 <div class="meta-stats">
-                    <span class="overall-score"><i class="fas fa-star"></i> ${review.authorRating ? review.authorRating.toFixed(1) : 'N/A'}</span>
                     <span><i class="fas fa-eye"></i> ${review.viewCount || 0}</span>
                     <button class="favorite-btn-detail ${review.favorited ? 'favorited' : ''}" data-review-id="${review.reviewId}">
                         <i class="${review.favorited ? 'fas' : 'far'} fa-heart"></i>
@@ -146,12 +125,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>${review.restaurantName}</span>
             </a>
             ${scoresHtml}
+            <div class="overall-score-container">
+                <div class="score-item">
+                    <span class="score-label">平均</span>
+                    <span class="score-value overall-score-value">
+                        <i class="fas fa-star"></i> ${review.authorRating ? review.authorRating.toFixed(1) : 'N/A'}
+                    </span>
+                </div>
+            </div>
+            ${coverImageHtml}
             <div class="experience-content">
                 ${contentHtml}
             </div>
         `;
         
         container.innerHTML = html;
+
+        // 檢查來源頁面並動態更新返回連結
+        const breadcrumbDiv = container.querySelector('.breadcrumb');
+        if (breadcrumbDiv && document.referrer.includes('userCenter.html')) {
+            breadcrumbDiv.innerHTML = `
+                <a href="userCenter.html#favorites">
+                    <i class="fas fa-arrow-left"></i>
+                    返回我的收藏
+                </a>
+                <span style="margin: 0 8px; color: #999;">|</span>
+                <a href="experienceList.html">
+                    前往心得列表
+                </a>
+            `;
+        }
 
         const favButton = container.querySelector('.favorite-btn-detail');
         if (favButton) {
