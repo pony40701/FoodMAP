@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.service.MerchantRegistrationService;
@@ -36,6 +38,14 @@ public class MerchantRegistrationController {
     private static final Logger logger = LoggerFactory.getLogger(MerchantRegistrationController.class);
     
     private final MerchantRegistrationService registrationService;
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
+        logger.info("檢查電子信箱是否存在：{}", email);
+        boolean exists = registrationService.isEmailExists(email);
+        logger.info("電子信箱 {} {}", email, exists ? "已存在" : "可以使用");
+        return ResponseEntity.ok(exists);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<String> registerMerchant(

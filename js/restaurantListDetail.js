@@ -140,205 +140,36 @@ class RestaurantDetail {
 
   // 根據餐廳類型獲取相應的圖片
   getImagesByType(type) {
+    // 統一使用本地圖片作為輪播圖
+    const localImages = [
+      {
+        url: 'images/pigDance1.jpg',
+        alt: '餐廳圖片1'
+      },
+      {
+        url: 'images/pigDance3.webp',
+        alt: '餐廳圖片2'
+      },
+      {
+        url: 'images/pigDance2.jpeg',
+        alt: '餐廳圖片3'
+      },
+      {
+        url: 'images/pigDance4.webp',
+        alt: '餐廳圖片4'
+      }
+    ];
+
     const imageSets = {
-      '中式': [
-        {
-          url: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-4.0.3',
-          alt: '中式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-4.0.3',
-          alt: '中式料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '中式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '中式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3',
-          alt: '中式餐廳包廂'
-        }
-      ],
-      '日式': [
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '日式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-4.0.3',
-          alt: '日式料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '日式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '日式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '日式餐廳包廂'
-        }
-      ],
-      '火鍋': [
-        {
-          url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?ixlib=rb-4.0.3',
-          alt: '火鍋餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?ixlib=rb-4.0.3',
-          alt: '火鍋料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?ixlib=rb-4.0.3',
-          alt: '火鍋餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?ixlib=rb-4.0.3',
-          alt: '火鍋餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?ixlib=rb-4.0.3',
-          alt: '火鍋餐廳包廂'
-        }
-      ],
-      '咖啡廳': [
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '咖啡廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '咖啡特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '咖啡廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '咖啡廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3',
-          alt: '咖啡廳戶外區'
-        }
-      ],
-      '牛排': [
-        {
-          url: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3',
-          alt: '牛排餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3',
-          alt: '牛排特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3',
-          alt: '牛排餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3',
-          alt: '牛排餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3',
-          alt: '牛排餐廳包廂'
-        }
-      ],
-      '美式': [
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '美式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '美式料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '美式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '美式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '美式餐廳戶外區'
-        }
-      ],
-      '韓式': [
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '韓式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '韓式料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '韓式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '韓式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '韓式餐廳包廂'
-        }
-      ],
-      '泰式': [
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '泰式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '泰式料理特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '泰式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '泰式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '泰式餐廳戶外區'
-        }
-      ],
-      '港式': [
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '港式餐廳環境'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '港式點心特寫'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '港式餐廳用餐區'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '港式餐廳吧台'
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?ixlib=rb-4.0.3',
-          alt: '港式餐廳包廂'
-        }
-      ]
+      '中式': localImages,
+      '日式': localImages,
+      '火鍋': localImages,
+      '咖啡廳': localImages,
+      '牛排': localImages,
+      '美式': localImages,
+      '韓式': localImages,
+      '泰式': localImages,
+      '港式': localImages
     };
 
     // 如果找不到對應的類型，返回中式餐廳的圖片

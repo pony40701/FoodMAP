@@ -34,6 +34,10 @@ public class MerchantRegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
 
+    public boolean isEmailExists(String email) {
+        return merchantAccountRepository.findByEmail(email).isPresent();
+    }
+
     public void registerMerchant(RegisterRequest request, MultipartFile avatar, List<MultipartFile> photos) throws IOException {
         logger.info("開始註冊商家流程");
         logger.info("收到的照片數量: {}", photos != null ? photos.size() : 0);
@@ -63,6 +67,7 @@ public class MerchantRegistrationService {
         if (avatar != null && !avatar.isEmpty()) {
             logger.info("處理頭像: {}", avatar.getOriginalFilename());
             profile.setAvatarData(avatar.getBytes());
+            profile.setAvatarData(avatar.getBytes());
         }
         MerchantProfile savedProfile = merchantProfileRepository.save(profile);
         logger.info("商家檔案已儲存，ID: {}", savedProfile.getId());
@@ -80,7 +85,7 @@ public class MerchantRegistrationService {
 
                         RestaurantPhoto restaurantPhoto = new RestaurantPhoto();
                         restaurantPhoto.setRestaurant(savedRestaurant);
-                        restaurantPhoto.setPhotoData(photoData); 
+                        restaurantPhoto.setPhotoData(photo.getBytes());
                         RestaurantPhoto savedPhoto = restaurantPhotoRepository.save(restaurantPhoto);
                         logger.info("照片紀錄已儲存成功，ID：{}", savedPhoto.getId());
                     } catch (Exception e) {
