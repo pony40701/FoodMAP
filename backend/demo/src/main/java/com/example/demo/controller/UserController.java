@@ -1,24 +1,23 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.User;
-import com.example.demo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.entity.User;
+import com.example.demo.repository.UserRepository;
+
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(
-    origins = {"http://127.0.0.1:5500", "http://localhost:5500"},
-    allowedHeaders = "*",
-    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE},
-    allowCredentials = "true",
-    maxAge = 3600
-)
 public class UserController {
 
     @Autowired
@@ -60,6 +59,21 @@ public class UserController {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "獲取用戶資料失敗：" + e.getMessage()));
         }
+    }
+
+    @GetMapping("/{id}/avatar")
+    public ResponseEntity<byte[]> getUserAvatar(@PathVariable Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.getAvatarUrl() != null && user.getAvatarUrl().length > 0) {
+                return ResponseEntity.ok()
+                        .header("Content-Type", "image/jpeg") // or other appropriate image type
+                        .body(user.getAvatarUrl());
+            }
+        }
+        // Return a default avatar or a 404 Not Found
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
