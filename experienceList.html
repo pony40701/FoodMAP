@@ -372,7 +372,7 @@
                 <div class="footer-links">
                     <a href="/restaurant-signup.html">商家註冊</a>
                     <a href="ranking.html">排行榜</a>
-                    <a href="/blogPost.html">寫評論</a>
+                    <a href="/blogPost.html">寫心得</a>
                     <a href="/helpcenter.html">幫助中心</a>
                 </div>
             </div>
@@ -677,6 +677,7 @@
                             localStorage.setItem('user', JSON.stringify(data));
                             localStorage.setItem('isLoggedIn', 'true');
                             localStorage.setItem('userId', data.id);
+                            localStorage.setItem('authToken', data.token);
                             // 顯示會員頭像
                             const loginSection = document.getElementById('loginSection');
                             const userSection = document.getElementById('userSection');

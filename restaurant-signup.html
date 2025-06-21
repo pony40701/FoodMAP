@@ -246,6 +246,13 @@
 				if (e.target.closest('.delete-photo')) {
 					const photoItem = e.target.closest('.photo-item');
 					if (photoItem) {
+						// 找到要刪除的照片在陣列中的索引
+						const index = Array.from(photoItem.parentNode.children).indexOf(photoItem);
+						// 從 selectedPhotos 陣列中移除該照片
+						if (index > -1) {
+							selectedPhotos.splice(index - 1, 1); // -1 是因為還有一個 add-photo 按鈕
+							console.log("刪除後剩餘照片數量：", selectedPhotos.length);
+						}
 						photoItem.remove();
 					}
 				}
@@ -264,8 +271,11 @@
 let selectedPhotos = [];
 
 document.getElementById("photo-upload").addEventListener("change", function(e) {
-  selectedPhotos = Array.from(e.target.files);
-  ("選了幾張照片：", selectedPhotos.length);
+  // 將新選擇的照片添加到現有的照片列表中
+  const newPhotos = Array.from(e.target.files);
+  selectedPhotos = selectedPhotos.concat(newPhotos);
+  console.log("目前總共選了幾張照片：", selectedPhotos.length);
+  console.log("新增的照片：", newPhotos.map(p => p.name).join(", "));
 });
 
 // 表單送出
@@ -281,10 +291,10 @@ document.getElementById("restaurant-signup-form").addEventListener("submit", asy
   }
 
   // ✅ 用 selectedPhotos，不要再用 getElementById 抓一次了！
-  ("照片數量（送出時）:", selectedPhotos.length);
+  console.log("送出時的照片數量:", selectedPhotos.length);
   for (let i = 0; i < selectedPhotos.length; i++) {
     formData.append("photos", selectedPhotos[i]);
-    ("加了照片：", selectedPhotos[i].name);
+    console.log("加入照片：", selectedPhotos[i].name);
   }
 
   // 抓其他欄位
@@ -310,6 +320,8 @@ document.getElementById("restaurant-signup-form").addEventListener("submit", asy
     if (response.ok) {
       const result = await response.text();
       alert("註冊成功！伺服器回應：" + result);
+      // 清空照片列表
+      selectedPhotos = [];
     } else {
       const errorText = await response.text();
       alert("發生錯誤：" + response.status + "\n" + errorText);

@@ -1,31 +1,40 @@
 package com.example.demo.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dto.MerchantRestaurantDTO;
-import com.example.demo.repository.MerchantAccountRepository;
-import com.example.demo.security.MerchantJwtService;
+import com.example.demo.entity.MerchantAccount;
+import com.example.demo.entity.MerchantProfile;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
-import com.example.demo.repository.RestaurantPhotoRepository;
 import com.example.demo.repository.LocalRestaurantRepository;
+import com.example.demo.repository.MerchantAccountRepository;
+import com.example.demo.repository.MerchantProfileRepository;
+import com.example.demo.repository.RestaurantPhotoRepository;
+import com.example.demo.security.MerchantJwtService;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.UUID;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/merchants/restaurant")
@@ -44,6 +53,7 @@ public class MerchantRestaurantController {
     private final MerchantJwtService merchantJwtService;
     private final LocalRestaurantRepository restaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
+    private final MerchantProfileRepository merchantProfileRepository;
 
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
@@ -104,14 +114,19 @@ public class MerchantRestaurantController {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new RuntimeException("Restaurant not found"));
 
-        List<String> photoUrls = restaurant.getPhotos().stream()
-                .map(RestaurantPhoto::getImageUrl)
-                .collect(Collectors.toList());
+        List<String> photoBase64List = new ArrayList<>();
+        for (RestaurantPhoto photo : restaurant.getPhotos()) {
+            if (photo.getPhotoData() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(photo.getPhotoData());
+                photoBase64List.add(base64Image);
+            }
+        }
 
-        return ResponseEntity.ok(photoUrls);
+        return ResponseEntity.ok(photoBase64List);
     }
 
     @PutMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
     public ResponseEntity<?> updateBasicInfo(
             @RequestHeader("Authorization") String authHeader,
             @ModelAttribute MerchantRestaurantDTO.UpdateBasicInfoRequest request) {
@@ -135,17 +150,9 @@ public class MerchantRestaurantController {
 
         try {
             // 處理頭像上傳
-            String avatarUrl = null;
+            byte[] avatarBytes = null;
             if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
-                String fileName = UUID.randomUUID().toString() + "_" + request.getAvatar().getOriginalFilename();
-                Path uploadPath = Paths.get("uploads");
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-                Path filePath = uploadPath.resolve(fileName);
-                Files.copy(request.getAvatar().getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                avatarUrl = "/uploads/" + fileName;
-                logger.info("頭像上傳成功: {}", avatarUrl);
+                avatarBytes = request.getAvatar().getBytes();
             }
 
             // 更新資料庫
@@ -154,9 +161,28 @@ public class MerchantRestaurantController {
                 request.getName(),
                 request.getEmail(),
                 request.getPhoneNumber(),
-                request.getAddress(),
-                avatarUrl
+                request.getAddress()
             );
+
+            // 如果有新的頭像，更新 MerchantProfile
+            if (avatarBytes != null) {
+                // 先通過 email 找到商家帳號
+                MerchantAccount merchantAccount = merchantAccountRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("商家帳號不存在"));
+
+                // 獲取或創建 MerchantProfile
+                MerchantProfile profile = merchantProfileRepository.findById(merchantAccount.getId())
+                    .orElseGet(() -> {
+                        MerchantProfile newProfile = new MerchantProfile();
+                        newProfile.setId(merchantAccount.getId());
+                        newProfile.setMerchantAccount(merchantAccount);
+                        return newProfile;
+                    });
+
+                // 設置頭像
+                profile.setAvatarData(avatarBytes);
+                merchantProfileRepository.save(profile);
+            }
 
             if (updatedRows > 0) {
                 logger.info("基本資料更新成功");

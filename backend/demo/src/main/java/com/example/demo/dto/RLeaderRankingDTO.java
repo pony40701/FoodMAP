@@ -6,5 +6,4 @@ public interface RLeaderRankingDTO {
     String getAddress();
     Double getAverageRating();
     Integer getReviewCount();
-    String getPhotoUrl();
 } 
