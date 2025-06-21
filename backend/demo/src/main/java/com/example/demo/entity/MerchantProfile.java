@@ -14,7 +14,7 @@ public class MerchantProfile {
 
     @Lob
     @Column(name = "avatar_url", columnDefinition = "LONGBLOB")
-    private byte[] avatarUrl;
+    private byte[] avatarData;
 
     @Column(name = "description")
     private String description;

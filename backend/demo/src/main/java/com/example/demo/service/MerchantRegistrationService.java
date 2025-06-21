@@ -61,7 +61,7 @@ public class MerchantRegistrationService {
         profile.setMerchantAccount(savedAccount);
         if (avatar != null && !avatar.isEmpty()) {
             logger.info("處理頭像: {}", avatar.getOriginalFilename());
-            profile.setAvatarUrl(avatar.getBytes());
+            profile.setAvatarData(avatar.getBytes());
         }
         MerchantProfile savedProfile = merchantProfileRepository.save(profile);
         logger.info("商家檔案已儲存，ID: {}", savedProfile.getId());
@@ -75,7 +75,7 @@ public class MerchantRegistrationService {
                         logger.info("處理照片：{}, 大小：{} bytes", photo.getOriginalFilename(), photo.getSize());
                         RestaurantPhoto restaurantPhoto = new RestaurantPhoto();
                         restaurantPhoto.setRestaurant(savedRestaurant);
-                        restaurantPhoto.setImageUrl(photo.getBytes());
+                        restaurantPhoto.setPhotoData(photo.getBytes());
                         RestaurantPhoto savedPhoto = restaurantPhotoRepository.save(restaurantPhoto);
                         logger.info("照片已儲存成功，ID：{}", savedPhoto.getId());
                     } catch (Exception e) {

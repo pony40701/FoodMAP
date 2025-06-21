@@ -14,7 +14,7 @@ public class RestaurantPhoto {
 
     @Lob
     @Column(name = "image_url", columnDefinition = "LONGBLOB")
-    private byte[] imageUrl;
+    private byte[] photoData;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
