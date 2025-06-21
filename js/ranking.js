@@ -118,12 +118,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const restaurantItem = document.createElement('div');
             restaurantItem.className = 'restaurant-item';
             
-            const imageUrl = restaurant.photoUrl || '../images/restaurant-default.jpg';
+            // 初始設置為預設圖片
+            const imageUrl = '../images/restaurant-default.jpg';
 
             restaurantItem.innerHTML = `
                 <div class="rank rank-${rank}">${rank}</div>
                 <div class="restaurant-image">
-                    <img src="${imageUrl}" alt="${restaurant.name}" loading="lazy">
+                    <img src="${imageUrl}" alt="${restaurant.name}" loading="lazy" data-restaurant-id="${restaurant.restaurantId}">
                 </div>
                 <div class="restaurant-info">
                     <h3 class="restaurant-name">${restaurant.name}</h3>
@@ -144,6 +145,28 @@ document.addEventListener('DOMContentLoaded', function() {
             fragment.appendChild(restaurantItem);
         }
         customRestaurantList.appendChild(fragment);
+
+        // 非同步加載圖片
+        restaurants.forEach(restaurant => {
+            const imgElement = customRestaurantList.querySelector(`img[data-restaurant-id="${restaurant.restaurantId}"]`);
+            if (imgElement) {
+                fetch(`http://localhost:8080/api/rleader/ranking/restaurant/photo/${restaurant.restaurantId}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.blob();
+                        }
+                        throw new Error('Image not found.');
+                    })
+                    .then(blob => {
+                        imgElement.src = URL.createObjectURL(blob);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching restaurant image:', error);
+                        // 圖片加載失敗，維持預設圖片
+                    });
+            }
+        });
+
         favoriteButtonHandler.initialize();
     }
     

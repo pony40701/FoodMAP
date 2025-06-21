@@ -1,8 +1,10 @@
 package com.example.demo.service;
 //boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan
-import java.util.List;
 import java.io.IOException;
+import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,14 +14,12 @@ import com.example.demo.entity.MerchantAccount;
 import com.example.demo.entity.MerchantProfile;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
+import com.example.demo.repository.LocalRestaurantRepository;
 import com.example.demo.repository.MerchantAccountRepository;
 import com.example.demo.repository.MerchantProfileRepository;
-import com.example.demo.repository.LocalRestaurantRepository;
 import com.example.demo.repository.RestaurantPhotoRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RequiredArgsConstructor
 @Service
@@ -32,6 +32,7 @@ public class MerchantRegistrationService {
     private final LocalRestaurantRepository localRestaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
     public void registerMerchant(RegisterRequest request, MultipartFile avatar, List<MultipartFile> photos) throws IOException {
         logger.info("開始註冊商家流程");
@@ -61,7 +62,7 @@ public class MerchantRegistrationService {
         profile.setMerchantAccount(savedAccount);
         if (avatar != null && !avatar.isEmpty()) {
             logger.info("處理頭像: {}", avatar.getOriginalFilename());
-            profile.setAvatarUrl(avatar.getBytes());
+            profile.setAvatarData(avatar.getBytes());
         }
         MerchantProfile savedProfile = merchantProfileRepository.save(profile);
         logger.info("商家檔案已儲存，ID: {}", savedProfile.getId());
@@ -73,11 +74,15 @@ public class MerchantRegistrationService {
                 if (photo != null && !photo.isEmpty()) {
                     try {
                         logger.info("處理照片：{}, 大小：{} bytes", photo.getOriginalFilename(), photo.getSize());
+                        
+                        // 使用 FileStorageService 將檔案轉換為 byte[]
+                        byte[] photoData = fileStorageService.store(photo);
+
                         RestaurantPhoto restaurantPhoto = new RestaurantPhoto();
                         restaurantPhoto.setRestaurant(savedRestaurant);
-                        restaurantPhoto.setImageUrl(photo.getBytes());
+                        restaurantPhoto.setPhotoData(photoData); 
                         RestaurantPhoto savedPhoto = restaurantPhotoRepository.save(restaurantPhoto);
-                        logger.info("照片已儲存成功，ID：{}", savedPhoto.getId());
+                        logger.info("照片紀錄已儲存成功，ID：{}", savedPhoto.getId());
                     } catch (Exception e) {
                         logger.error("儲存照片時發生錯誤：{}", e.getMessage());
                         throw e;

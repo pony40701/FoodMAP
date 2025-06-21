@@ -1,39 +1,40 @@
 package com.example.demo.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dto.MerchantRestaurantDTO;
-import com.example.demo.repository.MerchantAccountRepository;
-import com.example.demo.repository.MerchantProfileRepository;
-import com.example.demo.security.MerchantJwtService;
+import com.example.demo.entity.MerchantAccount;
+import com.example.demo.entity.MerchantProfile;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.entity.RestaurantPhoto;
-import com.example.demo.entity.MerchantProfile;
-import com.example.demo.entity.MerchantAccount;
-import com.example.demo.repository.RestaurantPhotoRepository;
 import com.example.demo.repository.LocalRestaurantRepository;
+import com.example.demo.repository.MerchantAccountRepository;
+import com.example.demo.repository.MerchantProfileRepository;
+import com.example.demo.repository.RestaurantPhotoRepository;
+import com.example.demo.security.MerchantJwtService;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.UUID;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/merchants/restaurant")
@@ -115,9 +116,9 @@ public class MerchantRestaurantController {
 
         List<String> photoBase64List = new ArrayList<>();
         for (RestaurantPhoto photo : restaurant.getPhotos()) {
-            if (photo.getImageUrl() != null) {
-                String base64Image = Base64.getEncoder().encodeToString(photo.getImageUrl());
-                photoBase64List.add("data:image/jpeg;base64," + base64Image);
+            if (photo.getPhotoData() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(photo.getPhotoData());
+                photoBase64List.add(base64Image);
             }
         }
 
@@ -179,7 +180,7 @@ public class MerchantRestaurantController {
                     });
 
                 // 設置頭像
-                profile.setAvatarUrl(avatarBytes);
+                profile.setAvatarData(avatarBytes);
                 merchantProfileRepository.save(profile);
             }
 
