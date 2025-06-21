@@ -835,8 +835,13 @@ function showToast(message, type = 'info') {
 
 // 移除收藏評論
 async function removeFavoriteReview(reviewId) {
-    if (!window.confirm('您確定要移除這篇收藏心得嗎？')) {
-        return;
+    const confirmed = await showConfirmationModal(
+        '您確定要移除這篇收藏心得嗎？',
+        '移除收藏'
+    );
+
+    if (!confirmed) {
+        return; // 使用者點擊取消
     }
 
     const userId = localStorage.getItem('userId');
@@ -844,29 +849,29 @@ async function removeFavoriteReview(reviewId) {
         showToast('請先登入', 'error');
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/users/favorite/review/${userId}/${reviewId}`, {
             method: 'DELETE'
-        });
+            });
 
-        if (!response.ok) {
+            if (!response.ok) {
             throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
-        }
+            }
 
         const body = await response.json();
         if (!body.success) {
             throw new Error(body.message || '移除收藏評論失敗');
         }
-
+            
         showToast('已取消收藏心得', 'success');
-        // 從 DOM 中移除卡片
+                // 從 DOM 中移除卡片
         const card = document.querySelector(`.food-card[data-id="${reviewId}"]`);
         if (card) {
             card.remove();
         }
         // 可以在此處更新收藏計數
-    } catch (error) {
+        } catch (error) {
         console.error('移除收藏評論失敗:', error);
         
         // 回復按鈕狀態
@@ -902,6 +907,56 @@ async function removeFavoriteReview(reviewId) {
             console.error('從本地快取移除收藏評論失敗:', localError);
         }
     }
+}
+
+/**
+ * 顯示自訂確認彈窗
+ * @param {string} message - 要顯示的訊息
+ * @param {string} title - 彈窗標題
+ * @returns {Promise<boolean>} - 回傳一個 Promise，使用者點擊確定時解析為 true，否則為 false
+ */
+function showConfirmationModal(message, title = '確認操作') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const modalTitle = document.getElementById('confirmModalTitle');
+        const modalMessage = document.getElementById('confirmModalMessage');
+        const okButton = document.getElementById('confirmModalOk');
+        const cancelButton = document.getElementById('confirmModalCancel');
+
+        if (!modal || !modalTitle || !modalMessage || !okButton || !cancelButton) {
+            console.error('找不到確認彈窗的必要元素');
+            return resolve(false); // 避免 Promise 卡住
+        }
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+
+        // 為了避免重複綁定事件，先複製再取代按鈕
+        const newOkButton = okButton.cloneNode(true);
+        okButton.parentNode.replaceChild(newOkButton, okButton);
+        
+        const newCancelButton = cancelButton.cloneNode(true);
+        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+
+        newOkButton.onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+        };
+
+        newCancelButton.onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+
+        // 點擊背景關閉
+        modal.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                resolve(false);
+            }
+        };
+    });
 }
 
 // 查看餐廳詳情
