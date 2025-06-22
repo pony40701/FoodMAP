@@ -34,12 +34,13 @@ public class ReviewService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createReview(ReviewRequestDto dto) {
         try {
-            log.info("創建新評論：userId={}, title={}, contentLength={}, newImages={}, existingPhotos={}", 
+            log.info("創建新評論：userId={}, title={}, contentLength={}, newImages={}, existingPhotos={}, existingImageInfo={}", 
                 dto.getUserId(), 
                 dto.getTitle(),
                 dto.getContent_json() != null ? dto.getContent_json().length() : 0,
                 dto.getPhotoData() != null ? dto.getPhotoData().size() : 0,
-                dto.getPhotos() != null ? dto.getPhotos().size() : 0);
+                dto.getPhotos() != null ? dto.getPhotos().size() : 0,
+                dto.getExistingImageInfo() != null ? dto.getExistingImageInfo().size() : 0);
             
             if (dto.getContent_json() != null && dto.getContent_json().length() > 50000) {
                 log.warn("評論內容過長：{} 字符", dto.getContent_json().length());
@@ -75,12 +76,53 @@ public class ReviewService {
             if (dto.getPhotos() != null && !dto.getPhotos().isEmpty()) {
                 for (String photoId : dto.getPhotos()) {
                     if (photoId.matches("\\d+")) {
-                        ReviewPhoto photo = new ReviewPhoto();
-                        photo.setReview(review);
-                        photo.setImageUrl(photoId); // 存儲圖片ID
-                        reviewPhotoRepository.save(photo);
+                        // 從原始圖片複製數據
+                        Optional<ReviewPhoto> originalPhotoOpt = reviewPhotoRepository.findById(Integer.parseInt(photoId));
+                        if (originalPhotoOpt.isPresent()) {
+                            ReviewPhoto originalPhoto = originalPhotoOpt.get();
+                            
+                            ReviewPhoto photo = new ReviewPhoto();
+                            photo.setReview(review);
+                            photo.setImageUrl(originalPhoto.getImageUrl());
+                            photo.setImage(originalPhoto.getImage()); // 複製圖片數據
+                            photo.setImageWidth(originalPhoto.getImageWidth()); // 複製原始寬度
+                            photo.setImageHeight(originalPhoto.getImageHeight()); // 複製原始高度
+                            
+                            // 如果有existingImageInfo，使用新的尺寸信息覆蓋原始信息
+                            if (dto.getExistingImageInfo() != null && dto.getExistingImageInfo().containsKey(photoId)) {
+                                ReviewRequestDto.PhotoData imageInfo = dto.getExistingImageInfo().get(photoId);
+                                if (imageInfo.getSize() != null) {
+                                    photo.setImageWidth(imageInfo.getSize().getWidth());
+                                    photo.setImageHeight(imageInfo.getSize().getHeight());
+                                    log.info("使用existingImageInfo更新複製圖片的大小信息：photoId={}, width={}, height={}", 
+                                        photoId, imageInfo.getSize().getWidth(), imageInfo.getSize().getHeight());
+                                }
+                            }
+                            
+                            ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                            
+                            // 替換已存在圖片的佔位符
+                            String contentJson = review.getContentJson();
+                            if (contentJson != null) {
+                                String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%s]", photoId);
+                                String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                                if (contentJson.contains(oldPlaceholder)) {
+                                    contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
+                                    review.setContentJson(contentJson);
+                                    log.info("替換已存在圖片佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
+                                }
+                            }
+                            
+                            log.info("複製外部圖片：originalId={}, newId={}, hasImageData={}", 
+                                photoId, savedPhoto.getId(), savedPhoto.getImage() != null && savedPhoto.getImage().length > 0);
+                        } else {
+                            log.warn("跳過不存在的圖片ID：{}", photoId);
+                        }
                     }
                 }
+                
+                // 保存更新後的內容
+                reviewRepository.save(review);
             }
 
             // 5. 儲存標籤
@@ -314,7 +356,7 @@ public class ReviewService {
             updateReviewRating(reviewId, dto.getRatings());
 
             // 更新照片 - 處理新圖片和已存在圖片，並替換佔位符
-            updateReviewPhotosAndData(reviewId, dto.getPhotoData(), dto.getPhotos());
+            updateReviewPhotosAndData(reviewId, dto.getPhotoData(), dto.getPhotos(), dto.getExistingImageInfo());
 
             // 更新標籤
             updateReviewTags(reviewId, dto.getTags());
@@ -339,11 +381,12 @@ public class ReviewService {
         log.info("更新草稿評分：reviewId={}", reviewId);
     }
 
-    private void updateReviewPhotosAndData(Integer reviewId, List<ReviewRequestDto.PhotoData> photoDataList, List<String> photoUrls) {
-        log.info("開始更新草稿照片：reviewId={}, 新圖片數量={}, 已存在圖片數量={}", 
+    private void updateReviewPhotosAndData(Integer reviewId, List<ReviewRequestDto.PhotoData> photoDataList, List<String> photoUrls, Map<String, ReviewRequestDto.PhotoData> existingImageInfo) {
+        log.info("開始更新草稿照片：reviewId={}, 新圖片數量={}, 已存在圖片數量={}, 圖片大小信息數量={}", 
             reviewId, 
             photoDataList != null ? photoDataList.size() : 0,
-            photoUrls != null ? photoUrls.size() : 0);
+            photoUrls != null ? photoUrls.size() : 0,
+            existingImageInfo != null ? existingImageInfo.size() : 0);
         
         // 獲取當前草稿
         Review review = reviewRepository.findById(reviewId.intValue())
@@ -379,6 +422,7 @@ public class ReviewService {
                 if (photoData.getSize() != null) {
                     photo.setImageWidth(photoData.getSize().getWidth());
                     photo.setImageHeight(photoData.getSize().getHeight());
+                    log.info("保存新圖片大小信息：{}x{}", photoData.getSize().getWidth(), photoData.getSize().getHeight());
                 }
                 
                 ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
@@ -395,45 +439,83 @@ public class ReviewService {
             }
         }
         
-        // 處理已存在的圖片ID
+        // 處理已存在的圖片ID - 改為智能更新而不是重新創建
         if (photoUrls != null && !photoUrls.isEmpty()) {
             log.info("處理已存在圖片ID：{}", photoUrls);
             for (String photoId : photoUrls) {
                 log.info("處理圖片ID：{}", photoId);
-                // 如果是圖片ID（已存在的圖片），複製完整的圖片數據
+                // 如果是圖片ID（已存在的圖片），檢查是否屬於當前草稿
                 if (photoId.matches("\\d+")) {
-                    // 從原始圖片記錄獲取完整的圖片數據
-                    Optional<ReviewPhoto> originalPhotoOpt = reviewPhotoRepository.findById(Integer.parseInt(photoId));
-                    if (originalPhotoOpt.isPresent()) {
-                        ReviewPhoto originalPhoto = originalPhotoOpt.get();
+                    Integer photoIdInt = Integer.parseInt(photoId);
+                    
+                    // 檢查這個圖片是否已經屬於當前草稿
+                    Optional<ReviewPhoto> existingPhotoOpt = existingPhotos.stream()
+                        .filter(photo -> photo.getId().equals(photoIdInt))
+                        .findFirst();
+                    
+                    if (existingPhotoOpt.isPresent()) {
+                        // 圖片已經屬於當前草稿，更新其大小信息
+                        ReviewPhoto existingPhoto = existingPhotoOpt.get();
+                        photosToKeep.add(existingPhoto.getId());
                         
-                        ReviewPhoto photo = new ReviewPhoto();
-                        photo.setReview(review);
-                        photo.setImageUrl(originalPhoto.getImageUrl());
-                        photo.setImage(originalPhoto.getImage()); // 複製圖片數據
-                        photo.setImageWidth(originalPhoto.getImageWidth()); // 複製圖片寬度
-                        photo.setImageHeight(originalPhoto.getImageHeight()); // 複製圖片高度
-                        ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
-                        photosToKeep.add(savedPhoto.getId());
-                        
-                        // 替換已存在圖片的佔位符
-                        if (contentJson != null) {
-                            String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%s]", photoId);
-                            String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
-                            log.info("檢查佔位符：{} 是否存在於內容中", oldPlaceholder);
-                            if (contentJson.contains(oldPlaceholder)) {
-                                contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
-                                contentUpdated = true;
-                                log.info("替換已存在圖片佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
-                            } else {
-                                log.warn("佔位符 {} 不存在於內容中", oldPlaceholder);
+                        // 如果有existingImageInfo，更新圖片的大小和對齊信息
+                        if (existingImageInfo != null && existingImageInfo.containsKey(photoId)) {
+                            ReviewRequestDto.PhotoData imageInfo = existingImageInfo.get(photoId);
+                            if (imageInfo.getSize() != null) {
+                                existingPhoto.setImageWidth(imageInfo.getSize().getWidth());
+                                existingPhoto.setImageHeight(imageInfo.getSize().getHeight());
+                                log.info("更新已存在圖片的大小信息：photoId={}, width={}, height={}", 
+                                    photoId, imageInfo.getSize().getWidth(), imageInfo.getSize().getHeight());
                             }
+                            reviewPhotoRepository.save(existingPhoto);
                         }
                         
-                        log.info("複製已存在圖片：originalId={}, newId={}, hasImageData={}", 
-                            photoId, savedPhoto.getId(), savedPhoto.getImage() != null && savedPhoto.getImage().length > 0);
+                        log.info("保留已存在的圖片：photoId={}, hasImageData={}", 
+                            existingPhoto.getId(), existingPhoto.getImage() != null && existingPhoto.getImage().length > 0);
                     } else {
-                        log.warn("跳過不存在的圖片ID：{}", photoId);
+                        // 圖片不屬於當前草稿，需要從其他地方複製
+                        Optional<ReviewPhoto> originalPhotoOpt = reviewPhotoRepository.findById(photoIdInt);
+                        if (originalPhotoOpt.isPresent()) {
+                            ReviewPhoto originalPhoto = originalPhotoOpt.get();
+                            
+                            ReviewPhoto photo = new ReviewPhoto();
+                            photo.setReview(review);
+                            photo.setImageUrl(originalPhoto.getImageUrl());
+                            photo.setImage(originalPhoto.getImage()); // 複製圖片數據
+                            
+                            // 如果有existingImageInfo，使用新的尺寸信息覆蓋原始信息
+                            if (existingImageInfo != null && existingImageInfo.containsKey(photoId)) {
+                                ReviewRequestDto.PhotoData imageInfo = existingImageInfo.get(photoId);
+                                if (imageInfo.getSize() != null) {
+                                    photo.setImageWidth(imageInfo.getSize().getWidth());
+                                    photo.setImageHeight(imageInfo.getSize().getHeight());
+                                    log.info("使用existingImageInfo更新複製圖片的大小信息：photoId={}, width={}, height={}", 
+                                        photoId, imageInfo.getSize().getWidth(), imageInfo.getSize().getHeight());
+                                }
+                            }
+                            
+                            ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                            photosToKeep.add(savedPhoto.getId());
+                            
+                            // 替換已存在圖片的佔位符
+                            if (contentJson != null) {
+                                String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%s]", photoId);
+                                String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                                log.info("檢查佔位符：{} 是否存在於內容中", oldPlaceholder);
+                                if (contentJson.contains(oldPlaceholder)) {
+                                    contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
+                                    contentUpdated = true;
+                                    log.info("替換已存在圖片佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
+                                } else {
+                                    log.warn("佔位符 {} 不存在於內容中", oldPlaceholder);
+                                }
+                            }
+                            
+                            log.info("複製外部圖片：originalId={}, newId={}, hasImageData={}", 
+                                photoId, savedPhoto.getId(), savedPhoto.getImage() != null && savedPhoto.getImage().length > 0);
+                        } else {
+                            log.warn("跳過不存在的圖片ID：{}", photoId);
+                        }
                     }
                 } else {
                     log.warn("無效的圖片ID格式：{}", photoId);
@@ -748,8 +830,8 @@ public class ReviewService {
         rating.setOverallScore(dto.getRatings().getOverall_score());
         reviewRatingRepository.save(rating);
 
-        // 4. 更新照片 - 處理新圖片和已存在圖片
-        updateReviewPhotosAndData(reviewId, dto.getPhotoData(), dto.getPhotos());
+        // 4. 更新照片 - 專門處理已發布文章的圖片更新
+        updatePublishedReviewPhotos(reviewId, dto.getPhotoData(), dto.getPhotos(), dto.getContent_json(), dto.getExistingImageInfo());
 
         // 5. 更新標籤
         reviewTagRepository.deleteByReviewId(reviewId.intValue());
@@ -765,6 +847,167 @@ public class ReviewService {
         }
 
         return review.getId().intValue();
+    }
+
+    /**
+     * 專門處理已發布文章的圖片更新
+     */
+    private void updatePublishedReviewPhotos(Integer reviewId, List<ReviewRequestDto.PhotoData> photoDataList, 
+                                           List<String> photoUrls, String contentJson, Map<String, ReviewRequestDto.PhotoData> existingImageInfo) {
+        log.info("開始更新已發布文章圖片：reviewId={}, 新圖片數量={}, 已存在圖片數量={}", 
+            reviewId, 
+            photoDataList != null ? photoDataList.size() : 0,
+            photoUrls != null ? photoUrls.size() : 0);
+        
+        // 獲取當前文章的所有圖片
+        List<ReviewPhoto> existingPhotos = reviewPhotoRepository.findByReviewId(reviewId.intValue());
+        log.info("當前文章圖片數量：{}", existingPhotos.size());
+        
+        // 記錄需要保留的圖片ID
+        Set<Integer> photosToKeep = new HashSet<>();
+        boolean contentUpdated = false;
+        
+        // 處理新的圖片數據
+        if (photoDataList != null && !photoDataList.isEmpty()) {
+            log.info("處理新圖片數據，數量：{}", photoDataList.size());
+            for (int i = 0; i < photoDataList.size(); i++) {
+                ReviewRequestDto.PhotoData photoData = photoDataList.get(i);
+                ReviewPhoto photo = new ReviewPhoto();
+                photo.setReview(reviewRepository.findById(reviewId.intValue()).orElseThrow());
+                photo.setImageUrl(photoData.getFileName()); // 使用檔名作為URL
+                photo.setImage(photoData.getImageData()); // 儲存圖片數據
+                
+                // 保存圖片大小信息
+                if (photoData.getSize() != null) {
+                    photo.setImageWidth(photoData.getSize().getWidth());
+                    photo.setImageHeight(photoData.getSize().getHeight());
+                }
+                
+                ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                photosToKeep.add(savedPhoto.getId());
+                
+                // 在HTML內容中插入圖片佔位符
+                if (contentJson != null) {
+                    String placeholder = String.format("[NEW_IMAGE_PLACEHOLDER_%d]", i);
+                    String imagePlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                    contentJson = contentJson.replace(placeholder, imagePlaceholder);
+                    contentUpdated = true;
+                    log.info("替換新圖片佔位符：{} -> {}", placeholder, imagePlaceholder);
+                }
+            }
+        }
+        
+        // 處理已存在的圖片ID
+        if (photoUrls != null && !photoUrls.isEmpty()) {
+            log.info("處理已存在圖片ID：{}", photoUrls);
+            for (String photoId : photoUrls) {
+                log.info("處理圖片ID：{}", photoId);
+                // 如果是圖片ID（已存在的圖片），檢查是否屬於當前文章
+                if (photoId.matches("\\d+")) {
+                    Integer photoIdInt = Integer.parseInt(photoId);
+                    
+                    // 檢查這個圖片是否已經屬於當前文章
+                    Optional<ReviewPhoto> existingPhotoOpt = existingPhotos.stream()
+                        .filter(photo -> photo.getId().equals(photoIdInt))
+                        .findFirst();
+                    
+                    if (existingPhotoOpt.isPresent()) {
+                        // 圖片已經屬於當前文章，保留它
+                        ReviewPhoto existingPhoto = existingPhotoOpt.get();
+                        photosToKeep.add(existingPhoto.getId());
+                        
+                        // 如果有existingImageInfo，更新圖片的大小和對齊信息
+                        if (existingImageInfo != null && existingImageInfo.containsKey(photoId)) {
+                            ReviewRequestDto.PhotoData imageInfo = existingImageInfo.get(photoId);
+                            if (imageInfo.getSize() != null) {
+                                existingPhoto.setImageWidth(imageInfo.getSize().getWidth());
+                                existingPhoto.setImageHeight(imageInfo.getSize().getHeight());
+                                log.info("更新已存在圖片的大小信息：photoId={}, width={}, height={}", 
+                                    photoId, imageInfo.getSize().getWidth(), imageInfo.getSize().getHeight());
+                            }
+                            reviewPhotoRepository.save(existingPhoto);
+                        }
+                        
+                        log.info("保留已存在的圖片：photoId={}, hasImageData={}", 
+                            existingPhoto.getId(), existingPhoto.getImage() != null && existingPhoto.getImage().length > 0);
+                    } else {
+                        // 圖片不屬於當前文章，需要從其他地方複製
+                        Optional<ReviewPhoto> originalPhotoOpt = reviewPhotoRepository.findById(photoIdInt);
+                        if (originalPhotoOpt.isPresent()) {
+                            ReviewPhoto originalPhoto = originalPhotoOpt.get();
+                            
+                            ReviewPhoto photo = new ReviewPhoto();
+                            photo.setReview(reviewRepository.findById(reviewId.intValue()).orElseThrow());
+                            photo.setImageUrl(originalPhoto.getImageUrl());
+                            photo.setImage(originalPhoto.getImage()); // 複製圖片數據
+                            photo.setImageWidth(originalPhoto.getImageWidth()); // 複製圖片寬度
+                            photo.setImageHeight(originalPhoto.getImageHeight()); // 複製圖片高度
+                            
+                            // 如果有existingImageInfo，使用新的尺寸信息覆蓋原始信息
+                            if (existingImageInfo != null && existingImageInfo.containsKey(photoId)) {
+                                ReviewRequestDto.PhotoData imageInfo = existingImageInfo.get(photoId);
+                                if (imageInfo.getSize() != null) {
+                                    photo.setImageWidth(imageInfo.getSize().getWidth());
+                                    photo.setImageHeight(imageInfo.getSize().getHeight());
+                                    log.info("使用existingImageInfo更新複製圖片的大小信息：photoId={}, width={}, height={}", 
+                                        photoId, imageInfo.getSize().getWidth(), imageInfo.getSize().getHeight());
+                                }
+                            }
+                            
+                            ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
+                            photosToKeep.add(savedPhoto.getId());
+                            
+                            // 替換已存在圖片的佔位符
+                            if (contentJson != null) {
+                                String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%s]", photoId);
+                                String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                                log.info("檢查佔位符：{} 是否存在於內容中", oldPlaceholder);
+                                if (contentJson.contains(oldPlaceholder)) {
+                                    contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
+                                    contentUpdated = true;
+                                    log.info("替換已存在圖片佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
+                                } else {
+                                    log.warn("佔位符 {} 不存在於內容中", oldPlaceholder);
+                                }
+                            }
+                            
+                            log.info("複製外部圖片：originalId={}, newId={}, hasImageData={}", 
+                                photoId, savedPhoto.getId(), savedPhoto.getImage() != null && savedPhoto.getImage().length > 0);
+                        } else {
+                            log.warn("跳過不存在的圖片ID：{}", photoId);
+                        }
+                    }
+                } else {
+                    log.warn("無效的圖片ID格式：{}", photoId);
+                }
+            }
+        }
+        
+        // 刪除不再需要的舊照片
+        for (ReviewPhoto existingPhoto : existingPhotos) {
+            if (!photosToKeep.contains(existingPhoto.getId())) {
+                reviewPhotoRepository.delete(existingPhoto);
+                log.info("刪除不再需要的舊照片：photoId={}", existingPhoto.getId());
+            }
+        }
+        
+        // 保存更新後的內容
+        if (contentUpdated) {
+            Review updatedReview = reviewRepository.findById(reviewId.intValue()).orElseThrow();
+            updatedReview.setContentJson(contentJson);
+            reviewRepository.save(updatedReview);
+            log.info("更新已發布文章內容，包含圖片佔位符替換，新內容長度：{}", contentJson.length());
+            log.info("新內容預覽：{}", contentJson.substring(0, Math.min(200, contentJson.length())));
+        } else {
+            log.info("內容沒有變更，跳過保存");
+        }
+        
+        int totalPhotos = (photoDataList != null ? photoDataList.size() : 0) + (photoUrls != null ? photoUrls.size() : 0);
+        log.info("更新已發布文章照片完成：reviewId={}, 新圖片={}, 已存在圖片={}, 總數={}", 
+            reviewId, 
+            photoDataList != null ? photoDataList.size() : 0,
+            photoUrls != null ? photoUrls.size() : 0,
+            totalPhotos);
     }
 
     // 查詢用戶的文章數據
