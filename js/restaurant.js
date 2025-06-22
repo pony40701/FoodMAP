@@ -135,7 +135,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addPhotoButton && photoUpload) {
         // 點擊新增照片按鈕時觸發檔案選擇
         addPhotoButton.onclick = function() {
-            photoUpload.click();
+            const infoSection = addPhotoButton.closest('.info-section');
+            if (infoSection && infoSection.classList.contains('editing')) {
+                photoUpload.click();
+            }
         };
 
         // 處理照片上傳
@@ -143,14 +146,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const files = e.target.files;
             for (let file of files) {
                 if (file.type.startsWith('image/')) {
+                    // 檢查檔案大小（2MB）
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('檔案大小不能超過 2MB');
+                        continue;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const photoItem = document.createElement('div');
                         photoItem.className = 'photo-item';
                         photoItem.innerHTML = `
-                            <img src="${e.target.result}" alt="餐廳照片">
+                            <img src="${e.target.result}" alt="餐廳照片" data-base64="${e.target.result}">
                             <div class="photo-overlay">
-                                <button class="delete-photo"><i class="fas fa-trash"></i></button>
+                                <button class="delete-photo">
+                                    <i class="fas fa-trash"></i>
+                                    刪除
+                                </button>
                             </div>
                         `;
                         // 將新照片插入到新增按鈕之前
@@ -166,11 +178,47 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 處理照片刪除
     if (photoGrid) {
-        photoGrid.onclick = function(e) {
-            if (e.target.closest('.delete-photo')) {
-                const photoItem = e.target.closest('.photo-item');
-                if (photoItem && !photoItem.classList.contains('add-photo')) {
-                    photoItem.remove();
+        photoGrid.onclick = async function(e) {
+            const deleteButton = e.target.closest('.delete-photo');
+            if (deleteButton) {
+                const infoSection = deleteButton.closest('.info-section');
+                if (infoSection && infoSection.classList.contains('editing')) {
+                    const photoItem = deleteButton.closest('.photo-item');
+                    if (photoItem && !photoItem.classList.contains('add-photo')) {
+                        try {
+                            const img = photoItem.querySelector('img');
+                            const base64Data = img.dataset.base64;
+                            
+                            console.log('準備刪除照片，base64 長度:', base64Data.length);
+                            
+                            // 發送刪除請求到後端
+                            const response = await fetch('http://localhost:8080/api/merchants/restaurant/photos', {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('merchantToken')}`,
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    imageUrl: base64Data
+                                })
+                            });
+
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                console.error('刪除照片失敗:', errorData);
+                                throw new Error(errorData.message || '刪除照片失敗');
+                            }
+
+                            // 只有在後端成功刪除後才從 UI 移除
+                            photoItem.remove();
+                            console.log('照片刪除成功');
+                        } catch (error) {
+                            console.error('刪除照片時發生錯誤:', error);
+                            alert('刪除照片失敗: ' + error.message);
+                        }
+                    }
                 }
             }
         };
@@ -358,45 +406,48 @@ function updateAvatars(avatarData) {
 
 // 載入餐廳照片
 async function loadRestaurantPhotos(restaurantId) {
-    ("開始載入餐廳照片");
-    const token = localStorage.getItem("merchantToken");
-    
     try {
-        const response = await fetch(`http://localhost:8080/api/merchants/restaurant/photos/${restaurantId}`, {
+        const response = await fetch('http://localhost:8080/api/merchants/restaurant/photos', {
             method: 'GET',
             headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
+                'Authorization': `Bearer ${localStorage.getItem('merchantToken')}`
             }
         });
 
         if (!response.ok) {
-            throw new Error(`獲取餐廳照片失敗: ${response.status}`);
+            throw new Error('載入照片失敗');
         }
 
-        const photoBase64List = await response.json();
-        ("獲取到的照片數據:", photoBase64List.length);
-
-        // 清空現有的照片（除了新增照片按鈕）
+        const photos = await response.json();
         const photoGrid = document.querySelector('.photo-grid');
-        const addPhotoButton = photoGrid.querySelector('.add-photo');
-        photoGrid.innerHTML = '';
-        photoGrid.appendChild(addPhotoButton);
+        
+        // 清除現有照片，但保留"新增照片"按鈕
+        const existingPhotos = photoGrid.querySelectorAll('.photo-item:not(.add-photo)');
+        existingPhotos.forEach(photo => photo.remove());
 
-        // 添加所有照片
-        photoBase64List.forEach(base64Image => {
+        // 添加照片到網格
+        photos.forEach(base64Image => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
+            photoItem.setAttribute('data-saved', 'true'); // 標記為已保存的照片
+            
             photoItem.innerHTML = `
-                <img src="${base64Image}" alt="餐廳照片" onerror="this.src='images/default-restaurant.jpg'">
-                <div class="photo-overlay">
-                    <button class="delete-photo"><i class="fas fa-trash"></i></button>
+                <img src="${base64Image}" alt="餐廳照片" data-base64="${base64Image}">
+                <div class="photo-overlay editing-only">
+                    <button class="delete-photo">
+                        <i class="fas fa-trash"></i>
+                        刪除
+                    </button>
                 </div>
             `;
-            photoGrid.insertBefore(photoItem, addPhotoButton);
+            
+            // 將新照片插入到"新增照片"按鈕之前
+            photoGrid.insertBefore(photoItem, photoGrid.lastElementChild);
         });
+
     } catch (error) {
-        console.error("載入餐廳照片失敗:", error);
+        console.error('載入照片失敗:', error);
+        alert('載入照片失敗，請稍後再試。');
     }
 }
 
@@ -426,91 +477,100 @@ function updateField(section, labelText, value) {
 // 切換編輯模式
 function toggleEditMode(sectionId) {
     const section = document.getElementById(sectionId);
-    const isEditing = !section.classList.contains('editing');
-    
-    // 如果要進入編輯模式，先檢查其他區段是否正在編輯
-    if (isEditing) {
-        const editingSections = document.querySelectorAll('.info-section .info-grid.editing, .info-section .info-content.editing, .info-section .photo-gallery.editing');
-        editingSections.forEach(editingSection => {
-            if (editingSection.id !== sectionId) {
-                cancelEdit(editingSection.id);
-            }
-        });
-    }
+    if (!section) return;
 
-    // 更新編輯狀態
-    section.classList.toggle('editing', isEditing);
+    const infoSection = section.closest('.info-section');
+    if (!infoSection) return;
+
+    const editButton = infoSection.querySelector('.edit-button');
+    const actionButtons = infoSection.querySelector('.action-buttons');
     
-    // 獲取按鈕元素
-    const buttonGroup = section.closest('.info-section').querySelector('.button-group');
-    const editButton = buttonGroup.querySelector('.edit-button');
-    const actionButtons = buttonGroup.querySelector('.action-buttons');
-    
-    // 更新按鈕顯示狀態
-    if (isEditing) {
-        editButton.style.display = 'none';
-        actionButtons.style.display = 'flex';
-        
-        // 儲存原始值，用於取消時還原
-        const inputs = section.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.dataset.originalValue = input.value;
-        });
-        
-        // 如果是頭像，儲存原始圖片路徑
-        const avatar = section.querySelector('.profile-avatar');
-        if (avatar) {
-            avatar.dataset.originalSrc = avatar.src;
+    // 進入編輯模式
+    editButton.style.display = 'none';
+    actionButtons.style.display = 'flex';
+    infoSection.classList.add('editing');
+
+    // 處理輸入欄位
+    const viewModeElements = section.querySelectorAll('.view-mode');
+    const editModeElements = section.querySelectorAll('.edit-mode');
+
+    viewModeElements.forEach(el => {
+        el.style.display = 'none';
+    });
+
+    editModeElements.forEach(el => {
+        el.style.display = 'block';
+    });
+
+    // 特殊處理照片區塊
+    if (sectionId === 'photo-info') {
+        const addPhotoButton = section.querySelector('.add-photo');
+        if (addPhotoButton) {
+            addPhotoButton.style.display = 'flex';
         }
-    } else {
-        editButton.style.display = 'flex';
-        actionButtons.style.display = 'none';
+        // 顯示所有照片的刪除按鈕
+        const photoOverlays = section.querySelectorAll('.photo-overlay');
+        photoOverlays.forEach(overlay => {
+            overlay.style.display = 'flex';
+        });
     }
-    
-    // 切換輸入欄位的顯示/隱藏
-    const viewElements = section.querySelectorAll('.view-mode');
-    const editElements = section.querySelectorAll('.edit-mode');
-    
-    viewElements.forEach(el => el.style.display = isEditing ? 'none' : 'block');
-    editElements.forEach(el => el.style.display = isEditing ? 'block' : 'none');
 }
 
 // 取消編輯
 function cancelEdit(sectionId) {
     const section = document.getElementById(sectionId);
-    
-    // 還原所有輸入欄位的值
-    const inputs = section.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-        if (input.dataset.originalValue) {
-            input.value = input.dataset.originalValue;
-        }
-    });
-    
-    // 還原頭像
-    const avatar = section.querySelector('.profile-avatar');
-    if (avatar && avatar.dataset.originalSrc) {
-        avatar.src = avatar.dataset.originalSrc;
-        // 同時更新導覽列的頭像
-        document.querySelector('.avatar-img').src = avatar.dataset.originalSrc;
-    }
-    
-    // 清除檔案輸入
-    const fileInputs = section.querySelectorAll('input[type="file"]');
-    fileInputs.forEach(input => {
-        input.value = '';
-    });
+    if (!section) return;
+
+    const infoSection = section.closest('.info-section');
+    if (!infoSection) return;
+
+    const editButton = infoSection.querySelector('.edit-button');
+    const actionButtons = infoSection.querySelector('.action-buttons');
     
     // 退出編輯模式
-    toggleEditMode(sectionId);
+    editButton.style.display = 'block';
+    actionButtons.style.display = 'none';
+    infoSection.classList.remove('editing');
+
+    // 特殊處理照片區塊
+    if (sectionId === 'photo-info') {
+        const restaurantId = localStorage.getItem('restaurantId');
+        if (restaurantId) {
+            loadRestaurantPhotos(restaurantId);
+        }
+        const addPhotoButton = section.querySelector('.add-photo');
+        if (addPhotoButton) {
+            addPhotoButton.style.display = 'none';
+        }
+        // 隱藏所有照片的刪除按鈕
+        const photoOverlays = section.querySelectorAll('.photo-overlay');
+        photoOverlays.forEach(overlay => {
+            overlay.style.display = 'none';
+        });
+    }
+
+    // 處理其他輸入欄位
+    const viewModeElements = section.querySelectorAll('.view-mode');
+    const editModeElements = section.querySelectorAll('.edit-mode');
+
+    viewModeElements.forEach(el => {
+        el.style.display = 'block';
+    });
+
+    editModeElements.forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
 // 儲存變更
 async function saveChanges(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    let success = false;
+    
     try {
-        let success = false;
-        
-        switch(sectionId) {
+        switch (sectionId) {
             case 'basic-info':
                 success = await saveBasicInfo();
                 break;
@@ -526,8 +586,42 @@ async function saveChanges(sectionId) {
         }
         
         if (success) {
-            // 如果儲存成功，退出編輯模式
-            toggleEditMode(sectionId);
+            const infoSection = section.closest('.info-section');
+            if (!infoSection) return;
+
+            // 切換按鈕顯示
+            const editButton = infoSection.querySelector('.edit-button');
+            const actionButtons = infoSection.querySelector('.action-buttons');
+            editButton.style.display = 'block';
+            actionButtons.style.display = 'none';
+            
+            // 切換編輯狀態
+            infoSection.classList.remove('editing');
+
+            // 切換輸入欄位和顯示欄位的狀態
+            const viewModeElements = section.querySelectorAll('.view-mode');
+            const editModeElements = section.querySelectorAll('.edit-mode');
+
+            viewModeElements.forEach(el => {
+                el.style.display = 'block';
+                // 更新顯示的值
+                const input = el.nextElementSibling;
+                if (input && input.classList.contains('edit-mode')) {
+                    el.textContent = input.value;
+                }
+            });
+
+            editModeElements.forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // 特殊處理照片區塊
+            if (sectionId === 'photo-info') {
+                const addPhotoButton = section.querySelector('.add-photo');
+                if (addPhotoButton) {
+                    addPhotoButton.style.display = 'none';
+                }
+            }
         }
     } catch (error) {
         console.error('儲存變更時發生錯誤:', error);
@@ -734,9 +828,61 @@ async function saveDescription() {
     }
 }
 
+// 修改 savePhotos 函數
 async function savePhotos() {
-    // TODO: 實作餐廳照片的儲存邏輯
-    return false;
+    const token = localStorage.getItem('merchantToken');
+    
+    try {
+        // 只獲取新增的照片元素（沒有 data-saved 屬性的照片）
+        const newPhotoItems = document.querySelectorAll('.photo-item:not(.add-photo):not([data-saved])');
+        
+        // 為每張新照片創建一個 FormData 並發送請求
+        for (const item of newPhotoItems) {
+            const img = item.querySelector('img');
+            const base64Data = img.dataset.base64;
+            
+            // 將 base64 轉換為 Blob
+            // 移除 data:image/jpeg;base64, 前綴
+            const base64WithoutPrefix = base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+            const byteCharacters = atob(base64WithoutPrefix);
+            const byteNumbers = new Array(byteCharacters.length);
+            
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+            
+            // 創建 FormData
+            const formData = new FormData();
+            formData.append('photo', blob, 'photo.jpg');
+
+            // 發送更新請求
+            const uploadResponse = await fetch('http://localhost:8080/api/merchants/restaurant/photos', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json();
+                throw new Error(errorData.message || '儲存照片失敗');
+            }
+
+            // 標記照片為已保存
+            item.setAttribute('data-saved', 'true');
+        }
+
+        alert('餐廳照片更新成功！');
+        return true;
+    } catch (error) {
+        console.error('儲存照片失敗:', error);
+        alert(error.message || '儲存照片失敗，請稍後再試。');
+        return false;
+    }
 }
 
 // 處理頭像上傳預覽

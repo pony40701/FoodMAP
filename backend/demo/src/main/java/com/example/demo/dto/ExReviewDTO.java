@@ -15,12 +15,18 @@ public class ExReviewDTO {
     private String cuisineType;
     private Integer viewCount;
     private boolean isFavorited;
+    private String restaurantPlaceId;
+    private Integer environmentScore;
+    private Integer serviceScore;
+    private Integer tasteScore;
+    private Integer priceScore;
 
     // Constructors
     public ExReviewDTO() {}
 
     public ExReviewDTO(Long reviewId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
-                       String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited) {
+                       String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited, String restaurantPlaceId,
+                       Integer environmentScore, Integer serviceScore, Integer tasteScore, Integer priceScore) {
         this.reviewId = reviewId;
         this.imageBase64 = imageBase64;
         this.authorName = authorName;
@@ -33,6 +39,11 @@ public class ExReviewDTO {
         this.cuisineType = cuisineType;
         this.viewCount = viewCount;
         this.isFavorited = isFavorited;
+        this.restaurantPlaceId = restaurantPlaceId;
+        this.environmentScore = environmentScore;
+        this.serviceScore = serviceScore;
+        this.tasteScore = tasteScore;
+        this.priceScore = priceScore;
     }
 
     // Getters and Setters
@@ -130,5 +141,45 @@ public class ExReviewDTO {
 
     public void setFavorited(boolean favorited) {
         isFavorited = favorited;
+    }
+
+    public String getRestaurantPlaceId() {
+        return restaurantPlaceId;
+    }
+
+    public void setRestaurantPlaceId(String restaurantPlaceId) {
+        this.restaurantPlaceId = restaurantPlaceId;
+    }
+
+    public Integer getEnvironmentScore() {
+        return environmentScore;
+    }
+
+    public void setEnvironmentScore(Integer environmentScore) {
+        this.environmentScore = environmentScore;
+    }
+
+    public Integer getServiceScore() {
+        return serviceScore;
+    }
+
+    public void setServiceScore(Integer serviceScore) {
+        this.serviceScore = serviceScore;
+    }
+
+    public Integer getTasteScore() {
+        return tasteScore;
+    }
+
+    public void setTasteScore(Integer tasteScore) {
+        this.tasteScore = tasteScore;
+    }
+
+    public Integer getPriceScore() {
+        return priceScore;
+    }
+
+    public void setPriceScore(Integer priceScore) {
+        this.priceScore = priceScore;
     }
 } 

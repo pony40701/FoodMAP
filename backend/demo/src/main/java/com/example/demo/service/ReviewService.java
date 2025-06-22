@@ -1,19 +1,39 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.ReviewRequestDto;
-import com.example.demo.dto.ReviewStatsDto;
-import com.example.demo.dto.UserReviewStatsDto;
-import com.example.demo.dto.ReviewStatsDetailDto;
-import com.example.demo.dto.ReviewDraftDto;
-import com.example.demo.entity.*;
-import com.example.demo.repository.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
-import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.demo.dto.ReviewDraftDto;
+import com.example.demo.dto.ReviewRequestDto;
+import com.example.demo.dto.ReviewStatsDetailDto;
+import com.example.demo.dto.ReviewStatsDto;
+import com.example.demo.dto.UserReviewStatsDto;
+import com.example.demo.entity.Restaurant;
+import com.example.demo.entity.Review;
+import com.example.demo.entity.ReviewPhoto;
+import com.example.demo.entity.ReviewRating;
+import com.example.demo.entity.ReviewStats;
+import com.example.demo.entity.ReviewTag;
+import com.example.demo.entity.Tag;
+import com.example.demo.entity.User;
+import com.example.demo.repository.ReviewPhotoRepository;
+import com.example.demo.repository.ReviewRatingRepository;
+import com.example.demo.repository.ReviewRepository;
+import com.example.demo.repository.ReviewStatsRepository;
+import com.example.demo.repository.ReviewTagRepository;
+import com.example.demo.repository.TagRepository;
+
 import lombok.extern.slf4j.Slf4j;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -57,6 +77,7 @@ public class ReviewService {
             review.setRestaurant(restaurant);
             
             review.setTitle(dto.getTitle());
+            // 由於圖片現在是即時上傳並替換為路徑，這裡直接儲存HTML內容
             review.setContentJson(dto.getContent_json());
             review.setStatus(dto.getStatus());
             review.setCreatedAt(java.time.LocalDateTime.now());
@@ -166,14 +187,16 @@ public class ReviewService {
     private void saveReviewPhotoData(List<ReviewRequestDto.PhotoData> photoDataList, Review review) {
         // 處理新的圖片數據
         if (photoDataList != null && !photoDataList.isEmpty()) {
+            String contentJson = review.getContentJson();
+
             for (int i = 0; i < photoDataList.size(); i++) {
                 ReviewRequestDto.PhotoData photoData = photoDataList.get(i);
                 ReviewPhoto photo = new ReviewPhoto();
                 photo.setReview(review);
-                photo.setImageUrl(photoData.getFileName()); // 使用檔名作為URL
-                photo.setImage(photoData.getImageData()); // 儲存圖片數據
+                // 檔名現在只用於儲存，不再當作URL
+                photo.setImageUrl(photoData.getFileName());
+                photo.setImage(photoData.getImageData());
                 
-                // 保存圖片大小信息
                 if (photoData.getSize() != null) {
                     photo.setImageWidth(photoData.getSize().getWidth());
                     photo.setImageHeight(photoData.getSize().getHeight());
@@ -181,23 +204,25 @@ public class ReviewService {
                 
                 ReviewPhoto savedPhoto = reviewPhotoRepository.save(photo);
                 
-                // 在HTML內容中插入圖片佔位符
-                String contentJson = review.getContentJson();
+                // 直接在 contentJson 中更新 URL
                 if (contentJson != null) {
                     String placeholder = String.format("[NEW_IMAGE_PLACEHOLDER_%d]", i);
-                    String imagePlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
-                    contentJson = contentJson.replace(placeholder, imagePlaceholder);
-                    review.setContentJson(contentJson);
+                    // 生成指向 API 端點的相對路徑
+                    String apiPath = "/api/reviews/photos/" + savedPhoto.getId();
+                    
+                    // 因為 contentJson 現在是 HTML，我們進行簡單的字串替換
+                    // 假設前端傳來的佔位符格式為 <img src="[NEW_IMAGE_PLACEHOLDER_...]">
+                    // 或是編輯器使用的其他佔位符格式
+                    if (contentJson.contains(placeholder)) {
+                         contentJson = contentJson.replace(placeholder, apiPath);
+                    }
                 }
             }
-        }
-        
-        // 保存更新後的內容
-        if (!photoDataList.isEmpty()) {
+            review.setContentJson(contentJson);
             reviewRepository.save(review);
         }
         
-        log.info("儲存評論圖片數據：reviewId={}, 圖片數量={}", review.getId(), photoDataList.size());
+        log.info("儲存評論圖片數據：reviewId={}, 圖片數量={}", review.getId(), photoDataList != null ? photoDataList.size() : 0);
     }
 
     private void saveReviewTags(List<String> tagNames, Review review) {
@@ -1166,23 +1191,38 @@ public class ReviewService {
     }
     
     public Map<String, Object> getReviewPhotoInfo(Integer photoId) {
+        ReviewPhoto photo = reviewPhotoRepository.findById(photoId)
+                .orElseThrow(() -> new RuntimeException("圖片不存在"));
+        
+        Map<String, Object> info = new HashMap<>();
+        info.put("id", photo.getId());
+        info.put("url", photo.getImageUrl());
+        info.put("width", photo.getImageWidth());
+        info.put("height", photo.getImageHeight());
+        if (photo.getImage() != null) {
+            info.put("size", photo.getImage().length);
+        } else {
+            info.put("size", 0);
+        }
+        
+        return info;
+    }
+
+    @Transactional
+    public ReviewPhoto saveSinglePhoto(MultipartFile file) {
         try {
-            ReviewPhoto photo = reviewPhotoRepository.findById(photoId)
-                    .orElseThrow(() -> new RuntimeException("圖片不存在"));
+            if (file.isEmpty()) {
+                throw new RuntimeException("上傳檔案不得為空");
+            }
+            ReviewPhoto photo = new ReviewPhoto();
+            photo.setImage(file.getBytes());
+            // 由於此時還沒有關聯的 review，所以 review_id 會是 null
+            // 檔名可以先存起來，雖然目前沒用到
+            photo.setImageUrl(file.getOriginalFilename());
             
-            Map<String, Object> photoInfo = new HashMap<>();
-            photoInfo.put("id", photo.getId());
-            photoInfo.put("imageUrl", photo.getImageUrl());
-            photoInfo.put("width", photo.getImageWidth());
-            photoInfo.put("height", photo.getImageHeight());
-            photoInfo.put("hasImageData", photo.getImage() != null && photo.getImage().length > 0);
-            
-            log.info("獲取圖片信息：photoId={}, width={}, height={}", 
-                photoId, photo.getImageWidth(), photo.getImageHeight());
-            return photoInfo;
-        } catch (Exception e) {
-            log.error("獲取圖片信息時發生錯誤：photoId={}", photoId, e);
-            throw new RuntimeException("獲取圖片信息失敗：" + e.getMessage());
+            return reviewPhotoRepository.save(photo);
+        } catch (IOException e) {
+            throw new RuntimeException("讀取檔案失敗", e);
         }
     }
 }

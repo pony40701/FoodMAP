@@ -42,6 +42,8 @@ public interface FavoriteRepository extends JpaRepository<Favorite, FavoriteId> 
            "ORDER BY uf.favorited_at DESC", nativeQuery = true)
     List<String> findFavoriteJsonRawByUserId(@Param("userId") Long userId);
 
+    List<Favorite> findByUserIdAndTargetType(Long userId, String targetType);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Favorite f WHERE f.userId = :userId AND f.targetId = :targetId AND f.targetType = :targetType")

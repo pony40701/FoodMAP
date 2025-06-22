@@ -239,14 +239,41 @@ function insertImage() {
 function handleImageFiles(files) {
     Array.from(files).forEach(file => {
         if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
+            // 先顯示一個上傳中的提示
+            const placeholder = document.createElement('p');
+            placeholder.textContent = `圖片上傳中: ${file.name}...`;
+            placeholder.style.color = '#999';
+            document.getElementById('editor').appendChild(placeholder);
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/api/reviews/photos/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`上傳失敗: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 上傳成功後，用回傳的圖片路徑替換掉提示文字
                 const img = document.createElement('img');
-                img.src = e.target.result;
+                // 我們不需要手動添加 host，因為瀏覽器會自動使用當前的 host
+                // 後端回傳的路徑是 /api/reviews/photos/ID
+                img.src = data.location; 
                 img.style.maxWidth = '100%';
-                document.getElementById('editor').appendChild(img);
-            };
-            reader.readAsDataURL(file);
+                
+                // 替換佔位符
+                placeholder.replaceWith(img);
+            })
+            .catch(error => {
+                console.error('圖片上傳錯誤:', error);
+                placeholder.textContent = `圖片上傳失敗: ${file.name}`;
+                placeholder.style.color = 'red';
+            });
         }
     });
 }

@@ -15,17 +15,21 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.ExReviewProjection;
 import com.example.demo.entity.Favorite;
 import com.example.demo.entity.FavoriteId;
+import com.example.demo.repository.ExReviewRepository;
 import com.example.demo.repository.FavoriteRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,10 +37,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(
+    origins = {"http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5501", "http://localhost:5501"},
+    allowedHeaders = "*",
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.OPTIONS},
+    allowCredentials = "true",
+    maxAge = 3600
+)
 public class FavoriteController {
 
     @Autowired
     private FavoriteRepository favoriteRepository;
+
+    @Autowired
+    private ExReviewRepository exReviewRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -297,39 +311,49 @@ public class FavoriteController {
     @Transactional
     public ResponseEntity<?> toggleReviewFavorite(
             @RequestParam Long userId, 
-            @RequestParam Long reviewId,
+            @RequestParam String targetId,
             @RequestParam(required = false) String restaurantPlaceId) {
-        // First, check if the favorite already exists
-        String checkSql = "SELECT COUNT(*) FROM user_favorites WHERE user_id = ? AND target_id = ? AND target_type = 'review'";
-        Integer count = jdbcTemplate.queryForObject(checkSql, new Object[]{userId, reviewId}, Integer.class);
-
-        Map<String, Object> response = new HashMap<>();
-
-        if (count != null && count > 0) {
-            // Favorite exists, so delete it
-            String deleteSql = "DELETE FROM user_favorites WHERE user_id = ? AND target_id = ? AND target_type = 'review'";
-            int deletedRows = jdbcTemplate.update(deleteSql, userId, reviewId);
-            if (deletedRows > 0) {
-                response.put("success", true);
-                response.put("message", "取消收藏成功");
-                response.put("isFavorited", false);
-            } else {
-                response.put("success", false);
-                response.put("message", "取消收藏失敗");
-            }
+        
+        FavoriteId favoriteId = new FavoriteId(userId, "review", targetId);
+        if (favoriteRepository.existsById(favoriteId)) {
+            favoriteRepository.deleteById(favoriteId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "status", "removed",
+                "message", "已取消收藏",
+                "isFavorited", false
+            ));
         } else {
-            // Favorite does not exist, so add it
-            String insertSql = "INSERT INTO user_favorites (user_id, target_id, target_type, favorited_at, restaurant_place_id) VALUES (?, ?, 'review', NOW(), ?)";
-            int insertedRows = jdbcTemplate.update(insertSql, userId, reviewId, restaurantPlaceId);
-            if (insertedRows > 0) {
-                response.put("success", true);
-                response.put("message", "收藏成功");
-                response.put("isFavorited", true);
-            } else {
-                response.put("success", false);
-                response.put("message", "收藏失敗");
+            Favorite favorite = new Favorite();
+            favorite.setUserId(userId);
+            favorite.setTargetType("review");
+            favorite.setTargetId(targetId);
+            favorite.setFavoritedAt(LocalDateTime.now());
+            
+            if (restaurantPlaceId != null && !restaurantPlaceId.isBlank()) {
+                favorite.setRestaurantPlaceId(restaurantPlaceId);
             }
+
+            favoriteRepository.save(favorite);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "status", "added",
+                "message", "收藏成功",
+                "isFavorited", true
+            ));
         }
-        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/favorites/reviews")
+    public ResponseEntity<?> getUserFavoriteReviews(@PathVariable Long userId) {
+        try {
+            List<ExReviewProjection> reviews = exReviewRepository.findFavoritedReviewsByUserId(userId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "獲取收藏心得失敗: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 }

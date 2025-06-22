@@ -667,25 +667,36 @@ body {
   display: none;
   justify-content: center;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
-.photo-item:hover .photo-overlay {
-  display: flex;
+/* 只在編輯模式下且滑鼠懸停時顯示刪除按鈕 */
+.info-section.editing .photo-item:hover .photo-overlay {
+    display: flex;
+}
+
+/* 在非編輯模式下強制隱藏刪除按鈕 */
+.info-section:not(.editing) .photo-overlay {
+    display: none !important;
 }
 
 .delete-photo {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.2em;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.3s;
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
 .delete-photo:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+    background: #ff6b81;
+    transform: scale(1.05);
 }
 
 .add-photo {
@@ -838,4 +849,12 @@ body {
     font-size: 16px;
     line-height: 1.5;
     color: #333;
+}
+
+.photo-overlay.editing-only {
+    display: none;
+}
+
+.editing .photo-overlay.editing-only {
+    display: flex;
 }
