@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 
@@ -604,16 +606,43 @@ public class ReviewService {
         publishedRating.setOverallScore(draftRating.getOverallScore());
         reviewRatingRepository.save(publishedRating);
 
-        // 4. 複製照片資料
-        List<ReviewPhoto> draftPhotos = reviewPhotoRepository.findByReviewId(draftId.intValue());
-        for (ReviewPhoto draftPhoto : draftPhotos) {
-            ReviewPhoto publishedPhoto = new ReviewPhoto();
-            publishedPhoto.setReview(publishedReview);
-            publishedPhoto.setImageUrl(draftPhoto.getImageUrl());
-            publishedPhoto.setImage(draftPhoto.getImage()); // 複製圖片數據
-            publishedPhoto.setImageWidth(draftPhoto.getImageWidth()); // 複製圖片寬度
-            publishedPhoto.setImageHeight(draftPhoto.getImageHeight()); // 複製圖片高度
-            reviewPhotoRepository.save(publishedPhoto);
+        // 4. 複製照片資料 - 按照HTML中佔位符的順序
+        List<ReviewPhoto> publishedPhotos = reviewPhotoRepository.findByReviewId(draftId.intValue());
+        
+        // 從HTML內容中提取圖片ID的順序
+        List<Integer> photoOrder = extractPhotoOrderFromContent(draft.getContentJson());
+        
+        // 按照HTML中的順序重新排列圖片
+        List<ReviewPhoto> orderedPhotos = new ArrayList<>();
+        if (!photoOrder.isEmpty()) {
+            // 按照HTML中的順序排列圖片
+            for (Integer photoId : photoOrder) {
+                publishedPhotos.stream()
+                    .filter(photo -> photo.getId().equals(photoId))
+                    .findFirst()
+                    .ifPresent(orderedPhotos::add);
+            }
+            // 添加任何未在HTML中出現的圖片（按ID排序）
+            publishedPhotos.stream()
+                .filter(photo -> !photoOrder.contains(photo.getId()))
+                .sorted(Comparator.comparing(ReviewPhoto::getId))
+                .forEach(orderedPhotos::add);
+        } else {
+            // 如果沒有找到佔位符，按ID排序
+            orderedPhotos = publishedPhotos.stream()
+                .sorted(Comparator.comparing(ReviewPhoto::getId))
+                .collect(Collectors.toList());
+        }
+        
+        // 複製圖片，保持順序
+        for (ReviewPhoto publishedPhoto : orderedPhotos) {
+            ReviewPhoto newPhoto = new ReviewPhoto();
+            newPhoto.setReview(publishedReview);
+            newPhoto.setImageUrl(publishedPhoto.getImageUrl());
+            newPhoto.setImage(publishedPhoto.getImage()); // 複製圖片數據
+            newPhoto.setImageWidth(publishedPhoto.getImageWidth()); // 複製圖片寬度
+            newPhoto.setImageHeight(publishedPhoto.getImageHeight()); // 複製圖片高度
+            reviewPhotoRepository.save(newPhoto);
         }
 
         // 5. 複製標籤資料
@@ -755,9 +784,36 @@ public class ReviewService {
         newRating.setOverallScore(dto.getRatings().getOverall_score());
         reviewRatingRepository.save(newRating);
 
-        // 4. 複製照片資料
+        // 4. 複製照片資料 - 按照HTML中佔位符的順序
         List<ReviewPhoto> publishedPhotos = reviewPhotoRepository.findByReviewId(publishedId.intValue());
-        for (ReviewPhoto publishedPhoto : publishedPhotos) {
+        
+        // 從HTML內容中提取圖片ID的順序
+        List<Integer> photoOrder = extractPhotoOrderFromContent(dto.getContent_json());
+        
+        // 按照HTML中的順序重新排列圖片
+        List<ReviewPhoto> orderedPhotos = new ArrayList<>();
+        if (!photoOrder.isEmpty()) {
+            // 按照HTML中的順序排列圖片
+            for (Integer photoId : photoOrder) {
+                publishedPhotos.stream()
+                    .filter(photo -> photo.getId().equals(photoId))
+                    .findFirst()
+                    .ifPresent(orderedPhotos::add);
+            }
+            // 添加任何未在HTML中出現的圖片（按ID排序）
+            publishedPhotos.stream()
+                .filter(photo -> !photoOrder.contains(photo.getId()))
+                .sorted(Comparator.comparing(ReviewPhoto::getId))
+                .forEach(orderedPhotos::add);
+        } else {
+            // 如果沒有找到佔位符，按ID排序
+            orderedPhotos = publishedPhotos.stream()
+                .sorted(Comparator.comparing(ReviewPhoto::getId))
+                .collect(Collectors.toList());
+        }
+        
+        // 複製圖片，保持順序
+        for (ReviewPhoto publishedPhoto : orderedPhotos) {
             ReviewPhoto newPhoto = new ReviewPhoto();
             newPhoto.setReview(newDraft);
             newPhoto.setImageUrl(publishedPhoto.getImageUrl());
@@ -1184,5 +1240,17 @@ public class ReviewService {
             log.error("獲取圖片信息時發生錯誤：photoId={}", photoId, e);
             throw new RuntimeException("獲取圖片信息失敗：" + e.getMessage());
         }
+    }
+
+    private List<Integer> extractPhotoOrderFromContent(String contentJson) {
+        List<Integer> photoOrder = new ArrayList<>();
+        if (contentJson != null) {
+            Pattern pattern = Pattern.compile("\\[IMAGE_PLACEHOLDER_(\\d+)\\]");
+            Matcher matcher = pattern.matcher(contentJson);
+            while (matcher.find()) {
+                photoOrder.add(Integer.parseInt(matcher.group(1)));
+            }
+        }
+        return photoOrder;
     }
 }
