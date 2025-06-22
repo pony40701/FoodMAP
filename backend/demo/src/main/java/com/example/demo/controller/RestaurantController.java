@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,33 +20,35 @@ import com.example.demo.service.RestaurantService;
 @RestController
 @RequestMapping("/api/restaurants")
 public class RestaurantController {
-@Autowired
-private RestaurantService restaurantService;
+    private static final Logger logger = LoggerFactory.getLogger(RestaurantController.class);
 
-@GetMapping
-public Page<RestaurantListDTO> getAllRestaurant(
-    @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "10") int size) {
-    Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurantsWithReviews(pageable);
-}
+    @Autowired
+    private RestaurantService restaurantService;
 
-@GetMapping("/{placeId}")
-public RestaurantListDTO getRestaurantByPlaceId(@PathVariable String placeId) {
-	return restaurantService.getRtoLDRestaurantDTOByPlaceId(placeId);
-}
+    @GetMapping
+    public Page<RestaurantListDTO> getAllRestaurant(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return restaurantService.getRestaurantsWithReviews(pageable);
+    }
 
-@GetMapping("/list")
-public List<RestaurantListDTO> getRestaurantList(@RequestParam(required = false) String sort){
-	return restaurantService.getRestaurantList();
-}
+    @GetMapping("/{placeId}")
+    public RestaurantListDTO getRestaurantByPlaceId(@PathVariable String placeId) {
+        return restaurantService.getRtoLDRestaurantDTOByPlaceId(placeId);
+    }
 
-@GetMapping("/sort")
-public Page<RestaurantListDTO> getRestaurantsBySort(
-    @RequestParam String sortBy,
-    @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "10") int size) {
-    Pageable pageable = PageRequest.of(page, size);
-    return restaurantService.getRestaurantsBySortWithReviews(sortBy, pageable);
-}
+    @GetMapping("/list")
+    public List<RestaurantListDTO> getRestaurantList(@RequestParam(required = false) String sort){
+        return restaurantService.getRestaurantList();
+    }
+
+    @GetMapping("/sort")
+    public Page<RestaurantListDTO> getRestaurantsBySort(
+        @RequestParam String sortBy,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return restaurantService.getRestaurantsBySortWithReviews(sortBy, pageable);
+    }
 }

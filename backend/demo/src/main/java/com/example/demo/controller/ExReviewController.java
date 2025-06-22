@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,5 +30,17 @@ public class ExReviewController {
             @RequestParam(required = false) Long userId) {
         List<ExReviewDTO> reviews = exReviewService.getLatestReviews(limit, offset, sort, search, cuisineTypes, userId);
         return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/ex-reviews/{id}")
+    public ResponseEntity<ExReviewDTO> getReviewById(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long userId) {
+        ExReviewDTO review = exReviewService.getReviewById(id, userId);
+        if (review != null) {
+            return ResponseEntity.ok(review);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 

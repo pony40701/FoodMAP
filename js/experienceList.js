@@ -151,6 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.date = article.date;
         card.dataset.views = article.views;
         card.dataset.category = article.category;
+        // Make card clickable
+        card.style.cursor = 'pointer';
 
         card.innerHTML = `
             <div class="food-image">
@@ -185,7 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        card.querySelector('.favorite-btn').addEventListener('click', async () => {
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.favorite-btn')) {
+                window.location.href = `experienceDetail.html?id=${article.id}&fav=${article.favorited}`;
+            }
+        });
+
+        card.querySelector('.favorite-btn').addEventListener('click', async (e) => {
+            e.stopPropagation(); // Prevent card click event from firing
             const icon = card.querySelector('.favorite-btn i');
             const targetArticle = allArticles.find(a => a.id === article.id);
             const wasFavorited = !!targetArticle?.favorited;
@@ -200,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const userId = user.id;
-            const reviewId = article.id;
+            const targetId = article.id;
             const restaurantPlaceId = article.restaurantPlaceId;
 
             // Optimistic UI update
@@ -211,35 +220,34 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const url = new URL('http://localhost:8080/api/users/favorite/toggle');
                 url.searchParams.append('userId', userId);
-                url.searchParams.append('reviewId', reviewId);
+                url.searchParams.append('targetId', targetId);
                 if (restaurantPlaceId) {
                     url.searchParams.append('restaurantPlaceId', restaurantPlaceId);
                 }
 
                 const res = await fetch(url.toString(), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                 });
                 const data = await res.json();
                 
                 if (res.ok && data.success) {
                     // Update favorite state from response
                     if (targetArticle) targetArticle.favorited = data.isFavorited;
-                    icon.classList.toggle('far', !data.isFavorited);
                     icon.classList.toggle('fas', data.isFavorited);
+                    icon.classList.toggle('far', !data.isFavorited);
                     showToast(data.message);
                 } else {
                     // Revert UI on failure
                     if (targetArticle) targetArticle.favorited = wasFavorited;
-                    icon.classList.toggle('far', wasFavorited);
-                    icon.classList.toggle('fas', !wasFavorited);
+                    icon.classList.toggle('fas', wasFavorited);
+                    icon.classList.toggle('far', !wasFavorited);
                     showToast(data.message || '操作失敗');
                 }
             } catch (err) {
                 // Revert UI on error
                 if (targetArticle) targetArticle.favorited = wasFavorited;
-                icon.classList.toggle('far', wasFavorited);
-                icon.classList.toggle('fas', !wasFavorited);
+                icon.classList.toggle('fas', wasFavorited);
+                icon.classList.toggle('far', !wasFavorited);
                 showToast('操作失敗，請稍後再試');
             }
         });

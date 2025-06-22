@@ -9,12 +9,16 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.RLeaderRankingDTO;
 import com.example.demo.repository.RLeaderRestaurantRepository;
+import com.example.demo.repository.RestaurantPhotoRepository;
 
 @Service
 public class RLeaderRestaurantService {
 
     @Autowired
     private RLeaderRestaurantRepository repository;
+
+    @Autowired
+    private RestaurantPhotoRepository photoRepository;
 
     public Page<RLeaderRankingDTO> getRestaurants(String filter, Pageable pageable) {
         switch (filter) {
@@ -28,8 +32,8 @@ public class RLeaderRestaurantService {
         }
     }
 
-    public Optional<String> getCoverImageUrlById(Integer restaurantId) {
-        return repository.findById(restaurantId)
-                .map(restaurant -> restaurant.getCoverImageUrl());
+    public Optional<byte[]> getCoverPhotoDataById(Integer restaurantId) {
+        return photoRepository.findFirstByRestaurantId(restaurantId)
+                .map(photo -> photo.getPhotoData());
     }
 } 

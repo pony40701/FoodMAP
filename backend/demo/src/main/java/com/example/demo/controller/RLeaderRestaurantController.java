@@ -1,10 +1,9 @@
 package com.example.demo.controller;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,9 +30,9 @@ public class RLeaderRestaurantController {
     }
 
     @GetMapping("/ranking/restaurant/photo/{restaurantId}")
-    public ResponseEntity<?> getRestaurantPhoto(@PathVariable Integer restaurantId) {
-        return service.getCoverImageUrlById(restaurantId)
-                .map(url -> ResponseEntity.ok(Map.of("photoUrl", url)))
+    public ResponseEntity<byte[]> getRestaurantPhoto(@PathVariable Integer restaurantId) {
+        return service.getCoverPhotoDataById(restaurantId)
+                .map(photoData -> ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(photoData))
                 .orElse(ResponseEntity.notFound().build());
     }
 } 

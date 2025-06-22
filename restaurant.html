@@ -309,18 +309,34 @@
 			display: none;
 			justify-content: center;
 			align-items: center;
+			opacity: 0;
+			transition: opacity 0.3s ease;
 		}
 
-		.info-section.editing .photo-overlay {
+		.photo-item:hover .photo-overlay {
+			opacity: 1;
 			display: flex;
 		}
 
 		.delete-photo {
-			background: none;
+			background: #ff4444;
 			border: none;
 			color: white;
-			font-size: 20px;
+			font-size: 16px;
 			cursor: pointer;
+			padding: 8px 16px;
+			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.delete-photo:hover {
+			background: #cc0000;
+		}
+
+		.delete-photo i {
+			font-size: 16px;
 		}
 
 		.add-photo {
