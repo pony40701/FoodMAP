@@ -635,6 +635,9 @@ public class ReviewService {
         }
         
         // 複製圖片，保持順序
+        String contentJson = publishedReview.getContentJson();
+        boolean contentUpdated = false;
+        
         for (ReviewPhoto publishedPhoto : orderedPhotos) {
             ReviewPhoto newPhoto = new ReviewPhoto();
             newPhoto.setReview(publishedReview);
@@ -642,7 +645,25 @@ public class ReviewService {
             newPhoto.setImage(publishedPhoto.getImage()); // 複製圖片數據
             newPhoto.setImageWidth(publishedPhoto.getImageWidth()); // 複製圖片寬度
             newPhoto.setImageHeight(publishedPhoto.getImageHeight()); // 複製圖片高度
-            reviewPhotoRepository.save(newPhoto);
+            ReviewPhoto savedPhoto = reviewPhotoRepository.save(newPhoto);
+            
+            // 更新HTML內容中的佔位符ID
+            if (contentJson != null) {
+                String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", publishedPhoto.getId());
+                String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                if (contentJson.contains(oldPlaceholder)) {
+                    contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
+                    contentUpdated = true;
+                    log.info("更新佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
+                }
+            }
+        }
+        
+        // 保存更新後的內容
+        if (contentUpdated) {
+            publishedReview.setContentJson(contentJson);
+            reviewRepository.save(publishedReview);
+            log.info("更新發布文章內容，包含佔位符ID替換");
         }
 
         // 5. 複製標籤資料
@@ -813,6 +834,9 @@ public class ReviewService {
         }
         
         // 複製圖片，保持順序
+        String contentJson = newDraft.getContentJson();
+        boolean contentUpdated = false;
+        
         for (ReviewPhoto publishedPhoto : orderedPhotos) {
             ReviewPhoto newPhoto = new ReviewPhoto();
             newPhoto.setReview(newDraft);
@@ -820,7 +844,25 @@ public class ReviewService {
             newPhoto.setImage(publishedPhoto.getImage()); // 複製圖片數據
             newPhoto.setImageWidth(publishedPhoto.getImageWidth()); // 複製圖片寬度
             newPhoto.setImageHeight(publishedPhoto.getImageHeight()); // 複製圖片高度
-            reviewPhotoRepository.save(newPhoto);
+            ReviewPhoto savedPhoto = reviewPhotoRepository.save(newPhoto);
+            
+            // 更新HTML內容中的佔位符ID
+            if (contentJson != null) {
+                String oldPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", publishedPhoto.getId());
+                String newPlaceholder = String.format("[IMAGE_PLACEHOLDER_%d]", savedPhoto.getId());
+                if (contentJson.contains(oldPlaceholder)) {
+                    contentJson = contentJson.replace(oldPlaceholder, newPlaceholder);
+                    contentUpdated = true;
+                    log.info("更新佔位符：{} -> {}", oldPlaceholder, newPlaceholder);
+                }
+            }
+        }
+        
+        // 保存更新後的內容
+        if (contentUpdated) {
+            newDraft.setContentJson(contentJson);
+            reviewRepository.save(newDraft);
+            log.info("更新新草稿內容，包含佔位符ID替換");
         }
 
         // 5. 複製標籤資料
