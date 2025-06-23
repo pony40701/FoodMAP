@@ -212,20 +212,20 @@ public class ReviewController {
     }
 
     // 上傳單張評論圖片
-    @PostMapping("/photos/upload")
-    public ResponseEntity<Map<String, String>> uploadReviewPhoto(@RequestParam("image") MultipartFile imageFile) {
-        try {
-            log.info("上傳評論圖片: {}", imageFile.getOriginalFilename());
-            ReviewPhoto savedPhoto = reviewService.saveSinglePhoto(imageFile);
-            String location = "/api/reviews/photos/" + savedPhoto.getId();
+    // @PostMapping("/photos/upload")
+    // public ResponseEntity<Map<String, String>> uploadReviewPhoto(@RequestParam("image") MultipartFile imageFile) {
+    //     try {
+    //         log.info("上傳評論圖片: {}", imageFile.getOriginalFilename());
+    //         ReviewPhoto savedPhoto = reviewService.saveSinglePhoto(imageFile);
+    //         String location = "/api/reviews/photos/" + savedPhoto.getId();
             
-            Map<String, String> response = new HashMap<>();
-            response.put("location", location);
+    //         Map<String, String> response = new HashMap<>();
+    //         response.put("location", location);
             
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("上傳圖片時發生錯誤:", e);
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    //         return ResponseEntity.ok(response);
+    //     } catch (Exception e) {
+    //         log.error("上傳圖片時發生錯誤:", e);
+    //         return ResponseEntity.badRequest().build();
+    //     }
+    // }
 } 
