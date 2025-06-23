@@ -10,7 +10,9 @@ function showSlide(n) {
     currentSlide = (n + slides.length) % slides.length;
     const carouselWrapper = document.querySelector('.carousel-wrapper');
     if (carouselWrapper) {
-        carouselWrapper.style.transform = `translateX(-${currentSlide * 33.333}%)`;
+        // 使用動態計算，避免硬編碼 33.333%
+        const offset = currentSlide * (100 / slides.length);
+        carouselWrapper.style.transform = `translateX(-${offset}%)`;
     }
     dots.forEach((dot, index) => {
         dot.classList.toggle('active', index === currentSlide);
@@ -20,11 +22,29 @@ function showSlide(n) {
 function initCarousel() {
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.dot');
+    const prevButton = document.querySelector('.carousel-button.prev');
+    const nextButton = document.querySelector('.carousel-button.next');
+
     if (slides.length === 0) return;
-    setInterval(() => showSlide(currentSlide + 1), 5000);
+    
+    // 自動輪播
+    setInterval(() => showSlide(currentSlide + 1), 6000);
+    
+    // 指示點點擊
     dots.forEach((dot, index) => {
         dot.addEventListener('click', () => showSlide(index));
     });
+
+    // 加上前後按鈕的事件監聽器
+    if (prevButton && nextButton) {
+        prevButton.addEventListener('click', () => {
+            showSlide(currentSlide - 1);
+        });
+        nextButton.addEventListener('click', () => {
+            showSlide(currentSlide + 1);
+        });
+    }
+
     showSlide(0);
 }
 
