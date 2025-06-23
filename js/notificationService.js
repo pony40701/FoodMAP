@@ -8,11 +8,11 @@ const NotificationService = {
     initialize: function() {
         if (this.initialized) return;
         
-        ('初始化通知服務...');
+        console.log('初始化通知服務...');
         
         // 檢查用戶是否已登入
         if (!localStorage.getItem('isLoggedIn') || !localStorage.getItem('userId')) {
-            ('用戶未登入，無法初始化通知服務');
+            console.log('用戶未登入，無法初始化通知服務');
             return false;
         }
         
@@ -24,20 +24,84 @@ const NotificationService = {
             this.checkUnreadNotifications();
         }, 180000);
         
+        // 監聽跨頁面的通知狀態變化
+        this.setupCrossPageSync();
+        
         // 開發測試用：如果需要，可以強制顯示通知徽章進行測試
         if (localStorage.getItem('debugShowNotification') === 'true') {
             this.showTestNotification();
         }
         
         this.initialized = true;
-        ('通知服務初始化完成');
+        console.log('通知服務初始化完成');
         return true;
+    },
+    
+    // 設置跨頁面同步
+    setupCrossPageSync: function() {
+        // 監聽 storage 事件，當其他頁面更新通知狀態時同步
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'notificationReadStatus') {
+                console.log('檢測到其他頁面的通知狀態變化，重新檢查');
+                this.checkUnreadNotifications();
+            }
+        });
+        
+        // 監聽自定義事件
+        document.addEventListener('notificationMarkedAsRead', () => {
+            console.log('檢測到通知已標記為已讀事件');
+            this.checkUnreadNotifications();
+        });
     },
     
     // 測試用：立即顯示通知徽章
     showTestNotification: function() {
-        ('顯示測試通知徽章');
+        console.log('顯示測試通知徽章');
         this.updateNotificationBadge(1);
+    },
+    
+    // 獲取本地存儲的通知已讀狀態
+    getLocalNotificationReadStatus: function() {
+        try {
+            const readStatus = localStorage.getItem('notificationReadStatus');
+            return readStatus ? JSON.parse(readStatus) : {};
+        } catch (error) {
+            console.error('解析通知已讀狀態失敗:', error);
+            return {};
+        }
+    },
+    
+    // 更新本地存儲的通知已讀狀態
+    updateLocalNotificationReadStatus: function(notificationId = null, markAllAsRead = false) {
+        try {
+            let readStatus = this.getLocalNotificationReadStatus();
+            
+            if (markAllAsRead) {
+                // 標記所有通知為已讀
+                readStatus.allRead = true;
+                readStatus.lastMarkAllReadTime = Date.now();
+                console.log('本地標記所有通知為已讀');
+            } else if (notificationId) {
+                // 標記特定通知為已讀
+                if (!readStatus.readNotifications) {
+                    readStatus.readNotifications = [];
+                }
+                if (!readStatus.readNotifications.includes(notificationId)) {
+                    readStatus.readNotifications.push(notificationId);
+                    console.log(`本地標記通知 ${notificationId} 為已讀`);
+                }
+            }
+            
+            localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
+            
+            // 觸發跨頁面同步事件
+            localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
+            
+            return readStatus;
+        } catch (error) {
+            console.error('更新通知已讀狀態失敗:', error);
+            return {};
+        }
     },
     
     // 檢查未讀通知數量
@@ -51,63 +115,107 @@ const NotificationService = {
                 return;
             }
             
-            // 檢查是否需要使用模擬數據
-            if (localStorage.getItem('useMockData') === 'true' || true) {
-                ('使用模擬通知數據');
-                const mockUnreadCount = 3; // 模擬3個未讀通知
-                this.updateNotificationBadge(mockUnreadCount);
-                return mockUnreadCount;
+            // 獲取本地已讀狀態
+            const readStatus = this.getLocalNotificationReadStatus();
+            
+            // 檢查是否所有通知都已標記為已讀
+            if (readStatus.allRead) {
+                console.log('所有通知已標記為已讀');
+                this.updateNotificationBadge(0);
+                return 0;
             }
             
-            // 嘗試從API獲取真實數據
-            const response = await fetch(`${this.apiBaseUrl}/notifications/user/${userId}/unread-count`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
+            // 如果API可用，嘗試從API獲取真實數據
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/notifications/user/${userId}/unread-count`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    let unreadCount = data.count || 0;
+                    
+                    // 考慮本地已讀狀態
+                    if (readStatus.readNotifications && readStatus.readNotifications.length > 0) {
+                        unreadCount = Math.max(0, unreadCount - readStatus.readNotifications.length);
+                    }
+                    
+                    console.log(`從API檢測到 ${unreadCount} 個未讀通知`);
+                    this.updateNotificationBadge(unreadCount);
+                    return unreadCount;
                 }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`獲取未讀通知數量失敗: ${response.status}`);
+            } catch (apiError) {
+                console.warn('API請求失敗，使用本地數據:', apiError);
             }
             
-            const data = await response.json();
-            const unreadCount = data.count || 0;
+            // API失敗時使用模擬數據，但考慮本地已讀狀態
+            console.log('使用模擬通知數據');
+            let mockUnreadCount = 3; // 模擬3個未讀通知
             
-            (`檢測到 ${unreadCount} 個未讀通知`);
+            // 如果本地標記所有為已讀，則顯示0
+            if (readStatus.allRead) {
+                mockUnreadCount = 0;
+            } else if (readStatus.readNotifications && readStatus.readNotifications.length > 0) {
+                // 減去已讀的通知數量
+                mockUnreadCount = Math.max(0, mockUnreadCount - readStatus.readNotifications.length);
+            }
             
-            // 更新通知計數顯示
-            this.updateNotificationBadge(unreadCount);
+            this.updateNotificationBadge(mockUnreadCount);
+            return mockUnreadCount;
             
-            return unreadCount;
         } catch (error) {
             console.error('檢查未讀通知時發生錯誤:', error);
             
-            // 如果API請求失敗，使用模擬數據
-            ('API請求失敗，使用模擬通知數據');
-            const mockUnreadCount = 2; // 模擬2個未讀通知
-            this.updateNotificationBadge(mockUnreadCount);
-            return mockUnreadCount;
+            // 出錯時檢查本地狀態
+            const readStatus = this.getLocalNotificationReadStatus();
+            const unreadCount = readStatus.allRead ? 0 : 1;
+            this.updateNotificationBadge(unreadCount);
+            return unreadCount;
         }
     },
     
     // 更新通知徽章顯示
     updateNotificationBadge: function(count) {
-        (`更新通知徽章：${count}個未讀通知`);
+        console.log(`更新通知徽章：${count}個未讀通知`);
         
-        // 更新下拉選單中的通知徽章
+        // 優先顯示感嘆號指示器，有未讀通知時顯示感嘆號而不是數字
+        const exclamationElement = document.getElementById('notification-exclamation');
         const badgeElement = document.getElementById('notification-count');
-        if (badgeElement) {
-            if (count > 0) {
-                badgeElement.textContent = count > 99 ? '99+' : count;
-                badgeElement.style.display = 'flex';
-                ('顯示下拉選單通知徽章');
-            } else {
+        
+        if (count > 0) {
+            // 有未讀通知時優先顯示感嘆號
+            if (exclamationElement) {
+                exclamationElement.style.display = 'flex';
+                console.log('顯示下拉選單感嘆號指示器');
+            }
+            
+            // 隱藏數字徽章，避免重疊
+            if (badgeElement) {
                 badgeElement.style.display = 'none';
-                ('隱藏下拉選單通知徽章');
+                console.log('隱藏數字徽章以避免與感嘆號重疊');
             }
         } else {
+            // 沒有未讀通知時隱藏感嘆號
+            if (exclamationElement) {
+                exclamationElement.style.display = 'none';
+                console.log('隱藏下拉選單感嘆號指示器');
+            }
+            
+            // 也隱藏數字徽章
+            if (badgeElement) {
+                badgeElement.style.display = 'none';
+                console.log('隱藏下拉選單通知徽章');
+            }
+        }
+        
+        if (!exclamationElement) {
+            console.warn('找不到下拉選單感嘆號指示器元素');
+        }
+        if (!badgeElement) {
             console.warn('找不到下拉選單通知徽章元素');
         }
         
@@ -116,7 +224,7 @@ const NotificationService = {
         if (avatarBadge) {
             if (count > 0) {
                 avatarBadge.style.display = 'flex';
-                ('顯示頭像通知徽章');
+                console.log('顯示頭像通知徽章');
                 
                 // 確保徽章可見 - 強制重新計算樣式
                 setTimeout(() => {
@@ -127,7 +235,7 @@ const NotificationService = {
                 }, 10);
             } else {
                 avatarBadge.style.display = 'none';
-                ('隱藏頭像通知徽章');
+                console.log('隱藏頭像通知徽章');
             }
         } else {
             console.warn('找不到頭像通知徽章元素');
@@ -152,20 +260,33 @@ const NotificationService = {
                 return false;
             }
             
-            const response = await fetch(`${this.apiBaseUrl}/notifications/${notificationId}/read`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            // 立即更新本地狀態
+            this.updateLocalNotificationReadStatus(notificationId);
             
-            if (!response.ok) {
-                throw new Error(`標記通知已讀失敗: ${response.status}`);
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/notifications/${notificationId}/read`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`標記通知已讀失敗: ${response.status}`);
+                }
+            } catch (apiError) {
+                console.warn('API標記已讀失敗，但本地狀態已更新:', apiError);
             }
             
             // 重新檢查未讀通知數量
             this.checkUnreadNotifications();
+            
+            // 觸發事件通知其他頁面
+            document.dispatchEvent(new CustomEvent('notificationMarkedAsRead', {
+                detail: { notificationId }
+            }));
+            
             return true;
         } catch (error) {
             console.error('標記通知已讀時發生錯誤:', error);
@@ -184,25 +305,46 @@ const NotificationService = {
                 return false;
             }
             
-            const response = await fetch(`${this.apiBaseUrl}/notifications/user/${userId}/mark-all-read`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            // 立即更新本地狀態
+            this.updateLocalNotificationReadStatus(null, true);
             
-            if (!response.ok) {
-                throw new Error(`標記所有通知已讀失敗: ${response.status}`);
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/notifications/user/${userId}/mark-all-read`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`標記所有通知已讀失敗: ${response.status}`);
+                }
+            } catch (apiError) {
+                console.warn('API標記所有已讀失敗，但本地狀態已更新:', apiError);
             }
             
             // 更新通知計數顯示
             this.updateNotificationBadge(0);
+            
+            // 觸發事件通知其他頁面
+            document.dispatchEvent(new CustomEvent('notificationMarkedAsRead', {
+                detail: { allRead: true }
+            }));
+            
             return true;
         } catch (error) {
             console.error('標記所有通知已讀時發生錯誤:', error);
             return false;
         }
+    },
+    
+    // 重置通知狀態（用於測試或重新登入）
+    resetNotificationStatus: function() {
+        localStorage.removeItem('notificationReadStatus');
+        localStorage.removeItem('hasUnreadNotifications');
+        console.log('通知狀態已重置');
+        this.checkUnreadNotifications();
     },
     
     // 停止通知輪詢

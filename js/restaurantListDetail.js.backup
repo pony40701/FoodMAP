@@ -88,6 +88,7 @@ class RestaurantDetail {
     this.setupMenuScroll();
     this.setupFullMenuButton();
     this.setupShareModal();
+    this.initializeFavoriteSystem();
     initDirectionsModal(); // 初始化路線規劃功能
   }
 
@@ -111,6 +112,14 @@ class RestaurantDetail {
     }
 
     this.renderGoogleReviews();
+    
+    // 重新设置操作按钮，确保收藏按钮有正确的place_id
+    this.setupActionButtons();
+    
+    // 重新初始化收藏按钮系统
+    if (window.favoriteButton) {
+      await window.favoriteButton.initialize();
+    }
   }
 
   // 預設餐廳資料
@@ -448,10 +457,9 @@ class RestaurantDetail {
 
   // 設置操作按鈕功能
   setupActionButtons() {
-    // 收藏按鈕
     const saveBtn = document.querySelector('.action-btn.save');
     if (saveBtn) {
-      // 設置餐廳ID到按鈕的data屬性
+      // 设置餐厅ID到按钮的data属性
       if (this.restaurantData) {
         const placeId = this.restaurantData.place_id || this.restaurantData.placeId || this.restaurantData.id;
         if (placeId) {
@@ -459,26 +467,33 @@ class RestaurantDetail {
         }
       }
       
-      // 初始化收藏狀態
-      this.updateFavoriteButtonState(saveBtn);
+      // 移除 onclick 屬性，避免雙重觸發
+      saveBtn.removeAttribute('onclick');
       
-      // 添加點擊事件
-      saveBtn.addEventListener('click', async (e) => {
+      // 移除舊的事件監聽器並添加新的
+      const newBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+      
+      // 檢查當前收藏狀態並設置按鈕外觀
+      this.updateFavoriteButtonState(newBtn);
+      
+      // 使用真正的收藏系統API
+      newBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         
         // 檢查登錄狀態
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!isLoggedIn) {
-          showToast('請先登入會員才能使用收藏功能');
+          alert('請先登入會員才能使用收藏功能');
           return;
         }
         
         try {
           // 獲取餐廳資料
-          const placeId = saveBtn.getAttribute('data-place-id');
+          const placeId = newBtn.getAttribute('data-place-id');
           if (!placeId) {
-            showToast('無法獲取餐廳資訊');
+            alert('無法獲取餐廳資訊');
             return;
           }
           
@@ -490,19 +505,19 @@ class RestaurantDetail {
           
           // 檢查當前收藏狀態
           const isCurrentlyFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
-          const icon = saveBtn.querySelector('i');
+          const icon = newBtn.querySelector('i');
           
           if (isCurrentlyFavorited) {
             // 移除收藏
             const success = await window.favoriteSystem.removeStore(placeId);
             if (success) {
-              saveBtn.classList.remove('active');
+              newBtn.classList.remove('active');
               icon.classList.remove('fas');
               icon.classList.add('far');
-              saveBtn.style.color = '';
-              showToast('已移除收藏');
+              newBtn.style.color = '';
+              alert('已移除收藏');
             } else {
-              showToast('移除收藏失敗，請稍後再試');
+              alert('移除收藏失敗，請稍後再試');
             }
           } else {
             // 添加收藏
@@ -514,48 +529,19 @@ class RestaurantDetail {
             
             const success = await window.favoriteSystem.addStore(restaurantData);
             if (success) {
-              saveBtn.classList.add('active');
+              newBtn.classList.add('active');
               icon.classList.remove('far');
               icon.classList.add('fas');
-              saveBtn.style.color = '#ff6b1a';
-              showToast('已加入收藏');
+              newBtn.style.color = '#ff6b1a';
+              alert('已加入收藏');
             } else {
-              showToast('加入收藏失敗，請稍後再試');
+              alert('加入收藏失敗，請稍後再試');
             }
           }
         } catch (error) {
           console.error('收藏操作失敗:', error);
-          showToast('收藏操作失敗，請稍後再試');
+          alert('收藏操作失敗，請稍後再試');
         }
-      });
-    }
-
-    // 取得按鈕元素
-    const shareBtn = document.querySelector('.action-btn.share');
-
-    // 監聽分享按鈕點擊事件
-    if (shareBtn) {
-      shareBtn.addEventListener('click', () => {
-        // 顯示彈出視窗
-        const currentUrl = window.location.href;
-        const shareLinkInput = document.querySelector('.share-link-input');
-        const shareTitle = document.querySelector('.share-modal-content h2');
-        const shareModalOverlay = document.querySelector('.share-modal-overlay');
-        const closeModalBtn = document.querySelector('.close-modal');
-        const copyLinkBtn = document.querySelector('.copy-link-btn');
-        const shareIcons = document.querySelectorAll('.share-options .share-icon');
-
-        if (!shareLinkInput || !shareTitle || !shareModalOverlay || !closeModalBtn || !copyLinkBtn || !shareIcons || shareIcons.length === 0) {
-          console.error('分享彈出視窗相關元素未找到');
-          return;
-        }
-
-        shareLinkInput.value = currentUrl; // 暫時使用當前頁面 URL 作為分享連結
-        if (this.restaurantData) {
-          shareTitle.textContent = `分享 ${this.restaurantData.name || '這家餐廳'}`; // 更新標題
-        }
-       
-        shareModalOverlay.classList.add('visible');
       });
     }
   }
@@ -596,6 +582,36 @@ class RestaurantDetail {
       }
     } catch (error) {
       console.error('更新收藏按鈕狀態失敗:', error);
+    }
+  }
+
+    // 取得按鈕元素
+    const shareBtn = document.querySelector('.action-btn.share');
+
+    // 監聽分享按鈕點擊事件
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        // 顯示彈出視窗
+        const currentUrl = window.location.href;
+        const shareLinkInput = document.querySelector('.share-link-input');
+        const shareTitle = document.querySelector('.share-modal-content h2');
+        const shareModalOverlay = document.querySelector('.share-modal-overlay');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const copyLinkBtn = document.querySelector('.copy-link-btn');
+        const shareIcons = document.querySelectorAll('.share-options .share-icon');
+
+        if (!shareLinkInput || !shareTitle || !shareModalOverlay || !closeModalBtn || !copyLinkBtn || !shareIcons || shareIcons.length === 0) {
+          console.error('分享彈出視窗相關元素未找到');
+          return;
+        }
+
+        shareLinkInput.value = currentUrl; // 暫時使用當前頁面 URL 作為分享連結
+        if (this.restaurantData) {
+          shareTitle.textContent = `分享 ${this.restaurantData.name || '這家餐廳'}`; // 更新標題
+        }
+       
+        shareModalOverlay.classList.add('visible');
+      });
     }
   }
 
@@ -664,6 +680,26 @@ class RestaurantDetail {
         // 簡單跳轉到 menuDetail.html 頁面，不通過 URL 傳遞大量資料
         window.location.href = 'menuDetail.html';
       });
+          }
+    }
+
+  // 初始化收藏系統
+  async initializeFavoriteSystem() {
+    try {
+      if (typeof FavoriteSystem !== 'undefined' && typeof FavoriteButton !== 'undefined') {
+        if (!window.favoriteSystem) {
+          window.favoriteSystem = new FavoriteSystem();
+        }
+        
+        if (!window.favoriteButton) {
+          window.favoriteButton = new FavoriteButton();
+        }
+        
+        await window.favoriteSystem.initialize();
+        await window.favoriteButton.initialize();
+      }
+    } catch (error) {
+      // 静默处理错误
     }
   }
 
@@ -832,9 +868,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 初始化登入模態框
   initLoginModals();
-  
-  // 檢查並更新登入狀態
-  checkAndUpdateLoginStatus();
 
   // Initialize menu scroll for popular dishes section
   // Note: The popular dishes section in HTML does not have a specific container class like .popular-dishes around the menu-grid and buttons.
@@ -1513,48 +1546,88 @@ function initDirectionsModal() {
   }
 }
 
-// 檢查並更新登入狀態
+// 收藏切換函數
+function toggleFavorite(button) {
+  // 檢查登錄狀態
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  if (!isLoggedIn) {
+    alert('請先登入會員才能使用收藏功能');
+    return;
+  }
+  
+  // 切換收藏狀態
+  const isSaved = button.classList.toggle('active');
+  const icon = button.querySelector('i');
+  
+  if (isSaved) {
+    icon.classList.remove('far');
+    icon.classList.add('fas');
+    button.style.color = '#ff6b1a';
+    alert('已加入收藏');
+  } else {
+    icon.classList.remove('fas');
+    icon.classList.add('far');
+    button.style.color = '';
+    alert('已移除收藏');
+  }
+}
+
+// 檢查並更新登錄狀態
 function checkAndUpdateLoginStatus() {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
   const loginSection = document.getElementById('loginSection');
   const userSection = document.getElementById('userSection');
   
   if (isLoggedIn) {
-    // 已登入 - 隱藏登入區域，顯示用戶區域
-    if (loginSection) {
-      loginSection.style.display = 'none';
-    }
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // 隱藏登入按鈕，顯示用戶區域
+    if (loginSection) loginSection.style.display = 'none';
     if (userSection) {
-      userSection.style.display = 'block';
+      userSection.style.display = 'flex';
       
-      // 設置用戶頭像
-      const avatarImg = userSection.querySelector('.avatar-img');
-      const savedAvatar = localStorage.getItem('userAvatar');
-      if (avatarImg && savedAvatar) {
-        avatarImg.src = savedAvatar;
+      // 更新用戶頭像
+      const userAvatarImg = document.querySelector('.avatar-img');
+      if (userAvatarImg && userData) {
+        const avatarUrl = userData.image_url || userData.avatar_url;
+        if (avatarUrl) {
+          userAvatarImg.src = avatarUrl;
+          userAvatarImg.alt = userData.username || '會員頭像';
+        }
       }
     }
   } else {
-    // 未登入 - 顯示登入區域，隱藏用戶區域
-    if (loginSection) {
-      loginSection.style.display = 'block';
-    }
-    if (userSection) {
-      userSection.style.display = 'none';
-    }
+    // 顯示登入按鈕，隱藏用戶區域
+    if (loginSection) loginSection.style.display = 'block';
+    if (userSection) userSection.style.display = 'none';
   }
 }
 
 // 登出功能
 function logout() {
-  // 清除登入相關的 localStorage 資料
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('userId');
-  localStorage.removeItem('userName');
-  localStorage.removeItem('userEmail');
-  localStorage.removeItem('userAvatar');
+  // 清除所有登錄相關的 localStorage 資料
   localStorage.removeItem('authToken');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('user');
   
-  // 重新載入頁面以更新 UI 狀態
+  // 更新 UI 狀態
+  checkAndUpdateLoginStatus();
+  
+  // 重新整理頁面
   window.location.reload();
 }
+
+// 頁面載入完成後初始化功能
+document.addEventListener('DOMContentLoaded', async function() {
+  // 檢查並更新登錄狀態
+  checkAndUpdateLoginStatus();
+  
+  // 初始化餐廳詳情頁面
+  const restaurantDetail = new RestaurantDetail();
+  
+  // 收藏按鈕功能由 onclick 處理，移除重複的事件監聽器
+  
+  // 初始化登入模態框功能
+  initLoginModals();
+}); 

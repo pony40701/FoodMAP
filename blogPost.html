@@ -8,266 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/navforaboutus.css">
     <link rel="stylesheet" href="css/blogPost.css">
- 
+    <link rel="stylesheet" href="css/login-modal.css">
     <style>
-        /* 登入和用戶區塊樣式 */
-        .login-section,
-        .user-section {
-            display: flex;
-            align-items: center;
-        }
-        
-        /* 會員頭像樣式 */
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: visible;
-            cursor: pointer;
-            border: 2px solid #ff6b1a;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1001;
-        }
-        
-        .user-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255, 107, 26, 0.4);
-        }
-        
-        .avatar-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-        
-        /* 頭像下拉選單樣式 */
-        .avatar-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 107, 26, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            min-width: 200px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1002;
-        }
-        
-        .user-avatar:hover .avatar-dropdown {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .avatar-dropdown .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #ff6b1a;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border-bottom: 1px solid rgba(255, 107, 26, 0.1);
-            white-space: nowrap;
-        }
-        
-        .avatar-dropdown .dropdown-item:last-child {
-            border-bottom: none;
-        }
-        
-        .avatar-dropdown .dropdown-item i {
-            font-size: 18px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .avatar-dropdown .dropdown-item:hover {
-            background: rgba(255, 107, 26, 0.1);
-            color: #ff8c42;
-        }
-        
-        /* 下拉選單分隔線 */
-        .dropdown-divider {
-            height: 1px;
-            background: rgba(255, 107, 26, 0.1);
-            margin: 8px 0;
-        }
-        
-        /* 登出選項樣式 */
-        .logout-item {
-            color: #ff4757 !important;
-        }
-        
-        .logout-item:hover {
-            background: rgba(255, 71, 87, 0.1) !important;
-            color: #ff6b81 !important;
-        }
-        
-        .logout-item i {
-            color: inherit;
-        }
-        
-        /* 響應式設計 */
-        @media (max-width: 768px) {
-            .avatar-dropdown {
-                position: fixed;
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                border-radius: 12px 12px 0 0;
-                transform: translateY(100%);
-            }
-            
-            .user-avatar:hover .avatar-dropdown {
-                transform: translateY(0);
-            }
-            
-            .avatar-dropdown .dropdown-item {
-                padding: 16px;
-                font-size: 18px;
-            }
-            
-            .avatar-dropdown .dropdown-item i {
-                font-size: 20px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .avatar-dropdown .dropdown-item {
-                padding: 14px;
-                font-size: 16px;
-            }
-            
-            .avatar-dropdown .dropdown-item i {
-                font-size: 18px;
-            }
-        }
-        
-        /* 登入模態框樣式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            animation: fadeIn 0.3s;
-        }
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            border-radius: 16px;
-            padding: 32px 32px 24px 32px;
-            border: 1px solid #ff6b1a;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s;
-            position: relative;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .modal-header h2 {
-            font-size: 28px;
-            color: #ff6b1a;
-            margin: 0;
-        }
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close:hover {
-            color: #ff6b1a;
-        }
-        .modal-body {
-            padding: 0;
-        }
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .form-group label {
-            font-size: 16px;
-            color: #333;
-            font-weight: 600;
-        }
-        .form-group input {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .form-group input:focus {
-            border: 1.5px solid #ff6b1a;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 0;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.3s;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #e55a15 0%, #d4500f 100%);
-        }
-        .form-footer {
-            margin-top: 12px;
-            text-align: center;
-        }
-        .form-footer a {
-            color: #ff6b1a;
-            text-decoration: none;
-            margin: 0 4px;
-            font-size: 15px;
-            transition: color 0.2s;
-        }
-        .form-footer a:hover {
-            color: #e55a15;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; } to { opacity: 1; }
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; }
-        }
-        @media (max-width: 480px) {
-            .modal-content { padding: 18px 6px 12px 6px; }
-            .modal-header h2 { font-size: 22px; }
+        .search-section {
+            display: none !important;
         }
     </style>
 </head>
@@ -298,7 +42,7 @@
             <div class="restaurant-dropdown">
                 <a href="restaurantList.html" class="nav-link dropdown-toggle">
                     <i class="fas fa-utensils"></i>
-                    <span>餐廳詳情</span>
+                    <span>餐廳列表</span>
                 </a>
             </div>
             <div class="restaurant-dropdown">
@@ -310,11 +54,11 @@
                     </a>
                     <a href="ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
-                        <span>人氣排行</span>
+                        <span>熱門排行</span>
                     </a>
-                    <a href="ranking.html#rating" class="dropdown-item">
-                        <i class="fas fa-star"></i>
-                        <span>評分排行</span>
+                    <a href="ranking.html#new" class="dropdown-item">
+                        <i class="fas fa-store-alt"></i>
+                        <span>新進店家</span>
                     </a>
                 </div>
             </div>
@@ -346,7 +90,7 @@
             </div>
             <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
-                <button class="btn-login">登入</button>
+                <button class="btn-login" id="loginButton">登入</button>
             </div>
             
             <!-- 已登入狀態 - 顯示會員頭像 -->
@@ -881,32 +625,59 @@
 
     <!-- 登入彈跳視窗 -->
     <div id="loginModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>登入</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <form id="loginForm" class="login-form">
-            <div class="form-group">
-              <label for="email">電子郵件</label>
-              <input type="email" id="email" name="email" required>
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 減少結構層級，標題和表單組合在一起 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">登入</h2>
+                <span class="close"
+                    style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+
+                <form id="loginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="email"
+                            style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="email" name="email" required
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="password"
+                            style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="password" name="password" required
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <button type="submit"
+                        style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
+                </form>
+
+                <div style="text-align: center; font-size: 13px; margin-bottom: 10px;">
+                    <a href="userForgotPassword.html">忘記密碼</a> | <a href="userRegister.html">註冊新帳號</a>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #888; font-size: 13px;">或使用以下方式登入</p>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <button onclick="socialLogin('google')"
+                            style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #db4437;">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button onclick="socialLogin('facebook')"
+                            style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #1877f3;">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </button>
+                        <button onclick="socialLogin('line')"
+                            style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #00c300;">
+                            <i class="fab fa-line"></i> Line
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="password">密碼</label>
-              <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn-primary">登入</button>
-          </form>
-          <div class="form-footer">
-            <a href="userForgotPassword.html">忘記密碼？</a> | <a href="userRegister.html">註冊新帳號</a>
-          </div>
         </div>
-      </div>
     </div>
 
     <!-- 添加必要的 JavaScript 函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
     <script src="js/login.js"></script>
     <script src="js/blogPost2.js"></script>
     <script>

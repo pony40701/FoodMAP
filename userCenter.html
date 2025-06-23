@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>會員中心 - 食力派ChowCrew</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/navforaboutus.css">
+  <link rel="stylesheet" href="css/login-modal.css">
   <link rel="stylesheet" href="css/userCenter.css">
   <link rel="stylesheet" href="css/experienceList.css">
   <!-- 添加餐廳卡片相關的樣式 -->
@@ -18,6 +20,16 @@
   <link rel="stylesheet" href="css/restaurant-modal-new.css">
   <!-- 添加 Leaflet 地圖 CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    .search-section {
+        display: none !important;
+    }
+
+    /* 強制修正收藏頁面的網格佈局 */
+    #favorites .restaurants-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+  </style>
   <!-- 添加登入相關功能 -->
   <script src="js/config.js"></script>
   <script src="js/toast.js"></script>
@@ -33,19 +45,48 @@
 </head>
 <body>
   <!-- 導覽列 -->
-  <nav class="navbar">
+  <div class="navbar">
     <div class="navbar-left">
       <a href="index.html" class="logo-text">食力派ChowCrew</a>
     </div>
-    <div class="navbar-right">
-      <a href="restaurantList.html" class="nav-link">
-        <i class="fas fa-utensils"></i>
-        <span>餐廳詳情</span>
-      </a>
-      <a href="index.html" class="nav-link">回首頁</a>
-      <button class="btn-logout" id="logoutBtn">登出</button>
+    <div class="search-section">
+      <div class="search-bar">
+        <div class="input-container">
+          <span class="input-icon">🍴</span>
+          <input class="search-input" placeholder="找美食" />
+        </div>
+        <div class="search-divider"></div>
+        <div class="input-container">
+          <span class="input-icon">📍</span>
+          <input class="search-input" placeholder="選擇地點" />
+        </div>
+        <!-- 搜尋按鈕 -->
+        <button class="search-btn">
+          <img src="images/search.png" alt="search" width="26" height="26" />
+        </button>
+      </div>
     </div>
-  </nav>
+    <div class="navbar-right">
+      <div class="restaurant-dropdown">
+        <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+        <div class="restaurant-dropdown-content">
+          <a href="restaurant-signup.html" class="dropdown-item">
+            <i class="fas fa-store"></i>
+            <span>商家註冊</span>
+          </a>
+          <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>商家登入</span>
+          </a>
+        </div>
+      </div>
+      <!-- Replace avatar with a simple logout button -->
+      <button class="btn-logout" onclick="logout()">登出</button>
+    </div>
+    <button class="hamburger">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
 
   <!-- 會員中心主容器 -->
   <div class="user-center-container">
@@ -53,7 +94,7 @@
     <div class="sidebar">
       <div class="user-info">
         <div class="user-avatar">
-          <img src="images/default-avatar.png" alt="會員頭像" class="avatar-img">
+          <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
         </div>
         <div class="user-name">載入中...</div>
         <div class="user-email">載入中...</div>
@@ -275,15 +316,63 @@
 
   </div>
 
-  <!-- 確認對話框 -->
-  <div id="customConfirmModal" class="modal" style="display: none; justify-content: center; align-items: center;">
-    <div class="confirm-modal-content">
-        <h2 id="confirmModalTitle" class="confirm-modal-title"></h2>
-        <p id="confirmModalMessage" class="confirm-modal-message"></p>
-        <div class="confirm-modal-actions">
-            <button id="confirmModalCancel" class="btn-cancel">取消</button>
-            <button id="confirmModalOk" class="btn-confirm">確定</button>
+  <!-- 會員登入彈出視窗 -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>登入</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="email">電子郵件</label>
+          <input type="email" id="email" name="email" required>
         </div>
+        <div class="form-group">
+          <label for="password">密碼</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn-primary">登入</button>
+      </form>
+      <div class="form-footer">
+        <a href="userForgotPassword.html">忘記密碼</a> | <a href="userRegister.html">註冊新帳號</a>
+      </div>
+      <div class="social-login">
+        <p>或使用以下方式登入</p>
+        <div class="social-buttons">
+          <button class="social-btn google"><i class="fab fa-google"></i> Google</button>
+          <button class="social-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
+          <button class="social-btn line"><i class="fab fa-line"></i> Line</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商家登入彈出視窗 -->
+  <div id="restaurantLoginModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>商家登入</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="restaurantLoginForm" class="login-form">
+        <div class="form-group">
+          <label for="merchant-email">電子郵件</label>
+          <input type="email" id="merchant-email" name="merchant-email" required>
+        </div>
+        <div class="form-group">
+          <label for="merchant-password">密碼</label>
+          <input type="password" id="merchant-password" name="merchant-password" required>
+        </div>
+        <div class="form-group form-group-checkbox">
+          <input type="checkbox" id="rememberMe" name="rememberMe">
+          <label for="rememberMe">記住我</label>
+        </div>
+        <button type="submit" class="btn-primary">登入</button>
+      </form>
+      <div class="form-footer">
+        <a href="#">忘記密碼</a> | <a href="restaurant-signup.html">註冊商家帳號</a>
+      </div>
     </div>
   </div>
 
@@ -307,83 +396,6 @@
     </div>
   </div>
 
-  <!-- 添加必要的 JavaScript 文件 -->
-  <!-- 先引入 config.js 設置 API_BASE_URL -->
-  <script src="js/config.js"></script>
-  <script src="js/toast.js"></script>
-  <script src="js/BusinessHours.js"></script>
-  <script src="js/restaurant-modal-index.js"></script>
-  <script src="js/favoriteSystem.js"></script>
-  <script src="js/favoriteButton.js"></script>
-  <script src="js/userCenter.js"></script>
-  
-  <!-- 添加 Leaflet 地圖 JavaScript -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  
-  <!-- 添加登出功能的腳本 -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // 檢查用戶是否已登入，如果沒有則跳轉到首頁
-      if (localStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'index.html';
-        return;
-      }
-      
-      // 綁定登出按鈕事件
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-          // 執行登出功能
-          logout();
-          // 登出後跳轉到首頁
-          window.location.href = 'index.html';
-        });
-      }
-      
-      // 初始化 RestaurantModal
-      if (typeof RestaurantModal !== 'undefined') {
-        RestaurantModal.init();
-        window.RestaurantModal = RestaurantModal;
-      }
-      
-      // 初始化收藏系統
-      if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
-        window.favoriteSystem.initialize();
-      }
-      
-      // 初始化用戶中心
-      if (typeof initializeUserCenter === 'function') {
-        initializeUserCenter();
-      }
-      
-      // 設置餐廳卡片點擊事件
-      setTimeout(setupCardClickEvents, 1000);
-    });
-    
-    // 綁定餐廳卡片點擊事件的輔助函數
-    function setupCardClickEvents() {
-      const cards = document.querySelectorAll('.restaurant-card');
-      cards.forEach(card => {
-        const placeId = card.getAttribute('data-id');
-        if (placeId) {
-          card.addEventListener('click', (e) => {
-            // 如果點擊的是收藏按鈕，不觸發卡片點擊事件
-            if (e.target.closest('.favorite-btn')) {
-              e.stopPropagation();
-              return;
-            }
-            // 確保 viewRestaurant 函數存在
-            if (typeof viewRestaurant === 'function') {
-              viewRestaurant(placeId);
-            } else {
-              alert('系統錯誤，無法顯示餐廳詳情');
-            }
-          });
-        }
-      });
-    }
-  </script>
-  
   <!-- 餐廳詳細資訊彈窗 - 新版 -->
   <div id="restaurantModalNew" class="restaurant-modal-new">
     <div class="restaurant-modal-content-new">
@@ -505,6 +517,33 @@
   
   <!-- Debug 腳本 -->
   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 檢查用戶是否已登入，如果沒有則跳轉到首頁
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // 初始化 RestaurantModal
+      if (typeof RestaurantModal !== 'undefined') {
+        RestaurantModal.init();
+        window.RestaurantModal = RestaurantModal;
+      }
+      
+      // 初始化收藏系統
+      if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
+        window.favoriteSystem.initialize();
+      }
+      
+      // 初始化用戶中心
+      if (typeof initializeUserCenter === 'function') {
+        initializeUserCenter();
+      }
+      
+      // 設置餐廳卡片點擊事件
+      setTimeout(setupCardClickEvents, 1000);
+    });
+    
     // 綁定餐廳卡片點擊事件的輔助函數
     function setupCardClickEvents() {
       const cards = document.querySelectorAll('.restaurant-card');
@@ -522,26 +561,17 @@
         }
       });
     }
-    
-    // 頁面載入完成後執行
-    document.addEventListener('DOMContentLoaded', function() {
-      // 延遲一點時間確保所有元素都已載入
-      setTimeout(setupCardClickEvents, 1000);
-    });
-    
-    // 監聽 DOM 變化，確保新添加的卡片也能正確綁定事件
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.addedNodes.length) {
-          setupCardClickEvents();
-        }
-      });
-    });
-    
-    // 開始觀察 DOM 變化
-    observer.observe(document.querySelector('.favorites-stores') || document.body, {
-      childList: true,
-      subtree: true
+  </script>
+  <script src="js/userCenter.js"></script>
+  <script>
+    const hamburger = document.querySelector('.hamburger');
+    const navRight = document.querySelector('.navbar-right');
+    const hamburgerIcon = hamburger.querySelector('i');
+
+    hamburger.addEventListener('click', () => {
+      navRight.classList.toggle('active');
+      hamburgerIcon.classList.toggle('fa-bars');
+      hamburgerIcon.classList.toggle('fa-xmark');
     });
   </script>
 </body>

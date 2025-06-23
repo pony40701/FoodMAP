@@ -912,50 +912,63 @@ async function removeFavoriteReview(reviewId) {
 /**
  * 顯示自訂確認彈窗
  * @param {string} message - 要顯示的訊息
- * @param {string} title - 彈窗標題
- * @returns {Promise<boolean>} - 回傳一個 Promise，使用者點擊確定時解析為 true，否則為 false
+ * @param {string} [title='確認操作'] - 彈窗的標題
+ * @returns {Promise<boolean>} - 如果用戶點擊確認則解析為 true，否則為 false
  */
 function showConfirmationModal(message, title = '確認操作') {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('customConfirmModal');
-        const modalTitle = document.getElementById('confirmModalTitle');
-        const modalMessage = document.getElementById('confirmModalMessage');
-        const okButton = document.getElementById('confirmModalOk');
-        const cancelButton = document.getElementById('confirmModalCancel');
-
-        if (!modal || !modalTitle || !modalMessage || !okButton || !cancelButton) {
-            console.error('找不到確認彈窗的必要元素');
-            return resolve(false); // 避免 Promise 卡住
+    return new Promise(resolve => {
+        // 先移除可能已存在的舊彈窗，避免重複
+        const existingModal = document.getElementById('confirmationModal');
+        if (existingModal) {
+            existingModal.remove();
         }
 
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
-
-        // 為了避免重複綁定事件，先複製再取代按鈕
-        const newOkButton = okButton.cloneNode(true);
-        okButton.parentNode.replaceChild(newOkButton, okButton);
+        // 創建彈窗的 HTML 結構
+        const modalHTML = `
+            <div id="confirmationModal" class="modal" style="display: flex; justify-content: center; align-items: center; z-index: 2000;">
+                <div class="confirm-modal-content">
+                    <h3 class="confirm-modal-title">${title}</h3>
+                    <p class="confirm-modal-message">${message}</p>
+                    <div class="confirm-modal-actions">
+                        <button id="confirmBtn" class="btn-confirm">確定</button>
+                        <button id="cancelBtn" class="btn-cancel">取消</button>
+                    </div>
+                </div>
+            </div>`;
         
-        const newCancelButton = cancelButton.cloneNode(true);
-        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+        // 將彈窗附加到 body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        newOkButton.onclick = () => {
-            modal.style.display = 'none';
-            resolve(true);
-        };
+        // 使用 setTimeout 確保 DOM 渲染完成後再操作元素
+        setTimeout(() => {
+            const modal = document.getElementById('confirmationModal');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
 
-        newCancelButton.onclick = () => {
-            modal.style.display = 'none';
-            resolve(false);
-        };
-
-        // 點擊背景關閉
-        modal.onclick = (event) => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-                resolve(false);
+            // 再次檢查元素是否存在
+            if (!modal || !confirmBtn || !cancelBtn) {
+                console.error('創建彈窗後，仍然找不到必要的元素。');
+                resolve(false); // 出錯時返回 false
+                return;
             }
-        };
+
+            const closeModal = (result) => {
+                if (modal) {
+                    modal.remove();
+                }
+                resolve(result);
+            };
+
+            confirmBtn.onclick = () => closeModal(true);
+            cancelBtn.onclick = () => closeModal(false);
+
+            // 點擊彈窗背景也可以關閉
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(false);
+                }
+            });
+        }, 0); // 延遲 0ms 將其推入下一個事件循環
     });
 }
 
@@ -1748,42 +1761,40 @@ async function loadUserData() {
 
 // 更新使用者顯示資訊
 function updateUserDisplay(userData) {
-    ('更新使用者資訊顯示:', userData);
-    
-    if (!userData) {
-        console.error('無效的用戶資料');
-        return;
-        }
-    
-    // 更新用戶名稱
-    const userNameElement = document.querySelector('.user-name');
-    if (userNameElement) {
-        userNameElement.textContent = userData.username || userData.fullName || userData.email || '未知用戶';
-    }
-    
-    // 更新用戶郵箱
-    const userEmailElement = document.querySelector('.user-email');
-    if (userEmailElement) {
-        userEmailElement.textContent = userData.email || '';
-    }
-    
-    // 更新用戶頭像 - 檢查 image_url 和 avatar_url
-    const userAvatarImg = document.querySelector('.avatar-img');
-    if (userAvatarImg) {
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-            userAvatarImg.src = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
-            userAvatarImg.alt = userData.username || '會員頭像';
+    if (!userData) return;
 
-            userAvatarImg.onerror = function() {
-                this.onerror = null;
-                this.src = 'images/default-avatar.png';
-                this.alt = '預設頭像';
-            };
-        } else {
-            userAvatarImg.src = 'images/default-avatar.png';
-            userAvatarImg.alt = '預設頭像';
+    // Handle potentially nested user object for name and email
+    const user = userData.user || userData;
+
+    // Update name and email
+    const userNameEl = document.querySelector('.sidebar .user-name');
+    const userEmailEl = document.querySelector('.sidebar .user-email');
+    if (userNameEl) {
+        userNameEl.textContent = user.username || user.fullName || user.name || '使用者';
+    }
+    if (userEmailEl) {
+        userEmailEl.textContent = user.email || '';
+    }
+
+    // Construct avatar URL from userId
+    const userId = localStorage.getItem('userId');
+    const sidebarAvatarImg = document.querySelector('.sidebar .user-avatar .avatar-img');
+    const navbarAvatarImg = document.querySelector('.navbar .user-avatar .avatar-img');
+    
+    if (userId) {
+        const avatarUrl = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
+        if (sidebarAvatarImg) {
+            sidebarAvatarImg.src = avatarUrl;
+            sidebarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
         }
+        if (navbarAvatarImg) {
+            navbarAvatarImg.src = avatarUrl;
+            navbarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
+        }
+    } else {
+        // Fallback if no userId is found
+        if (sidebarAvatarImg) sidebarAvatarImg.src = 'images/default-avatar.png';
+        if (navbarAvatarImg) navbarAvatarImg.src = 'images/default-avatar.png';
     }
 }
 
@@ -2129,18 +2140,43 @@ function loadNotifications(typeFilter = 'all') {
             return;
         }
 
-        notificationsList.innerHTML = notifications.map(notification => `
-            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
-                <div class="notification-header">
-                    <span class="notification-type">${getNotificationTypeText(notification.type)}</span>
-                    <span class="notification-time">${formatTime(notification.time || notification.createdAt)}</span>
+        // 生成通知列表 HTML
+        const notificationsHtml = notifications.map(notification => {
+            const isUnread = !notification.read;
+            const notificationType = notification.type || 'system';
+            const notificationTime = formatTime(notification.time || notification.createdAt);
+            
+            // 根據通知類型設置顯示文字
+            const typeText = getNotificationTypeText(notificationType);
+            
+            return `
+                <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${notification.id}">
+                    <div class="notification-header">
+                        <span class="notification-type" data-type="${notificationType}">${typeText}</span>
+                        <span class="notification-time">${notificationTime}</span>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-status-icon"></div>
+                        ${notification.content || notification.message}
+                    </div>
                 </div>
-                <div class="notification-content">
-                    ${notification.content || notification.message}
+            `;
+        }).join('');
+        
+        // 組合完整的 HTML
+        const helpText = `
+            <div class="notification-help">
+                <div class="notification-help-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>提示：</strong>
+                    <span class="unread-example">未讀通知</span> 有橘色邊框和感嘆號圖標，
+                    <span class="read-example">已讀通知</span> 呈現灰色。點擊通知可標記為已讀。
+                    </span>
                 </div>
-                ${!notification.read ? '<div class="unread-indicator"></div>' : ''}
             </div>
-        `).join('');
+        `;
+        
+        notificationsList.innerHTML = notificationsHtml + helpText;
         
         // 添加點擊事件，點擊通知時標記為已讀
         document.querySelectorAll('.notification-item').forEach(item => {
@@ -2176,20 +2212,48 @@ function addMarkAllAsReadButton(container) {
     // 添加點擊事件
     markAllBtn.addEventListener('click', function() {
         if (window.NotificationService && typeof window.NotificationService.markAllAsRead === 'function') {
+            // 計算當前未讀數量
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            
+            // 立即更新UI
+            unreadItems.forEach(item => {
+                item.classList.remove('unread');
+            });
+            
             window.NotificationService.markAllAsRead()
                 .then(success => {
                     if (success) {
-                        // 重新載入通知列表
-                        loadNotifications('all');
+                        // 重新載入通知列表以確保數據一致性
+                        setTimeout(() => {
+                            loadNotifications('all');
+                        }, 500);
                         showToast('已將所有通知標記為已讀');
+                    } else {
+                        // 如果失敗，重新載入以恢復正確狀態
+                        loadNotifications('all');
                     }
                 });
         } else {
-            // 如果沒有通知服務模組，直接更新UI
-            document.querySelectorAll('.notification-item.unread').forEach(item => {
+            // 如果沒有通知服務模組，直接更新UI並手動更新本地狀態
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            
+            unreadItems.forEach(item => {
                 item.classList.remove('unread');
-                item.querySelector('.unread-indicator')?.remove();
             });
+            
+            // 手動更新本地通知狀態
+            try {
+                const readStatus = {
+                    allRead: true,
+                    lastMarkAllReadTime: Date.now(),
+                    readNotifications: []
+                };
+                localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
+                console.log('手動標記所有通知為已讀');
+            } catch (error) {
+                console.error('手動更新通知狀態失敗:', error);
+            }
+            
             showToast('已將所有通知標記為已讀');
             buttonContainer.remove(); // 移除整個容器
         }
@@ -2212,20 +2276,36 @@ function addMarkAllAsReadButton(container) {
 function markNotificationAsRead(notificationId, element) {
     if (!notificationId) return;
     
+    // 立即更新UI（樂觀更新）
+    if (element && element.classList.contains('unread')) {
+        element.classList.remove('unread');
+    }
+    
     // 如果有通知服務模組，使用其標記為已讀功能
     if (window.NotificationService && typeof window.NotificationService.markAsRead === 'function') {
         window.NotificationService.markAsRead(notificationId)
             .then(success => {
-                if (success && element) {
-                    element.classList.remove('unread');
-                    element.querySelector('.unread-indicator')?.remove();
+                if (!success && element) {
+                    // 如果標記失敗，回復UI狀態
+                    element.classList.add('unread');
                 }
             });
     } else {
-        // 否則僅更新UI
-        if (element) {
-            element.classList.remove('unread');
-            element.querySelector('.unread-indicator')?.remove();
+        // 否則僅更新UI並手動更新本地狀態
+        
+        // 手動更新本地通知狀態
+        try {
+            let readStatus = JSON.parse(localStorage.getItem('notificationReadStatus') || '{}');
+            if (!readStatus.readNotifications) {
+                readStatus.readNotifications = [];
+            }
+            if (!readStatus.readNotifications.includes(notificationId)) {
+                readStatus.readNotifications.push(notificationId);
+                localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
+                console.log(`手動標記通知 ${notificationId} 為已讀`);
+            }
+        } catch (error) {
+            console.error('手動更新通知狀態失敗:', error);
         }
     }
 }
@@ -2425,8 +2505,10 @@ function initializePage() {
     // 設置事件監聽器
     setupEventListeners();
 
-    // 處理 URL 錨點
-    handleURLHash();
+    // 處理 URL 錨點 (延遲處理確保所有初始化完成)
+    setTimeout(() => {
+        handleURLHash();
+    }, 200);
 }
 
 // 頁面載入時執行初始化
@@ -2447,7 +2529,10 @@ function handleURLHash() {
         }
     }
     
-    switchSection(targetSection);
+    // 使用 setTimeout 確保 DOM 元素已經完全載入
+    setTimeout(() => {
+        switchSection(targetSection);
+    }, 100);
 }
 
 // 初始化圖表 (保留原有的假圖表)
@@ -2482,12 +2567,30 @@ function setupEventListeners() {
     }
     
     // 設置通知過濾按鈕
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('#notifications .filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            // 更新篩選按鈕狀態
+            document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            
             const type = this.getAttribute('data-type');
-            filterNotifications(type);
+            loadNotifications(type);
+        });
+    });
+    
+    // 為通用的篩選按鈕也設置事件監聽器（備用方案）
+    document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 檢查是否在通知區塊中
+            const notificationsSection = this.closest('#notifications');
+            if (notificationsSection) {
+                // 更新篩選按鈕狀態
+                document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const type = this.getAttribute('data-type');
+                loadNotifications(type);
+            }
         });
     });
     
@@ -2626,15 +2729,36 @@ function switchSection(sectionId) {
         targetSection.classList.add('active');
         targetSection.style.display = 'block'; // 顯式顯示
         
-        // 如果切換到收藏區塊，初始化收藏功能
-        if (sectionId === 'favorites') {
-            initializeFavorites();
-        }
-        
-        // 如果切換到數據分析區塊，立即更新收藏統計數據
-        if (sectionId === 'analytics') {
-            loadAnalyticsData();
-            updateFavoriteStats();
+        // 根據不同區塊載入相對應的數據
+        switch(sectionId) {
+            case 'favorites':
+                // 如果切換到收藏區塊，初始化收藏功能
+                initializeFavorites();
+                break;
+            case 'analytics':
+                // 如果切換到數據分析區塊，立即更新收藏統計數據
+                loadAnalyticsData();
+                updateFavoriteStats();
+                break;
+            case 'notifications':
+                // 如果切換到通知中心，載入通知數據
+                loadNotifications('all');
+                
+                // 同時觸發首頁通知服務的重新檢查（如果存在）
+                if (window.NotificationService && typeof window.NotificationService.checkUnreadNotifications === 'function') {
+                    setTimeout(() => {
+                        window.NotificationService.checkUnreadNotifications();
+                    }, 500); // 延遲一點確保通知載入完成
+                }
+                break;
+            case 'reviews':
+                // 如果切換到評論區塊，載入評論數據
+                loadReviews('all');
+                break;
+            case 'profile':
+                // 如果切換到個人資料，載入用戶數據
+                loadUserData();
+                break;
         }
     }
     // 添加 active 類別到選中的選單項目
