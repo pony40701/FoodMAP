@@ -6,6 +6,11 @@ let savedRange = null; // 保存游標範圍
 let updateToolbarTimeout = null; // 防抖計時器
 let currentUserId = null; // 全域用戶ID變數
 
+// 餐廳資訊全域變數
+let currentRestaurantId = null; // 當前餐廳ID
+let currentRestaurantName = null; // 當前餐廳名稱
+let currentRestaurantAddress = null; // 當前餐廳地址
+
 // 防抖版本的 updateToolbarState
 function debouncedUpdateToolbarState() {
     console.log('debouncedUpdateToolbarState: 被調用');
@@ -63,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     initRatingSystem();
     // 載入用戶數據
     loadUserData();
+    // 檢查URL參數中的餐廳資訊
+    await getRestaurantInfoFromURL();
     // 載入文章列表
     await loadPublishedPosts();
     // 初始化統計圖表
@@ -2063,7 +2070,7 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     const imageData = collectImageData();
     const postData = {
         userId: currentUserId, // 使用當前登入用戶ID
-        restaurantId: 1, // TODO: 從餐廳選擇中獲取
+        restaurantId: currentRestaurantId || 1, // 使用當前餐廳ID或預設值
         title: title || '未命名文章',
         content_json: imageData.processedHtmlContent || content,
         status: 'published',
@@ -3471,10 +3478,10 @@ async function loadPublishedPosts() {
         publishedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         // 顯示文章列表
-        publishedPosts.forEach(post => {
-            const postElement = createPublishedPostElement(post);
+        for (const post of publishedPosts) {
+            const postElement = await createPublishedPostElement(post);
             publishedList.appendChild(postElement);
-        });
+        }
     } catch (error) {
         console.error('載入已發布文章時發生錯誤：', error);
         publishedList.innerHTML = '<div class="error">載入已發布文章失敗，請稍後再試</div>';
@@ -3482,7 +3489,7 @@ async function loadPublishedPosts() {
 }
 
 // 創建已發布文章元素
-function createPublishedPostElement(post) {
+async function createPublishedPostElement(post) {
     const div = document.createElement('div');
     div.className = 'post-card';
     div.setAttribute('data-post-id', post.id); // 添加文章ID屬性
@@ -3505,6 +3512,9 @@ function createPublishedPostElement(post) {
     // 限制內容顯示長度
     const contentPreview = truncateText(stripHtml(post.content_json), 80);
 
+    // 根據餐廳ID獲取餐廳資訊
+    const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+
     div.innerHTML = `
         <div class="post-header">
             <h3>${escapeHtml(post.title)}</h3>
@@ -3512,7 +3522,10 @@ function createPublishedPostElement(post) {
         </div>
         <div class="post-content">
             <p class="restaurant-info">
-                <i class="fas fa-utensils"></i> 餐廳ID: ${post.restaurantId}
+                <i class="fas fa-utensils"></i> 餐廳名稱: ${restaurantInfo.name}
+            </p>
+            <p class="restaurant-address">
+                <i class="fas fa-map-marker-alt"></i> 地址: ${restaurantInfo.address}
             </p>
             <div class="post-ratings">
                 <span class="rating-label">總評分</span>
@@ -4457,4 +4470,96 @@ async function editPublishedPost(postId) {
     }
 }
 
-// 刪除已發布文章
+
+
+
+// 設置餐廳資訊的函數
+function setRestaurantInfo(restaurantId, restaurantName, restaurantAddress) {
+    currentRestaurantId = restaurantId;
+    currentRestaurantName = restaurantName;
+    currentRestaurantAddress = restaurantAddress;
+    
+    console.log('設置餐廳資訊:', {
+        id: currentRestaurantId,
+        name: currentRestaurantName,
+        address: currentRestaurantAddress
+    });
+    
+    // 如果餐廳名稱元素存在，自動填入
+    const restaurantNameElement = document.getElementById('restaurantName');
+    if (restaurantNameElement && currentRestaurantName) {
+        restaurantNameElement.value = currentRestaurantName;
+    }
+    
+    // 如果餐廳地址元素存在，自動填入
+    const restaurantLocationElement = document.getElementById('restaurantLocation');
+    if (restaurantLocationElement && currentRestaurantAddress) {
+        restaurantLocationElement.value = currentRestaurantAddress;
+    }
+    
+    // 如果餐廳名稱編輯元素存在，也自動填入
+    const restaurantNameEditElement = document.getElementById('restaurantNameEdit');
+    if (restaurantNameEditElement && currentRestaurantName) {
+        restaurantNameEditElement.value = currentRestaurantName;
+    }
+    
+    // 如果餐廳地址編輯元素存在，也自動填入
+    const restaurantLocationEditElement = document.getElementById('restaurantLocationEdit');
+    if (restaurantLocationEditElement && currentRestaurantAddress) {
+        restaurantLocationEditElement.value = currentRestaurantAddress;
+    }
+}
+
+// 從URL參數獲取餐廳資訊
+async function getRestaurantInfoFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('restaurantId');
+    
+    if (restaurantId) {
+        // 使用getRestaurantInfoById獲取完整的餐廳資訊
+        const restaurantInfo = await getRestaurantInfoById(restaurantId);
+        setRestaurantInfo(restaurantId, restaurantInfo.name, restaurantInfo.address);
+        return true;
+    } else {
+        setRestaurantInfo("1", "等待餐廳資訊輸入...", "等待餐廳資訊輸入...");
+    }
+    
+    return false;
+}
+
+// 根據餐廳ID獲取餐廳資訊
+async function getRestaurantInfoById(restaurantId) {
+    try {
+        // 使用API查詢餐廳資料
+        const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
+        
+        if (response.ok) {
+            const restaurant = await response.json();
+            return {
+                name: restaurant.name || `餐廳ID: ${restaurantId}`,
+                address: restaurant.address || restaurant.location || "地址資訊未提供"
+            };
+        } else if (response.status === 404) {
+            // 如果餐廳不存在，返回預設值
+            return { 
+                name: `餐廳ID: ${restaurantId}`, 
+                address: "餐廳資訊不存在" 
+            };
+        } else {
+            throw new Error(`API錯誤: ${response.status}`);
+        }
+        
+    } catch (error) {
+        console.error('獲取餐廳資訊時發生錯誤：', error);
+        
+       
+        // 最終備用方案
+        return { 
+            name: `餐廳ID: ${restaurantId}`, 
+            address: "地址資訊未提供" 
+        };
+    }
+}
+
+// 暴露給全域的函數，供其他頁面調用
+window.setRestaurantInfo = setRestaurantInfo;
