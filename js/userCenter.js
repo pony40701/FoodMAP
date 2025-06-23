@@ -2425,8 +2425,10 @@ function initializePage() {
     // 設置事件監聽器
     setupEventListeners();
 
-    // 處理 URL 錨點
-    handleURLHash();
+    // 處理 URL 錨點 (延遲處理確保所有初始化完成)
+    setTimeout(() => {
+        handleURLHash();
+    }, 200);
 }
 
 // 頁面載入時執行初始化
@@ -2447,7 +2449,10 @@ function handleURLHash() {
         }
     }
     
-    switchSection(targetSection);
+    // 使用 setTimeout 確保 DOM 元素已經完全載入
+    setTimeout(() => {
+        switchSection(targetSection);
+    }, 100);
 }
 
 // 初始化圖表 (保留原有的假圖表)
@@ -2482,12 +2487,30 @@ function setupEventListeners() {
     }
     
     // 設置通知過濾按鈕
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('#notifications .filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            // 更新篩選按鈕狀態
+            document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            
             const type = this.getAttribute('data-type');
-            filterNotifications(type);
+            loadNotifications(type);
+        });
+    });
+    
+    // 為通用的篩選按鈕也設置事件監聽器（備用方案）
+    document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 檢查是否在通知區塊中
+            const notificationsSection = this.closest('#notifications');
+            if (notificationsSection) {
+                // 更新篩選按鈕狀態
+                document.querySelectorAll('#notifications .filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const type = this.getAttribute('data-type');
+                loadNotifications(type);
+            }
         });
     });
     
@@ -2626,15 +2649,29 @@ function switchSection(sectionId) {
         targetSection.classList.add('active');
         targetSection.style.display = 'block'; // 顯式顯示
         
-        // 如果切換到收藏區塊，初始化收藏功能
-        if (sectionId === 'favorites') {
-            initializeFavorites();
-        }
-        
-        // 如果切換到數據分析區塊，立即更新收藏統計數據
-        if (sectionId === 'analytics') {
-            loadAnalyticsData();
-            updateFavoriteStats();
+        // 根據不同區塊載入相對應的數據
+        switch(sectionId) {
+            case 'favorites':
+                // 如果切換到收藏區塊，初始化收藏功能
+                initializeFavorites();
+                break;
+            case 'analytics':
+                // 如果切換到數據分析區塊，立即更新收藏統計數據
+                loadAnalyticsData();
+                updateFavoriteStats();
+                break;
+            case 'notifications':
+                // 如果切換到通知中心，載入通知數據
+                loadNotifications('all');
+                break;
+            case 'reviews':
+                // 如果切換到評論區塊，載入評論數據
+                loadReviews('all');
+                break;
+            case 'profile':
+                // 如果切換到個人資料，載入用戶數據
+                loadUserData();
+                break;
         }
     }
     // 添加 active 類別到選中的選單項目
