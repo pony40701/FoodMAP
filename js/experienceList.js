@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            console.log('API Response Data:', data);
             
             if (data.length < limit || (allArticles.length + data.length) >= TOTAL_ARTICLES_LIMIT) {
                 hasMore = false;
@@ -118,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             // If parsing fails, assume it's an HTML string
             text = contentJson;
-            console.warn('Could not parse content_json, treating as plain text. Content:', contentJson);
         }
 
         // Strip HTML tags from the text
