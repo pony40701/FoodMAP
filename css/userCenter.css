@@ -1,15 +1,23 @@
-/* 全局樣式重置 */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+@media (max-width: 768px) {
+    .restaurant-main-info {
+        flex-direction: column;
+    }
+    
+    .restaurant-modal-image {
+        width: 100%;
+        height: auto;
+    }
 }
 
-body {
-    font-family: 'Microsoft JhengHei', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-    line-height: 1.6;
+/* 會員中心容器 */
+.user-center-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 80px auto 0;
+    min-height: calc(100vh - 80px);
+    padding-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 彈窗樣式 */
@@ -148,79 +156,6 @@ body {
 
 .modal-direction-btn:hover {
     background-color: #45a049;
-}
-
-@media (max-width: 768px) {
-    .restaurant-main-info {
-        flex-direction: column;
-    }
-    
-    .restaurant-modal-image {
-        width: 100%;
-        height: auto;
-    }
-}
-
-/* 導覽列樣式 */
-.navbar {
-    background-color: #fff;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    width: 100%;
-}
-
-.navbar-left .logo-text {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #ff6b1a;
-    text-decoration: none;
-}
-
-.navbar-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.nav-link {
-    color: #666;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.nav-link:hover {
-    color: #ff6b1a;
-}
-
-.btn-logout {
-    background-color: #ff6b1a;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.btn-logout:hover {
-    background-color: #ff8533;
-}
-
-/* 會員中心容器 */
-.user-center-container {
-    display: flex;
-    margin-top: 80px;
-    min-height: calc(100vh - 80px);
-    padding-top: 20px;
-    max-width: 100%;
 }
 
 /* 側邊選單樣式 */
@@ -403,15 +338,13 @@ body {
 
 /* 主要內容區域樣式 */
 .main-content {
-    flex: 1;
-    padding: 2rem;
-    background-color: #fff;
-    margin: 0 1rem 2rem 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-grow: 1;
+    width: calc(100% - 240px); /* 考慮到側邊欄寬度 */
+    padding: 2.5rem;
+    background-color: #f9fafb;
     overflow-y: auto;
-    width: calc(100% - 2rem);
-    max-width: 100%;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* 確保 padding 不會導致溢出 */
 }
 
 /* 內容區塊通用樣式 */
@@ -1047,17 +980,16 @@ select:focus {
     .section-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 15px;
+        gap: 10px;
     }
-    
+
     .view-toggle {
-        width: 100%;
+        align-self: flex-end;
     }
-    
+
     .view-toggle .toggle-btn {
-        flex: 1;
-        justify-content: center;
-        padding: 12px 10px;
+        padding: 6px 10px;
+        font-size: 13px;
     }
 }
 
@@ -1306,13 +1238,12 @@ select:focus {
 
 .no-data {
     text-align: center;
-    padding: 40px;
-    color: #999;
-    font-size: 16px;
-    background: #f8f9fa;
+    padding: 3rem 1rem;
+    color: #888;
+    background-color: #fafafa;
+    border: 1px dashed #ddd;
     border-radius: 8px;
-    border: 2px dashed #ddd;
-    margin: 20px 0;
+    margin-top: 1.5rem;
 }
 
 /* 響應式設計 */

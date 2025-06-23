@@ -7,8 +7,34 @@
     <link rel="stylesheet" href="css/userRegister.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/navforaboutus.css">
 </head>
 <body>
+    <!-- 導覽列 -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <a href="index.html" class="logo-text">食力派ChowCrew</a>
+        </div>
+        <div class="navbar-right">
+            <div class="restaurant-dropdown">
+                <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
+                <div class="restaurant-dropdown-content">
+                    <a href="restaurant-signup.html" class="dropdown-item">
+                        <i class="fas fa-store"></i>
+                        <span>商家註冊</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>商家登入</span>
+                    </a>
+                </div>
+            </div>
+            <button class="btn-login" id="showLoginModalLink">登入</button>
+        </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
     <div class="container">
         <div class="register-box">
             <div class="register-header">
@@ -233,5 +259,19 @@
     });
     </script>
     <script src="js/userRegister.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/loginModal.js"></script>
+    <script>
+		const hamburger = document.querySelector('.hamburger');
+		const navRight = document.querySelector('.navbar-right');
+		const hamburgerIcon = hamburger.querySelector('i');
+
+		hamburger.addEventListener('click', () => {
+			navRight.classList.toggle('active');
+			hamburgerIcon.classList.toggle('fa-bars');
+			hamburgerIcon.classList.toggle('fa-xmark');
+		});
+	</script>
 </body>
 </html> 
