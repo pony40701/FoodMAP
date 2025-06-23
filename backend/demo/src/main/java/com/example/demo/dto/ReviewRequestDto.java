@@ -3,6 +3,7 @@ package com.example.demo.dto;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class ReviewRequestDto {
@@ -16,6 +17,7 @@ public class ReviewRequestDto {
     private List<String> tags;
     private List<String> photos; // 保留向後兼容
     private List<PhotoData> photoData; // 新增：圖片數據
+    private Map<String, PhotoData> existingImageInfo; // 新增：已存在圖片的信息
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -33,7 +35,8 @@ public class ReviewRequestDto {
         private String fileName;
         private String contentType;
         private byte[] imageData;
-        private ImageSize size; // 新增：圖片大小信息
+        private ImageSize size; // 圖片大小信息
+        private String alignment; // 圖片對齊信息
     }
     
     @Data

@@ -426,15 +426,50 @@ input[type="text"]::placeholder {
     border: 1px solid #ddd;
     border-radius: 0 0 4px 4px;
     background: white;
+    font-size: 16px;
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.3s ease;
     overflow-y: auto;
     line-height: 1.6;
     resize: none;
+    word-break: break-word;       /* 長英文、網址會換行 */
+    white-space: normal;          /* 保證會自動換行 */
+    overflow-wrap: break-word;    /* 舊瀏覽器支援（等同 word-break） */
 }
 
 .rich-editor:focus {
-    outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 5px rgba(255, 107, 26, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.1);
+}
+
+/* 空段落樣式 - 讓空段落即使沒有文字也能看見游標 */
+#editor p:empty::before,
+#editor div:empty::before,
+#editorEdit p:empty::before,
+#editorEdit div:empty::before,
+.rich-editor p:empty::before,
+.rich-editor div:empty::before {
+    content: "\200B"; /* zero-width space */
+    display: inline-block;
+}
+
+/* 確保編輯器內的空段落有最小高度 */
+#editor p:empty,
+#editor div:empty,
+#editorEdit p:empty,
+#editorEdit div:empty,
+.rich-editor p:empty,
+.rich-editor div:empty {
+    min-height: 1.2em;
+}
+
+/* 工具列樣式 */
+.toolbar-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
 /* 移除不必要的工具列分隔線 */
@@ -513,17 +548,19 @@ input[type="text"]::placeholder {
     display: block;
 }
 
-/* 圖片容器樣式 */
+/* 圖片相關樣式 */
 .image-wrapper {
     display: block;
-    margin: 1em 0;
-    clear: both;
-    min-height: 1em;
-    cursor: text;
-    text-align: left; /* 預設左對齊 */
+    margin: 0.5rem 0;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    max-width: 100%;
+    /* 確保圖片不會影響文字編輯 */
+    pointer-events: auto;
+    width: 100%;
 }
 
-/* 圖片對齊樣式 */
 .image-wrapper.align-left {
     text-align: left;
 }
@@ -536,7 +573,6 @@ input[type="text"]::placeholder {
     text-align: right;
 }
 
-/* 當圖片容器被選中時顯示虛線邊框 */
 .image-wrapper:focus-within {
     outline: 1px dashed #4a90e2;
     outline-offset: 2px;
@@ -553,6 +589,10 @@ input[type="text"]::placeholder {
     -moz-user-select: none;
     -ms-user-select: none;
     vertical-align: middle;
+    border-radius: 8px;
+    overflow: hidden;
+    pointer-events: auto;
+    z-index: 1;
 }
 
 .image-container::after {
@@ -563,6 +603,7 @@ input[type="text"]::placeholder {
     right: 0;
     bottom: 0;
     pointer-events: none;
+    z-index: 1;
 }
 
 .image-container img {
@@ -571,6 +612,13 @@ input[type="text"]::placeholder {
     display: block;
     border: 2px solid transparent;
     pointer-events: none;
+    transition: border-color 0.3s ease;
+    position: relative;
+    z-index: 2;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 /* 圖片容器的懸停和選中狀態 */
@@ -580,19 +628,27 @@ input[type="text"]::placeholder {
 
 .image-container.selected img {
     border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
 /* 調整大小控制點 */
 .resize-handle {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     background: #4a90e2;
     border: 2px solid white;
     border-radius: 50%;
     pointer-events: auto;
-    z-index: 2;
+    z-index: 10;
     display: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.resize-handle:hover {
+    background: #357abd;
+    transform: scale(1.1);
 }
 
 /* 只在選中狀態顯示控制點 */
@@ -603,26 +659,137 @@ input[type="text"]::placeholder {
 /* 圖片容器在調整大小時的狀態 */
 .image-container.resizing img {
     border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.image-container.resizing .resize-handle {
+    background: #357abd;
+    transform: scale(1.2);
 }
 
 .resize-info {
     position: absolute;
-    bottom: -25px;
+    bottom: -30px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: 12px;
+    font-weight: 500;
     display: none;
     white-space: nowrap;
     pointer-events: none;
     z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .image-container.resizing .resize-info {
     display: block;
+}
+
+/* 圖片載入狀態 */
+.image-loading {
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+}
+
+.image-loading::before {
+    content: '載入中...';
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* 圖片錯誤狀態 */
+.image-error {
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8d7da;
+    border: 2px dashed #dc3545;
+    border-radius: 8px;
+    color: #721c24;
+}
+
+.image-error::before {
+    content: '圖片載入失敗';
+    font-size: 14px;
+}
+
+/* 圖片上傳按鈕樣式 */
+.image-upload-btn {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.image-upload-btn:hover {
+    background: linear-gradient(135deg, #357abd 0%, #4a90e2 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.image-upload-btn:active {
+    transform: translateY(0);
+}
+
+/* 圖片工具列 */
+.image-toolbar {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 4px;
+    display: none;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.image-container.selected .image-toolbar {
+    display: flex;
+}
+
+.image-toolbar button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.image-toolbar button:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.image-toolbar button.active {
+    background: #4a90e2;
+    color: white;
 }
 
 /* 文字大小樣式 */
