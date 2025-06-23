@@ -203,4 +203,18 @@ function generateRatingStars(rating) {
         }
     }
     return stars;
+}
+
+function submitReply(button) {
+    // Logic to submit reply
+    console.log('Reply submitted');
+    hideReplyForm(button);
+}
+
+function merchantLogout() {
+    localStorage.removeItem('merchantToken');
+    localStorage.removeItem('merchantEmail');
+    localStorage.removeItem('restaurantId');
+    alert('您已成功登出商家帳戶。');
+    window.location.href = 'index.html';
 } 

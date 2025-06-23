@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/navforaboutus.css">
     <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/login-modal.css">
     <style>
         body {
             font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
@@ -177,10 +178,12 @@
             </div>
         </div>
         <div class="navbar-right">
-            <a href="restaurantList.html" class="nav-link">
-                <i class="fas fa-utensils"></i>
-                <span>餐廳詳情</span>
-            </a>
+            <div class="restaurant-dropdown">
+                <a href="restaurantList.html" class="nav-link dropdown-toggle">
+                    <i class="fas fa-utensils"></i>
+                    <span>餐廳列表</span>
+                </a>
+            </div>
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">排行榜 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
@@ -190,27 +193,31 @@
                     </a>
                     <a href="ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
-                        <span>人氣排行</span>
+                        <span>熱門排行</span>
                     </a>
-                    <a href="ranking.html#rating" class="dropdown-item">
-                        <i class="fas fa-star"></i>
-                        <span>評分排行</span>
+                    <a href="ranking.html#new" class="dropdown-item">
+                        <i class="fas fa-store-alt"></i>
+                        <span>新進店家</span>
                     </a>
                 </div>
             </div>
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="javascript:void(0)" onclick="handleWriteReview()" class="dropdown-item">
+                    <a href="blogPost.html" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
                         <span>寫食記</span>
+                    </a>
+                     <a href="experienceList.html" class="dropdown-item">
+                        <i class="fas fa-book-open"></i>
+                        <span>瀏覽心得</span>
                     </a>
                 </div>
             </div>
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">商家專用 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="./restaurant-signup.html" class="dropdown-item">
+                    <a href="restaurant-signup.html" class="dropdown-item">
                         <i class="fas fa-store"></i>
                         <span>商家註冊</span>
                     </a>
@@ -220,7 +227,6 @@
                     </a>
                 </div>
             </div>
-            <!-- 未登入狀態 - 顯示登入按鈕 -->
             <div id="loginSection" class="login-section">
                 <button class="btn-login">登入</button>
             </div>
@@ -230,19 +236,19 @@
                 <div class="user-avatar">
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
-                        <a href="usercenter.html" class="dropdown-item">
+                        <a href="userCenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-                        <a href="usercenter.html#favorites" class="dropdown-item">
+                        <a href="userCenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
                         </a>
-                        <a href="usercenter.html#reviews" class="dropdown-item">
+                        <a href="userCenter.html#reviews" class="dropdown-item">
                             <i class="fas fa-star"></i>
                             <span>我的評論</span>
                         </a>
-                        <a href="usercenter.html#orders" class="dropdown-item">
+                        <a href="userCenter.html#orders" class="dropdown-item">
                             <i class="fas fa-history"></i>
                             <span>瀏覽紀錄</span>
                         </a>
@@ -255,6 +261,9 @@
                 </div>
             </div>
         </div>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
 
     <!-- 幫助中心內容 -->
@@ -327,6 +336,79 @@
         </div>
     </div>
 
+    <!-- 登入彈出視窗 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 減少結構層級，標題和表單組合在一起 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">登入</h2>
+                <span class="close" style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+                
+                <form id="loginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="email" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="email" name="email" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="password" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="password" name="password" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <button type="submit" style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
+                </form>
+                
+                <div style="text-align: center; font-size: 13px; margin-bottom: 10px;">
+                    <a href="userForgotPassword.html">忘記密碼</a> | <a href="userRegister.html">註冊新帳號</a>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #888; font-size: 13px;">或使用以下方式登入</p>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <button onclick="socialLogin('google')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #db4437;">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button onclick="socialLogin('facebook')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #1877f3;">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </button>
+                        <button onclick="socialLogin('line')" style="display: flex; align-items: center; justify-content: center; gap: 4px; border: none; border-radius: 6px; padding: 6px 0; width: 32%; font-size: 13px; font-weight: 500; cursor: pointer; background: #f5f5f5; color: #00c300;">
+                            <i class="fab fa-line"></i> Line
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商家登入彈出視窗 -->
+    <div id="restaurantLoginModal" class="modal">
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 商家登入標題區域 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">商家登入</h2>
+                <span class="close" style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+                
+                <form id="restaurantLoginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-email" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="restaurant-email" name="email" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-password" style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="restaurant-password" name="password" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="restaurant-remember" name="remember" style="margin-right: 6px; width: 14px; height: 14px; accent-color: #ff6b1a; cursor: pointer;">
+                        <label for="restaurant-remember" style="font-size: 13px; font-weight: 400; color: #666; cursor: pointer;">記住我</label>
+                    </div>
+                    <button type="submit" style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
+                </form>
+                
+                <div style="text-align: center; font-size: 13px; margin-bottom: 15px;">
+                    <a href="restaurant-forgot-password.html">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 頁尾 -->
     <footer class="footer">
         <div class="footer-container">
@@ -363,5 +445,19 @@
             <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
         </div>
     </footer>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/login.js"></script>
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
+        });
+    </script>
 </body>
 </html>

@@ -1748,42 +1748,40 @@ async function loadUserData() {
 
 // 更新使用者顯示資訊
 function updateUserDisplay(userData) {
-    ('更新使用者資訊顯示:', userData);
-    
-    if (!userData) {
-        console.error('無效的用戶資料');
-        return;
-        }
-    
-    // 更新用戶名稱
-    const userNameElement = document.querySelector('.user-name');
-    if (userNameElement) {
-        userNameElement.textContent = userData.username || userData.fullName || userData.email || '未知用戶';
-    }
-    
-    // 更新用戶郵箱
-    const userEmailElement = document.querySelector('.user-email');
-    if (userEmailElement) {
-        userEmailElement.textContent = userData.email || '';
-    }
-    
-    // 更新用戶頭像 - 檢查 image_url 和 avatar_url
-    const userAvatarImg = document.querySelector('.avatar-img');
-    if (userAvatarImg) {
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-            userAvatarImg.src = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
-            userAvatarImg.alt = userData.username || '會員頭像';
+    if (!userData) return;
 
-            userAvatarImg.onerror = function() {
-                this.onerror = null;
-                this.src = 'images/default-avatar.png';
-                this.alt = '預設頭像';
-            };
-        } else {
-            userAvatarImg.src = 'images/default-avatar.png';
-            userAvatarImg.alt = '預設頭像';
+    // Handle potentially nested user object for name and email
+    const user = userData.user || userData;
+
+    // Update name and email
+    const userNameEl = document.querySelector('.sidebar .user-name');
+    const userEmailEl = document.querySelector('.sidebar .user-email');
+    if (userNameEl) {
+        userNameEl.textContent = user.username || user.fullName || user.name || '使用者';
+    }
+    if (userEmailEl) {
+        userEmailEl.textContent = user.email || '';
+    }
+
+    // Construct avatar URL from userId
+    const userId = localStorage.getItem('userId');
+    const sidebarAvatarImg = document.querySelector('.sidebar .user-avatar .avatar-img');
+    const navbarAvatarImg = document.querySelector('.navbar .user-avatar .avatar-img');
+    
+    if (userId) {
+        const avatarUrl = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
+        if (sidebarAvatarImg) {
+            sidebarAvatarImg.src = avatarUrl;
+            sidebarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
         }
+        if (navbarAvatarImg) {
+            navbarAvatarImg.src = avatarUrl;
+            navbarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
+        }
+    } else {
+        // Fallback if no userId is found
+        if (sidebarAvatarImg) sidebarAvatarImg.src = 'images/default-avatar.png';
+        if (navbarAvatarImg) navbarAvatarImg.src = 'images/default-avatar.png';
     }
 }
 

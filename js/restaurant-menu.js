@@ -386,4 +386,12 @@ document.addEventListener('DOMContentLoaded', function() {
             ('排序方式:', this.value);
         });
     }
-}); 
+});
+
+function merchantLogout() {
+    localStorage.removeItem('merchantToken');
+    localStorage.removeItem('merchantEmail');
+    localStorage.removeItem('restaurantId');
+    alert('您已成功登出商家帳戶。');
+    window.location.href = 'index.html';
+} 
