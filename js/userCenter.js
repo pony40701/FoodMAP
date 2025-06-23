@@ -912,50 +912,63 @@ async function removeFavoriteReview(reviewId) {
 /**
  * 顯示自訂確認彈窗
  * @param {string} message - 要顯示的訊息
- * @param {string} title - 彈窗標題
- * @returns {Promise<boolean>} - 回傳一個 Promise，使用者點擊確定時解析為 true，否則為 false
+ * @param {string} [title='確認操作'] - 彈窗的標題
+ * @returns {Promise<boolean>} - 如果用戶點擊確認則解析為 true，否則為 false
  */
 function showConfirmationModal(message, title = '確認操作') {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('customConfirmModal');
-        const modalTitle = document.getElementById('confirmModalTitle');
-        const modalMessage = document.getElementById('confirmModalMessage');
-        const okButton = document.getElementById('confirmModalOk');
-        const cancelButton = document.getElementById('confirmModalCancel');
-
-        if (!modal || !modalTitle || !modalMessage || !okButton || !cancelButton) {
-            console.error('找不到確認彈窗的必要元素');
-            return resolve(false); // 避免 Promise 卡住
+    return new Promise(resolve => {
+        // 先移除可能已存在的舊彈窗，避免重複
+        const existingModal = document.getElementById('confirmationModal');
+        if (existingModal) {
+            existingModal.remove();
         }
 
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
-
-        // 為了避免重複綁定事件，先複製再取代按鈕
-        const newOkButton = okButton.cloneNode(true);
-        okButton.parentNode.replaceChild(newOkButton, okButton);
+        // 創建彈窗的 HTML 結構
+        const modalHTML = `
+            <div id="confirmationModal" class="modal" style="display: flex; justify-content: center; align-items: center; z-index: 2000;">
+                <div class="confirm-modal-content">
+                    <h3 class="confirm-modal-title">${title}</h3>
+                    <p class="confirm-modal-message">${message}</p>
+                    <div class="confirm-modal-actions">
+                        <button id="confirmBtn" class="btn-confirm">確定</button>
+                        <button id="cancelBtn" class="btn-cancel">取消</button>
+                    </div>
+                </div>
+            </div>`;
         
-        const newCancelButton = cancelButton.cloneNode(true);
-        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+        // 將彈窗附加到 body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        newOkButton.onclick = () => {
-            modal.style.display = 'none';
-            resolve(true);
-        };
+        // 使用 setTimeout 確保 DOM 渲染完成後再操作元素
+        setTimeout(() => {
+            const modal = document.getElementById('confirmationModal');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
 
-        newCancelButton.onclick = () => {
-            modal.style.display = 'none';
-            resolve(false);
-        };
-
-        // 點擊背景關閉
-        modal.onclick = (event) => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-                resolve(false);
+            // 再次檢查元素是否存在
+            if (!modal || !confirmBtn || !cancelBtn) {
+                console.error('創建彈窗後，仍然找不到必要的元素。');
+                resolve(false); // 出錯時返回 false
+                return;
             }
-        };
+
+            const closeModal = (result) => {
+                if (modal) {
+                    modal.remove();
+                }
+                resolve(result);
+            };
+
+            confirmBtn.onclick = () => closeModal(true);
+            cancelBtn.onclick = () => closeModal(false);
+
+            // 點擊彈窗背景也可以關閉
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(false);
+                }
+            });
+        }, 0); // 延遲 0ms 將其推入下一個事件循環
     });
 }
 
