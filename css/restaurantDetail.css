@@ -301,6 +301,7 @@
   padding: 0 24px;
   align-items: flex-start;
   margin-top: 40px; /* Add top margin for spacing */
+  margin-bottom: 75px; /* 控制與footer的間距 */
 }
 
 /* 右側邊欄 */
@@ -527,8 +528,8 @@
 
 /* 推薦餐廳區塊樣式 */
 .recommended-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #e6e6e6;
 }
 
@@ -548,8 +549,8 @@
 
 /* 評論區塊樣式 */
 .reviews-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #e6e6e6;
 }
 
@@ -859,7 +860,7 @@
   border: 1px solid #e6e6e6;
   border-radius: 8px;
   overflow: visible; /* 改為 visible 避免內容被裁切造成淡出效果 */
-  margin-bottom: 24px;
+  margin-bottom: 10px;
   height: auto; /* 讓高度自適應內容 */
   /* 確保沒有視覺效果造成淡出 */
   box-shadow: none;
@@ -1381,8 +1382,26 @@
 /* 響應式設計調整 */
 @media (max-width: 768px) {
   .recommended-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+  }
+  
+  .reviews-section {
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+  }
+  
+  .map-section {
+    margin-bottom: 8px;
+  }
+  
+  .footer {
+    padding: 20px 15px 15px 15px;
+    margin-top: 75px;
+  }
+  
+  .content-wrapper {
+    margin-bottom: 75px;
   }
 } 
 
@@ -1390,9 +1409,9 @@
 .footer {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(255, 107, 26, 0.1) 100%);
     color: #fff;
-    padding: 50px 20px 20px 20px;
+    padding: 30px 20px 20px 20px;
     font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
-    margin-top: 60px;
+    margin-top: 75px;
     border-top: 3px solid #ff6b1a;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -1503,8 +1522,8 @@
 /* ========== 頁尾響應式設計 ========== */
 @media (max-width: 768px) {
     .footer {
-        padding: 40px 16px 16px 16px;
-        margin-top: 40px;
+        padding: 30px 16px 16px 16px;
+        margin-top: 25px;
     }
     
     .footer-container {
