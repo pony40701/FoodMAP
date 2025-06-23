@@ -151,11 +151,6 @@
         </div>
     </main>
 
-    <!-- 回到頂部按鈕 -->
-    <button id="backToTop" class="back-to-top" title="回到頂部">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
     <!-- 頁尾 -->
     <footer class="footer">
         <div class="footer-container">
@@ -353,6 +348,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- 回到頂部按鈕 -->
+    <button id="backToTop" class="back-to-top" title="回到頂部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script>
         // 回到頂部按鈕功能
@@ -377,7 +377,6 @@
     </script>
     <script src="js/toast.js"></script>
     <script src="js/experienceList.js"></script>
-    <script src="js/loginModal.js"></script>
     <script>
         // API 基礎路徑
         window.API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080/api';
@@ -440,8 +439,9 @@
                 }
             });
             // 開啟商家登入
-            document.querySelectorAll('a.dropdown-item, a.nav-link').forEach(link => {
-                if (link.textContent.includes('商家登入')) {
+            document.querySelectorAll('a.dropdown-item').forEach(link => {
+                const text = link.querySelector('span');
+                if (text && text.textContent.includes('商家登入')) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         restaurantLoginModal.style.display = 'block';
@@ -489,8 +489,8 @@
                                 userAvatarImg.src = data.image_url || data.avatar_url;
                             }
                             loginModal.style.display = 'none';
-                            alert('登入成功！');
-                            location.reload(); // 登入成功後刷新頁面
+                            showToast('登入成功！');
+                            setTimeout(() => location.reload(), 1000); 
                         } else {
                             alert(data.error || data.message || '登入失敗');
                         }
@@ -520,9 +520,11 @@
                             localStorage.setItem('merchantToken', result.token);
                             localStorage.setItem('merchantEmail', result.email);
                             localStorage.setItem('restaurantId', result.restaurantId);
-                            alert('商家登入成功！');
+                            showToast('商家登入成功！');
                             restaurantLoginModal.style.display = 'none';
-                            window.location.href = 'restaurant.html';
+                            setTimeout(() => {
+                                window.location.href = 'restaurant.html';
+                            }, 1000);
                         } else {
                             const errorData = await response.json();
                             alert(errorData.message || '商家登入失敗');
@@ -545,7 +547,7 @@
             localStorage.removeItem('user');
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userId');
-            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
 
             // 切換 UI 狀態
             const loginSection = document.getElementById('loginSection');

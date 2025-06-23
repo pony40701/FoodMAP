@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas fa-arrow-left"></i>
                     返回我的收藏
                 </a>
-                <span style="margin: 0 8px; color: #999;">|</span>
                 <a href="experienceList.html">
                     前往心得列表
                 </a>
