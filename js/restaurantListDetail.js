@@ -178,6 +178,53 @@ class RestaurantDetail {
 
   // 從 URL 獲取餐廳資料
   async getRestaurantDataFromUrl() {
+    // 檢查是否有從 menuDetail.html 返回的資料
+    const returnData = sessionStorage.getItem('restaurantDetailReturnData');
+    if (returnData) {
+      try {
+        this.restaurantData = JSON.parse(returnData);
+        console.log('從 menuDetail.html 返回，恢復餐廳資料:', this.restaurantData);
+        
+        // 清除 sessionStorage 中的資料
+        sessionStorage.removeItem('restaurantDetailReturnData');
+        return;
+      } catch (error) {
+        console.error('恢復從菜單頁面返回的資料失敗:', error);
+      }
+    }
+    
+    // 檢查備用數據（防止用戶按上一頁時數據丟失）
+    const backupData = sessionStorage.getItem('menuDetailBackupData');
+    if (backupData && document.referrer.includes('menuDetail.html')) {
+      try {
+        this.restaurantData = JSON.parse(backupData);
+        console.log('從備用數據恢復餐廳資料:', this.restaurantData);
+        
+        // 清除備用數據
+        sessionStorage.removeItem('menuDetailBackupData');
+        return;
+      } catch (error) {
+        console.error('恢復備用數據失敗:', error);
+      }
+    }
+    
+    // 檢查是否有從其他頁面返回的狀態
+    const savedPageState = sessionStorage.getItem('restaurantDetailPageState');
+    if (savedPageState && document.referrer.includes('menuDetail.html')) {
+      try {
+        const pageState = JSON.parse(savedPageState);
+        this.restaurantData = pageState.restaurantData;
+        console.log('從 sessionStorage 恢復頁面狀態餐廳資料:', this.restaurantData);
+        
+        // 清除 sessionStorage 中的狀態
+        sessionStorage.removeItem('restaurantDetailPageState');
+        return;
+      } catch (error) {
+        console.error('恢復頁面狀態失敗:', error);
+        // 如果恢復失敗，繼續執行正常的資料載入流程
+      }
+    }
+    
     // 優先從 URL 參數讀取餐廳 ID 或資料
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = urlParams.get('restaurantId');
@@ -502,10 +549,17 @@ class RestaurantDetail {
     const viewFullMenuBtn = document.querySelector('.view-full-menu');
     if (viewFullMenuBtn) {
       viewFullMenuBtn.addEventListener('click', () => {
-        // 將餐廳資料轉換為 JSON 字串並進行編碼
-        const encodedRestaurantData = encodeURIComponent(JSON.stringify(this.restaurantData));
-        // 導向到 menuDetail.html 頁面，並在 URL 中傳遞資料
-        window.location.href = `menuDetail.html?data=${encodedRestaurantData}`;
+        // 將餐廳資料保存到 sessionStorage 中，避免 URL 過長的問題
+        sessionStorage.setItem('menuDetailRestaurantData', JSON.stringify(this.restaurantData));
+        
+        // 保存當前頁面狀態到 sessionStorage，以便返回時恢復
+        sessionStorage.setItem('restaurantDetailPageState', JSON.stringify({
+          restaurantData: this.restaurantData,
+          currentUrl: window.location.href
+        }));
+        
+        // 簡單跳轉到 menuDetail.html 頁面，不通過 URL 傳遞大量資料
+        window.location.href = 'menuDetail.html';
       });
     }
   }
@@ -1123,6 +1177,21 @@ function createRecommendedRestaurantCard(restaurant) {
     const rating = restaurant.averageRating || restaurant.rating || 0;
     const reviewCount = restaurant.reviewCount || restaurant.ratingCount || restaurant.user_ratings_total || 0;
 
+    // 生成星星評分
+    const generateStars = (rating) => {
+        if (!rating || rating < 1 || rating > 5) return '';
+        let stars = '';
+        const fullStars = Math.floor(rating);
+        for (let i = 1; i <= 5; i++) {
+            if (i <= fullStars) {
+                stars += '<span class="star filled">★</span>';
+            } else {
+                stars += '<span class="star empty">☆</span>';
+            }
+        }
+        return stars;
+    };
+
     return `
         <a href="#" class="menu-item restaurant-card v3">
           <div class="menu-item-image">
@@ -1132,6 +1201,7 @@ function createRecommendedRestaurantCard(restaurant) {
             <h4 class="restaurant-name">${restaurant.name}</h4>
             <div class="restaurant-rating">
               <span class="rating-score">${rating ? rating.toFixed(1) : 'N/A'}</span>
+              <div class="stars">${generateStars(rating)}</div>
               <span class="review-count">(${reviewCount || 0} 則評論)</span>
             </div>
           </div>
