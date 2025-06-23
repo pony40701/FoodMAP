@@ -674,6 +674,45 @@
         </div>
     </div>
 
+    <!-- 商家登入彈出視窗 -->
+    <div id="restaurantLoginModal" class="modal">
+        <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
+            <!-- 商家登入標題區域 -->
+            <div style="position: relative; text-align: center; padding: 15px 15px 0;">
+                <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">商家登入</h2>
+                <span class="close"
+                    style="position: absolute; right: 15px; top: 10px; font-size: 20px; color: #aaa; cursor: pointer;">&times;</span>
+
+                <form id="restaurantLoginForm" style="text-align: left; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-email"
+                            style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
+                        <input type="email" id="restaurant-email" name="email" required
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="restaurant-password"
+                            style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
+                        <input type="password" id="restaurant-password" name="password" required
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="restaurant-remember" name="remember"
+                            style="margin-right: 6px; width: 14px; height: 14px; accent-color: #ff6b1a; cursor: pointer;">
+                        <label for="restaurant-remember"
+                            style="font-size: 13px; font-weight: 400; color: #666; cursor: pointer;">記住我</label>
+                    </div>
+                    <button type="submit"
+                        style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
+                </form>
+
+                <div style="text-align: center; font-size: 13px; margin-bottom: 15px;">
+                    <a href="restaurant-forgot-password.html">忘記密碼</a> | <a href="restaurant-signup.html">商家註冊</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 添加必要的 JavaScript 函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <script src="js/config.js"></script>
@@ -689,6 +728,67 @@
             navRight.classList.toggle('active');
             hamburgerIcon.classList.toggle('fa-bars');
             hamburgerIcon.classList.toggle('fa-xmark');
+        });
+
+        // 商家登入彈窗相關函數
+        function openRestaurantLoginModal() {
+            document.getElementById('restaurantLoginModal').style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+            if (restaurantLoginModal) {
+                const closeBtn = restaurantLoginModal.querySelector('.close');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        restaurantLoginModal.style.display = 'none';
+                    };
+                }
+
+                const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+                if (restaurantLoginForm) {
+                    restaurantLoginForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const email = document.getElementById('restaurant-email').value;
+                        const password = document.getElementById('restaurant-password').value;
+                        try {
+                            const response = await fetch(`${window.API_BASE_URL || 'http://localhost:8080'}/api/merchants/login`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email, password })
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                localStorage.setItem('merchantToken', result.token);
+                                localStorage.setItem('merchantEmail', result.email);
+                                localStorage.setItem('restaurantId', result.restaurantId);
+                                alert('商家登入成功！');
+                                restaurantLoginModal.style.display = 'none';
+                                window.location.href = 'restaurant.html';
+                            } else {
+                                const errorData = await response.json();
+                                alert(errorData.message || '商家登入失敗');
+                            }
+                        } catch (error) {
+                            console.error('商家登入錯誤:', error);
+                            alert('登入時發生錯誤，請稍後再試。');
+                        }
+                    });
+                }
+            }
+
+            // 點擊模態框外部關閉
+            window.addEventListener('click', function(event) {
+                const loginModal = document.getElementById('loginModal');
+                const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+                if (event.target === loginModal) {
+                    loginModal.style.display = 'none';
+                }
+                if (event.target === restaurantLoginModal) {
+                    restaurantLoginModal.style.display = 'none';
+                }
+            });
         });
     </script>
 </body>

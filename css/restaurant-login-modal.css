@@ -1,0 +1,193 @@
+body {
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    background-color: rgba(0, 0, 0, 0.5); /* 黑色半透明背景 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 400px;
+    margin: 1.75rem auto;
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 0.5rem;
+    outline: 0;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: calc(0.5rem - 1px);
+    border-top-right-radius: calc(0.5rem - 1px);
+}
+
+.modal-title {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ff6b1a;
+}
+
+.btn-close {
+    box-sizing: content-box;
+    width: 1em;
+    height: 1em;
+    padding: 0.25em 0.25em;
+    color: #000;
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    border: 0;
+    border-radius: 0.25rem;
+    opacity: .5;
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    opacity: .75;
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.form-label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0.375rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #ffb58b;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 26, 0.25);
+}
+
+.form-check {
+    display: block;
+    min-height: 1.5rem;
+    padding-left: 1.5em;
+    margin-bottom: 0.125rem;
+}
+
+.form-check-input {
+    width: 1em;
+    height: 1em;
+    margin-top: 0.25em;
+    vertical-align: top;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border: 1px solid rgba(0,0,0,.25);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    color-adjust: exact;
+}
+
+.form-check-input[type=checkbox] {
+    border-radius: 0.25em;
+}
+
+.form-check-input:checked {
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.375rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
+}
+
+.btn-primary:hover {
+    background-color: #e65c0a;
+    border-color: #d65509;
+}
+
+.w-100 {
+    width: 100% !important;
+}
+
+.mt-3 {
+    margin-top: 1rem !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.mt-2 {
+    margin-top: 0.5rem !important;
+}
+
+a {
+    color: #ff6b1a;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #e65c0a;
+    text-decoration: underline;
+} 

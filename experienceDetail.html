@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/navforaboutus.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/experienceDetail.css">
+    <link rel="stylesheet" href="css/login-modal.css">
 </head>
 <body>
     <!-- 導航欄 (與 experienceList.html 相同) -->
@@ -75,7 +76,7 @@
                         <i class="fas fa-store"></i>
                         <span>商家註冊</span>
                     </a>
-                    <a href="#" class="dropdown-item" onclick="openRestaurantLoginModal()">
+                    <a href="#" class="dropdown-item">
                         <i class="fas fa-sign-in-alt"></i>
                         <span>商家登入</span>
                     </a>
@@ -123,6 +124,43 @@
         <div class="loading-spinner"></div>
     </main>
     
+    <!-- 頁尾 (與 experienceList.html 相同) -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>關於我們</h4>
+                <div class="footer-links">
+                    <a href="about.html">關於我們</a>
+                    <a href="terms-of-service.html">服務條款</a>
+                    <a href="privacy-policy.html">隱私政策</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速連結</h4>
+                <div class="footer-links">
+                    <a href="/restaurant-signup.html">商家註冊</a>
+                    <a href="ranking.html">排行榜</a>
+                    <a href="/blogPost.html">寫心得</a>
+                    <a href="/helpcenter.html">幫助中心</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>聯絡我們</h4>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
+                <p>📞 02-1234-5678</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
+        </div>
+    </footer>
+
     <!-- 登入彈出視窗 -->
     <div id="loginModal" class="modal">
         <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
@@ -196,49 +234,11 @@
         </div>
     </div>
 
-    <!-- 頁尾 (與 experienceList.html 相同) -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h4>關於我們</h4>
-                <div class="footer-links">
-                    <a href="about.html">關於我們</a>
-                    <a href="terms-of-service.html">服務條款</a>
-                    <a href="privacy-policy.html">隱私政策</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h4>快速連結</h4>
-                <div class="footer-links">
-                    <a href="/restaurant-signup.html">商家註冊</a>
-                    <a href="ranking.html">排行榜</a>
-                    <a href="/blogPost.html">寫心得</a>
-                    <a href="/helpcenter.html">幫助中心</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h4>聯絡我們</h4>
-                <p><i class="fas fa-envelope"></i> <a href="mailto:service@chowcrew.com">service@chowcrew.com</a></p>
-                <p>📞 02-1234-5678</p>
-                <div class="social-icons">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="#" aria-label="Line"><i class="fab fa-line"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© 2025 食力派ChowCrew. 版權所有 | 台灣美食推薦第一選擇</p>
-        </div>
-    </footer>
-
     <script src="js/config.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/experienceDetail.js"></script>
-    <script src="js/login.js"></script> 
     <script>
-        // navbar and login modal logic
+        // API 基礎路徑
         window.API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080/api';
 
         const hamburger = document.querySelector('.hamburger');
@@ -250,6 +250,175 @@
             hamburgerIcon.classList.toggle('fa-bars');
             hamburgerIcon.classList.toggle('fa-xmark');
         });
+
+        // 登入彈窗功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 新增：頁面載入時檢查登入狀態
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (isLoggedIn === 'true' && user) {
+                const loginSection = document.getElementById('loginSection');
+                const userSection = document.getElementById('userSection');
+                if (loginSection) loginSection.style.display = 'none';
+                if (userSection) userSection.style.display = 'flex';
+
+                const userAvatarImg = document.querySelector('#userSection .avatar-img');
+                if (userAvatarImg && (user.image_url || user.avatar_url)) {
+                    userAvatarImg.src = user.image_url || user.avatar_url;
+                }
+            }
+            
+            // 會員登入
+            const loginModal = document.getElementById('loginModal');
+            const loginBtns = document.querySelectorAll('.btn-login');
+            const loginClose = loginModal.querySelector('.close');
+            // 商家登入
+            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+            const restaurantLoginClose = restaurantLoginModal.querySelector('.close');
+
+            // 開啟會員登入
+            loginBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    loginModal.style.display = 'block';
+                });
+            });
+            // 關閉會員登入
+            if(loginClose) {
+                loginClose.addEventListener('click', function() {
+                    loginModal.style.display = 'none';
+                });
+            }
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === loginModal) {
+                    loginModal.style.display = 'none';
+                }
+                if (event.target === restaurantLoginModal) {
+                    restaurantLoginModal.style.display = 'none';
+                }
+            });
+            // 開啟商家登入
+            document.querySelectorAll('a.dropdown-item').forEach(link => {
+                const text = link.querySelector('span');
+                if (text && text.textContent.includes('商家登入')) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        restaurantLoginModal.style.display = 'block';
+                    });
+                }
+            });
+            // 關閉商家登入
+            if(restaurantLoginClose){
+                restaurantLoginClose.addEventListener('click', function() {
+                    restaurantLoginModal.style.display = 'none';
+                });
+            }
+
+            // 會員登入表單送出（呼叫後端 API）
+            const userLoginForm = document.getElementById('loginForm');
+            if (userLoginForm) {
+                userLoginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const email = userLoginForm.querySelector('#email').value;
+                    const password = userLoginForm.querySelector('#password').value;
+                    try {
+                        const response = await fetch(`${window.API_BASE_URL}/auth/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            // 儲存用戶資料
+                            localStorage.setItem('user', JSON.stringify(data));
+                            localStorage.setItem('isLoggedIn', 'true');
+                            localStorage.setItem('userId', data.id);
+                            localStorage.setItem('authToken', data.token);
+                            // 顯示會員頭像
+                            const loginSection = document.getElementById('loginSection');
+                            const userSection = document.getElementById('userSection');
+                            if (loginSection) loginSection.style.display = 'none';
+                            if (userSection) userSection.style.display = 'flex';
+                            // 更新頭像
+                            const userAvatarImg = document.querySelector('.avatar-img');
+                            if (userAvatarImg && (data.image_url || data.avatar_url)) {
+                                userAvatarImg.src = data.image_url || data.avatar_url;
+                            }
+                            loginModal.style.display = 'none';
+                            showToast('登入成功！');
+                            setTimeout(() => location.reload(), 1000); 
+                        } else {
+                            alert(data.error || data.message || '登入失敗');
+                        }
+                    } catch (error) {
+                        alert('登入失敗，請稍後再試');
+                    }
+                });
+            }
+
+            // 商家登入表單送出（呼叫後端 API）
+            const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+            if (restaurantLoginForm) {
+                restaurantLoginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('restaurant-email').value;
+                    const password = document.getElementById('restaurant-password').value;
+                    try {
+                        const response = await fetch(`${window.API_BASE_URL}/merchants/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+                        if (response.ok) {
+                            const result = await response.json();
+                            localStorage.setItem('merchantToken', result.token);
+                            localStorage.setItem('merchantEmail', result.email);
+                            localStorage.setItem('restaurantId', result.restaurantId);
+                            showToast('商家登入成功！');
+                            restaurantLoginModal.style.display = 'none';
+                            setTimeout(() => {
+                                window.location.href = 'restaurant.html';
+                            }, 1000);
+                        } else {
+                            const errorData = await response.json();
+                            alert(errorData.message || '商家登入失敗');
+                        }
+                    } catch (error) {
+                        alert('商家登入失敗，請稍後再試');
+                    }
+                });
+            }
+
+            // 社群登入按鈕（僅示意）
+            window.socialLogin = function(type) {
+                alert('使用 ' + type + ' 登入 (僅前端示意)');
+                loginModal.style.display = 'none';
+            }
+        });
+
+        function logout() {
+            // 清除使用者登入資訊
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('authToken');
+
+            // 切換 UI 狀態
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            if (loginSection) loginSection.style.display = 'flex';
+            if (userSection) userSection.style.display = 'none';
+
+            showToast('您已成功登出！');
+            // 重新載入頁面以確保狀態完全更新
+            setTimeout(() => window.location.reload(), 1000);
+        }
     </script>
 </body>
 </html> 
