@@ -166,11 +166,11 @@
         <i class="fas fa-pencil-alt"></i>
         <span>寫心得</span>
       </button>
+      <button class="action-btn save" data-place-id="" title="收藏" aria-label="收藏">
+        <i class="far fa-heart"></i>
+      </button>
       <button class="action-btn share" title="分享" aria-label="分享">
         <i class="fas fa-share-square"></i>
-      </button>
-      <button class="action-btn save" title="收藏" aria-label="收藏">
-        <i class="far fa-heart"></i>
       </button>
     </div>
 
@@ -235,7 +235,7 @@
                 </div>
               </div>
             </div>
-            <a href="menuDetail.html" class="view-full-menu" target="_blank" rel="noopener noreferrer">查看完整菜單</a>
+            <a href="menuDetail.html" class="view-full-menu">查看完整菜單</a>
           </div>
 
           <!-- 評論區塊 -->
@@ -337,6 +337,10 @@
 
     <!-- 加入必要的 JavaScript -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/favoriteSystem.js"></script>
+    <script src="js/favoriteButton.js"></script>
+    <script src="js/toast.js"></script>
     <script src="js/restaurantListDetail.js"></script>
   </body>
 </html>
