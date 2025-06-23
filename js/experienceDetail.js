@@ -52,6 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
             day: 'numeric'
         });
 
+        // Handle author avatar
+        const authorAvatarUrl = review.authorAvatar
+            ? `data:image/jpeg;base64,${review.authorAvatar}`
+            : 'images/default-avatar.png';
+
         let contentHtml = '';
         if (review.contentJson) {
             // The content from the backend is already an HTML string.
@@ -103,15 +108,24 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // Handle author link
+        const authorName = review.authorName || '匿名使用者';
+        const authorLinkStart = review.authorId
+            ? `<a href="userCenter.html?userId=${review.authorId}" class="author-link">`
+            : '<div class="author-link-disabled">';
+        const authorLinkEnd = review.authorId ? '</a>' : '</div>';
+
         const html = `
             ${breadcrumbHtml}
             <h1 class="experience-title">${review.reviewTitle}</h1>
             <div class="author-meta">
-                <img src="${review.authorAvatar || 'images/default-avatar.png'}" alt="作者頭像" class="author-avatar">
-                <div class="author-info">
-                    <div class="author-name">${review.authorName}</div>
-                    <div class="publish-date">${publishDate}</div>
-                </div>
+                ${authorLinkStart}
+                    <img src="${authorAvatarUrl}" alt="作者頭像" class="author-avatar" onerror="this.onerror=null;this.src='images/default-avatar.png';">
+                    <div class="author-info">
+                        <div class="author-name">${authorName}</div>
+                        <div class="publish-date">${publishDate}</div>
+                    </div>
+                ${authorLinkEnd}
                 <div class="meta-stats">
                     <span><i class="fas fa-eye"></i> ${review.viewCount || 0}</span>
                     <button class="favorite-btn-detail ${review.favorited ? 'favorited' : ''}" data-review-id="${review.reviewId}">
