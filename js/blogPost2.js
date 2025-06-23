@@ -62,6 +62,18 @@ function restoreRange() {
 
 // 頁面載入完成後執行
 document.addEventListener('DOMContentLoaded', async function() {
+    // 首先檢查登入狀態
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn || !userData) {
+        console.log('用戶未登入，無法進入心得編寫頁面');
+        alert('請先登入會員才能使用心得編寫功能');
+        // 跳轉到登入頁面或首頁
+        window.location.href = 'index.html';
+        return;
+    }
+    
     // 初始化編輯器功能
     initEditor();
     // 初始化評分系統
@@ -1764,6 +1776,13 @@ function initializeImageResize(container, img, resizeInfo, handles) {
 //     });
 // }
 
+// 檢查用戶登入狀態
+function checkLoginStatus() {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    return isLoggedIn && userData;
+}
+
 // 載入用戶數據
 function loadUserData() {
     // 從 localStorage 獲取 login.js 儲存的用戶數據
@@ -1772,6 +1791,7 @@ function loadUserData() {
     
     if (!isLoggedIn || !userData) {
         console.log('用戶未登入或無用戶數據');
+        // 不顯示登入模態框，因為頁面載入時已經處理了登入檢查
         return;
     }
     
