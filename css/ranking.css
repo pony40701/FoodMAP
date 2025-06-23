@@ -525,17 +525,3 @@ body {
     box-shadow: 0 2px 8px rgba(255, 107, 26, 0.10);
 }
 
-.logo-text {
-    text-decoration: none !important;
-    color: #ff6b1a;
-    cursor: pointer;
-}
-.logo-text:hover {
-    color: #ff8c42;
-}
-
-.navbar-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-} 
