@@ -65,7 +65,7 @@
             <div class="restaurant-dropdown">
                 <a href="#" class="nav-link dropdown-toggle">食評 <i class="fas fa-chevron-down"></i></a>
                 <div class="restaurant-dropdown-content">
-                    <a href="./blogPost.html" onclick="handleWriteReview()" class="dropdown-item">
+                    <a href="#" onclick="handleWriteReview(); return false;" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
                         <span>寫食評</span>
                     </a>
@@ -468,20 +468,7 @@
             });
         });
 
-        function handleWriteReview() {
-            // 檢查是否已登入
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
-            if (!isLoggedIn) {
-                // 顯示請先登入的 alert 訊息
-                alert('請先登入會員');
-                // 顯示登入彈跳視窗
-                document.getElementById('loginModal').style.display = 'block';
-            } else {
-                // 已登入，直接跳轉到寫食記頁面
-                window.location.href = 'blogPost.html';
-            }
-        }
     </script>
   </body>
 </html>

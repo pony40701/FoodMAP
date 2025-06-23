@@ -1378,7 +1378,18 @@ function handleWriteReview() {
         if (confirmLogin) {
             // 儲存當前餐廳資訊，以便登入後回來寫評論
             const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
-            const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+            
+            // 從 localStorage 獲取餐廳 ID
+            let restaurantId = '';
+            try {
+                const selectedRestaurant = localStorage.getItem('selectedRestaurant');
+                if (selectedRestaurant) {
+                    const restaurantData = JSON.parse(selectedRestaurant);
+                    restaurantId = restaurantData.placeId || restaurantData.id || '';
+                }
+            } catch (error) {
+                console.error('解析 localStorage 餐廳資料失敗:', error);
+            }
             
             localStorage.setItem('restaurant_id', restaurantId);
             localStorage.setItem('restaurant_name', restaurantName);
@@ -1389,15 +1400,44 @@ function handleWriteReview() {
         }
     } else {
         // 已登入，獲取當前餐廳資訊並跳轉
+        console.log('=== 開始獲取餐廳資訊 ===');
+        
         const restaurantName = document.querySelector('.restaurant-name')?.textContent || '';
-        const restaurantId = new URLSearchParams(window.location.search).get('id') || '';
+        const restaurantAddress = document.querySelector('.address')?.textContent || '';
         
-        // 將餐廳資訊存儲到 localStorage
-        localStorage.setItem('restaurant_id', restaurantId);
-        localStorage.setItem('restaurant_name', restaurantName);
+        // 先嘗試從 URL 參數獲取 placeId
+        const urlParams = new URLSearchParams(window.location.search);
+        let placeId = urlParams.get('restaurantId') || urlParams.get('id') || '';
         
-        // 跳轉到寫評論頁面
-        window.location.href = 'writeComment.html';
+        // 如果 URL 沒有 placeId，從 localStorage 獲取
+        if (!placeId) {
+            try {
+                const selectedRestaurant = localStorage.getItem('selectedRestaurant');
+                if (selectedRestaurant) {
+                    const restaurantData = JSON.parse(selectedRestaurant);
+                    placeId = restaurantData.placeId || restaurantData.id || '';
+                    console.log('從 localStorage 獲取的餐廳資料:', restaurantData);
+                }
+            } catch (error) {
+                console.error('解析 localStorage 餐廳資料失敗:', error);
+            }
+        }
+        
+        console.log('餐廳名稱:', restaurantName);
+        console.log('餐廳地址:', restaurantAddress);
+        console.log('最終獲取到的 placeId:', placeId);
+        
+        // 構建帶參數的 URL
+        const params = new URLSearchParams();
+        if (placeId) params.append('placeId', placeId);
+        if (restaurantName) params.append('name', restaurantName);
+        if (restaurantAddress) params.append('address', restaurantAddress);
+        
+        const finalUrl = `blogPost.html?${params.toString()}`;
+        console.log('最終 URL:', finalUrl);
+        
+        // 跳轉到心得頁面並帶上參數
+        window.location.href = finalUrl;
     }
 }
 
