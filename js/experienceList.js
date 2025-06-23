@@ -23,16 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cuisineTypes: []
     };
 
-    // --- MOCK DATA ---
-    const mockArticles = [
-        { id: 1, user: { name: '美食達人小明', avatar: 'https://i.pravatar.cc/40?img=1' }, rating: 5, title: '台北信義區隱藏版日式拉麵', restaurant: '麵屋武藏', imageUrl: '/images/restaurant1.jpg', excerpt: '這家位於信義區巷弄內的拉麵店，湯頭濃郁，叉燒軟嫩多汁，值得一試！', date: '2024-03-20', category: '日式', views: 150, favorited: false },
-        { id: 2, user: { name: '早餐控大王', avatar: 'https://i.pravatar.cc/40?img=2' }, rating: 4, title: '老字號台式早餐店推薦', restaurant: '阜杭豆漿', imageUrl: '/images/carousel2.jpg', excerpt: '傳統台式早餐店，蛋餅外酥內軟，搭配特製醬料，每天都想吃！', date: '2024-03-19', category: '台式', views: 320, favorited: true },
-        { id: 3, user: { name: '義食主義者', avatar: 'https://i.pravatar.cc/40?img=3' }, rating: 5, title: '道地義大利手工披薩', restaurant: 'Pizzeria Oggi', imageUrl: '/images/restaurant2.jpg', excerpt: '採用進口食材，薄脆餅皮配上新鮮配料，道地義式風味！', date: '2024-03-18', category: '義式', views: 280, favorited: false },
-        { id: 4, user: { name: '泰式美食家', avatar: 'https://i.pravatar.cc/40?img=4' }, rating: 5, title: '隱藏版泰式船麵', restaurant: '船麵小廚', imageUrl: '/images/restaurant3.jpg', excerpt: '巷弄中的泰式船麵，湯頭香辣夠味，配料新鮮豐富，絕對值得一試！', date: '2024-03-17', category: '東南亞', views: 245, favorited: false },
-        { id: 5, user: { name: '甜點控女孩', avatar: 'https://i.pravatar.cc/40?img=5' }, rating: 4, title: '法式手工甜點工作室', restaurant: 'Le Petit Pâtissier', imageUrl: '/images/carousel3.jpg', excerpt: '純手工製作的法式馬卡龍，口感酥脆，內餡綿密，完美比例的甜度讓人難以忘懷。', date: '2024-03-16', category: '甜點', views: 198, favorited: false },
-        { id: 6, user: { name: '韓食達人', avatar: 'https://i.pravatar.cc/40?img=6' }, rating: 5, title: '正宗韓式部隊鍋', restaurant: '韓食堂', imageUrl: '/images/carousel1.jpg', excerpt: '超濃郁起司配上道地韓式辣醬，各式配料豐富多樣，是一鍋值得分享的美味！', date: '2024-03-15', category: '韓式', views: 267, favorited: true },
-    ];
-
     // --- API Fetching ---
     async function fetchAndRenderArticles(limit, offset, append = false) {
         if (isLoading || !hasMore) return;
@@ -62,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
+            console.log('API Response Data:', data);
             
             if (data.length < limit || (allArticles.length + data.length) >= TOTAL_ARTICLES_LIMIT) {
                 hasMore = false;
@@ -73,11 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageUrl = `data:image/jpeg;base64,${dto.imageBase64}`;
                 }
 
-                let avatarUrl = dto.authorAvatar || 'https://i.pravatar.cc/40';
+                let avatarUrl = dto.authorAvatar
+                    ? `data:image/jpeg;base64,${dto.authorAvatar}`
+                    : '/images/default-avatar.png';
 
                 return {
                     id: dto.reviewId,
-                    user: { name: dto.authorName, avatar: avatarUrl },
+                    user: { id: dto.authorId, name: dto.authorName || '匿名使用者', avatar: avatarUrl },
                     rating: dto.authorRating,
                     title: dto.reviewTitle,
                     restaurant: dto.restaurantName,
@@ -154,6 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Make card clickable
         card.style.cursor = 'pointer';
 
+        const userLink = article.user.id
+            ? `<a href="userCenter.html?userId=${article.user.id}" class="user-info-link">`
+            : '<div class="user-info-link-disabled">';
+        const userLinkEnd = article.user.id ? '</a>' : '</div>';
+
         card.innerHTML = `
             <div class="food-image">
                 <img src="${article.imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
@@ -162,13 +160,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             </div>
             <div class="food-content">
-                <div class="user-info">
-                    <img src="${article.user.avatar}" alt="用戶頭像" class="avatar">
-                    <div class="user-details">
-                        <span class="username">${article.user.name}</span>
-                        <div class="rating">${createStarRating(article.rating)}</div>
+                ${userLink}
+                    <div class="user-info">
+                        <img src="${article.user.avatar}" alt="用戶頭像" class="avatar" onerror="this.onerror=null;this.src='/images/default-avatar.png';">
+                        <div class="user-details">
+                            <span class="username">${article.user.name}</span>
+                            <div class="rating">${createStarRating(article.rating)}</div>
+                        </div>
                     </div>
-                </div>
+                ${userLinkEnd}
                 <div class="restaurant-info">
                     <h2>${article.title}</h2>
                     <div class="restaurant-name">
@@ -188,9 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.favorite-btn')) {
-                window.location.href = `experienceDetail.html?id=${article.id}&fav=${article.favorited}`;
+            // Stop propagation if the click is on the user link or the favorite button
+            if (e.target.closest('.favorite-btn') || e.target.closest('.user-info-link')) {
+                return;
             }
+            window.location.href = `experienceDetail.html?id=${article.id}&fav=${article.favorited}`;
         });
 
         card.querySelector('.favorite-btn').addEventListener('click', async (e) => {

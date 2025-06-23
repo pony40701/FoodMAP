@@ -15,9 +15,18 @@ import com.example.demo.entity.Review;
 public interface ExReviewRepository extends JpaRepository<Review, Long> {
 
     @Query(value = """
+        WITH RankedPhotos AS (
+            SELECT
+                id,
+                review_id,
+                image,
+                ROW_NUMBER() OVER(PARTITION BY review_id ORDER BY id ASC) as rn
+            FROM review_photos
+        )
         SELECT
             r.id as reviewId,
             rp.image as image,
+            u.id AS authorId,
             u.name AS authorName,
             u.avatar_url AS authorAvatar,
             rr.overall_score AS authorRating,
@@ -36,7 +45,7 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
         FROM reviews r
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
         LEFT JOIN review_ratings rr ON rr.review_id = r.id
-        LEFT JOIN review_photos rp ON rp.review_id = r.id AND rp.id = (SELECT MIN(id) FROM review_photos WHERE review_id = r.id)
+        LEFT JOIN RankedPhotos rp ON rp.review_id = r.id AND rp.rn = 1
         LEFT JOIN review_stats rs ON rs.review_id = r.id
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN user_favorites uf ON uf.target_id = r.id AND uf.target_type = 'review' AND uf.user_id = :userId
@@ -57,9 +66,18 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
             @Param("userId") Long userId);
 
     @Query(value = """
+        WITH RankedPhotos AS (
+            SELECT
+                id,
+                review_id,
+                image,
+                ROW_NUMBER() OVER(PARTITION BY review_id ORDER BY id ASC) as rn
+            FROM review_photos
+        )
         SELECT
             r.id as reviewId,
             rp.image as image,
+            u.id AS authorId,
             u.name AS authorName,
             u.avatar_url AS authorAvatar,
             rr.overall_score AS authorRating,
@@ -79,7 +97,7 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
         JOIN user_favorites uf ON r.id = uf.target_id AND uf.target_type = 'review'
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
         LEFT JOIN review_ratings rr ON rr.review_id = r.id
-        LEFT JOIN review_photos rp ON rp.review_id = r.id AND rp.id = (SELECT MIN(id) FROM review_photos WHERE review_id = r.id)
+        LEFT JOIN RankedPhotos rp ON rp.review_id = r.id AND rp.rn = 1
         LEFT JOIN review_stats rs ON rs.review_id = r.id
         LEFT JOIN users u ON r.user_id = u.id
         WHERE uf.user_id = :userId
@@ -88,9 +106,18 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
     List<ExReviewProjection> findFavoritedReviewsByUserId(@Param("userId") Long userId);
 
     @Query(value = """
+        WITH RankedPhotos AS (
+            SELECT
+                id,
+                review_id,
+                image,
+                ROW_NUMBER() OVER(PARTITION BY review_id ORDER BY id ASC) as rn
+            FROM review_photos
+        )
         SELECT
             r.id as reviewId,
             rp.image as image,
+            u.id AS authorId,
             u.name AS authorName,
             u.avatar_url AS authorAvatar,
             rr.overall_score AS authorRating,
@@ -109,7 +136,7 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
         FROM reviews r
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
         LEFT JOIN review_ratings rr ON rr.review_id = r.id
-        LEFT JOIN review_photos rp ON rp.review_id = r.id AND rp.id = (SELECT MIN(id) FROM review_photos WHERE review_id = r.id)
+        LEFT JOIN RankedPhotos rp ON rp.review_id = r.id AND rp.rn = 1
         LEFT JOIN review_stats rs ON rs.review_id = r.id
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN user_favorites uf ON uf.target_id = r.id AND uf.target_type = 'review' AND uf.user_id = :userId

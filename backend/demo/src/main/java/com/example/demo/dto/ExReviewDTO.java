@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class ExReviewDTO {
     private Long reviewId;
+    private Long authorId;
     private String imageBase64;
     private String authorName;
     private String authorAvatar;
@@ -24,10 +25,11 @@ public class ExReviewDTO {
     // Constructors
     public ExReviewDTO() {}
 
-    public ExReviewDTO(Long reviewId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
+    public ExReviewDTO(Long reviewId, Long authorId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
                        String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited, String restaurantPlaceId,
                        Integer environmentScore, Integer serviceScore, Integer tasteScore, Integer priceScore) {
         this.reviewId = reviewId;
+        this.authorId = authorId;
         this.imageBase64 = imageBase64;
         this.authorName = authorName;
         this.authorAvatar = authorAvatar;
@@ -53,6 +55,14 @@ public class ExReviewDTO {
 
     public void setReviewId(Long reviewId) {
         this.reviewId = reviewId;
+    }
+
+    public Long getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(Long authorId) {
+        this.authorId = authorId;
     }
 
     public String getImageBase64() {
