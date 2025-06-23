@@ -4,6 +4,12 @@ let isEditingPost = false; // 添加編輯模式標記
 let editingPostId = null; // 添加正在編輯的文章ID
 let savedRange = null; // 保存游標範圍
 let updateToolbarTimeout = null; // 防抖計時器
+let currentUserId = null; // 全域用戶ID變數
+
+// 餐廳資訊全域變數
+let currentRestaurantId = null; // 當前餐廳ID
+let currentRestaurantName = null; // 當前餐廳名稱
+let currentRestaurantAddress = null; // 當前餐廳地址
 
 // 防抖版本的 updateToolbarState
 function debouncedUpdateToolbarState() {
@@ -62,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     initRatingSystem();
     // 載入用戶數據
     loadUserData();
+    // 檢查URL參數中的餐廳資訊
+    await getRestaurantInfoFromURL();
     // 載入文章列表
     await loadPublishedPosts();
     // 初始化統計圖表
@@ -1758,34 +1766,51 @@ function initializeImageResize(container, img, resizeInfo, handles) {
 
 // 載入用戶數據
 function loadUserData() {
-    // 這裡應該從後端 API 獲取用戶數據
-    // 目前使用模擬數據
-    const userData = {
-        name: '美食探索家',
-        avatar: '/IMAGE/jojo.jpg',  // 確保路徑正確
-        bio: '熱愛分享美食體驗'
-    };
-
+    // 從 localStorage 獲取 login.js 儲存的用戶數據
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn || !userData) {
+        console.log('用戶未登入或無用戶數據');
+        return;
+    }
+    
+    // 設置全域用戶ID
+    currentUserId = userData.id;
+    console.log('載入用戶數據:', userData);
+    
     // 更新用戶資訊
-    document.getElementById('userName').textContent = userData.name;
-    document.getElementById('userBio').textContent = userData.bio;
+    const userNameElement = document.getElementById('userName');
+    const avatarImg = document.getElementById('userAvatar');
+    document.getElementById('userBio').textContent = "熱愛美食的探索家:" + currentUserId;
+    
+    if (userNameElement) {
+        userNameElement.textContent = userData.username || userData.fullName || userData.email || '美食探索家';
+    }
 
     // 處理頭像載入
-    const avatarImg = document.getElementById('userAvatar');
     if (avatarImg) {
         // 先設置預設頭像
         avatarImg.src = 'images/pig.jpg';
         
-        // 創建新的圖片物件來預載入用戶頭像
-        const img = new Image();
-        img.onload = function() {
-            avatarImg.src = userData.avatar;
-        };
-        img.onerror = function() {
-            // 如果載入失敗，保持預設頭像
-            console.log('頭像載入失敗，使用預設頭像');
-        };
-        img.src = userData.avatar;
+        // 從用戶數據中獲取頭像URL
+        const avatarUrl = userData.image_url || userData.avatar_url;
+        
+        if (avatarUrl) {
+            // 創建新的圖片物件來預載入用戶頭像
+            const img = new Image();
+            img.onload = function() {
+                avatarImg.src = avatarUrl;
+                console.log('用戶頭像載入成功:', avatarUrl);
+            };
+            img.onerror = function() {
+                // 如果載入失敗，保持預設頭像
+                console.log('頭像載入失敗，使用預設頭像');
+            };
+            img.src = avatarUrl;
+        } else {
+            console.log('用戶無頭像URL，使用預設頭像');
+        }
     }
 }
 
@@ -1851,7 +1876,7 @@ function loadUserData() {
 async function initStatsChart() {
     try {
         // 從後端API獲取用戶統計數據
-        const response = await fetch('http://localhost:8080/api/reviews/user/1/overview'); // 暫時使用固定用戶ID
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/overview`); // 暫時使用固定用戶ID
         if (!response.ok) throw new Error('載入統計數據失敗');
         const userStats = await response.json();
         
@@ -1876,7 +1901,7 @@ async function initStatsChart() {
 async function updateViewsChart() {
     try {
         // 從後端API獲取用戶統計數據
-        const response = await fetch('http://localhost:8080/api/reviews/user/1/stats'); // 暫時使用固定用戶ID
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/stats`); // 暫時使用固定用戶ID
         if (!response.ok) throw new Error('載入圖表數據失敗');
         const statsList = await response.json();
         
@@ -1935,7 +1960,7 @@ async function initRankings() {
 async function updateRankings(type) {
     try {
         // 從後端API獲取用戶統計數據
-        const response = await fetch('http://localhost:8080/api/reviews/user/1/stats'); // 暫時使用固定用戶ID
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/stats`); // 暫時使用固定用戶ID
         if (!response.ok) throw new Error('載入排行榜數據失敗');
         const statsList = await response.json();
         
@@ -2044,8 +2069,8 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     // 準備發布數據
     const imageData = collectImageData();
     const postData = {
-        userId: 1, // TODO: 從登入資訊中獲取
-        restaurantId: 1, // TODO: 從餐廳選擇中獲取
+        userId: currentUserId, // 使用當前登入用戶ID
+        restaurantId: currentRestaurantId || 1, // 使用當前餐廳ID或預設值
         title: title || '未命名文章',
         content_json: imageData.processedHtmlContent || content,
         status: 'published',
@@ -2124,7 +2149,7 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
     // 準備發布數據
     const imageData = collectImageData('#editorEdit');
     const postData = {
-        userId: window.currentEditingDraft?.userId || window.currentEditingPost?.userId || 1,
+        userId: window.currentEditingDraft?.userId || window.currentEditingPost?.userId || currentUserId,
         restaurantId: window.currentEditingDraft?.restaurantId || window.currentEditingPost?.restaurantId || 1,
         title: title || '未命名文章',
         content_json: imageData.processedHtmlContent || content,
@@ -2232,7 +2257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 獲取表單數據
             const imageData = collectImageData('#editor');
             const postData = {
-                userId: 1, // TODO: 從登入資訊中獲取
+                userId: currentUserId, // 使用當前登入用戶ID
                 restaurantId: 1, // TODO: 從餐廳選擇中獲取
                 title: document.getElementById('postTitle').value || '未命名草稿',
                 content_json: imageData.processedHtmlContent || document.getElementById('editor').innerHTML || '',
@@ -2404,7 +2429,7 @@ async function loadDrafts() {
     draftsList.innerHTML = '<div class="loading">載入中...</div>';
     
     try {
-        const response = await fetch('http://localhost:8080/api/reviews/drafts/1'); // 暫時使用固定用戶ID
+        const response = await fetch(`http://localhost:8080/api/reviews/drafts/${currentUserId}`); // 使用currentUserId變數
         if (!response.ok) throw new Error('載入草稿失敗');
         const drafts = await response.json();
         
@@ -3437,7 +3462,7 @@ async function loadPublishedPosts() {
     publishedList.innerHTML = '<div class="loading">載入中...</div>';
     
     try {
-        const response = await fetch('http://localhost:8080/api/reviews/user/1/published'); // 暫時使用固定用戶ID
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/published`); // 暫時使用固定用戶ID
         if (!response.ok) throw new Error('載入已發布文章失敗');
         const publishedPosts = await response.json();
         
@@ -3453,10 +3478,10 @@ async function loadPublishedPosts() {
         publishedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         // 顯示文章列表
-        publishedPosts.forEach(post => {
-            const postElement = createPublishedPostElement(post);
+        for (const post of publishedPosts) {
+            const postElement = await createPublishedPostElement(post);
             publishedList.appendChild(postElement);
-        });
+        }
     } catch (error) {
         console.error('載入已發布文章時發生錯誤：', error);
         publishedList.innerHTML = '<div class="error">載入已發布文章失敗，請稍後再試</div>';
@@ -3464,7 +3489,7 @@ async function loadPublishedPosts() {
 }
 
 // 創建已發布文章元素
-function createPublishedPostElement(post) {
+async function createPublishedPostElement(post) {
     const div = document.createElement('div');
     div.className = 'post-card';
     div.setAttribute('data-post-id', post.id); // 添加文章ID屬性
@@ -3487,6 +3512,9 @@ function createPublishedPostElement(post) {
     // 限制內容顯示長度
     const contentPreview = truncateText(stripHtml(post.content_json), 80);
 
+    // 根據餐廳ID獲取餐廳資訊
+    const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+
     div.innerHTML = `
         <div class="post-header">
             <h3>${escapeHtml(post.title)}</h3>
@@ -3494,7 +3522,10 @@ function createPublishedPostElement(post) {
         </div>
         <div class="post-content">
             <p class="restaurant-info">
-                <i class="fas fa-utensils"></i> 餐廳ID: ${post.restaurantId}
+                <i class="fas fa-utensils"></i> 餐廳名稱: ${restaurantInfo.name}
+            </p>
+            <p class="restaurant-address">
+                <i class="fas fa-map-marker-alt"></i> 地址: ${restaurantInfo.address}
             </p>
             <div class="post-ratings">
                 <span class="rating-label">總評分</span>
@@ -4076,7 +4107,7 @@ async function editPublishedPost(postId) {
         console.log('文章ID:', postId);
         
         // 獲取文章詳情
-        const response = await fetch(`http://localhost:8080/api/reviews/user/1/published`);
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/published`);
         if (!response.ok) throw new Error('載入文章失敗');
         const publishedPosts = await response.json();
         const post = publishedPosts.find(p => p.id === postId);
@@ -4439,4 +4470,96 @@ async function editPublishedPost(postId) {
     }
 }
 
-// 刪除已發布文章
+
+
+
+// 設置餐廳資訊的函數
+function setRestaurantInfo(restaurantId, restaurantName, restaurantAddress) {
+    currentRestaurantId = restaurantId;
+    currentRestaurantName = restaurantName;
+    currentRestaurantAddress = restaurantAddress;
+    
+    console.log('設置餐廳資訊:', {
+        id: currentRestaurantId,
+        name: currentRestaurantName,
+        address: currentRestaurantAddress
+    });
+    
+    // 如果餐廳名稱元素存在，自動填入
+    const restaurantNameElement = document.getElementById('restaurantName');
+    if (restaurantNameElement && currentRestaurantName) {
+        restaurantNameElement.value = currentRestaurantName;
+    }
+    
+    // 如果餐廳地址元素存在，自動填入
+    const restaurantLocationElement = document.getElementById('restaurantLocation');
+    if (restaurantLocationElement && currentRestaurantAddress) {
+        restaurantLocationElement.value = currentRestaurantAddress;
+    }
+    
+    // 如果餐廳名稱編輯元素存在，也自動填入
+    const restaurantNameEditElement = document.getElementById('restaurantNameEdit');
+    if (restaurantNameEditElement && currentRestaurantName) {
+        restaurantNameEditElement.value = currentRestaurantName;
+    }
+    
+    // 如果餐廳地址編輯元素存在，也自動填入
+    const restaurantLocationEditElement = document.getElementById('restaurantLocationEdit');
+    if (restaurantLocationEditElement && currentRestaurantAddress) {
+        restaurantLocationEditElement.value = currentRestaurantAddress;
+    }
+}
+
+// 從URL參數獲取餐廳資訊
+async function getRestaurantInfoFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('restaurantId');
+    
+    if (restaurantId) {
+        // 使用getRestaurantInfoById獲取完整的餐廳資訊
+        const restaurantInfo = await getRestaurantInfoById(restaurantId);
+        setRestaurantInfo(restaurantId, restaurantInfo.name, restaurantInfo.address);
+        return true;
+    } else {
+        setRestaurantInfo("1", "等待餐廳資訊輸入...", "等待餐廳資訊輸入...");
+    }
+    
+    return false;
+}
+
+// 根據餐廳ID獲取餐廳資訊
+async function getRestaurantInfoById(restaurantId) {
+    try {
+        // 使用API查詢餐廳資料
+        const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
+        
+        if (response.ok) {
+            const restaurant = await response.json();
+            return {
+                name: restaurant.name || `餐廳ID: ${restaurantId}`,
+                address: restaurant.address || restaurant.location || "地址資訊未提供"
+            };
+        } else if (response.status === 404) {
+            // 如果餐廳不存在，返回預設值
+            return { 
+                name: `餐廳ID: ${restaurantId}`, 
+                address: "餐廳資訊不存在" 
+            };
+        } else {
+            throw new Error(`API錯誤: ${response.status}`);
+        }
+        
+    } catch (error) {
+        console.error('獲取餐廳資訊時發生錯誤：', error);
+        
+       
+        // 最終備用方案
+        return { 
+            name: `餐廳ID: ${restaurantId}`, 
+            address: "地址資訊未提供" 
+        };
+    }
+}
+
+// 暴露給全域的函數，供其他頁面調用
+window.setRestaurantInfo = setRestaurantInfo;
