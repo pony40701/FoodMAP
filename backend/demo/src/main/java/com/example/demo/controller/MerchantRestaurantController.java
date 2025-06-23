@@ -5,8 +5,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,15 +37,7 @@ import com.example.demo.security.MerchantJwtService;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
 import java.util.stream.Collectors;
-import java.util.UUID;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,7 +52,6 @@ import org.springframework.web.multipart.MultipartFile;
 )
 @RequiredArgsConstructor
 public class MerchantRestaurantController {
-    private static final Logger logger = LoggerFactory.getLogger(MerchantRestaurantController.class);
 
     private final MerchantAccountRepository merchantAccountRepository;
     private final MerchantJwtService merchantJwtService;
@@ -72,54 +61,40 @@ public class MerchantRestaurantController {
 
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
-        logger.info("收到 token 驗證請求");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             return ResponseEntity.ok(false);
         }
 
         String token = authHeader.substring(7);
         String email = merchantJwtService.extractEmail(token);
-        logger.info("正在驗證 token，email: {}", email);
         
         boolean isValid = merchantJwtService.validateToken(token, email);
-        logger.info("token 驗證結果: {}", isValid);
         
         return ResponseEntity.ok(isValid);
     }
 
     @GetMapping("/info")
     public ResponseEntity<MerchantRestaurantDTO> getRestaurantInfo(@RequestHeader("Authorization") String authHeader) {
-        logger.info("收到獲取餐廳資料請求");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
         String token = authHeader.substring(7);
         String email = merchantJwtService.extractEmail(token);
         Integer restaurantId = merchantJwtService.extractRestaurantId(token);
-        logger.info("解析 token - email: {}, restaurantId: {}", email, restaurantId);
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
         // 獲取餐廳資料
-        logger.info("開始查詢餐廳資料，restaurantId: {}", restaurantId);
         return merchantAccountRepository.findRestaurantInfoById(restaurantId)
                 .map(projection -> {
-                    logger.info("成功獲取餐廳資料: {}", projection);
-                    logger.info("頭像URL: {}", projection.getAvatar_url());
                     MerchantRestaurantDTO dto = MerchantRestaurantDTO.fromProjection(projection);
-                    logger.info("轉換後的 DTO 資料: {}", dto);
-                    logger.info("DTO 中的頭像URL: {}", dto.getAvatarUrl());
                     return ResponseEntity.ok(dto);
                 })
                 .orElseThrow(() -> {
-                    logger.warn("找不到餐廳資料，restaurantId: {}", restaurantId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳資料");
                 });
     }
@@ -145,21 +120,17 @@ public class MerchantRestaurantController {
     public ResponseEntity<?> updateBasicInfo(
             @RequestHeader("Authorization") String authHeader,
             @ModelAttribute MerchantRestaurantDTO.UpdateBasicInfoRequest request) {
-        logger.info("收到更新基本資料請求");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
         String token = authHeader.substring(7);
         String email = merchantJwtService.extractEmail(token);
         Integer restaurantId = merchantJwtService.extractRestaurantId(token);
-        logger.info("解析 token - email: {}, restaurantId: {}", email, restaurantId);
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
@@ -201,7 +172,6 @@ public class MerchantRestaurantController {
             }
 
             if (updatedRows > 0) {
-                logger.info("基本資料更新成功");
                 // 獲取更新後的餐廳資料
                 return merchantAccountRepository.findRestaurantInfoById(restaurantId)
                     .map(projection -> {
@@ -210,11 +180,9 @@ public class MerchantRestaurantController {
                     })
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳資料"));
             } else {
-                logger.warn("找不到要更新的餐廳資料");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要更新的餐廳資料");
             }
         } catch (Exception e) {
-            logger.error("更新基本資料時發生錯誤", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新基本資料失敗: " + e.getMessage());
         }
     }
@@ -223,21 +191,17 @@ public class MerchantRestaurantController {
     public ResponseEntity<?> updateBusinessInfo(
         @RequestHeader("Authorization") String authHeader,
         @RequestBody MerchantRestaurantDTO.UpdateBusinessInfoRequest request) {
-    logger.info("收到更新營業資訊請求");
     
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        logger.warn("未提供有效的 Authorization header");
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
     }
 
     String token = authHeader.substring(7);
     String email = merchantJwtService.extractEmail(token);
     Integer restaurantId = merchantJwtService.extractRestaurantId(token);
-    logger.info("解析 token - email: {}, restaurantId: {}", email, restaurantId);
     
     // 驗證 token
     if (!merchantJwtService.validateToken(token, email)) {
-        logger.warn("無效的 token");
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
     }
 
@@ -251,7 +215,6 @@ public class MerchantRestaurantController {
         );
 
         if (updatedRows > 0) {
-            logger.info("營業資訊更新成功");
             // 獲取更新後的餐廳資料
             return merchantAccountRepository.findRestaurantInfoById(restaurantId)
                 .map(projection -> {
@@ -260,11 +223,9 @@ public class MerchantRestaurantController {
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳資料"));
         } else {
-            logger.warn("找不到要更新的餐廳資料");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要更新的餐廳資料");
         }
     } catch (Exception e) {
-        logger.error("更新營業資訊時發生錯誤", e);
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新營業資訊失敗: " + e.getMessage());
     }
     }
@@ -273,21 +234,17 @@ public class MerchantRestaurantController {
     public ResponseEntity<?> updateDescription(
         @RequestHeader("Authorization") String authHeader,
         @RequestBody Map<String, String> request) {
-        logger.info("收到更新餐廳簡介請求");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
         String token = authHeader.substring(7);
         String email = merchantJwtService.extractEmail(token);
         Integer restaurantId = merchantJwtService.extractRestaurantId(token);
-        logger.info("解析 token - email: {}, restaurantId: {}", email, restaurantId);
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
@@ -300,7 +257,6 @@ public class MerchantRestaurantController {
             );
 
             if (updatedRows > 0) {
-                logger.info("餐廳簡介更新成功");
                 // 獲取更新後的餐廳資料
                 return merchantAccountRepository.findRestaurantInfoById(restaurantId)
                     .map(projection -> {
@@ -309,11 +265,9 @@ public class MerchantRestaurantController {
                     })
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳資料"));
             } else {
-                logger.warn("找不到要更新的餐廳資料");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要更新的餐廳資料");
             }
         } catch (Exception e) {
-            logger.error("更新餐廳簡介時發生錯誤", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新餐廳簡介失敗: " + e.getMessage());
         }
     }
@@ -323,33 +277,26 @@ public class MerchantRestaurantController {
     public ResponseEntity<?> deleteRestaurantPhoto(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody Map<String, String> request) {
-        logger.info("收到刪除餐廳照片請求");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
         String token = authHeader.substring(7);
         String email = merchantJwtService.extractEmail(token);
         Integer restaurantId = merchantJwtService.extractRestaurantId(token);
-        logger.info("解析 token - email: {}, restaurantId: {}", email, restaurantId);
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
         String base64Image = request.get("imageUrl");
         if (base64Image == null) {
-            logger.warn("未提供照片資料");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "未提供照片資料");
         }
-        logger.info("收到的 base64Image 長度: {}", base64Image.length());
 
         try {
-            logger.info("開始處理照片刪除");
             Restaurant restaurant = restaurantRepository.findById(restaurantId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳"));
 
@@ -357,31 +304,25 @@ public class MerchantRestaurantController {
             String base64Data = base64Image;
             if (base64Image.contains(",")) {
                 base64Data = base64Image.split(",")[1];
-                logger.info("提取 base64 資料部分，長度: {}", base64Data.length());
             }
             
             try {
                 byte[] imageData = Base64.getDecoder().decode(base64Data);
-                logger.info("解碼後的圖片資料大小: {} bytes", imageData.length);
                 
                 // 找到並刪除照片
                 List<RestaurantPhoto> photos = restaurant.getPhotos();
-                logger.info("餐廳現有照片數量: {}", photos.size());
                 boolean photoFound = false;
                 RestaurantPhoto photoToDelete = null;
                 
                 for (RestaurantPhoto photo : photos) {
                     byte[] existingImageData = photo.getPhotoData();
                     if (existingImageData == null) {
-                        logger.warn("照片 ID {} 的資料為空", photo.getId());
                         continue;
                     }
                     
-                    logger.info("比較照片 - ID: {}, 大小: {} bytes", photo.getId(), existingImageData.length);
                     
                     // 比較圖片資料
                     if (Arrays.equals(existingImageData, imageData)) {
-                        logger.info("找到要刪除的照片，ID: {}", photo.getId());
                         photoToDelete = photo;
                         photoFound = true;
                         break;
@@ -389,7 +330,6 @@ public class MerchantRestaurantController {
                 }
 
                 if (!photoFound) {
-                    logger.warn("找不到要刪除的照片");
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到要刪除的照片");
                 }
 
@@ -400,15 +340,12 @@ public class MerchantRestaurantController {
                 // 刪除照片記錄
                 restaurantPhotoRepository.delete(photoToDelete);
                 restaurantPhotoRepository.flush();
-                logger.info("照片刪除成功");
 
                 return ResponseEntity.ok().build();
             } catch (IllegalArgumentException e) {
-                logger.error("Base64 解碼失敗", e);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "照片格式錯誤: " + e.getMessage());
             }
         } catch (Exception e) {
-            logger.error("刪除餐廳照片時發生錯誤", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "刪除照片失敗: " + e.getMessage());
         }
     }
@@ -418,10 +355,8 @@ public class MerchantRestaurantController {
     public ResponseEntity<?> addRestaurantPhoto(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam("photo") MultipartFile photo) {
-        logger.info("收到新增餐廳照片請求");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
@@ -431,12 +366,10 @@ public class MerchantRestaurantController {
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
         try {
-            logger.info("開始處理照片上傳，restaurantId: {}", restaurantId);
             Restaurant restaurant = restaurantRepository.findById(restaurantId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "找不到餐廳"));
 
@@ -450,10 +383,8 @@ public class MerchantRestaurantController {
             restaurantPhoto.setPhotoData(photoData);
             restaurantPhotoRepository.save(restaurantPhoto);
 
-            logger.info("照片上傳成功");
             return ResponseEntity.ok().body(Map.of("imageUrl", "data:image/jpeg;base64," + base64Image));
         } catch (Exception e) {
-            logger.error("新增餐廳照片時發生錯誤", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "新增照片失敗: " + e.getMessage());
         }
     }
@@ -461,10 +392,8 @@ public class MerchantRestaurantController {
     @GetMapping("/photos")
     public ResponseEntity<List<String>> getRestaurantPhotos(
             @RequestHeader("Authorization") String authHeader) {
-        logger.info("收到獲取餐廳照片請求");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("未提供有效的 Authorization header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未提供有效的認證token");
         }
 
@@ -474,7 +403,6 @@ public class MerchantRestaurantController {
         
         // 驗證 token
         if (!merchantJwtService.validateToken(token, email)) {
-            logger.warn("無效的 token");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "無效的token");
         }
 
@@ -491,7 +419,6 @@ public class MerchantRestaurantController {
 
             return ResponseEntity.ok(photoUrls);
         } catch (Exception e) {
-            logger.error("獲取餐廳照片時發生錯誤", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "獲取照片失敗");
         }
     }

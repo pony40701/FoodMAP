@@ -20,8 +20,6 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.service.MerchantRegistrationService;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/merchants")
@@ -35,15 +33,12 @@ import org.slf4j.LoggerFactory;
 @RequiredArgsConstructor
 public class MerchantRegistrationController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MerchantRegistrationController.class);
     
     private final MerchantRegistrationService registrationService;
 
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
-        logger.info("檢查電子信箱是否存在：{}", email);
         boolean exists = registrationService.isEmailExists(email);
-        logger.info("電子信箱 {} {}", email, exists ? "已存在" : "可以使用");
         return ResponseEntity.ok(exists);
     }
 
@@ -54,31 +49,24 @@ public class MerchantRegistrationController {
         @RequestPart(value = "photos", required = false) MultipartFile[] photos) {
 
         try {
-            logger.info("收到註冊請求，email: {}", request.getEmail());
-            logger.info("頭像檔案: {}", avatar != null ? avatar.getOriginalFilename() : "無");
-            logger.info("照片數量: {}", photos != null ? photos.length : 0);
 
             // 將 photos 陣列轉換為 List
             List<MultipartFile> photoList = new ArrayList<>();
             if (photos != null) {
                 for (MultipartFile photo : photos) {
                     if (photo != null && !photo.isEmpty()) {
-                        logger.info("處理照片: {}, 大小: {} bytes", photo.getOriginalFilename(), photo.getSize());
                         photoList.add(photo);
                     }
                 }
             }
             
             registrationService.registerMerchant(request, avatar, photoList);
-            logger.info("註冊成功");
             return ResponseEntity.ok("註冊成功");
             
         } catch (IOException e) {
-            logger.error("處理圖片時發生錯誤: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("處理圖片時發生錯誤: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("註冊過程中發生錯誤: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("註冊失敗: " + e.getMessage());
         }

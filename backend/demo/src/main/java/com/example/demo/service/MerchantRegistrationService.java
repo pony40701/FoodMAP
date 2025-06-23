@@ -32,7 +32,6 @@ public class MerchantRegistrationService {
     private final LocalRestaurantRepository localRestaurantRepository;
     private final RestaurantPhotoRepository restaurantPhotoRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FileStorageService fileStorageService;
 
     public boolean isEmailExists(String email) {
         return merchantAccountRepository.findByEmail(email).isPresent();
@@ -67,7 +66,6 @@ public class MerchantRegistrationService {
         if (avatar != null && !avatar.isEmpty()) {
             logger.info("處理頭像: {}", avatar.getOriginalFilename());
             profile.setAvatarData(avatar.getBytes());
-            profile.setAvatarData(avatar.getBytes());
         }
         MerchantProfile savedProfile = merchantProfileRepository.save(profile);
         logger.info("商家檔案已儲存，ID: {}", savedProfile.getId());
@@ -80,8 +78,6 @@ public class MerchantRegistrationService {
                     try {
                         logger.info("處理照片：{}, 大小：{} bytes", photo.getOriginalFilename(), photo.getSize());
                         
-                        // 使用 FileStorageService 將檔案轉換為 byte[]
-                        byte[] photoData = fileStorageService.store(photo);
 
                         RestaurantPhoto restaurantPhoto = new RestaurantPhoto();
                         restaurantPhoto.setRestaurant(savedRestaurant);
