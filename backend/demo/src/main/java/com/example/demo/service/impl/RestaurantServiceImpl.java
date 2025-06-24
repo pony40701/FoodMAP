@@ -55,16 +55,12 @@ public class RestaurantServiceImpl implements RestaurantService {
         List<GoogleRestaurant> restaurants;
         
         if ("ratingDesc".equals(sort)) {
-            // 按評分降冪排序（由高到低）
             restaurants = googleRestaurantRepository.findAllByOrderByRatingDesc();
         } else if ("reviewCountDesc".equals(sort)) {
-            // 按評論數降冪排序（由多到少）
             restaurants = googleRestaurantRepository.findAllByOrderByReviewCountDesc();
         } else if ("createdAtDesc".equals(sort)) {
-            // 按創建時間降冪排序（由新到舊）
             restaurants = googleRestaurantRepository.findAllByOrderByCreatedAtDesc();
         } else {
-            // 預設排序或未知排序參數，使用原本的查詢
             restaurants = googleRestaurantRepository.findAll();
         }
         
@@ -94,7 +90,6 @@ public class RestaurantServiceImpl implements RestaurantService {
                 restaurantPage = googleRestaurantRepository.findAllByOrderByCreatedAtDesc(pageable);
                 break;
             default:
-                // 預設使用一般分頁查詢
                 restaurantPage = googleRestaurantRepository.findAll(pageable);
                 break;
         }
@@ -123,7 +118,6 @@ public class RestaurantServiceImpl implements RestaurantService {
                 restaurantPage = googleRestaurantRepository.findAllByOrderByCreatedAtDesc(pageable);
                 break;
             default:
-                // 預設使用一般分頁查詢
                 restaurantPage = googleRestaurantRepository.findAll(pageable);
                 break;
         }
@@ -139,7 +133,6 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     private RestaurantListDTO convertToDTO(GoogleRestaurant restaurant) {
-        // 查詢第一張圖片
         String base64Photo = null;
         try {
             java.util.Optional<LLeaderGoogleRestaurantPhoto> photoOpt = photoRepository.findFirstByPlaceId(restaurant.getPlaceId());

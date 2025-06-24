@@ -3,24 +3,17 @@ class MenuDetail {
     this.restaurantData = null;
     this.getRestaurantDataFromUrl();
     this.setupBackButtonHandler();
-    // updateBreadcrumb 將在數據載入後調用
-    // TODO: 在這裡添加更多處理完整菜單內容的邏輯
   }
   
-  // 設置返回按鈕處理，確保數據能正確傳回
   setupBackButtonHandler() {
-    // 監聽頁面卸載事件，確保返回時數據不丟失
     window.addEventListener('beforeunload', () => {
       if (this.restaurantData) {
-        // 保存數據以供返回使用
         sessionStorage.setItem('restaurantDetailReturnData', JSON.stringify(this.restaurantData));
         
-        // 同時保存到另一個 key 作為備份
         sessionStorage.setItem('menuDetailBackupData', JSON.stringify(this.restaurantData));
       }
     });
     
-    // 監聽 popstate 事件（用戶按上一頁時觸發）
     window.addEventListener('popstate', () => {
       if (this.restaurantData) {
         sessionStorage.setItem('restaurantDetailReturnData', JSON.stringify(this.restaurantData));
@@ -29,47 +22,35 @@ class MenuDetail {
     });
   }
 
-  // 從 sessionStorage 或 URL 獲取餐廳資料
   getRestaurantDataFromUrl() {
-    // 優先從 sessionStorage 讀取資料（避免 URL 過長問題）
     const sessionRestaurantData = sessionStorage.getItem('menuDetailRestaurantData');
     if (sessionRestaurantData) {
       try {
         this.restaurantData = JSON.parse(sessionRestaurantData);
-        console.log('從 sessionStorage 獲取到的餐廳資料:', this.restaurantData);
-        
-        // 不要立即清除，保留給返回時使用
-        // sessionStorage.removeItem('menuDetailRestaurantData');
         
         this.renderMenu();
         this.updateBreadcrumb();
         return;
       } catch (error) {
-        console.error('解析 sessionStorage 餐廳資料失敗:', error);
       }
     }
     
-    // 備用方案：從 URL 參數讀取資料
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantData = urlParams.get('data');
     
     if (restaurantData) {
       try {
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        console.log('從 URL 獲取到的餐廳資料:', this.restaurantData);
         this.renderMenu();
         this.updateBreadcrumb();
       } catch (error) {
-        console.error('解析 URL 餐廳資料失敗:', error);
         this.showErrorMessage('資料解析失敗，請重新進入餐廳頁面');
       }
     } else {
-      console.error('無法獲取餐廳資料');
       this.showErrorMessage('無法載入餐廳資料，請重新進入餐廳頁面');
     }
   }
   
-  // 顯示錯誤訊息
   showErrorMessage(message) {
     const container = document.querySelector('.menu-container') || document.body;
     container.innerHTML = `
@@ -83,7 +64,6 @@ class MenuDetail {
     `;
   }
 
-  // 更新麵包屑導航
   updateBreadcrumb() {
     const restaurantLink = document.getElementById('restaurant-link');
     const menuRestaurantName = document.getElementById('menuRestaurantName');
@@ -91,38 +71,29 @@ class MenuDetail {
     if (this.restaurantData) {
       const restaurantName = this.restaurantData.name || '未知餐廳';
       
-      // 更新路径导航中的餐厅名称
       if (restaurantLink) {
         restaurantLink.textContent = restaurantName;
         
-        // 設置點擊事件，使用 sessionStorage 傳遞資料而不是 URL
         restaurantLink.addEventListener('click', (e) => {
           e.preventDefault();
           
-          // 將餐廳資料保存到 sessionStorage
           sessionStorage.setItem('restaurantDetailReturnData', JSON.stringify(this.restaurantData));
           
-          // 跳轉回餐廳詳情頁面
           window.location.href = 'restaurantListDetail.html';
         });
         
-        // 設置 href 為預設值（以防 JavaScript 失效）
         restaurantLink.href = 'restaurantListDetail.html';
       }
       
-      // 更新页面标题中的餐厅名称
       if (menuRestaurantName) {
         menuRestaurantName.textContent = `${restaurantName} - 完整菜單`;
       }
       
-      // 更新页面标题
       document.title = `${restaurantName} - 完整菜單 - 食力派ChowCrew`;
     }
   }
 
-  // 根據餐廳類型獲取菜單資料
   getMenuDataByType(type) {
-    // 定義不同餐廳類型的範例菜單資料
     const menuData = {
       '中式': [
         {
@@ -1210,7 +1181,6 @@ class MenuDetail {
         }
       ],
       '咖啡廳': [
-        // ... existing cafe menu data ...
       ],
       '韓式': [
         {
@@ -1263,29 +1233,19 @@ class MenuDetail {
       ]
     };
 
-    // 獲取餐廳類型，預設為中式
     const restaurantType = this.restaurantData.tags?.[0] || '中式';
 
-    // 返回對應類型的菜單資料，如果沒有則返回空陣列
     return menuData[restaurantType] || [];
   }
 
-  // 渲染菜單內容
   renderMenu() {
-    console.log('renderMenu function called');
-    
-    // 更新餐廳名稱標題
     const menuRestaurantName = document.querySelector('.menu-restaurant-name');
     if (menuRestaurantName && this.restaurantData) {
       menuRestaurantName.textContent = `${this.restaurantData.name || '未知餐廳'} - 完整菜單`;
     }
-    
-    // 保持靜態菜單內容，不進行動態替換
-    console.log('使用靜態菜單內容，餐廳名稱已更新');
   }
 }
 
-// 當 DOM 加載完成後初始化
 document.addEventListener('DOMContentLoaded', () => {
   new MenuDetail();
 }); 
