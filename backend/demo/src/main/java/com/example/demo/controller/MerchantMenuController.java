@@ -6,8 +6,6 @@ import com.example.demo.service.MerchantMenuService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @RestController
@@ -22,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MerchantMenuController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MerchantMenuController.class);
     
     private final MerchantMenuService menuService;
     private final MerchantJwtService merchantJwtService;

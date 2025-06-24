@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>菜單管理 - 食力派ChowCrew</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/navforaboutus.css" />
     <link rel="stylesheet" href="css/restaurant-menu.css" />
     <style>
         .menu-item-img {
@@ -26,35 +27,40 @@
 
 <body>
     <!-- 導覽列 -->
-    <nav class="navbar">
+    <div class="navbar">
         <div class="navbar-left">
             <a href="index.html" class="logo-text">食力派ChowCrew</a>
         </div>
         <div class="navbar-right">
-            <div class="user-avatar">
-                <img src="images/default-avatar.png" alt="商家頭像" class="avatar-img">
-                <div class="avatar-dropdown">
-                    <a href="restaurant.html" class="dropdown-item">
-                        <i class="fas fa-store"></i>
-                        <span>商家資料</span>
-                    </a>
-                    <a href="restaurant-menu.html" class="dropdown-item">
-                        <i class="fas fa-utensils"></i>
-                        <span>菜單管理</span>
-                    </a>
-                    <a href="restaurant-comment.html" class="dropdown-item">
-                        <i class="fas fa-comments"></i>
-                        <span>店家評論</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="index.html" class="dropdown-item logout-item">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>登出</span>
-                    </a>
+            <div id="userSection" class="user-section">
+                <div class="user-avatar">
+                    <img src="images/TEST.jpg" alt="商家頭像" class="avatar-img">
+                    <div class="avatar-dropdown">
+                        <a href="restaurant.html" class="dropdown-item">
+                            <i class="fas fa-store"></i>
+                            <span>商家資料</span>
+                        </a>
+                        <a href="restaurant-menu.html" class="dropdown-item">
+                            <i class="fas fa-utensils"></i>
+                            <span>菜單管理</span>
+                        </a>
+                        <a href="restaurant-comment.html" class="dropdown-item">
+                            <i class="fas fa-comments"></i>
+                            <span>店家評論</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="merchantLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>登出</span>
+                        </a>
+                    </div>
                 </div>
             </div>
+            <button class="hamburger">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-    </nav>
+    </div>
 
     <!-- 主要內容區域 -->
     <div class="content-section">
@@ -163,6 +169,17 @@
     </div>
 
     <script src="js/restaurant-menu.js"></script>
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navRight = document.querySelector('.navbar-right');
+        const hamburgerIcon = hamburger.querySelector('i');
+
+        hamburger.addEventListener('click', () => {
+            navRight.classList.toggle('active');
+            hamburgerIcon.classList.toggle('fa-bars');
+            hamburgerIcon.classList.toggle('fa-xmark');
+        });
+    </script>
 </body>
 
 </html> 

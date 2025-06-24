@@ -244,3 +244,30 @@
         padding: 12px;
     }
 } 
+
+.restaurants-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 100px;
+}
+
+@media (min-width: 992px) {
+    .restaurants-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .restaurants-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1400px) {
+    .restaurants-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+} 

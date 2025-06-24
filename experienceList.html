@@ -9,211 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/experienceList.css">
     <link rel="stylesheet" href="css/footer.css">
-    <style>
-        /* 登入視窗樣式 - 極簡版本 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 3000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            animation: fadeIn 0.3s;
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            border-radius: 12px;
-            padding: 15px 15px 20px 15px;
-            border: 1px solid rgba(255, 107, 26, 0.3);
-            width: 90%;
-            max-width: 340px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            animation: slideIn 0.3s;
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .modal-header h2 {
-            font-size: 20px;
-            color: #ff6b1a;
-            margin: 0;
-            flex-grow: 1;
-            text-align: center;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 22px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-            margin-left: auto;
-            position: absolute;
-            right: 15px;
-            top: 12px;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .form-group label {
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            padding: 9px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .btn-primary {
-            background: #ff6b1a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 0;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .form-footer {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .social-login {
-            margin-top: 12px;
-            text-align: center;
-        }
-
-        .social-login p {
-            margin-bottom: 5px;
-            color: #888;
-            font-size: 13px;
-        }
-
-        .social-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 0;
-            width: 32%;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            background: #f5f5f5;
-        }
-
-        .social-btn.google {
-            color: #db4437;
-        }
-
-        .social-btn.facebook {
-            color: #1877f3;
-        }
-
-        .social-btn.line {
-            color: #00c300;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-40px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* 登入和用戶區塊樣式*/
-        .login-section,
-        .user-section {
-            display: flex;
-            align-items: center;
-        }
-
-        /* 商家頭像樣式 */
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: visible;
-            cursor: pointer;
-            border: 2px solid #ff6b1a;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1001;
-        }
-
-        .user-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255, 107, 26, 0.4);
-        }
-
-        .avatar-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        /* 頭像下拉選單樣式 */
-        .avatar-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-    </style>
+    <link rel="stylesheet" href="css/login-modal.css">
 </head>
 <body>
       <!-- 導航欄 -->
@@ -242,7 +38,7 @@
             <div class="restaurant-dropdown">
                 <a href="restaurantList.html" class="nav-link dropdown-toggle">
                     <i class="fas fa-utensils"></i>
-                    <span>餐廳詳情</span>
+                    <span>餐廳列表</span>
                 </a>
             </div>
             <div class="restaurant-dropdown">
@@ -254,11 +50,11 @@
                     </a>
                     <a href="ranking.html#popular" class="dropdown-item">
                         <i class="fas fa-fire"></i>
-                        <span>人氣排行</span>
+                        <span>熱門排行</span>
                     </a>
-                    <a href="ranking.html#rating" class="dropdown-item">
-                        <i class="fas fa-star"></i>
-                        <span>評分排行</span>
+                    <a href="ranking.html#new" class="dropdown-item">
+                        <i class="fas fa-store-alt"></i>
+                        <span>新進店家</span>
                     </a>
                 </div>
             </div>
@@ -268,6 +64,10 @@
                     <a href="blogPost.html" class="dropdown-item">
                         <i class="fas fa-pen-alt"></i>
                         <span>寫食記</span>
+                    </a>
+                    <a href="experienceList.html" class="dropdown-item">
+                        <i class="fas fa-book-open"></i>
+                        <span>瀏覽心得</span>
                     </a>
                 </div>
             </div>
@@ -350,11 +150,6 @@
             <!-- 文章卡片將由 JavaScript 動態載入 -->
         </div>
     </main>
-
-    <!-- 回到頂部按鈕 -->
-    <button id="backToTop" class="back-to-top" title="回到頂部">
-        <i class="fas fa-arrow-up"></i>
-    </button>
 
     <!-- 頁尾 -->
     <footer class="footer">
@@ -553,6 +348,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- 回到頂部按鈕 -->
+    <button id="backToTop" class="back-to-top" title="回到頂部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script>
         // 回到頂部按鈕功能
@@ -577,7 +377,6 @@
     </script>
     <script src="js/toast.js"></script>
     <script src="js/experienceList.js"></script>
-    <script src="js/loginModal.js"></script>
     <script>
         // API 基礎路徑
         window.API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080/api';
@@ -640,8 +439,9 @@
                 }
             });
             // 開啟商家登入
-            document.querySelectorAll('a.dropdown-item, a.nav-link').forEach(link => {
-                if (link.textContent.includes('商家登入')) {
+            document.querySelectorAll('a.dropdown-item').forEach(link => {
+                const text = link.querySelector('span');
+                if (text && text.textContent.includes('商家登入')) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         restaurantLoginModal.style.display = 'block';
@@ -689,8 +489,8 @@
                                 userAvatarImg.src = data.image_url || data.avatar_url;
                             }
                             loginModal.style.display = 'none';
-                            alert('登入成功！');
-                            location.reload(); // 登入成功後刷新頁面
+                            showToast('登入成功！');
+                            setTimeout(() => location.reload(), 1000); 
                         } else {
                             alert(data.error || data.message || '登入失敗');
                         }
@@ -720,9 +520,11 @@
                             localStorage.setItem('merchantToken', result.token);
                             localStorage.setItem('merchantEmail', result.email);
                             localStorage.setItem('restaurantId', result.restaurantId);
-                            alert('商家登入成功！');
+                            showToast('商家登入成功！');
                             restaurantLoginModal.style.display = 'none';
-                            window.location.href = 'restaurant.html';
+                            setTimeout(() => {
+                                window.location.href = 'restaurant.html';
+                            }, 1000);
                         } else {
                             const errorData = await response.json();
                             alert(errorData.message || '商家登入失敗');
@@ -745,7 +547,7 @@
             localStorage.removeItem('user');
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userId');
-            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
 
             // 切換 UI 狀態
             const loginSection = document.getElementById('loginSection');
