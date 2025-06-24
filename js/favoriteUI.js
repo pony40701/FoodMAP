@@ -154,7 +154,7 @@ class FavoriteUI {
         
         const rating = store.rating || 0;
         const reviewCount = store.user_ratings_total || 0;
-        const address = store.address || store.vicinity || '';
+        const address = store.address || '';
 
         return `
             <div class="store-card" data-store-id="${store.id}">
@@ -389,7 +389,7 @@ class FavoriteUI {
         // 處理評分與評論數
         const rating = restaurant.rating || 0;
         const reviewCount = restaurant.user_ratings_total || 0;
-        const address = restaurant.address || restaurant.vicinity || '';
+        const address = restaurant.address || '';
         
         // 生成星級評分
         const generateStars = (rating) => {

@@ -242,7 +242,7 @@ async function loadFavorites(type = 'stores') {
                                 store.restaurant.name = detailData.name || store.restaurant.name;
                                 store.restaurant.rating = detailData.rating || store.restaurant.rating || 0;
                                 store.restaurant.user_ratings_total = detailData.user_ratings_total || store.restaurant.user_ratings_total || 0;
-                                store.restaurant.formatted_address = detailData.formatted_address || detailData.vicinity || store.restaurant.formatted_address || '地址不詳';
+                                store.restaurant.formatted_address = detailData.formatted_address || store.restaurant.formatted_address || '地址不詳';
                                 if (detailData.photos && detailData.photos.length > 0) {
                                     store.restaurant.photos = detailData.photos;
                                 }
@@ -251,7 +251,7 @@ async function loadFavorites(type = 'stores') {
                                 store.name = detailData.name || store.name;
                                 store.rating = detailData.rating || store.rating || 0;
                                 store.user_ratings_total = detailData.user_ratings_total || store.user_ratings_total || 0;
-                                store.formatted_address = detailData.formatted_address || detailData.vicinity || store.formatted_address || '地址不詳';
+                                store.formatted_address = detailData.formatted_address || store.formatted_address || '地址不詳';
                                 if (detailData.photos && detailData.photos.length > 0) {
                                     store.photos = detailData.photos;
                                 }
@@ -379,7 +379,7 @@ async function renderFavoriteStores(stores) {
             const name = restaurant.name || '未知餐廳';
             const rating = parseFloat(restaurant.rating) || parseFloat(restaurant.average_rating) || 0;
             const reviewCount = restaurant.user_ratings_total || restaurant.review_count || restaurant.reviewCount || 0;
-            const address = restaurant.formatted_address || restaurant.vicinity || restaurant.address || '地址不詳';
+            const address = restaurant.formatted_address || restaurant.address || '地址不詳';
             
             // 使用統一的圖片URL構建函數
             const imageUrl = buildRestaurantPhotoUrl(placeId);

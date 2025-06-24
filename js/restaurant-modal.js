@@ -164,7 +164,7 @@ const RestaurantModal = (function() {
             }
             
             // 設置地址
-        if (elements.address) elements.address.textContent = restaurant.address || restaurant.vicinity || '';
+        if (elements.address) elements.address.textContent = restaurant.address || '';
             
             // 設置營業狀態
             let isOpen = false;
@@ -501,7 +501,7 @@ const RestaurantModal = (function() {
                             place_id: restaurantId,
                             name: currentRestaurant.name,
                             photos: currentRestaurant.photos,
-                            address: currentRestaurant.address || currentRestaurant.vicinity,
+                            address: currentRestaurant.address || '',
                             rating: currentRestaurant.rating,
                             user_ratings_total: currentRestaurant.user_ratings_total,
                             types: currentRestaurant.types,
@@ -528,7 +528,7 @@ const RestaurantModal = (function() {
     function openDirections() {
         if (!currentRestaurant) return;
         
-        const address = currentRestaurant.address || currentRestaurant.vicinity || '';
+        const address = currentRestaurant.address || '';
         if (!address) {
             showToast('無法獲取餐廳地址');
             return;

@@ -277,16 +277,10 @@ async function performSearch() {
     if (locationKeyword) {
       searchResults = searchResults.filter(restaurant => {
         if (!restaurant) return false;
-        
         const address = (restaurant.address || '').toLowerCase();
-        const vicinity = (restaurant.vicinity || '').toLowerCase();
         const formattedAddress = (restaurant.formatted_address || '').toLowerCase();
-        
         const keyword = locationKeyword.toLowerCase();
-        
-        return address.includes(keyword) || 
-               vicinity.includes(keyword) || 
-               formattedAddress.includes(keyword);
+        return address.includes(keyword) || formattedAddress.includes(keyword);
       });
     }
     
