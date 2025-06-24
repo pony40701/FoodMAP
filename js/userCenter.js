@@ -975,17 +975,12 @@ function showConfirmationModal(message, title = '確認操作') {
 // 查看餐廳詳情
 async function viewRestaurant(restaurantId) {
     try {
-        // 優先從 API 獲取最新的餐廳詳情
+        // 優先從 API 獲取最新的餐廳詳情（統一與 index.html 一致）
         const apiBaseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
-        // 修改API端點為google-restaurants，以確保獲取完整營業時間數據
         const apiUrl = `${apiBaseUrl}/google-restaurants/${restaurantId}`;
-        
         const response = await fetch(apiUrl);
-        
         if (response.ok) {
-            // 如果 API 請求成功，使用 API 返回的數據
             const restaurantData = await response.json();
-            
             // 確保有位置數據
             if (!restaurantData.geometry && (restaurantData.lat || restaurantData.latitude)) {
                 restaurantData.geometry = {
@@ -995,189 +990,33 @@ async function viewRestaurant(restaurantId) {
                     }
                 };
             }
-            
             // 處理圖片資訊
-            // 構建餐廳圖片URL，與商家卡片一致
             const photoUrl = buildRestaurantPhotoUrl(restaurantId);
-            
-            // 設置圖片屬性，讓restaurant-modal.js直接使用
-            if (!restaurantData.photo) {
-                restaurantData.photo = photoUrl;
-            }
-            
-            if (!restaurantData.photos) {
-                restaurantData.photos = [photoUrl];
-            }
-            
-            // 處理營業時間數據 - 從json_raw解析更詳細的資訊
+            if (!restaurantData.photo) restaurantData.photo = photoUrl;
+            if (!restaurantData.photos) restaurantData.photos = [photoUrl];
+            // 從 json_raw 解析營業時間
             if (restaurantData.json_raw) {
                 try {
                     const jsonData = JSON.parse(restaurantData.json_raw);
-                    
-                    // 從json_raw提取營業時間資訊
-                    if (jsonData.opening_hours) {
-                        restaurantData.opening_hours = jsonData.opening_hours;
-                    }
-                    
-                    // 更新評分、評論數
-                    if (jsonData.rating) {
-                        restaurantData.rating = jsonData.rating;
-                        restaurantData.average_rating = jsonData.rating;
-                    }
+                    if (jsonData.opening_hours) restaurantData.opening_hours = jsonData.opening_hours;
+                    if (jsonData.rating) restaurantData.rating = jsonData.rating;
                     if (jsonData.user_ratings_total) {
                         restaurantData.user_ratings_total = jsonData.user_ratings_total;
                         restaurantData.review_count = jsonData.user_ratings_total;
                         restaurantData.reviewCount = jsonData.user_ratings_total;
                     }
-                } catch (e) {
-                    console.warn('解析json_raw失敗:', e);
-                }
+                } catch (e) {}
             }
-            
-            // 如果仍然沒有營業時間數據，嘗試處理可能存在的格式
-            if (restaurantData.opening_hours) {
-                // 確保 opening_hours 是對象，不是字符串
-                if (typeof restaurantData.opening_hours === 'string') {
-                    try {
-                        restaurantData.opening_hours = JSON.parse(restaurantData.opening_hours);
-                    } catch (e) {
-                        console.warn('解析營業時間字符串失敗:', e);
-                    }
-                }
-                
-                // 如果沒有 weekday_text 但有 periods，嘗試構建 weekday_text
-                if (!restaurantData.opening_hours.weekday_text && restaurantData.opening_hours.periods) {
-                    try {
-                        const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                        const weekdayText = [];
-                        
-                        for (let i = 0; i < 7; i++) {
-                            // 將循環索引轉換為 Google API 的星期幾表示 (0=週日, 1=週一, ..., 6=週六)
-                            const googleDay = i === 6 ? 0 : i + 1;
-                            const period = restaurantData.opening_hours.periods.find(p => p.open.day === googleDay);
-                            
-                            if (period) {
-                                // 確保時間格式正確，並移除可能的秒數
-                                const openHours = period.open.hours.toString().padStart(2, '0');
-                                const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
-                                const closeHours = period.close.hours.toString().padStart(2, '0');
-                                const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
-                                
-                                const openTime = `${openHours}:${openMinutes}`;
-                                const closeTime = `${closeHours}:${closeMinutes}`;
-                                weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
-                            } else {
-                                weekdayText.push(`${dayNames[i]}: 休息`);
-                            }
-                        }
-                        
-                        restaurantData.opening_hours.weekday_text = weekdayText;
-                    } catch (e) {
-                        console.warn('構建營業時間資料失敗:', e);
-                    }
-                }
-            }
-            
             // 顯示餐廳詳情
             if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
                 window.RestaurantModal.showRestaurantDetail(restaurantData);
             } else {
-                console.error('RestaurantModal 未初始化');
                 showToast('無法顯示餐廳詳情，請重新整理頁面');
             }
         } else {
-            // 如果 API 請求失敗，嘗試使用本地數據
-            
-            // 從收藏系統中獲取餐廳數據
-            if (window.favoriteSystem && typeof window.favoriteSystem.getRestaurantById === 'function') {
-                const localRestaurant = await window.favoriteSystem.getRestaurantById(restaurantId);
-                
-                if (localRestaurant) {
-                    // 確保有位置數據
-                    if (!localRestaurant.geometry && (localRestaurant.lat || localRestaurant.latitude)) {
-                        localRestaurant.geometry = {
-                            location: {
-                                lat: localRestaurant.lat || localRestaurant.latitude,
-                                lng: localRestaurant.lng || localRestaurant.longitude
-                            }
-                        };
-                    }
-                    
-                    // 處理圖片資訊
-                    // 構建餐廳圖片URL，與商家卡片一致
-                    const photoUrl = buildRestaurantPhotoUrl(restaurantId);
-                    
-                    // 設置圖片屬性，讓restaurant-modal.js直接使用
-                    if (!localRestaurant.photo) {
-                        localRestaurant.photo = photoUrl;
-                    }
-                    
-                    if (!localRestaurant.photos) {
-                        localRestaurant.photos = [photoUrl];
-                    }
-                    
-                    // 處理營業時間數據
-                    if (localRestaurant.opening_hours) {
-                        // 確保 opening_hours 是對象，不是字符串
-                        if (typeof localRestaurant.opening_hours === 'string') {
-                            try {
-                                localRestaurant.opening_hours = JSON.parse(localRestaurant.opening_hours);
-                            } catch (e) {
-                                console.warn('解析營業時間字符串失敗:', e);
-                            }
-                        }
-                        
-                        // 如果沒有 weekday_text 但有 periods，嘗試構建 weekday_text
-                        if (!localRestaurant.opening_hours.weekday_text && localRestaurant.opening_hours.periods) {
-                            try {
-                                const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                                const weekdayText = [];
-                                
-                                for (let i = 0; i < 7; i++) {
-                                    // 將循環索引轉換為 Google API 的星期幾表示 (0=週日, 1=週一, ..., 6=週六)
-                                    const googleDay = i === 6 ? 0 : i + 1;
-                                    const period = localRestaurant.opening_hours.periods.find(p => p.open.day === googleDay);
-                                    
-                                    if (period) {
-                                        // 確保時間格式正確，並移除可能的秒數
-                                        const openHours = period.open.hours.toString().padStart(2, '0');
-                                        const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
-                                        const closeHours = period.close.hours.toString().padStart(2, '0');
-                                        const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
-                                        
-                                        const openTime = `${openHours}:${openMinutes}`;
-                                        const closeTime = `${closeHours}:${closeMinutes}`;
-                                        weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
-                                    } else {
-                                        weekdayText.push(`${dayNames[i]}: 休息`);
-                                    }
-                                }
-                                
-                                localRestaurant.opening_hours.weekday_text = weekdayText;
-                            } catch (e) {
-                                console.warn('構建營業時間資料失敗:', e);
-                            }
-                        }
-                    }
-                    
-                    // 顯示餐廳詳情
-                    if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
-                        window.RestaurantModal.showRestaurantDetail(localRestaurant);
-                    } else {
-                        console.error('RestaurantModal 未初始化');
-                        showToast('無法顯示餐廳詳情，請重新整理頁面');
-                    }
-                } else {
-                    console.error('找不到餐廳數據:', restaurantId);
-                    showToast('找不到餐廳資訊');
-                }
-            } else {
-                console.error('favoriteSystem 未初始化');
-                showToast('系統錯誤，請重新整理頁面');
-            }
+            showToast('找不到餐廳資訊');
         }
     } catch (error) {
-        console.error('顯示餐廳詳情時出錯:', error);
         showToast('顯示餐廳詳情時出錯');
     }
 }

@@ -123,9 +123,9 @@ if (!window.favoriteSystem) {
 } 
 
 // 使用全域 API_BASE_URL，避免重複宣告
-const base = window.API_BASE_URL || 'http://localhost:8080/api';
+const favoriteApiBase = window.API_BASE_URL || 'http://localhost:8080/api';
 async function loadFavorites(userId) {
-  const res = await fetch(`${base}/users/${userId}/favorites`);
+  const res = await fetch(`${favoriteApiBase}/users/${userId}/favorites`);
   return res.json();
 } 
 
