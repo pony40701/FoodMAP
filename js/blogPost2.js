@@ -2071,13 +2071,9 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
     
     // 驗證必填項目
     const title = document.getElementById('postTitle').value;
-    const restaurant = document.getElementById('restaurantName').value;
     const content = document.getElementById('editor').innerHTML;
     
-    if (!restaurant || !content) {
-        alert('請至少填寫餐廳名稱和評論內容');
-        return;
-    }
+   
 
     // 驗證評分
     const ratings = collectRatings('#write-section');
@@ -2088,9 +2084,16 @@ document.getElementById('blogPostFormWrite')?.addEventListener('submit', async f
 
     // 準備發布數據
     const imageData = collectImageData();
+    
+    // 檢查是否已選擇餐廳
+    if (!currentRestaurantId) {
+        alert('請先選擇餐廳再發布文章');
+        return;
+    }
+    
     const postData = {
         userId: currentUserId, // 使用當前登入用戶ID
-        restaurantId: currentRestaurantId || 1, // 使用當前餐廳ID或預設值
+        restaurantId: currentRestaurantId, // 移除預設值，確保已選擇餐廳
         title: title || '未命名文章',
         content_json: imageData.processedHtmlContent || content,
         status: 'published',
@@ -2168,9 +2171,17 @@ document.getElementById('blogPostFormEdit')?.addEventListener('submit', async fu
 
     // 準備發布數據
     const imageData = collectImageData('#editorEdit');
+    
+    // 檢查是否有有效的餐廳ID
+    const finalRestaurantId = window.currentEditingDraft?.restaurantId || window.currentEditingPost?.restaurantId;
+    if (!finalRestaurantId) {
+        alert('無法獲取餐廳資訊，請重新選擇餐廳');
+        return;
+    }
+    
     const postData = {
         userId: window.currentEditingDraft?.userId || window.currentEditingPost?.userId || currentUserId,
-        restaurantId: window.currentEditingDraft?.restaurantId || window.currentEditingPost?.restaurantId || 1,
+        restaurantId: finalRestaurantId,
         title: title || '未命名文章',
         content_json: imageData.processedHtmlContent || content,
         status: 'published',
@@ -2278,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageData = collectImageData('#editor');
             const postData = {
                 userId: currentUserId, // 使用當前登入用戶ID
-                restaurantId: 1, // TODO: 從餐廳選擇中獲取
+                restaurantId: currentRestaurantId, // 移除預設值，允許 null 值儲存草稿
                 title: document.getElementById('postTitle').value || '未命名草稿',
                 content_json: imageData.processedHtmlContent || document.getElementById('editor').innerHTML || '',
                 status: 'draft',
@@ -2464,11 +2475,32 @@ async function loadDrafts() {
         // 按最後修改時間排序（新的在前）
         drafts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
-        // 顯示草稿列表
-        drafts.forEach(draft => {
-            const draftElement = createDraftElement(draft);
-            draftsList.appendChild(draftElement);
-        });
+        // 顯示草稿列表 - 使用 for...of 來正確處理異步函數
+        for (const draft of drafts) {
+            try {
+                const draftElement = await createDraftElement(draft);
+                if (draftElement && draftElement instanceof Node) {
+                    draftsList.appendChild(draftElement);
+                } else {
+                    console.error('createDraftElement 返回的不是有效的 DOM 節點:', draftElement);
+                }
+            } catch (error) {
+                console.error('創建草稿元素失敗:', error);
+                // 創建一個簡單的錯誤顯示元素
+                const errorElement = document.createElement('div');
+                errorElement.className = 'draft-card error';
+                errorElement.innerHTML = `
+                    <div class="draft-header">
+                        <h3>載入失敗</h3>
+                        <span class="draft-date">草稿ID: ${draft.id}</span>
+                    </div>
+                    <div class="draft-content">
+                        <p class="error-message">載入草稿時發生錯誤，請稍後再試</p>
+                    </div>
+                `;
+                draftsList.appendChild(errorElement);
+            }
+        }
     } catch (error) {
         console.error('載入草稿時發生錯誤：', error);
         draftsList.innerHTML = '<div class="error">載入草稿失敗，請稍後再試</div>';
@@ -2476,7 +2508,7 @@ async function loadDrafts() {
 }
 
 // 創建草稿元素
-function createDraftElement(draft) {
+async function createDraftElement(draft) {
     const div = document.createElement('div');
     div.className = 'draft-card';
     
@@ -2492,12 +2524,30 @@ function createDraftElement(draft) {
     // 限制內容顯示長度
     const contentPreview = truncateText(stripHtml(draft.contentJson), 80);
 
+    // 獲取餐廳資訊，添加錯誤處理
+    let restaurantInfo;
+    try {
+        restaurantInfo = await getRestaurantInfoById(draft.restaurantId);
+    } catch (error) {
+        console.error('獲取餐廳資訊失敗:', error);
+        restaurantInfo = {
+            name: `餐廳ID: ${draft.restaurantId}`,
+            address: "地址資訊未提供"
+        };
+    }
+
     div.innerHTML = `
         <div class="draft-header">
             <h3>${escapeHtml(draft.title)}</h3>
             <span class="draft-date">最後修改：${lastModified}</span>
         </div>
         <div class="draft-content">
+            <p class="restaurant-info">
+                <i class="fas fa-utensils"></i> 餐廳名稱: ${restaurantInfo.name}
+            </p>
+            <p class="restaurant-address">
+                <i class="fas fa-map-marker-alt"></i> 地址: ${restaurantInfo.address}
+            </p>
             <p class="draft-preview">${contentPreview}</p>
             ${draft.tags && draft.tags.length > 0 ? `
                 <div class="draft-tags">
@@ -2546,8 +2596,13 @@ async function editDraft(draftId) {
         
         // 設置餐廳名稱（如果有）
         const restaurantNameEdit = document.getElementById('restaurantNameEdit');
+        const restaurantLocationEdit = document.getElementById('restaurantLocationEdit');
+        const restaurantInfo = await getRestaurantInfoById(draft.restaurantId);
         if (restaurantNameEdit) {
-            restaurantNameEdit.value = draft.restaurantName || `餐廳ID: ${draft.restaurantId}`;
+            restaurantNameEdit.value = restaurantInfo.name || `餐廳ID: ${draft.restaurantId}`;
+        }
+        if (restaurantLocationEdit) {
+            restaurantLocationEdit.value = restaurantInfo.address || `餐廳ID: ${draft.restaurantId}`;
         }
         
         // 先清空編輯器內容
@@ -3499,8 +3554,29 @@ async function loadPublishedPosts() {
 
         // 顯示文章列表
         for (const post of publishedPosts) {
-            const postElement = await createPublishedPostElement(post);
-            publishedList.appendChild(postElement);
+            try {
+                const postElement = await createPublishedPostElement(post);
+                if (postElement && postElement instanceof Node) {
+                    publishedList.appendChild(postElement);
+                } else {
+                    console.error('createPublishedPostElement 返回的不是有效的 DOM 節點:', postElement);
+                }
+            } catch (error) {
+                console.error('創建已發布文章元素失敗:', error);
+                // 創建一個簡單的錯誤顯示元素
+                const errorElement = document.createElement('div');
+                errorElement.className = 'post-card error';
+                errorElement.innerHTML = `
+                    <div class="post-header">
+                        <h3>載入失敗</h3>
+                        <span class="post-date">文章ID: ${post.id}</span>
+                    </div>
+                    <div class="post-content">
+                        <p class="error-message">載入文章時發生錯誤，請稍後再試</p>
+                    </div>
+                `;
+                publishedList.appendChild(errorElement);
+            }
         }
     } catch (error) {
         console.error('載入已發布文章時發生錯誤：', error);
@@ -3532,8 +3608,17 @@ async function createPublishedPostElement(post) {
     // 限制內容顯示長度
     const contentPreview = truncateText(stripHtml(post.content_json), 80);
 
-    // 根據餐廳ID獲取餐廳資訊
-    const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+    // 根據餐廳ID獲取餐廳資訊，添加錯誤處理
+    let restaurantInfo;
+    try {
+        restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+    } catch (error) {
+        console.error('獲取餐廳資訊失敗:', error);
+        restaurantInfo = {
+            name: `餐廳ID: ${post.restaurantId}`,
+            address: "地址資訊未提供"
+        };
+    }
 
     div.innerHTML = `
         <div class="post-header">
@@ -4153,6 +4238,15 @@ async function editPublishedPost(postId) {
         // 填充表單
         document.getElementById('postTitleEdit').value = post.title;
         document.getElementById('tagsEdit').value = post.tags.join(', ');
+        const restaurantName = document.getElementById('restaurantName');
+        const restaurantLocation = document.getElementById('restaurantLocation');
+        const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+        if (restaurantName) {
+            restaurantName.value = restaurantInfo.name || `餐廳ID: ${post.restaurantId}`;
+        }
+        if (restaurantLocation) {
+            restaurantLocation.value = restaurantInfo.address || `餐廳ID: ${post.restaurantId}`;
+        }
         
         // 先清空編輯器內容
         document.getElementById('editorEdit').innerHTML = '';
@@ -4550,14 +4644,14 @@ async function getRestaurantInfoFromURL() {
 // 根據餐廳ID獲取餐廳資訊
 async function getRestaurantInfoById(restaurantId) {
     try {
-        // 使用API查詢餐廳資料
-        const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
+        // 使用新的 API 查詢餐廳資料 (restaurants 表)
+        const response = await fetch(`http://localhost:8080/api/restaurant-save/${restaurantId}`);
         
         if (response.ok) {
             const restaurant = await response.json();
             return {
                 name: restaurant.name || `餐廳ID: ${restaurantId}`,
-                address: restaurant.address || restaurant.location || "地址資訊未提供"
+                address: restaurant.address || "地址資訊未提供"
             };
         } else if (response.status === 404) {
             // 如果餐廳不存在，返回預設值
