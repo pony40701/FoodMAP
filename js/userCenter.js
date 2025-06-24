@@ -1947,15 +1947,13 @@ function loadNotifications(typeFilter = 'all') {
             : [];
         renderNotifications(filteredNotifications);
         
-        // 添加標記所有通知為已讀的按鈕
-        if (filteredNotifications.length > 0) {
-            addMarkAllAsReadButton(notificationsList);
-        }
-        
-        // 自動標記通知為已讀（如果存在通知服務模組）
-        if (window.NotificationService && typeof window.NotificationService.markAllAsRead === 'function') {
-            window.NotificationService.markAllAsRead();
-        }
+        // 檢查是否有未讀通知後再決定是否添加按鈕
+        setTimeout(() => {
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            if (unreadCount > 0) {
+                addMarkAllAsReadButton(notificationsList);
+            }
+        }, 100);
     })
     .catch(error => {
         console.error('獲取通知資料失敗:', error);
@@ -1979,9 +1977,40 @@ function loadNotifications(typeFilter = 'all') {
             return;
         }
 
+        // 獲取本地已讀狀態
+        let localReadStatus = {};
+        try {
+            const readStatusData = localStorage.getItem('notificationReadStatus');
+            localReadStatus = readStatusData ? JSON.parse(readStatusData) : {};
+        } catch (error) {
+            console.error('解析本地已讀狀態失敗:', error);
+        }
+
         // 生成通知列表 HTML
         const notificationsHtml = notifications.map(notification => {
-            const isUnread = !notification.read;
+            // 先檢查本地是否標記為全部已讀
+            let isUnread = !notification.read;
+            
+            // 如果本地標記了全部已讀，則覆蓋原始狀態
+            if (localReadStatus.allRead) {
+                const markTime = localReadStatus.lastMarkAllReadTime || 0;
+                const notificationTime = new Date(notification.time || notification.createdAt).getTime();
+                
+                // 如果通知是在標記全部已讀之前的，則設為已讀
+                if (notificationTime <= markTime) {
+                    isUnread = false;
+                }
+            }
+            
+            // 檢查單個通知的已讀狀態
+            if (localReadStatus.readNotifications && localReadStatus.readNotifications.length > 0) {
+                // 確保比較時類型一致
+                const notificationIdStr = String(notification.id);
+                if (localReadStatus.readNotifications.includes(notificationIdStr)) {
+                    isUnread = false;
+                }
+            }
+            
             const notificationType = notification.type || 'system';
             const notificationTime = formatTime(notification.time || notification.createdAt);
             
@@ -2003,17 +2032,7 @@ function loadNotifications(typeFilter = 'all') {
         }).join('');
         
         // 組合完整的 HTML
-        const helpText = `
-            <div class="notification-help">
-                <div class="notification-help-content">
-                    <i class="fas fa-info-circle"></i>
-                    <span><strong>提示：</strong>
-                    <span class="unread-example">未讀通知</span> 有橘色邊框和感嘆號圖標，
-                    <span class="read-example">已讀通知</span> 呈現灰色。點擊通知可標記為已讀。
-                    </span>
-                </div>
-            </div>
-        `;
+        const helpText = ``;  // 隱藏提示文字
         
         notificationsList.innerHTML = notificationsHtml + helpText;
         
@@ -2062,14 +2081,24 @@ function addMarkAllAsReadButton(container) {
             window.NotificationService.markAllAsRead()
                 .then(success => {
                     if (success) {
-                        // 重新載入通知列表以確保數據一致性
-                        setTimeout(() => {
-                            loadNotifications('all');
-                        }, 500);
+                        // 不要重新載入通知列表，避免循環調用
+                        // setTimeout(() => {
+                        //     loadNotifications('all');
+                        // }, 500);
                         showToast('已將所有通知標記為已讀');
+                        
+                        // 移除或隱藏按鈕
+                        buttonContainer.remove();
+                        
+                        // 強制更新首頁的通知狀態
+                        // 通過更新時間戳來觸發其他頁面的重新檢查
+                        localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
                     } else {
-                        // 如果失敗，重新載入以恢復正確狀態
-                        loadNotifications('all');
+                        // 如果失敗，恢復 UI 狀態
+                        unreadItems.forEach(item => {
+                            item.classList.add('unread');
+                        });
+                        showToast('標記失敗，請稍後再試', 'error');
                     }
                 });
         } else {
@@ -2115,6 +2144,9 @@ function addMarkAllAsReadButton(container) {
 function markNotificationAsRead(notificationId, element) {
     if (!notificationId) return;
     
+    // 確保 notificationId 是字串類型
+    notificationId = String(notificationId);
+    
     // 立即更新UI（樂觀更新）
     if (element && element.classList.contains('unread')) {
         element.classList.remove('unread');
@@ -2127,6 +2159,9 @@ function markNotificationAsRead(notificationId, element) {
                 if (!success && element) {
                     // 如果標記失敗，回復UI狀態
                     element.classList.add('unread');
+                } else if (success) {
+                    // 標記成功後，觸發跨頁面同步
+                    localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
                 }
             });
     } else {
@@ -2142,6 +2177,9 @@ function markNotificationAsRead(notificationId, element) {
                 readStatus.readNotifications.push(notificationId);
                 localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
                 console.log(`手動標記通知 ${notificationId} 為已讀`);
+                
+                // 觸發跨頁面同步
+                localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
             }
         } catch (error) {
             console.error('手動更新通知狀態失敗:', error);

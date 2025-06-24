@@ -1513,7 +1513,7 @@
             } catch (error) {
                 console.error('服務初始化失敗:', error);
             }
-        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
 
 
         function setupCardClickEvents() {
@@ -1584,6 +1584,48 @@
                 console.log('hasUnreadNotifications:', localStorage.getItem('hasUnreadNotifications'));
                 console.log('NotificationService initialized:', window.NotificationService?.initialized);
             };
+            
+            // 開發測試功能：手動標記通知ID 3為已讀
+            window.markNotification3AsRead = function() {
+                if (window.NotificationService) {
+                    window.NotificationService.markAsRead('3').then(success => {
+                        if (success) {
+                            console.log('✅ 通知ID 3已標記為已讀');
+                        } else {
+                            console.log('❌ 標記失敗');
+                        }
+                    });
+                } else {
+                    console.log('❌ NotificationService 未載入');
+                }
+            };
+            
+            // 監聽頁面獲得焦點事件（當用戶切換回此頁面時）
+            window.addEventListener('focus', function() {
+                console.log('頁面獲得焦點，檢查通知狀態...');
+                if (window.NotificationService && window.NotificationService.initialized) {
+                    window.NotificationService.checkUnreadNotifications();
+                }
+            });
+            
+            // 監聽 storage 事件（來自其他頁面的變更）
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'notificationReadStatus' || e.key === 'notificationReadStatusTimestamp') {
+                    console.log('檢測到通知狀態變更，更新顯示...', {
+                        key: e.key,
+                        newValue: e.newValue,
+                        oldValue: e.oldValue
+                    });
+                    if (window.NotificationService && window.NotificationService.initialized) {
+                        // 延遲一點確保其他頁面的更新已完成
+                        setTimeout(() => {
+                            window.NotificationService.checkUnreadNotifications();
+                        }, 100);
+                    } else {
+                        console.warn('NotificationService 未初始化，無法更新通知狀態');
+                    }
+                }
+            });
         });
     </script>
 
