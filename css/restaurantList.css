@@ -442,8 +442,8 @@ main {
 /* 頁碼按鈕 */
 .page-number {
   background: transparent;
-  color: #333;
-  border: none;
+  color: #ff6b1a;
+  border: 1px solid #ff6b1a;
   padding: 12px 16px;
   font-size: 16px;
   font-weight: 500;
@@ -456,32 +456,26 @@ main {
 }
 
 .page-number:hover {
-  background: #f5f5f5;
+  background: rgba(255, 107, 26, 0.1);
+  color: #ff6b1a;
 }
 
 .page-number.active {
-  color: #333;
+  color: white;
   font-weight: 600;
-  background: transparent;
+  background: #ff6b1a;
+  border-color: #ff6b1a;
 }
 
 .page-number.active::after {
-  content: '';
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 2px;
-  background: #333;
-  border-radius: 1px;
+  display: none;
 }
 
 /* 箭頭按鈕 */
 .page-arrow {
   background: transparent;
-  color: #666;
-  border: none;
+  color: #ff6b1a;
+  border: 1px solid #ff6b1a;
   padding: 12px 16px;
   font-size: 16px;
   font-weight: 500;
@@ -493,8 +487,65 @@ main {
 }
 
 .page-arrow:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: #ff6b1a;
+  color: white;
+  border-color: #ff6b1a;
+}
+
+/* 特定箭頭按鈕樣式 */
+.first-arrow,
+.last-arrow {
+  color: #ff6b1a;
+  font-weight: 600;
+  border: 2px solid #ff6b1a;
+}
+
+.first-arrow:hover,
+.last-arrow:hover {
+  background: #ff6b1a;
+  color: white;
+  border-color: #ff6b1a;
+}
+
+.prev-arrow,
+.next-arrow {
+  color: #ff6b1a;
+  border: 1px solid #ff6b1a;
+}
+
+.prev-arrow:hover,
+.next-arrow:hover {
+  background: #ff6b1a;
+  color: white;
+  border-color: #ff6b1a;
+}
+
+/* page-btn 類的統一樣式 */
+.page-btn {
+  background: transparent;
+  color: #ff6b1a;
+  border: 1px solid #ff6b1a;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  min-width: 44px;
+  text-align: center;
+  position: relative;
+}
+
+.page-btn:hover {
+  background: rgba(255, 107, 26, 0.1);
+  color: #ff6b1a;
+}
+
+.page-btn.active {
+  color: white;
+  font-weight: 600;
+  background: #ff6b1a;
+  border-color: #ff6b1a;
 }
 
 /* 響應式設計 */
