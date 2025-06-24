@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 
@@ -14,14 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.ReviewDraftDto;
 import com.example.demo.dto.ReviewRequestDto;
 import com.example.demo.dto.ReviewStatsDetailDto;
 import com.example.demo.dto.ReviewStatsDto;
 import com.example.demo.dto.UserReviewStatsDto;
-import com.example.demo.entity.ReviewPhoto;
 import com.example.demo.service.ReviewService;
 
 import lombok.RequiredArgsConstructor;
