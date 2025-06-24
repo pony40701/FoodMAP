@@ -278,8 +278,8 @@
 
 /* 登出選項樣式 */
 .logout-item {
-    background: #ff6b1a !important;
-    color: #fff !important;
+    background: transparent !important;
+    color: #ff6b1a !important;
     border-radius: 6px;
     padding: 8px 20px;
     font-weight: 600;
@@ -290,9 +290,8 @@
 }
 
 .logout-item:hover {
-    background: #e55a15 !important;
-    color: #fff !important;
-
+    background: #ffe0b2 !important;
+    color: #ff6b1a !important;
 }
 
 .hamburger {
