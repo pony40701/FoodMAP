@@ -31,7 +31,7 @@ const RestaurantModal = (function() {
                 address: document.getElementById('modal-address-new'),
                 status: document.getElementById('modal-status-new'),
                 statusText: document.querySelector('#modal-status-new .modal-status-text-new'),
-                todayHours: document.getElementById('modal-today-hours-new'),
+                statusTime: document.getElementById('modal-status-time-new'),
                 viewHoursBtn: document.getElementById('view-full-hours-btn-new'),
                 tags: document.getElementById('modal-tags-new'),
                 favoriteBtn: document.getElementById('modal-favorite-btn-new'),
@@ -45,7 +45,7 @@ const RestaurantModal = (function() {
             };
             
             // 檢查關鍵元素是否存在，如果不存在則顯示警告
-            const requiredElements = ['modal', 'name', 'image', 'stars', 'rating', 'ratingCount', 'address', 'status', 'statusText', 'todayHours', 'viewHoursBtn'];
+            const requiredElements = ['modal', 'name', 'image', 'stars', 'rating', 'ratingCount', 'address', 'status', 'statusText', 'statusTime', 'viewHoursBtn'];
             const missingElements = requiredElements.filter(key => !elements[key]);
             
             if (missingElements.length > 0) {
@@ -249,12 +249,12 @@ const RestaurantModal = (function() {
             }
             
             // 顯示今日營業時間
-            if (elements.todayHours) {
+            if (elements.statusTime) {
                 let finalDisplayText = todayHoursText === '未提供營業時間' ? todayHoursText : `${todayName} ${todayHoursText}`;
-                elements.todayHours.textContent = finalDisplayText;
-                elements.todayHours.style.display = 'block';
-                elements.todayHours.style.visibility = 'visible';
-                elements.todayHours.style.opacity = '1';
+                elements.statusTime.textContent = finalDisplayText;
+                elements.statusTime.style.display = 'inline';
+                elements.statusTime.style.visibility = 'visible';
+                elements.statusTime.style.opacity = '1';
             }
             
             // 顯示完整營業時間按鈕
@@ -337,36 +337,6 @@ const RestaurantModal = (function() {
                     }
                 }
             } catch (error) {
-            }
-
-            // 在 showRestaurantDetail 內，主畫面今日營業狀態與營業時間美化排版：
-            if (elements.status && elements.todayHours) {
-                // 產生狀態圓點
-                const statusDot = `<span class="modal-status-dot ${isOpen ? 'open' : 'closed'}"></span>`;
-                // 狀態文字
-                const statusText = `<span class="modal-status-text">${isOpen ? '營業中' : '休息中'}</span>`;
-                // 今日營業時間
-                const todayHoursHtml = `<span class="modal-today-hours">${todayHoursText === '未提供營業時間' ? todayHoursText : todayName + ' ' + todayHoursText}</span>`;
-                // 組合
-                const statusRow = `<div class="modal-status-row">${statusDot}${statusText}${todayHoursHtml}</div>`;
-                // 插入到狀態區塊
-                elements.status.innerHTML = statusRow;
-                // 隱藏原本 todayHours
-                elements.todayHours.style.display = 'none';
-                // 自動插入 CSS
-                if (!document.getElementById('modal-status-row-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'modal-status-row-style';
-                    style.textContent = `
-                    .modal-status-row { display: flex; align-items: center; justify-content: space-between; background: #f8f8f8; border-radius: 6px; padding: 8px 14px; margin-bottom: 10px; font-size: 16px; }
-                    .modal-status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
-                    .modal-status-dot.open { background: #4caf50; }
-                    .modal-status-dot.closed { background: #f44336; }
-                    .modal-status-text { font-weight: bold; margin-right: 8px; }
-                    .modal-today-hours { color: #888; font-size: 15px; font-weight: normal; margin-left: auto; }
-                    `;
-                    document.head.appendChild(style);
-                }
             }
         } catch (error) {
             alert('加載餐廳詳情時出現錯誤，請重新整理頁面後再試。');
