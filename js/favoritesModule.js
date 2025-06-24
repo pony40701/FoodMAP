@@ -192,13 +192,7 @@ class FavoritesModule {
                 });
 
                 const infoWindow = new google.maps.InfoWindow({
-                    content: `
-                        <div class="map-info-window">
-                            <h3>${store.name}</h3>
-                            <p>${store.vicinity || '地址未知'}</p>
-                            <p>評分：${store.rating !== undefined ? store.rating + ' ★' : '暫無評分'}</p>
-                        </div>
-                    `
+                    content: `<div class="map-info-window"><h3>${store.name}</h3><p>評分：${store.rating !== undefined ? store.rating + ' ★' : '暫無評分'}</p></div>`,
                 });
 
                 marker.addListener('click', () => {

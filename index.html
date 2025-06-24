@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="css/food-types.css">
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="css/favoritesStyle.css">
-    <link rel="stylesheet" href="css/restaurant-card-v2.css">
     <link rel="stylesheet" href="css/restaurant-card-v3.css">
     <link rel="stylesheet" href="css/business-hours.css">
     <link rel="stylesheet" href="css/modal-fix.css">
@@ -1384,7 +1383,6 @@
     </div>
     </div>
     </div>
-    </div>
 
     </div>
     </div>
@@ -1427,14 +1425,14 @@
                             <span id="modal-address-new">餐廳地址</span>
                         </div>
                         <div class="modal-hours-new">
-                            <div class="modal-status-new" id="modal-status-new">
+                            <div class="modal-status-new" id="modal-status-new" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <i class="fas fa-clock"></i>
                                 <span class="modal-status-text-new">營業中</span>
+                                <span class="modal-status-time-new" id="modal-status-time-new">週一 09:00 - 22:00</span>
                             </div>
-                            <div class="modal-today-hours-new" id="modal-today-hours-new">週一 09:00 - 22:00</div>
-                            <button class="view-full-hours-btn-new" id="view-full-hours-btn-new">
-                                查看完整營業時間
-                            </button>
+                            <div style="margin: 0 0 0 32px; padding: 0;">
+                                <button class="view-full-hours-btn-new" id="view-full-hours-btn-new" style="margin-bottom: 0;">查看完整營業時間</button>
+                            </div>
                         </div>
                         <div class="restaurant-tags-new" id="modal-tags-new">
                             <!-- 標籤將由 JavaScript 動態填充 -->
@@ -1549,7 +1547,7 @@
             } catch (error) {
                 console.error('服務初始化失敗:', error);
             }
-        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
 
 
         function setupCardClickEvents() {
@@ -1620,12 +1618,53 @@
                 console.log('hasUnreadNotifications:', localStorage.getItem('hasUnreadNotifications'));
                 console.log('NotificationService initialized:', window.NotificationService?.initialized);
             };
+            
+            // 開發測試功能：手動標記通知ID 3為已讀
+            window.markNotification3AsRead = function() {
+                if (window.NotificationService) {
+                    window.NotificationService.markAsRead('3').then(success => {
+                        if (success) {
+                            console.log('✅ 通知ID 3已標記為已讀');
+                        } else {
+                            console.log('❌ 標記失敗');
+                        }
+                    });
+                } else {
+                    console.log('❌ NotificationService 未載入');
+                }
+            };
+            
+            // 監聽頁面獲得焦點事件（當用戶切換回此頁面時）
+            window.addEventListener('focus', function() {
+                console.log('頁面獲得焦點，檢查通知狀態...');
+                if (window.NotificationService && window.NotificationService.initialized) {
+                    window.NotificationService.checkUnreadNotifications();
+                }
+            });
+            
+            // 監聽 storage 事件（來自其他頁面的變更）
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'notificationReadStatus' || e.key === 'notificationReadStatusTimestamp') {
+                    console.log('檢測到通知狀態變更，更新顯示...', {
+                        key: e.key,
+                        newValue: e.newValue,
+                        oldValue: e.oldValue
+                    });
+                    if (window.NotificationService && window.NotificationService.initialized) {
+                        // 延遲一點確保其他頁面的更新已完成
+                        setTimeout(() => {
+                            window.NotificationService.checkUnreadNotifications();
+                        }, 100);
+                    } else {
+                        console.warn('NotificationService 未初始化，無法更新通知狀態');
+                    }
+                }
+            });
         });
     </script>
 
     <script src="js/config.js"></script>
     <script src="js/BusinessHours.js"></script>
-    <script src="js/searchService.js"></script>
     <script src="js/infiniteScroll.js"></script>
     <script src="js/main.js"></script>
     <script src="js/mapInit.js"></script>

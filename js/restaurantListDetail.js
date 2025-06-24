@@ -93,15 +93,12 @@ class RestaurantDetail {
 
   async init() {
     await this.getRestaurantDataFromUrl();
-    console.log('上一頁傳來的餐廳資料:', this.restaurantData);
-    console.log('googleReviews:', this.restaurantData.googleReviews);
     this.updatePageInfo();
     new RestaurantCarousel(this.restaurantData);
 
     // Leaflet 地圖初始化，只顯示單一餐廳 marker
     const lat = this.restaurantData.latitude;
     const lng = this.restaurantData.longitude;
-    console.log('Detail page lat/lng:', lat, lng);
     if (lat && lng && window.L) {
       const map = L.map('map').setView([lat, lng], 16);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -183,13 +180,12 @@ class RestaurantDetail {
     if (returnData) {
       try {
         this.restaurantData = JSON.parse(returnData);
-        console.log('從 menuDetail.html 返回，恢復餐廳資料:', this.restaurantData);
         
         // 清除 sessionStorage 中的資料
         sessionStorage.removeItem('restaurantDetailReturnData');
         return;
       } catch (error) {
-        console.error('恢復從菜單頁面返回的資料失敗:', error);
+        // Silently handle error
       }
     }
     
@@ -198,13 +194,12 @@ class RestaurantDetail {
     if (backupData && document.referrer.includes('menuDetail.html')) {
       try {
         this.restaurantData = JSON.parse(backupData);
-        console.log('從備用數據恢復餐廳資料:', this.restaurantData);
         
         // 清除備用數據
         sessionStorage.removeItem('menuDetailBackupData');
         return;
       } catch (error) {
-        console.error('恢復備用數據失敗:', error);
+        // Silently handle error
       }
     }
     
@@ -214,13 +209,11 @@ class RestaurantDetail {
       try {
         const pageState = JSON.parse(savedPageState);
         this.restaurantData = pageState.restaurantData;
-        console.log('從 sessionStorage 恢復頁面狀態餐廳資料:', this.restaurantData);
         
         // 清除 sessionStorage 中的狀態
         sessionStorage.removeItem('restaurantDetailPageState');
         return;
       } catch (error) {
-        console.error('恢復頁面狀態失敗:', error);
         // 如果恢復失敗，繼續執行正常的資料載入流程
       }
     }
@@ -233,18 +226,14 @@ class RestaurantDetail {
     // 如果有餐廳 ID，從 API 獲取資料
     if (restaurantId) {
       try {
-        console.log('從 API 載入餐廳資料，ID:', restaurantId);
         const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
         if (response.ok) {
           const apiData = await response.json();
           this.restaurantData = this.transformApiData(apiData);
-          console.log('從 API 成功載入餐廳資料:', this.restaurantData);
           return;
-        } else {
-          console.error('API 請求失敗:', response.status);
         }
       } catch (error) {
-        console.error('從 API 載入餐廳資料失敗:', error);
+        // Silently handle API errors
       }
     }
     
@@ -252,7 +241,6 @@ class RestaurantDetail {
     if (restaurantData) {
       try {
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
-        console.log('從 URL 成功讀取餐廳資料:', this.restaurantData);
         
         // 確保 ratingCount 存在
         if (!this.restaurantData.ratingCount) {
@@ -274,7 +262,7 @@ class RestaurantDetail {
         
         return;
       } catch (error) {
-        console.error('解析 URL 餐廳資料失敗:', error);
+        // Silently handle URL parsing errors
       }
     }
     
@@ -283,8 +271,6 @@ class RestaurantDetail {
     if (storedRestaurantData) {
       try {
         this.restaurantData = JSON.parse(storedRestaurantData);
-        console.log('從 localStorage 成功讀取餐廳資料:', this.restaurantData);
-        console.log('localStorage 中的 googleReviews:', this.restaurantData.googleReviews);
         
         // 確保 ratingCount 存在
         if (!this.restaurantData.ratingCount) {
@@ -306,13 +292,11 @@ class RestaurantDetail {
         
         return;
       } catch (error) {
-        console.error('解析 localStorage 餐廳資料失敗:', error);
         localStorage.removeItem('selectedRestaurant');
       }
     }
     
     // 如果沒有任何資料，使用預設資料
-    console.log('沒有找到餐廳資料，使用預設資料');
     this.restaurantData = this.getDefaultRestaurantData();
   }
 
@@ -1368,7 +1352,7 @@ function setupMenuScroll(containerSelector) {
 }
 
 // 處理寫評論按鈕點擊
-function handleWriteReview() {
+async function handleWriteReview() {
     // 檢查是否已登入
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     
@@ -1427,17 +1411,59 @@ function handleWriteReview() {
         console.log('餐廳地址:', restaurantAddress);
         console.log('最終獲取到的 placeId:', placeId);
         
-        // 構建帶參數的 URL
-        const params = new URLSearchParams();
-        if (placeId) params.append('placeId', placeId);
-        if (restaurantName) params.append('name', restaurantName);
-        if (restaurantAddress) params.append('address', restaurantAddress);
-        
-        const finalUrl = `blogPost.html?${params.toString()}`;
-        console.log('最終 URL:', finalUrl);
-        
-        // 跳轉到心得頁面並帶上參數
-        window.location.href = finalUrl;
+        // 先調用 API 儲存餐廳資料到資料庫
+        try {
+            const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+            const response = await fetch(`${baseUrl}/restaurant-save/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: restaurantName,
+                    address: restaurantAddress,
+                    placeId: placeId
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('餐廳儲存成功:', result);
+                
+                // 構建帶參數的 URL，包含 restaurantId
+                const params = new URLSearchParams();
+                if (result.restaurantId) params.append('restaurantId', result.restaurantId);
+                if (placeId) params.append('placeId', placeId);
+                if (restaurantName) params.append('name', restaurantName);
+                if (restaurantAddress) params.append('address', restaurantAddress);
+                
+                const finalUrl = `blogPost.html?${params.toString()}`;
+                console.log('最終 URL:', finalUrl);
+                
+                // 跳轉到心得頁面並帶上參數
+                window.location.href = finalUrl;
+            } else {
+                console.error('儲存餐廳失敗:', response.status, response.statusText);
+                // 即使儲存失敗，也繼續跳轉到心得頁面
+                const params = new URLSearchParams();
+                if (placeId) params.append('placeId', placeId);
+                if (restaurantName) params.append('name', restaurantName);
+                if (restaurantAddress) params.append('address', restaurantAddress);
+                
+                const finalUrl = `blogPost.html?${params.toString()}`;
+                window.location.href = finalUrl;
+            }
+        } catch (error) {
+            console.error('調用餐廳儲存 API 失敗:', error);
+            // 即使 API 調用失敗，也繼續跳轉到心得頁面
+            const params = new URLSearchParams();
+            if (placeId) params.append('placeId', placeId);
+            if (restaurantName) params.append('name', restaurantName);
+            if (restaurantAddress) params.append('address', restaurantAddress);
+            
+            const finalUrl = `blogPost.html?${params.toString()}`;
+            window.location.href = finalUrl;
+        }
     }
 }
 

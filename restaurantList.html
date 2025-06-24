@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="css/restaurantList.css" />
   </head>
   <body>
-    <!-- 導覽列 (與 experienceList.html 相同) -->
     <div class="navbar">
         <div class="navbar-left">
             <a href="index.html" class="logo-text">食力派ChowCrew</a>
@@ -125,9 +124,7 @@
         </button>
     </div>
 
-    <!-- 主要內容區域 -->
     <main>
-      <!-- 篩選條件列 -->
       <div class="filter-bar">
         <div class="sort-options">
           <button class="sort-btn" data-sort="rating">評分最高</button>
@@ -136,8 +133,6 @@
           <button class="sort-btn" data-sort="distance">鄰近餐廳</button>
         </div>
       </div>
-      <!-- 假資料商家卡片區塊（Yelp Sponsored Results 風格） -->
-      <!-- 由 JS 動態渲染多筆卡片，分頁按鈕區塊如下 -->
       <div class="list-layout">
         <section class="restaurant-list-section">
           <div id="restaurant-cards"></div>
@@ -149,17 +144,14 @@
       </div>
     </main>
 
-    <!-- 彈出視窗 -->
     <div id="restaurant-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
       <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
         <button class="modal-close" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
         <div id="modal-content-container">
-          <!-- 內容將由 JavaScript 動態填充 -->
         </div>
       </div>
     </div>
 
-    <!-- 頁尾 -->
     <footer class="footer">
       <div class="footer-container">
         <div class="footer-section">
@@ -198,10 +190,8 @@
       </div>
     </footer>
     
-    <!-- 登入彈跳視窗 -->
     <div id="loginModal" class="modal">
         <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
-            <!-- 減少結構層級，標題和表單組合在一起 -->
             <div style="position: relative; text-align: center; padding: 15px 15px 0;">
                 <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #ff6b1a;">登入</h2>
                 <span class="close"
@@ -249,7 +239,6 @@
         </div>
     </div>
 
-    <!-- 商家登入彈出視窗 -->
     <div id="restaurantLoginModal" class="modal">
         <div class="modal-content" style="padding: 0; max-width: 340px; margin: 15% auto;">
             <!-- 商家登入標題區域 -->
@@ -292,33 +281,25 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
-    <!-- 先引入 config.js 設置 API_BASE_URL -->
     <script src="js/config.js"></script>
     <script src="js/restaurant-modal.js"></script>
     <script src="JS/restaurantList.js"></script>
     <script src="js/login.js"></script>
     <script>
-      // 處理寫食記按鈕點擊
       function handleWriteReview() {
-        // 檢查是否已登入
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         
         if (!isLoggedIn) {
-          // 顯示請先登入的 alert 訊息
           alert('請先登入會員');
-          // 顯示登入彈跳視窗
           document.getElementById('loginModal').style.display = 'block';
-          // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
           window.onLoginSuccess = function() {
             window.location.href = 'blogPost.html';
           };
         } else {
-          // 已登入，直接跳轉到寫食記頁面
           window.location.href = 'blogPost.html';
         }
       }
 
-      // 商家登入彈窗相關函數
       function openRestaurantLoginModal() {
         document.getElementById('restaurantLoginModal').style.display = 'block';
       }
@@ -327,9 +308,7 @@
         document.getElementById('restaurantLoginModal').style.display = 'none';
       }
 
-      // 初始化登入模態框
       document.addEventListener('DOMContentLoaded', function() {
-        // 檢查是否需要自動開啟商家登入彈窗
         if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
           sessionStorage.removeItem('openRestaurantLogin');
           openRestaurantLoginModal();
@@ -337,7 +316,6 @@
 
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
-          // 關閉按鈕事件
           const closeBtn = loginModal.querySelector('.close');
           if (closeBtn) {
             closeBtn.onclick = function() {
@@ -346,7 +324,6 @@
           }
         }
 
-        // 初始化商家登入模態框
         const restaurantLoginModal = document.getElementById('restaurantLoginModal');
         if (restaurantLoginModal) {
           const closeBtn = restaurantLoginModal.querySelector('.close');
@@ -354,7 +331,6 @@
             closeBtn.onclick = closeRestaurantLoginModal;
           }
           
-          // 表單提交事件
           const restaurantLoginForm = document.getElementById('restaurantLoginForm');
           if (restaurantLoginForm) {
             restaurantLoginForm.addEventListener('submit', function(e) {
@@ -364,19 +340,13 @@
               const password = document.getElementById('restaurant-password').value;
               const remember = document.getElementById('restaurant-remember').checked;
               
-              // 這裡可以添加實際的登入驗證邏輯
-              ('商家登入:', { email, password, remember });
-              
-              // 模擬登入成功，跳轉到商家後台
               alert('登入成功！');
               closeRestaurantLoginModal();
-              // 跳轉到商家後台主頁
               window.location.href = 'restaurant.html';
             });
           }
         }
 
-        // 點擊模態框外部關閉
         window.onclick = function(event) {
           if (event.target === loginModal) {
             loginModal.style.display = 'none';
@@ -387,7 +357,7 @@
         };
       });
 
-      console.log('地圖初始化', lat, lng, document.querySelectorAll('#map').length);
+
 
       const hamburger = document.querySelector('.hamburger');
       const navRight = document.querySelector('.navbar-right');

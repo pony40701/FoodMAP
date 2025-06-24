@@ -14,10 +14,6 @@ import lombok.Data;
 public class LLeaderGoogleRestaurantPhoto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "photo_id")
-    private Long photoId;
-
     @Column(name = "place_id")
     private String placeId;
 

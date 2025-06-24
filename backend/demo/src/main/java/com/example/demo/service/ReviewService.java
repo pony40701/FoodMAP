@@ -154,16 +154,7 @@ public class ReviewService {
         log.info("儲存評論評分：reviewId={}", review.getId());
     }
 
-    private void saveReviewPhotos(List<String> photoUrls, Review review) {
-        // 處理舊的URL格式（向後兼容）
-        for (String url : photoUrls) {
-            ReviewPhoto photo = new ReviewPhoto();
-            photo.setReview(review);
-            photo.setImageUrl(url);
-            reviewPhotoRepository.save(photo);
-        }
-        log.info("儲存評論照片：reviewId={}, 照片數量={}", review.getId(), photoUrls.size());
-    }
+    
 
     private void saveReviewPhotoData(List<ReviewRequestDto.PhotoData> photoDataList, Review review) {
         // 處理新的圖片數據
@@ -794,8 +785,7 @@ public class ReviewService {
         log.info("建立新草稿：publishedId={}, newDraftId={}", publishedId, newDraft.getId());
 
         // 3. 複製評分資料
-        ReviewRating publishedRating = reviewRatingRepository.findById(publishedId.intValue())
-                .orElseThrow(() -> new RuntimeException("評分資料不存在"));
+        
         ReviewRating newRating = new ReviewRating();
         newRating.setReview(newDraft);
         newRating.setEnvironmentScore(dto.getRatings().getEnvironment_score());

@@ -242,7 +242,7 @@ async function loadFavorites(type = 'stores') {
                                 store.restaurant.name = detailData.name || store.restaurant.name;
                                 store.restaurant.rating = detailData.rating || store.restaurant.rating || 0;
                                 store.restaurant.user_ratings_total = detailData.user_ratings_total || store.restaurant.user_ratings_total || 0;
-                                store.restaurant.formatted_address = detailData.formatted_address || detailData.vicinity || store.restaurant.formatted_address || '地址不詳';
+                                store.restaurant.formatted_address = detailData.formatted_address || store.restaurant.formatted_address || '地址不詳';
                                 if (detailData.photos && detailData.photos.length > 0) {
                                     store.restaurant.photos = detailData.photos;
                                 }
@@ -251,7 +251,7 @@ async function loadFavorites(type = 'stores') {
                                 store.name = detailData.name || store.name;
                                 store.rating = detailData.rating || store.rating || 0;
                                 store.user_ratings_total = detailData.user_ratings_total || store.user_ratings_total || 0;
-                                store.formatted_address = detailData.formatted_address || detailData.vicinity || store.formatted_address || '地址不詳';
+                                store.formatted_address = detailData.formatted_address || store.formatted_address || '地址不詳';
                                 if (detailData.photos && detailData.photos.length > 0) {
                                     store.photos = detailData.photos;
                                 }
@@ -379,7 +379,7 @@ async function renderFavoriteStores(stores) {
             const name = restaurant.name || '未知餐廳';
             const rating = parseFloat(restaurant.rating) || parseFloat(restaurant.average_rating) || 0;
             const reviewCount = restaurant.user_ratings_total || restaurant.review_count || restaurant.reviewCount || 0;
-            const address = restaurant.formatted_address || restaurant.vicinity || restaurant.address || '地址不詳';
+            const address = restaurant.formatted_address || restaurant.address || '地址不詳';
             
             // 使用統一的圖片URL構建函數
             const imageUrl = buildRestaurantPhotoUrl(placeId);
@@ -976,17 +976,12 @@ window.showConfirmationModal = showConfirmationModal;
 // 查看餐廳詳情
 async function viewRestaurant(restaurantId) {
     try {
-        // 優先從 API 獲取最新的餐廳詳情
+        // 優先從 API 獲取最新的餐廳詳情（統一與 index.html 一致）
         const apiBaseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
-        // 修改API端點為google-restaurants，以確保獲取完整營業時間數據
         const apiUrl = `${apiBaseUrl}/google-restaurants/${restaurantId}`;
-        
         const response = await fetch(apiUrl);
-        
         if (response.ok) {
-            // 如果 API 請求成功，使用 API 返回的數據
             const restaurantData = await response.json();
-            
             // 確保有位置數據
             if (!restaurantData.geometry && (restaurantData.lat || restaurantData.latitude)) {
                 restaurantData.geometry = {
@@ -996,189 +991,33 @@ async function viewRestaurant(restaurantId) {
                     }
                 };
             }
-            
             // 處理圖片資訊
-            // 構建餐廳圖片URL，與商家卡片一致
             const photoUrl = buildRestaurantPhotoUrl(restaurantId);
-            
-            // 設置圖片屬性，讓restaurant-modal.js直接使用
-            if (!restaurantData.photo) {
-                restaurantData.photo = photoUrl;
-            }
-            
-            if (!restaurantData.photos) {
-                restaurantData.photos = [photoUrl];
-            }
-            
-            // 處理營業時間數據 - 從json_raw解析更詳細的資訊
+            if (!restaurantData.photo) restaurantData.photo = photoUrl;
+            if (!restaurantData.photos) restaurantData.photos = [photoUrl];
+            // 從 json_raw 解析營業時間
             if (restaurantData.json_raw) {
                 try {
                     const jsonData = JSON.parse(restaurantData.json_raw);
-                    
-                    // 從json_raw提取營業時間資訊
-                    if (jsonData.opening_hours) {
-                        restaurantData.opening_hours = jsonData.opening_hours;
-                    }
-                    
-                    // 更新評分、評論數
-                    if (jsonData.rating) {
-                        restaurantData.rating = jsonData.rating;
-                        restaurantData.average_rating = jsonData.rating;
-                    }
+                    if (jsonData.opening_hours) restaurantData.opening_hours = jsonData.opening_hours;
+                    if (jsonData.rating) restaurantData.rating = jsonData.rating;
                     if (jsonData.user_ratings_total) {
                         restaurantData.user_ratings_total = jsonData.user_ratings_total;
                         restaurantData.review_count = jsonData.user_ratings_total;
                         restaurantData.reviewCount = jsonData.user_ratings_total;
                     }
-                } catch (e) {
-                    console.warn('解析json_raw失敗:', e);
-                }
+                } catch (e) {}
             }
-            
-            // 如果仍然沒有營業時間數據，嘗試處理可能存在的格式
-            if (restaurantData.opening_hours) {
-                // 確保 opening_hours 是對象，不是字符串
-                if (typeof restaurantData.opening_hours === 'string') {
-                    try {
-                        restaurantData.opening_hours = JSON.parse(restaurantData.opening_hours);
-                    } catch (e) {
-                        console.warn('解析營業時間字符串失敗:', e);
-                    }
-                }
-                
-                // 如果沒有 weekday_text 但有 periods，嘗試構建 weekday_text
-                if (!restaurantData.opening_hours.weekday_text && restaurantData.opening_hours.periods) {
-                    try {
-                        const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                        const weekdayText = [];
-                        
-                        for (let i = 0; i < 7; i++) {
-                            // 將循環索引轉換為 Google API 的星期幾表示 (0=週日, 1=週一, ..., 6=週六)
-                            const googleDay = i === 6 ? 0 : i + 1;
-                            const period = restaurantData.opening_hours.periods.find(p => p.open.day === googleDay);
-                            
-                            if (period) {
-                                // 確保時間格式正確，並移除可能的秒數
-                                const openHours = period.open.hours.toString().padStart(2, '0');
-                                const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
-                                const closeHours = period.close.hours.toString().padStart(2, '0');
-                                const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
-                                
-                                const openTime = `${openHours}:${openMinutes}`;
-                                const closeTime = `${closeHours}:${closeMinutes}`;
-                                weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
-                            } else {
-                                weekdayText.push(`${dayNames[i]}: 休息`);
-                            }
-                        }
-                        
-                        restaurantData.opening_hours.weekday_text = weekdayText;
-                    } catch (e) {
-                        console.warn('構建營業時間資料失敗:', e);
-                    }
-                }
-            }
-            
             // 顯示餐廳詳情
             if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
                 window.RestaurantModal.showRestaurantDetail(restaurantData);
             } else {
-                console.error('RestaurantModal 未初始化');
                 showToast('無法顯示餐廳詳情，請重新整理頁面');
             }
         } else {
-            // 如果 API 請求失敗，嘗試使用本地數據
-            
-            // 從收藏系統中獲取餐廳數據
-            if (window.favoriteSystem && typeof window.favoriteSystem.getRestaurantById === 'function') {
-                const localRestaurant = await window.favoriteSystem.getRestaurantById(restaurantId);
-                
-                if (localRestaurant) {
-                    // 確保有位置數據
-                    if (!localRestaurant.geometry && (localRestaurant.lat || localRestaurant.latitude)) {
-                        localRestaurant.geometry = {
-                            location: {
-                                lat: localRestaurant.lat || localRestaurant.latitude,
-                                lng: localRestaurant.lng || localRestaurant.longitude
-                            }
-                        };
-                    }
-                    
-                    // 處理圖片資訊
-                    // 構建餐廳圖片URL，與商家卡片一致
-                    const photoUrl = buildRestaurantPhotoUrl(restaurantId);
-                    
-                    // 設置圖片屬性，讓restaurant-modal.js直接使用
-                    if (!localRestaurant.photo) {
-                        localRestaurant.photo = photoUrl;
-                    }
-                    
-                    if (!localRestaurant.photos) {
-                        localRestaurant.photos = [photoUrl];
-                    }
-                    
-                    // 處理營業時間數據
-                    if (localRestaurant.opening_hours) {
-                        // 確保 opening_hours 是對象，不是字符串
-                        if (typeof localRestaurant.opening_hours === 'string') {
-                            try {
-                                localRestaurant.opening_hours = JSON.parse(localRestaurant.opening_hours);
-                            } catch (e) {
-                                console.warn('解析營業時間字符串失敗:', e);
-                            }
-                        }
-                        
-                        // 如果沒有 weekday_text 但有 periods，嘗試構建 weekday_text
-                        if (!localRestaurant.opening_hours.weekday_text && localRestaurant.opening_hours.periods) {
-                            try {
-                                const dayNames = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-                                const weekdayText = [];
-                                
-                                for (let i = 0; i < 7; i++) {
-                                    // 將循環索引轉換為 Google API 的星期幾表示 (0=週日, 1=週一, ..., 6=週六)
-                                    const googleDay = i === 6 ? 0 : i + 1;
-                                    const period = localRestaurant.opening_hours.periods.find(p => p.open.day === googleDay);
-                                    
-                                    if (period) {
-                                        // 確保時間格式正確，並移除可能的秒數
-                                        const openHours = period.open.hours.toString().padStart(2, '0');
-                                        const openMinutes = (period.open.minutes || '00').toString().padStart(2, '0');
-                                        const closeHours = period.close.hours.toString().padStart(2, '0');
-                                        const closeMinutes = (period.close.minutes || '00').toString().padStart(2, '0');
-                                        
-                                        const openTime = `${openHours}:${openMinutes}`;
-                                        const closeTime = `${closeHours}:${closeMinutes}`;
-                                        weekdayText.push(`${dayNames[i]}: ${openTime} - ${closeTime}`);
-                                    } else {
-                                        weekdayText.push(`${dayNames[i]}: 休息`);
-                                    }
-                                }
-                                
-                                localRestaurant.opening_hours.weekday_text = weekdayText;
-                            } catch (e) {
-                                console.warn('構建營業時間資料失敗:', e);
-                            }
-                        }
-                    }
-                    
-                    // 顯示餐廳詳情
-                    if (window.RestaurantModal && typeof window.RestaurantModal.showRestaurantDetail === 'function') {
-                        window.RestaurantModal.showRestaurantDetail(localRestaurant);
-                    } else {
-                        console.error('RestaurantModal 未初始化');
-                        showToast('無法顯示餐廳詳情，請重新整理頁面');
-                    }
-                } else {
-                    console.error('找不到餐廳數據:', restaurantId);
-                    showToast('找不到餐廳資訊');
-                }
-            } else {
-                console.error('favoriteSystem 未初始化');
-                showToast('系統錯誤，請重新整理頁面');
-            }
+            showToast('找不到餐廳資訊');
         }
     } catch (error) {
-        console.error('顯示餐廳詳情時出錯:', error);
         showToast('顯示餐廳詳情時出錯');
     }
 }
@@ -2109,15 +1948,13 @@ function loadNotifications(typeFilter = 'all') {
             : [];
         renderNotifications(filteredNotifications);
         
-        // 添加標記所有通知為已讀的按鈕
-        if (filteredNotifications.length > 0) {
-            addMarkAllAsReadButton(notificationsList);
-        }
-        
-        // 自動標記通知為已讀（如果存在通知服務模組）
-        if (window.NotificationService && typeof window.NotificationService.markAllAsRead === 'function') {
-            window.NotificationService.markAllAsRead();
-        }
+        // 檢查是否有未讀通知後再決定是否添加按鈕
+        setTimeout(() => {
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            if (unreadCount > 0) {
+                addMarkAllAsReadButton(notificationsList);
+            }
+        }, 100);
     })
     .catch(error => {
         console.error('獲取通知資料失敗:', error);
@@ -2141,9 +1978,40 @@ function loadNotifications(typeFilter = 'all') {
             return;
         }
 
+        // 獲取本地已讀狀態
+        let localReadStatus = {};
+        try {
+            const readStatusData = localStorage.getItem('notificationReadStatus');
+            localReadStatus = readStatusData ? JSON.parse(readStatusData) : {};
+        } catch (error) {
+            console.error('解析本地已讀狀態失敗:', error);
+        }
+
         // 生成通知列表 HTML
         const notificationsHtml = notifications.map(notification => {
-            const isUnread = !notification.read;
+            // 先檢查本地是否標記為全部已讀
+            let isUnread = !notification.read;
+            
+            // 如果本地標記了全部已讀，則覆蓋原始狀態
+            if (localReadStatus.allRead) {
+                const markTime = localReadStatus.lastMarkAllReadTime || 0;
+                const notificationTime = new Date(notification.time || notification.createdAt).getTime();
+                
+                // 如果通知是在標記全部已讀之前的，則設為已讀
+                if (notificationTime <= markTime) {
+                    isUnread = false;
+                }
+            }
+            
+            // 檢查單個通知的已讀狀態
+            if (localReadStatus.readNotifications && localReadStatus.readNotifications.length > 0) {
+                // 確保比較時類型一致
+                const notificationIdStr = String(notification.id);
+                if (localReadStatus.readNotifications.includes(notificationIdStr)) {
+                    isUnread = false;
+                }
+            }
+            
             const notificationType = notification.type || 'system';
             const notificationTime = formatTime(notification.time || notification.createdAt);
             
@@ -2165,17 +2033,7 @@ function loadNotifications(typeFilter = 'all') {
         }).join('');
         
         // 組合完整的 HTML
-        const helpText = `
-            <div class="notification-help">
-                <div class="notification-help-content">
-                    <i class="fas fa-info-circle"></i>
-                    <span><strong>提示：</strong>
-                    <span class="unread-example">未讀通知</span> 有橘色邊框和感嘆號圖標，
-                    <span class="read-example">已讀通知</span> 呈現灰色。點擊通知可標記為已讀。
-                    </span>
-                </div>
-            </div>
-        `;
+        const helpText = ``;  // 隱藏提示文字
         
         notificationsList.innerHTML = notificationsHtml + helpText;
         
@@ -2224,14 +2082,24 @@ function addMarkAllAsReadButton(container) {
             window.NotificationService.markAllAsRead()
                 .then(success => {
                     if (success) {
-                        // 重新載入通知列表以確保數據一致性
-                        setTimeout(() => {
-                            loadNotifications('all');
-                        }, 500);
+                        // 不要重新載入通知列表，避免循環調用
+                        // setTimeout(() => {
+                        //     loadNotifications('all');
+                        // }, 500);
                         showToast('已將所有通知標記為已讀');
+                        
+                        // 移除或隱藏按鈕
+                        buttonContainer.remove();
+                        
+                        // 強制更新首頁的通知狀態
+                        // 通過更新時間戳來觸發其他頁面的重新檢查
+                        localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
                     } else {
-                        // 如果失敗，重新載入以恢復正確狀態
-                        loadNotifications('all');
+                        // 如果失敗，恢復 UI 狀態
+                        unreadItems.forEach(item => {
+                            item.classList.add('unread');
+                        });
+                        showToast('標記失敗，請稍後再試', 'error');
                     }
                 });
         } else {
@@ -2277,6 +2145,9 @@ function addMarkAllAsReadButton(container) {
 function markNotificationAsRead(notificationId, element) {
     if (!notificationId) return;
     
+    // 確保 notificationId 是字串類型
+    notificationId = String(notificationId);
+    
     // 立即更新UI（樂觀更新）
     if (element && element.classList.contains('unread')) {
         element.classList.remove('unread');
@@ -2289,6 +2160,9 @@ function markNotificationAsRead(notificationId, element) {
                 if (!success && element) {
                     // 如果標記失敗，回復UI狀態
                     element.classList.add('unread');
+                } else if (success) {
+                    // 標記成功後，觸發跨頁面同步
+                    localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
                 }
             });
     } else {
@@ -2304,6 +2178,9 @@ function markNotificationAsRead(notificationId, element) {
                 readStatus.readNotifications.push(notificationId);
                 localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
                 console.log(`手動標記通知 ${notificationId} 為已讀`);
+                
+                // 觸發跨頁面同步
+                localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
             }
         } catch (error) {
             console.error('手動更新通知狀態失敗:', error);

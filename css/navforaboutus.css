@@ -194,7 +194,6 @@
     transition: all 0.3s ease;
     border-bottom: 1px solid rgba(255, 107, 26, 0.1);
     white-space: nowrap;
-    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
 }
 
 .dropdown-item:last-child {
@@ -221,13 +220,12 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    overflow: hidden;
+    overflow: visible !important;
     cursor: pointer;
     border: 2px solid #ff6b1a;
     transition: all 0.3s ease;
     position: relative;
     z-index: 1001;
-    box-sizing: border-box;
 }
 
 .user-avatar:hover {
@@ -238,7 +236,10 @@
 .avatar-img {
     width: 100%;
     height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 }
 
 /* 頭像下拉選單樣式 */
@@ -291,6 +292,7 @@
 .logout-item:hover {
     background: #e55a15 !important;
     color: #fff !important;
+
 }
 
 .hamburger {
@@ -301,6 +303,24 @@
     font-size: 24px;
     cursor: pointer;
     z-index: 1001;
+}
+
+/* 登出按鈕樣式 */
+.btn-logout {
+    background: #ff6b1a;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+}
+
+.btn-logout:hover {
+    background: #e55a15;
+    transform: translateY(-1px);
 }
 
 /* 響應式設計 */
@@ -440,6 +460,47 @@
         padding: 10px 15px;
     }
 
+    .btn-logout {
+        padding: 6px 15px;
+        font-size: 14px;
+    }
+}
+@media (max-width: 480px) {
+    .logo-text {
+        font-size: 28px;
+    }
+    .navbar-right {
+        gap: 8px;
+    }
+    .btn-login {
+        padding: 6px 12px;
+        font-size: 15px;
+    }
+}
+
+/* 登入和用戶區塊樣式 */
+.login-section,
+.user-section {
+    display: flex;
+    align-items: center;
+}
+
+/* 登出選項樣式 */
+.logout-item {
+    color: #ff4757 !important;
+}
+
+.logout-item:hover {
+    background: rgba(255, 71, 87, 0.1) !important;
+    color: #ff6b81 !important;
+}
+
+.logout-item i {
+    color: inherit;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
     .avatar-dropdown {
         position: fixed;
         top: auto;
