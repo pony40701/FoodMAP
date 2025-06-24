@@ -240,7 +240,7 @@ class MapInit {
                 // 關鍵字比對（保留原有）
                 const keywords = [...(this.cuisineKeywords[type] || []), ...(this.foodTypeKeywords[type] || [])];
                 if (keywords.length > 0) {
-                    const searchText = `${restaurant.name} ${restaurant.vicinity || ''} ${restaurant.formatted_address || ''}`.toLowerCase();
+                    const searchText = `${restaurant.name} ${restaurant.formatted_address || ''}`.toLowerCase();
                     return keywords.some(keyword => searchText.includes(keyword.toLowerCase()));
                 }
                 return false;
@@ -330,7 +330,7 @@ class MapInit {
                 </div>
                 <div class="restaurant-address-row">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>${restaurant.vicinity || restaurant.formatted_address || '地址不詳'}</span>
+                    <span>${restaurant.formatted_address || '地址不詳'}</span>
                 </div>
                 <div class="restaurant-tags-row">
                     ${this.generateTags(restaurant.cuisine_type || [])}
@@ -602,7 +602,7 @@ class MapInit {
         }
 
         // 設置地址
-        if (modalAddress) modalAddress.textContent = restaurant.vicinity || restaurant.formatted_address || '';
+        if (modalAddress) modalAddress.textContent = restaurant.formatted_address || '';
 
         // 設置營業狀態
         let isOpen = false;
@@ -675,7 +675,7 @@ class MapInit {
         // 設置導航按鈕
         if (modalDirectionBtn) {
             modalDirectionBtn.onclick = () => {
-                const address = restaurant.vicinity || restaurant.formatted_address || '';
+                const address = restaurant.formatted_address || '';
                 const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
                 window.open(url, '_blank');
             };

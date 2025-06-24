@@ -153,11 +153,6 @@ class SearchService {
                 return true;
             }
             
-            // 檢查 vicinity
-            if (restaurant.vicinity && restaurant.vicinity.toLowerCase().includes(lowerKeyword)) {
-                return true;
-            }
-            
             return false;
         });
     }
@@ -216,7 +211,7 @@ class SearchService {
             const formatted = {
                 id: restaurant.place_id || restaurant.id,
                 name: restaurant.name || '未知餐廳',
-                address: restaurant.address || restaurant.formatted_address || restaurant.vicinity || '',
+                address: restaurant.address || restaurant.formatted_address || '',
                 rating: restaurant.rating || restaurant.averageRating || 0,
                 user_ratings_total: restaurant.user_ratings_total || restaurant.reviewCount || 0,
                 photos: restaurant.photos || 'images/no-image.jpg',
@@ -334,7 +329,7 @@ class SearchService {
         return {
             id: place.place_id,
             name: place.name || '未知名称',
-            address: place.formatted_address || place.vicinity || '',
+            address: place.formatted_address || '',
             rating: place.rating || 0,
             user_ratings_total: place.user_ratings_total || 0,
             photos: photo,

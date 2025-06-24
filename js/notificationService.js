@@ -27,6 +27,14 @@ const NotificationService = {
         // 監聽跨頁面的通知狀態變化
         this.setupCrossPageSync();
         
+        // 監聽頁面可見性變化
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log('頁面變為可見，重新檢查通知狀態');
+                this.checkUnreadNotifications();
+            }
+        });
+        
         // 開發測試用：如果需要，可以強制顯示通知徽章進行測試
         if (localStorage.getItem('debugShowNotification') === 'true') {
             this.showTestNotification();
@@ -41,7 +49,7 @@ const NotificationService = {
     setupCrossPageSync: function() {
         // 監聽 storage 事件，當其他頁面更新通知狀態時同步
         window.addEventListener('storage', (e) => {
-            if (e.key === 'notificationReadStatus') {
+            if (e.key === 'notificationReadStatus' || e.key === 'notificationReadStatusTimestamp') {
                 console.log('檢測到其他頁面的通知狀態變化，重新檢查');
                 this.checkUnreadNotifications();
             }
@@ -82,6 +90,9 @@ const NotificationService = {
                 readStatus.lastMarkAllReadTime = Date.now();
                 console.log('本地標記所有通知為已讀');
             } else if (notificationId) {
+                // 確保 notificationId 是字串類型
+                notificationId = String(notificationId);
+                
                 // 標記特定通知為已讀
                 if (!readStatus.readNotifications) {
                     readStatus.readNotifications = [];
@@ -95,7 +106,7 @@ const NotificationService = {
             localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
             
             // 觸發跨頁面同步事件
-            localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
+            localStorage.setItem('notificationReadStatusTimestamp', Date.now().toString());
             
             return readStatus;
         } catch (error) {
@@ -120,9 +131,15 @@ const NotificationService = {
             
             // 檢查是否所有通知都已標記為已讀
             if (readStatus.allRead) {
-                console.log('所有通知已標記為已讀');
-                this.updateNotificationBadge(0);
-                return 0;
+                // 檢查標記時間，如果是最近標記的（24小時內），則保持已讀狀態
+                const markTime = readStatus.lastMarkAllReadTime || 0;
+                const hoursSinceMarked = (Date.now() - markTime) / (1000 * 60 * 60);
+                
+                if (hoursSinceMarked < 24) {
+                    console.log('所有通知在24小時內已標記為已讀，保持已讀狀態');
+                    this.updateNotificationBadge(0);
+                    return 0;
+                }
             }
             
             // 如果API可用，嘗試從API獲取真實數據
@@ -154,14 +171,39 @@ const NotificationService = {
             
             // API失敗時使用模擬數據，但考慮本地已讀狀態
             console.log('使用模擬通知數據');
-            let mockUnreadCount = 3; // 模擬3個未讀通知
+            // 根據模擬數據，只有ID 3 (system) 是未讀的，ID 2 (promotion) 已經是已讀狀態
+            let mockUnreadCount = 1; // 模擬1個未讀通知（只有system通知ID:3未讀）
+            
+            // 重要：檢查本地已讀狀態（使用上面已經獲取的 readStatus）
+            // const readStatus = this.getLocalNotificationReadStatus(); // 移除重複聲明
             
             // 如果本地標記所有為已讀，則顯示0
             if (readStatus.allRead) {
-                mockUnreadCount = 0;
+                const markTime = readStatus.lastMarkAllReadTime || 0;
+                const hoursSinceMarked = (Date.now() - markTime) / (1000 * 60 * 60);
+                
+                // 24小時內標記的保持已讀狀態
+                if (hoursSinceMarked < 24) {
+                    mockUnreadCount = 0;
+                    console.log('本地已標記所有為已讀，模擬數據顯示0個未讀');
+                }
             } else if (readStatus.readNotifications && readStatus.readNotifications.length > 0) {
+                // 檢查已讀通知中是否包含模擬未讀通知的ID（只有3是未讀的）
+                const mockUnreadNotificationIds = ['3']; // 模擬未讀通知ID：3=system（2=promotion已經是已讀狀態）
+                let readMockNotifications = 0;
+                
+                // 計算已讀的模擬通知數量
+                mockUnreadNotificationIds.forEach(id => {
+                    if (readStatus.readNotifications.includes(id)) {
+                        readMockNotifications++;
+                        console.log(`模擬通知 ID ${id} 已標記為已讀`);
+                    }
+                });
+                
                 // 減去已讀的通知數量
-                mockUnreadCount = Math.max(0, mockUnreadCount - readStatus.readNotifications.length);
+                mockUnreadCount = Math.max(0, mockUnreadCount - readMockNotifications);
+                console.log(`模擬數據：總共1個未讀通知（ID:3 system），已讀${readMockNotifications}個，剩餘${mockUnreadCount}個未讀`);
+                console.log('已讀通知ID列表:', readStatus.readNotifications);
             }
             
             this.updateNotificationBadge(mockUnreadCount);
@@ -171,8 +213,8 @@ const NotificationService = {
             console.error('檢查未讀通知時發生錯誤:', error);
             
             // 出錯時檢查本地狀態
-            const readStatus = this.getLocalNotificationReadStatus();
-            const unreadCount = readStatus.allRead ? 0 : 1;
+            const errorReadStatus = this.getLocalNotificationReadStatus();
+            const unreadCount = errorReadStatus.allRead ? 0 : 1;
             this.updateNotificationBadge(unreadCount);
             return unreadCount;
         }
@@ -252,6 +294,9 @@ const NotificationService = {
     // 標記通知為已讀
     markAsRead: async function(notificationId) {
         try {
+            // 確保 notificationId 是字串類型
+            notificationId = String(notificationId);
+            
             const userId = localStorage.getItem('userId');
             const authToken = localStorage.getItem('authToken');
             

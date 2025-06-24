@@ -74,10 +74,7 @@ function createRestaurantCard(restaurant) {
         // 確保必要欄位存在
         const restaurantId = processedRestaurant.place_id || processedRestaurant.id || '';
         const restaurantName = processedRestaurant.name || '未命名餐廳';
-        const restaurantAddress = processedRestaurant.vicinity || 
-            processedRestaurant.formatted_address || 
-            processedRestaurant.address || 
-            '地址不詳';
+        const restaurantAddress = processedRestaurant.formatted_address || processedRestaurant.address || '地址不詳';
         
         // 處理圖片
         let imageUrl = processedRestaurant.photos?.[0]?.getUrl?.() || 

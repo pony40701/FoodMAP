@@ -27,7 +27,6 @@
     </style>
   </head>
   <body>
-    <!-- 導覽列（header） -->
     <nav class="navbar">
       <div class="navbar-left">
         <div class="logo-text">食力派ChowCrew</div>
@@ -101,7 +100,6 @@
             </a>
           </div>
         </div>
-        <!-- 未登入狀態 - 顯示登入按鈕 -->
         <div id="loginSection" class="login-section">
           <button class="btn-login">登入</button>
         </div>
@@ -110,7 +108,6 @@
 
 
 
-    <!-- 路径导航 -->
     <div class="breadcrumb-container">
       <div class="breadcrumb">
         <a href="#" id="restaurant-link" class="breadcrumb-link">餐廳名稱</a>
@@ -119,14 +116,11 @@
       </div>
     </div>
 
-    <!-- 主要內容區域 -->
     <main>
-      <!-- 這裡將放置完整菜單內容 -->
       <div class="menu-page-container">
         <h1 class="menu-restaurant-name" id="menuRestaurantName">完整菜單</h1>
         
         <div class="menu-items">
-          <!-- 前菜／開胃小點 -->
           <h2 class="menu-category">前菜／開胃小點</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -173,7 +167,6 @@
             </div>
           </div>
 
-          <!-- 義大利麵 Pasta -->
           <h2 class="menu-category">義大利麵 Pasta</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -274,7 +267,6 @@
             </div>
           </div>
 
-          <!-- 燉飯 Risotto -->
           <h2 class="menu-category">燉飯 Risotto</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -312,7 +304,6 @@
             </div>
           </div>
 
-          <!-- 披薩 8 吋 -->
           <h2 class="menu-category">披薩 8 吋</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -341,7 +332,6 @@
             </div>
           </div>
 
-          <!-- 主餐／肉食系列 -->
           <h2 class="menu-category">主餐／肉食系列</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -397,7 +387,6 @@
             </div>
           </div>
 
-          <!-- 分享餐／套餐組合 -->
           <h2 class="menu-category">分享餐／套餐組合</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -453,7 +442,6 @@
             </div>
           </div>
 
-          <!-- 飲料／氣泡／酒類 -->
           <h2 class="menu-category">飲料／氣泡／酒類</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -473,7 +461,6 @@
             </div>
           </div>
 
-          <!-- 甜點 -->
           <h2 class="menu-category">甜點</h2>
           <div class="menu-item">
             <div class="menu-item-content">
@@ -496,7 +483,6 @@
       </div>
     </main>
 
-    <!-- 頁尾 -->
     <footer class="footer">
       <div class="footer-container">
         <div class="footer-section">
@@ -535,7 +521,6 @@
       </div>
     </footer>
 
-    <!-- 登入模態框 -->
     <div id="loginModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -575,7 +560,6 @@
       </div>
     </div>
 
-    <!-- 商家登入模態框 -->
     <div id="restaurantLoginModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -608,27 +592,20 @@
     <script src="js/menuDetail.js"></script>
     <script src="js/login.js"></script>
     <script>
-      // 處理寫食記按鈕點擊
       function handleWriteReview() {
-        // 檢查是否已登入
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         
         if (!isLoggedIn) {
-          // 顯示請先登入的 alert 訊息
           alert('請先登入會員');
-          // 顯示登入彈跳視窗
           document.getElementById('loginModal').style.display = 'block';
-          // 登入成功後的回調函數 - 只在用戶確實要寫食記時才跳轉
           window.onLoginSuccess = function() {
             window.location.href = 'blogPost.html';
           };
         } else {
-          // 已登入，直接跳轉到寫食記頁面
           window.location.href = 'blogPost.html';
         }
       }
 
-      // 商家登入彈窗相關函數
       function openRestaurantLoginModal() {
         document.getElementById('restaurantLoginModal').style.display = 'block';
       }
@@ -637,9 +614,7 @@
         document.getElementById('restaurantLoginModal').style.display = 'none';
       }
 
-      // 初始化登入模態框
       document.addEventListener('DOMContentLoaded', function() {
-        // 檢查是否需要自動開啟商家登入彈窗
         if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
           sessionStorage.removeItem('openRestaurantLogin');
           openRestaurantLoginModal();
@@ -647,7 +622,6 @@
 
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
-          // 關閉按鈕事件
           const closeBtn = loginModal.querySelector('.close');
           if (closeBtn) {
             closeBtn.onclick = function() {
@@ -656,13 +630,9 @@
           }
         }
 
-        // 初始化商家登入模態框
         const restaurantLoginModal = document.getElementById('restaurantLoginModal');
-        if (restaurantLoginModal) {
-          // 關閉按鈕事件已在 HTML 中設置 onclick
-          
-          // 表單提交事件
-          const restaurantLoginForm = document.getElementById('restaurantLoginForm');
+                  if (restaurantLoginModal) {
+            const restaurantLoginForm = document.getElementById('restaurantLoginForm');
           if (restaurantLoginForm) {
             restaurantLoginForm.addEventListener('submit', function(e) {
               e.preventDefault();
@@ -671,19 +641,13 @@
               const password = document.getElementById('restaurant-password').value;
               const remember = document.getElementById('restaurant-remember').checked;
               
-              // 這裡可以添加實際的登入驗證邏輯
-              ('商家登入:', { email, password, remember });
-              
-              // 模擬登入成功，跳轉到商家後台
               alert('登入成功！');
               closeRestaurantLoginModal();
-              // 跳轉到商家後台主頁
               window.location.href = 'restaurant.html';
             });
           }
         }
 
-        // 點擊模態框外部關閉
         window.onclick = function(event) {
           if (event.target === loginModal) {
             loginModal.style.display = 'none';
@@ -693,7 +657,6 @@
           }
         };
 
-        // 從 URL 獲取餐廳資料
         const urlParams = new URLSearchParams(window.location.search);
         const restaurantData = urlParams.get('data');
         
@@ -701,7 +664,6 @@
           try {
             const data = JSON.parse(decodeURIComponent(restaurantData));
             
-            // 更新餐廳名稱
             const menuRestaurantName = document.getElementById('menuRestaurantName');
             const restaurantLink = document.getElementById('restaurant-link');
             
@@ -711,12 +673,10 @@
             
             if (restaurantLink && data.name) {
               restaurantLink.textContent = data.name;
-              // 設置返回連結
               const encodedData = encodeURIComponent(JSON.stringify(data));
               restaurantLink.href = `restaurantListDetail.html?data=${encodedData}`;
             }
           } catch (error) {
-            console.error('解析餐廳資料失敗:', error);
           }
         }
       });

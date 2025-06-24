@@ -67,25 +67,6 @@ public class GoogleRestaurantController {
             // 嘗試不同的查詢方式
             List<Map<String, Object>> restaurants = null;
             
-            // 方法 1：使用標準查詢
-            try {
-                String sql1 = "SELECT id, place_id, name, address, vicinity, rating, user_ratings_total, price_level FROM google_restaurants";
-                System.out.println("嘗試方法 1 - 標準查詢: " + sql1);
-                long startTime = System.currentTimeMillis();
-                restaurants = jdbcTemplate.queryForList(sql1);
-                long endTime = System.currentTimeMillis();
-                System.out.println("方法 1 成功獲取 " + restaurants.size() + " 間餐廳，耗時 " + (endTime - startTime) + " 毫秒");
-                
-                if (!restaurants.isEmpty()) {
-                    System.out.println("第一筆資料: " + restaurants.get(0));
-                    System.out.println("最後一筆資料: " + restaurants.get(restaurants.size() - 1));
-                    System.out.println("==== 獲取所有餐廳 - 完成 [" + new java.util.Date() + "] ====\n");
-                    return ResponseEntity.ok(restaurants);
-                }
-            } catch (Exception e) {
-                System.err.println("方法 1 失敗: " + e.getMessage());
-                e.printStackTrace();
-            }
             
             // 方法 2：使用簡單查詢
             try {

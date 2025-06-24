@@ -859,14 +859,10 @@
   background-color: #fff;
   border: 1px solid #e6e6e6;
   border-radius: 8px;
-  overflow: visible; /* 改為 visible 避免內容被裁切造成淡出效果 */
+  overflow: hidden;
   margin-bottom: 10px;
-  height: auto; /* 讓高度自適應內容 */
-  /* 確保沒有視覺效果造成淡出 */
-  box-shadow: none;
-  filter: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  height: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .map-title {
@@ -879,31 +875,23 @@
 }
 
 .map-container {
-  padding: 16px;
-  /* 確保容器沒有造成淡出效果 */
+  padding: 0;
   background: #fff;
-  box-shadow: none;
-  filter: none;
-  opacity: 1;
-  overflow: visible; /* 確保內容不被裁切 */
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Google Maps JavaScript API 地圖容器樣式 */
 #map {
   width: 100%;
-  height: 400px; /* 將高度加高一倍，從 200px 改為 400px */
-  border-radius: 4px;
-  margin-bottom: 16px;
-  /* 移除可能的淡出效果 */
-  box-shadow: none !important;
-  filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  opacity: 1 !important;
-  /* 確保地圖完全不透明 */
-  background: #fff;
-  /* 清除可能的漸層背景 */
-  background-image: none !important;
+  height: 300px;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
+  box-sizing: border-box;
 }
 
 /* 確保 Leaflet 地圖容器沒有淡出效果 */
@@ -948,12 +936,19 @@
   text-align: center;
 }
 
-.address {
+.map-section .address {
   font-weight: 500;
+  padding: 16px 16px 8px 16px;
+  margin: 0;
+  font-size: 14px;
+  color: #333;
 }
 
-.business-hours {
+.map-section .business-hours {
   color: #666;
+  padding: 0 16px 16px 16px;
+  margin: 0;
+  font-size: 14px;
 }
 
 .directions-btn {
@@ -961,7 +956,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px 16px;
   padding: 10px;
   background-color: #fff;
   border: 1px solid #FF6B35;
@@ -971,6 +967,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .directions-btn:hover {

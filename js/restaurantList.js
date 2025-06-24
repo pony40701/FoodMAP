@@ -1,25 +1,19 @@
-// 全域變數
 let currentDisplayedRestaurants = [];
-let map; // Leaflet 地圖實例
-let markers = []; // Leaflet 標記陣列
+let map;
+let markers = [];
 let userLocation = null;
 let currentSortType = null;
-let currentPage = 0; // 分頁變數，預設為 0
-let pageSize = 10; // 每頁顯示 10 筆
-let totalPages = 0; // 總頁數
-let totalElements = 0; // 總筆數
+let currentPage = 0;
+let pageSize = 10;
+let totalPages = 0;
+let totalElements = 0;
 
-// 分頁狀態
-let currentSort = null; // 添加排序狀態變量
+let currentSort = null;
 
-// 搜尋服務實例
 let searchService = null;
-// 備份原始餐廳資料
 let originalRestaurants = [];
-// 是否已載入全部餐廳資料
 let allRestaurantsLoaded = false;
 
-// 隨機打亂陣列的函數
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -28,46 +22,34 @@ function shuffleArray(array) {
   return array;
 }
 
-// 初始化 Leaflet 地圖
 function initMap() {
-  // 設定台北101為預設中心位置
   const taipei101 = { lat: 25.0330, lng: 121.5654 };
   
-  // 創建 Leaflet 地圖實例
   map = L.map('map').setView([taipei101.lat, taipei101.lng], 13);
   
-  // 添加 OpenStreetMap 圖層
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // 初始載入地圖標記
   updateMapMarkers(currentDisplayedRestaurants);
 }
 
-// 更新地圖標記
 function updateMapMarkers(restaurants) {
-    // 清除現有標記
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
-    // 添加新標記
     for (const restaurant of restaurants) {
         if (!restaurant.latitude || !restaurant.longitude) {
-            console.warn(`Restaurant ${restaurant.name} has invalid coordinates`);
             continue;
         }
 
-        // 確保經緯度是數字
         const lat = Number(restaurant.latitude);
         const lng = Number(restaurant.longitude);
 
         if (isNaN(lat) || isNaN(lng)) {
-            console.warn(`Restaurant ${restaurant.name} has invalid coordinate types`);
             continue;
         }
 
-        // 創建自定義圖標
         const customIcon = L.divIcon({
             className: 'restaurant-marker',
             html: `
@@ -97,10 +79,8 @@ function updateMapMarkers(restaurants) {
             popupAnchor: [0, -24]
         });
 
-        // 創建標記
         const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
 
-        // 添加彈出視窗
         const popupContent = `
             <div class="map-popup-content" data-restaurant-id="${restaurant.placeId || restaurant.id}" style="padding: 10px; min-width: 200px; cursor: pointer;">
                 <h3 style="margin: 0 0 8px 0; color: #333; font-size: 15px; font-weight: 600;">${restaurant.name}</h3>
@@ -114,45 +94,21 @@ function updateMapMarkers(restaurants) {
 
         const popup = marker.bindPopup(popupContent);
         
-        // 當彈出視窗打開時，添加點擊事件
         marker.on('popupopen', function() {
             const popupElement = document.querySelector('.map-popup-content');
             if (popupElement) {
                 popupElement.addEventListener('click', function() {
-                    console.log('=== 點擊地圖圖釘視窗 ===');
-                    console.log('餐廳名稱:', restaurant.name);
-                    console.log('點擊前的 restaurant 物件:', restaurant);
-                    console.log('點擊前的 googleReviews:', restaurant.googleReviews);
-                    console.log('googleReviews 是否為陣列:', Array.isArray(restaurant.googleReviews));
-                    console.log('googleReviews 長度:', restaurant.googleReviews?.length);
-                    
-                    // 確保 googleReviews 欄位正確帶入 localStorage (與餐廳卡片點擊邏輯一致)
                     const restaurantToSave = { ...restaurant };
                     
-                    // 處理 googleReviews 欄位
                     if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
-                        console.log('googleReviews 為 undefined 或 null，嘗試使用備用欄位');
                         if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
                             restaurantToSave.googleReviews = restaurant.google_reviews;
-                            console.log('使用 google_reviews 欄位:', restaurant.google_reviews);
                         } else {
-                            restaurantToSave.googleReviews = []; // 確保不是 null，而是空陣列
-                            console.log('設定為空陣列');
+                            restaurantToSave.googleReviews = [];
                         }
-                    } else {
-                        console.log('googleReviews 已存在，保持原值');
                     }
                     
-                    console.log('儲存到 localStorage 的餐廳資料:', restaurantToSave);
-            console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
-            console.log('=== 儲存完成，準備跳轉 ===');
-            
-                    console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
-                    console.log('=== 儲存完成，準備跳轉 ===');
-                    
-                    // 直接存完整物件 (與餐廳卡片點擊邏輯一致)
                     localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
-                    // 導頁到餐廳詳情頁面
                     window.location.href = 'restaurantListDetail.html';
                 });
             }
@@ -247,7 +203,6 @@ async function loadAllRestaurants() {
   const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
   
   try {
-    console.log('載入所有餐廳資料...');
     const response = await fetch(`${baseUrl}/restaurants/list`);
     
     if (!response.ok) {
@@ -255,7 +210,6 @@ async function loadAllRestaurants() {
     }
     
     const data = await response.json();
-    console.log('載入到', data.length, '筆餐廳資料');
     
     // 格式化資料
     originalRestaurants = data.map(restaurant => ({
@@ -272,7 +226,6 @@ async function loadAllRestaurants() {
     return originalRestaurants;
     
   } catch (error) {
-    console.error('載入所有餐廳資料失敗:', error);
     // 如果無法載入全部資料，使用當前已載入的資料
     return currentDisplayedRestaurants;
   }
@@ -280,20 +233,15 @@ async function loadAllRestaurants() {
 
 // 新的搜尋功能，使用本地資料搜尋
 async function performSearch() {
-  console.log('執行搜尋');
-  
   const foodSearchInput = document.getElementById("food-search");
   const locationSearchInput = document.getElementById("location-search");
   
   if (!foodSearchInput || !locationSearchInput) {
-    console.error('找不到搜尋輸入框');
     return;
   }
 
   const foodKeyword = foodSearchInput.value.trim();
   const locationKeyword = locationSearchInput.value.trim();
-  
-  console.log('搜尋關鍵字:', { foodKeyword, locationKeyword });
 
   try {
     // 確保已載入所有餐廳資料
@@ -301,7 +249,6 @@ async function performSearch() {
     
     // 如果沒有搜尋關鍵字，返回第一頁分頁資料
     if (!foodKeyword && !locationKeyword) {
-      console.log('沒有搜尋關鍵字，重新載入分頁資料');
       fetchRestaurants(null, 0);
       return;
     }
@@ -330,20 +277,12 @@ async function performSearch() {
     if (locationKeyword) {
       searchResults = searchResults.filter(restaurant => {
         if (!restaurant) return false;
-        
         const address = (restaurant.address || '').toLowerCase();
-        const vicinity = (restaurant.vicinity || '').toLowerCase();
         const formattedAddress = (restaurant.formatted_address || '').toLowerCase();
-        
         const keyword = locationKeyword.toLowerCase();
-        
-        return address.includes(keyword) || 
-               vicinity.includes(keyword) || 
-               formattedAddress.includes(keyword);
+        return address.includes(keyword) || formattedAddress.includes(keyword);
       });
     }
-    
-    console.log(`搜尋結果: ${searchResults.length} 間餐廳`);
     
     // 更新當前顯示的資料
     currentDisplayedRestaurants = searchResults;
@@ -356,36 +295,27 @@ async function performSearch() {
     const cardsContainer = document.getElementById('restaurant-cards');
     if (cardsContainer) {
       renderFilteredCards(pageData, searchResults.length);
-    } else {
-      console.error('找不到餐廳卡片容器!');
     }
 
     // 更新地圖標記
     updateMapMarkers(searchResults);
     
   } catch (error) {
-    console.error('搜尋過程中發生錯誤:', error);
-    console.log('恢復分頁資料');
     fetchRestaurants(null, 0);
   }
 }
 
 // 舊的搜尋函數 (保留作為備用)
 function handleSearch() {
-  console.log('Search function triggered');
-
   const foodSearchInput = document.getElementById("food-search");
   const locationSearchInput = document.getElementById("location-search");
   
   if (!foodSearchInput || !locationSearchInput) {
-    console.error('Search inputs not found');
     return;
   }
 
   const foodSearch = (foodSearchInput.value || '').toLowerCase();
   const locationSearch = (locationSearchInput.value || '').toLowerCase();
-  
-  console.log('Search terms:', { foodSearch, locationSearch });
 
   // 使用 currentDisplayedRestaurants 作為搜尋基礎
   let filtered = currentDisplayedRestaurants.filter(restaurant => {
@@ -410,8 +340,6 @@ function handleSearch() {
     return matchesFood && matchesLocation;
   });
 
-  console.log('Filtered results:', filtered.length);
-
   // 儲存搜尋結果
   currentDisplayedRestaurants = filtered;
   
@@ -423,8 +351,6 @@ function handleSearch() {
   const cardsContainer = document.getElementById('restaurant-cards');
   if (cardsContainer) {
     renderFilteredCards(pageData, currentDisplayedRestaurants.length);
-  } else {
-    console.error('Restaurant cards container not found!');
   }
 
   // 更新地圖標記
@@ -591,13 +517,37 @@ function renderPagination(totalCount) {
       return;
   }
 
+  html += '<div class="pagination-wrapper">';
+  
+  // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+  if (currentPage > 1) {
+    html += `<button class="page-arrow first-arrow" data-page="1">&laquo;</button>`;
+  }
+  
+  // 上一頁按鈕 - 只有不在第一頁時才顯示
+  if (currentPage > 1) {
+    html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+  }
+
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
   }
   
+  // 下一頁按鈕 - 只有不在最後一頁時才顯示
+  if (currentPage < totalPages) {
+    html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+  }
+  
+  // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+  if (currentPage < totalPages) {
+    html += `<button class="page-arrow last-arrow" data-page="${totalPages}">&raquo;</button>`;
+  }
+  
+  html += '</div>';
+  
   paginationContainer.innerHTML = html;
   
-  document.querySelectorAll('.page-btn').forEach(btn => {
+  document.querySelectorAll('.page-btn, .page-arrow').forEach(btn => {
     btn.onclick = function() {
       currentPage = parseInt(this.dataset.page);
       
@@ -763,20 +713,10 @@ function showRestaurantModal(restaurant) {
 
 // 修改 renderFilteredCards 函數中的卡片渲染部分
 function renderFilteredCards(pageData, totalCount) {
-  console.log(`Rendering page with ${pageData.length} items. Total count: ${totalCount}`);
-  console.log('渲染資料內容:', pageData);
-  
   const cardsContainer = document.getElementById('restaurant-cards');
   if (!cardsContainer) return;
 
   const cards = pageData.map((restaurant, index) => {
-    console.log(`渲染餐廳 ${index}:`, restaurant);
-    console.log(`餐廳名稱: ${restaurant.name}`);
-    console.log(`評分: ${restaurant.averageRating}`);
-    console.log(`評論數: ${restaurant.reviewCount}`);
-    console.log(`地址: ${restaurant.address}`);
-    console.log(`描述: ${restaurant.description}`);
-    
     // 確保 API_BASE_URL 存在，若不存在則使用預設值
     const baseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
     
@@ -784,8 +724,6 @@ function renderFilteredCards(pageData, totalCount) {
     const rating = restaurant.averageRating || 0;
     const reviewCount = restaurant.reviewCount || 0;
     const photoUrl = baseUrl + '/restaurant-images/' + (restaurant.placeId || restaurant.place_id) + '/raw';
-    
-    console.log(`處理後的評分: ${rating}, 評論數: ${reviewCount}, 圖片URL: ${photoUrl}`);
     
     return `
       <div class="restaurant-card yelp-style" style="position: relative; display: flex; gap: 16px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); align-items: center; cursor: pointer;" 
@@ -840,6 +778,16 @@ function renderSearchPaginationControls() {
   if (totalPages > 1) {
     html += '<div class="pagination-wrapper">';
     
+    // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 0) {
+      html += `<button class="page-arrow first-arrow" data-page="0">&laquo;</button>`;
+    }
+    
+    // 上一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 0) {
+      html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+    }
+    
     // 計算要顯示的頁碼範圍
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages, currentPage + 3);
@@ -862,7 +810,12 @@ function renderSearchPaginationControls() {
     
     // 下一頁箭頭 - 只有不在最後一頁時才顯示
     if (currentPage < totalPages - 1) {
-      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">></button>`;
+      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+    }
+    
+    // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+    if (currentPage < totalPages - 1) {
+      html += `<button class="page-arrow last-arrow" data-page="${totalPages - 1}">&raquo;</button>`;
     }
     
     html += '</div>';
@@ -908,6 +861,16 @@ function renderSearchResultPaginationControls() {
   if (totalPages > 1) {
     html += '<div class="pagination-wrapper">';
     
+    // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 1) {
+      html += `<button class="page-arrow first-arrow" data-page="1">&laquo;</button>`;
+    }
+    
+    // 上一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 1) {
+      html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+    }
+    
     // 計算要顯示的頁碼範圍
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages, currentPage + 3);
@@ -930,7 +893,12 @@ function renderSearchResultPaginationControls() {
     
     // 下一頁箭頭 - 只有不在最後一頁時才顯示
     if (currentPage < totalPages) {
-      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">></button>`;
+      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+    }
+    
+    // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+    if (currentPage < totalPages) {
+      html += `<button class="page-arrow last-arrow" data-page="${totalPages}">&raquo;</button>`;
     }
     
     html += '</div>';
@@ -991,7 +959,6 @@ function navigateToDetail(restaurantData) {
   try {
     restaurant = JSON.parse(decodeURIComponent(restaurantData));
   } catch (error) {
-    console.error('解析餐廳資料失敗:', error);
     return;
   }
   
@@ -1007,7 +974,6 @@ function navigateToDetail(restaurantData) {
 
 // 當頁面載入完成時初始化
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('頁面載入完成，開始獲取餐廳資料');
     fetchRestaurants(null, 0);  // 使用分頁參數獲取第一頁資料
     
     // 初始化地圖
@@ -1059,7 +1025,6 @@ function fetchRestaurants(sortType = null, page = 0) {
     }
     
     url += '?' + params.toString();
-    console.log('發送 API 請求到:', url);
     
     fetch(url)
         .then(response => {
@@ -1069,8 +1034,6 @@ function fetchRestaurants(sortType = null, page = 0) {
             return response.json();
         })
         .then(data => {
-            console.log('Received restaurant data:', data); // 添加日誌
-            
             let restaurants = [];
             
             // 檢查是否為分頁資料 (後端 API 回傳的是 Page 物件)
@@ -1080,14 +1043,12 @@ function fetchRestaurants(sortType = null, page = 0) {
                 totalPages = data.totalPages;
                 totalElements = data.totalElements;
                 currentPage = data.number;
-                console.log(`分頁資料: 第 ${currentPage + 1} 頁, 共 ${totalPages} 頁, 總共 ${totalElements} 筆`);
             } else if (Array.isArray(data)) {
                 // 非分頁資料（舊的排序查詢）
                 restaurants = data;
                 totalPages = Math.ceil(restaurants.length / pageSize);
                 totalElements = restaurants.length;
                 currentPage = 0;
-                console.log('非分頁資料，資料筆數:', restaurants.length);
             }
             
             // 確保資料格式正確
@@ -1106,8 +1067,6 @@ function fetchRestaurants(sortType = null, page = 0) {
                 };
             });
             
-            console.log('Formatted restaurant data:', formattedData); // 添加日誌
-            
             // 更新當前顯示的餐廳列表（只存當前頁面的資料）
             currentDisplayedRestaurants = formattedData;
             
@@ -1121,7 +1080,6 @@ function fetchRestaurants(sortType = null, page = 0) {
             renderSearchPaginationControls();
         })
         .catch(error => {
-            console.error('Error fetching restaurants:', error);
             const container = document.getElementById('restaurant-cards');
             if (container) {
                 container.innerHTML = '<div class="error-message">無法取得餐廳資料，請稍後再試。</div>';
@@ -1142,7 +1100,6 @@ function renderRestaurants(restaurants) {
         if (restaurant.json_raw) {
             try {
                 const jsonData = JSON.parse(restaurant.json_raw);
-                console.log('成功解析 json_raw 數據:', restaurant.name, jsonData);
                 
                 // 從 JSON 數據中提取評分、評論數
                 if (jsonData.rating) {
@@ -1160,7 +1117,7 @@ function renderRestaurants(restaurants) {
                     restaurant.opening_hours = jsonData.opening_hours;
                 }
             } catch (error) {
-                console.error('解析 json_raw 失敗:', error);
+                // Silently handle JSON parsing errors
             }
         }
         
@@ -1267,33 +1224,17 @@ function renderRestaurants(restaurants) {
 
         // 添加點擊事件處理
         card.addEventListener('click', () => {
-            console.log('=== 點擊餐廳卡片 ===');
-            console.log('餐廳名稱:', restaurant.name);
-            console.log('點擊前的 restaurant 物件:', restaurant);
-            console.log('點擊前的 googleReviews:', restaurant.googleReviews);
-            console.log('googleReviews 是否為陣列:', Array.isArray(restaurant.googleReviews));
-            console.log('googleReviews 長度:', restaurant.googleReviews?.length);
-            
             // 確保 googleReviews 欄位正確帶入 localStorage
             const restaurantToSave = { ...restaurant };
             
             // 處理 googleReviews 欄位
             if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
-                console.log('googleReviews 為 undefined 或 null，嘗試使用備用欄位');
                 if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
                     restaurantToSave.googleReviews = restaurant.google_reviews;
-                    console.log('使用 google_reviews 欄位:', restaurant.google_reviews);
                 } else {
                     restaurantToSave.googleReviews = []; // 確保不是 null，而是空陣列
-                    console.log('設定為空陣列');
                 }
-            } else {
-                console.log('googleReviews 已存在，保持原值');
             }
-            
-            console.log('儲存到 localStorage 的餐廳資料:', restaurantToSave);
-            console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
-            console.log('=== 儲存完成，準備跳轉 ===');
             
             // 直接存完整物件
             localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
