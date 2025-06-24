@@ -302,6 +302,24 @@
     z-index: 1001;
 }
 
+/* 登出按鈕樣式 */
+.btn-logout {
+    background: #ff6b1a;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+}
+
+.btn-logout:hover {
+    background: #e55a15;
+    transform: translateY(-1px);
+}
+
 /* 響應式設計 */
 @media (max-width: 1150px) {
     .navbar-right {
@@ -437,6 +455,11 @@
     .dropdown-item {
         font-size: 14px;
         padding: 10px 15px;
+    }
+
+    .btn-logout {
+        padding: 6px 15px;
+        font-size: 14px;
     }
 }
 @media (max-width: 480px) {
