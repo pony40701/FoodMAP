@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.ExReviewDTO;
 import com.example.demo.dto.ExReviewProjection;
+import com.example.demo.entity.ReviewTag;
 import com.example.demo.repository.ExReviewRepository;
+import com.example.demo.repository.ReviewTagRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -24,6 +26,9 @@ public class ExReviewService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private ReviewTagRepository reviewTagRepository;
 
     @Value("${app.web.base-url}")
     private String webBaseUrl;
@@ -36,7 +41,7 @@ public class ExReviewService {
 
         List<ExReviewProjection> projections = exReviewRepository.findLatestReviews(limit, offset, sort, effectiveSearch, effectiveCuisineTypes, userId);
         return projections.stream()
-                .map(this::convertToDto)
+                .map(p -> convertToDto(p))
                 .collect(Collectors.toList());
     }
 
@@ -44,7 +49,7 @@ public class ExReviewService {
         // userId can be null if the user is not logged in.
         // The repository query is designed to handle a null userId.
         Optional<ExReviewProjection> projection = exReviewRepository.findDetailsById(id, userId);
-        return projection.map(this::convertToDto).orElse(null);
+        return projection.map(p -> convertToDto(p)).orElse(null);
     }
 
     private ExReviewDTO convertToDto(ExReviewProjection projection) {
@@ -59,6 +64,12 @@ public class ExReviewService {
         }
 
         String updatedContentJson = rewriteImageUrls(projection.getContentJson());
+
+        // 查詢 tags
+        List<ReviewTag> tagEntities = reviewTagRepository.findByReviewId(projection.getReviewId().intValue());
+        List<String> tags = tagEntities.stream()
+                .map(rt -> rt.getTag().getName())
+                .collect(Collectors.toList());
 
         return new ExReviewDTO(
             projection.getReviewId(),
@@ -78,7 +89,8 @@ public class ExReviewService {
             projection.getEnvironmentScore(),
             projection.getServiceScore(),
             projection.getTasteScore(),
-            projection.getPriceScore()
+            projection.getPriceScore(),
+            tags
         );
     }
 
