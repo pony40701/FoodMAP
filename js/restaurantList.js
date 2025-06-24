@@ -523,13 +523,37 @@ function renderPagination(totalCount) {
       return;
   }
 
+  html += '<div class="pagination-wrapper">';
+  
+  // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+  if (currentPage > 1) {
+    html += `<button class="page-arrow first-arrow" data-page="1">&laquo;</button>`;
+  }
+  
+  // 上一頁按鈕 - 只有不在第一頁時才顯示
+  if (currentPage > 1) {
+    html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+  }
+
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
   }
   
+  // 下一頁按鈕 - 只有不在最後一頁時才顯示
+  if (currentPage < totalPages) {
+    html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+  }
+  
+  // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+  if (currentPage < totalPages) {
+    html += `<button class="page-arrow last-arrow" data-page="${totalPages}">&raquo;</button>`;
+  }
+  
+  html += '</div>';
+  
   paginationContainer.innerHTML = html;
   
-  document.querySelectorAll('.page-btn').forEach(btn => {
+  document.querySelectorAll('.page-btn, .page-arrow').forEach(btn => {
     btn.onclick = function() {
       currentPage = parseInt(this.dataset.page);
       
@@ -760,6 +784,16 @@ function renderSearchPaginationControls() {
   if (totalPages > 1) {
     html += '<div class="pagination-wrapper">';
     
+    // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 0) {
+      html += `<button class="page-arrow first-arrow" data-page="0">&laquo;</button>`;
+    }
+    
+    // 上一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 0) {
+      html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+    }
+    
     // 計算要顯示的頁碼範圍
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages, currentPage + 3);
@@ -782,7 +816,12 @@ function renderSearchPaginationControls() {
     
     // 下一頁箭頭 - 只有不在最後一頁時才顯示
     if (currentPage < totalPages - 1) {
-      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">></button>`;
+      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+    }
+    
+    // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+    if (currentPage < totalPages - 1) {
+      html += `<button class="page-arrow last-arrow" data-page="${totalPages - 1}">&raquo;</button>`;
     }
     
     html += '</div>';
@@ -828,6 +867,16 @@ function renderSearchResultPaginationControls() {
   if (totalPages > 1) {
     html += '<div class="pagination-wrapper">';
     
+    // 回到第一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 1) {
+      html += `<button class="page-arrow first-arrow" data-page="1">&laquo;</button>`;
+    }
+    
+    // 上一頁按鈕 - 只有不在第一頁時才顯示
+    if (currentPage > 1) {
+      html += `<button class="page-arrow prev-arrow" data-page="${currentPage - 1}">&lt;</button>`;
+    }
+    
     // 計算要顯示的頁碼範圍
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages, currentPage + 3);
@@ -850,7 +899,12 @@ function renderSearchResultPaginationControls() {
     
     // 下一頁箭頭 - 只有不在最後一頁時才顯示
     if (currentPage < totalPages) {
-      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">></button>`;
+      html += `<button class="page-arrow next-arrow" data-page="${currentPage + 1}">&gt;</button>`;
+    }
+    
+    // 去到最後頁按鈕 - 只有不在最後一頁時才顯示
+    if (currentPage < totalPages) {
+      html += `<button class="page-arrow last-arrow" data-page="${totalPages}">&raquo;</button>`;
     }
     
     html += '</div>';
