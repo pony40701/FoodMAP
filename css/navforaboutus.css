@@ -277,16 +277,20 @@
 
 /* 登出選項樣式 */
 .logout-item {
-    color: #ff4757 !important;
-}
-
-.logout-item i {
-    color: inherit;
+    background: #ff6b1a !important;
+    color: #fff !important;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-weight: 600;
+    display: inline-block;
+    margin: 8px 16px;
+    text-align: center;
+    transition: background 0.2s;
 }
 
 .logout-item:hover {
-    background: rgba(255, 71, 87, 0.1) !important;
-    color: #ff6b81 !important;
+    background: #e55a15 !important;
+    color: #fff !important;
 }
 
 .hamburger {
@@ -482,4 +486,19 @@
     .avatar-dropdown .dropdown-item i {
         font-size: 18px;
     }
+}
+
+.btn-logout {
+    background: #ff6b1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+}
+.btn-logout:hover {
+    background: #e55a15;
 } 

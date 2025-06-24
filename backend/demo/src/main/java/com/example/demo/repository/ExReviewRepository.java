@@ -23,7 +23,7 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
                 ROW_NUMBER() OVER(PARTITION BY review_id ORDER BY id ASC) as rn
             FROM review_photos
         )
-        SELECT
+        SELECT DISTINCT
             r.id as reviewId,
             rp.image as image,
             u.id AS authorId,
@@ -49,8 +49,10 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
         LEFT JOIN review_stats rs ON rs.review_id = r.id
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN user_favorites uf ON uf.target_id = r.id AND uf.target_type = 'review' AND uf.user_id = :userId
+        LEFT JOIN review_tags r_tag ON r_tag.review_id = r.id
+        LEFT JOIN tags t ON t.id = r_tag.tag_id
         WHERE r.status = 'published'
-        AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%'))
+        AND (:search IS NULL OR r.title LIKE CONCAT('%', :search, '%') OR rest.name LIKE CONCAT('%', :search, '%') OR u.name LIKE CONCAT('%', :search, '%') OR t.name LIKE CONCAT('%', :search, '%'))
         AND (:cuisineTypes IS NULL OR rest.cuisine_type IN (:cuisineTypes))
         ORDER BY
             CASE WHEN :sort = 'popular' THEN rs.total_views END DESC,

@@ -971,6 +971,7 @@ function showConfirmationModal(message, title = '確認操作') {
         }, 0); // 延遲 0ms 將其推入下一個事件循環
     });
 }
+window.showConfirmationModal = showConfirmationModal;
 
 // 查看餐廳詳情
 async function viewRestaurant(restaurantId) {
