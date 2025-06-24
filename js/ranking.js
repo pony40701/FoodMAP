@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
-            console.error('Error fetching Google restaurants:', error);
             googleRestaurantList.innerHTML += '<p>無法載入Google商家資料。</p>';
             return null; // 返回 null 以便調用者處理
         }
@@ -48,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
-            console.error('Error fetching custom restaurants:', error);
             customRestaurantList.innerHTML += '<p>無法載入食力派回饋資料。</p>';
             return null; // 返回 null
         }
@@ -161,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         imgElement.src = URL.createObjectURL(blob);
                     })
                     .catch(error => {
-                        console.error('Error fetching restaurant image:', error);
                         // 圖片加載失敗，維持預設圖片
                     });
             }
@@ -206,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } catch (error) {
-            console.error('Failed to load and render data:', error);
+            // silent fail
         } finally {
             isLoading = false;
             // 檢查是否需要顯示"加載更多"按鈕

@@ -32,12 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const review = await response.json();
             
-            // --- 偵錯用，請幫我看看控制台印出了什麼 ---
-            console.log("--- DEBUG: 從伺服器收到的資料 ---");
-            console.log("完整的 'review' 物件:", review);
-            console.log("收到的 'isFavorited' 狀態:", review.isFavorited);
-            console.log("--- DEBUG: 結束 ---");
-
             await renderExperience(review);
         } catch (error) {
             console.error('無法獲取文章詳情:', error);
@@ -51,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
             month: 'long',
             day: 'numeric'
         });
+
+        // Handle author avatar
+        const authorAvatarUrl = review.authorAvatar
+            ? `data:image/jpeg;base64,${review.authorAvatar}`
+            : 'images/default-avatar.png';
 
         let contentHtml = '';
         if (review.contentJson) {
@@ -106,15 +105,24 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // Handle author link
+        const authorName = review.authorName || '匿名使用者';
+        const authorLinkStart = review.authorId
+            ? `<a href="userCenter.html?userId=${review.authorId}" class="author-link">`
+            : '<div class="author-link-disabled">';
+        const authorLinkEnd = review.authorId ? '</a>' : '</div>';
+
         const html = `
             ${breadcrumbHtml}
             <h1 class="experience-title">${review.reviewTitle}</h1>
             <div class="author-meta">
-                <img src="${review.authorAvatar || 'images/default-avatar.png'}" alt="作者頭像" class="author-avatar">
-                <div class="author-info">
-                    <div class="author-name">${review.authorName}</div>
-                    <div class="publish-date">${publishDate}</div>
-                </div>
+                ${authorLinkStart}
+                    <img src="${authorAvatarUrl}" alt="作者頭像" class="author-avatar" onerror="this.onerror=null;this.src='images/default-avatar.png';">
+                    <div class="author-info">
+                        <div class="author-name">${authorName}</div>
+                        <div class="publish-date">${publishDate}</div>
+                    </div>
+                ${authorLinkEnd}
                 <div class="meta-stats">
                     <span><i class="fas fa-eye"></i> ${review.viewCount || 0}</span>
                     <button class="favorite-btn-detail ${review.favorited ? 'favorited' : ''}" data-review-id="${review.reviewId}">
@@ -219,13 +227,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 新增：獲取多張圖片資訊的函式
+    async function fetchImages(photoIds) {
+        const imageMap = new Map();
+        const promises = photoIds.map(async (photoId) => {
+            try {
+                const infoResponse = await fetch(`http://localhost:8080/api/review-photos/info/${photoId}`);
+                if (infoResponse.ok) {
+                    const photoInfo = await infoResponse.json();
+                    imageMap.set(photoId, photoInfo);
+                }
+            } catch (error) {
+                // 如果單張圖片資訊獲取失敗，只在控制台記錄錯誤，不中斷整個流程
+                console.error(`Failed to fetch image info for id ${photoId}`, error);
+            }
+        });
+        await Promise.all(promises);
+        return imageMap;
+    }
+
     // 處理圖片佔位符的函數
     async function processImagePlaceholders(content) {
         if (!content) return content;
-        
-        console.log('=== 開始處理圖片佔位符 ===');
-        console.log('原始內容長度:', content.length);
-        console.log('原始內容預覽:', content.substring(0, 500));
         
         // 徹底清理混亂的 HTML 結構
         let cleanedContent = content;
@@ -234,58 +257,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const placeholderRegex = /\[IMAGE_PLACEHOLDER_(\d+)\]/g;
         
         // 1. 移除所有重複的 image-wrapper 結構
-        console.log('步驟1: 清理重複的 image-wrapper 結構...');
-        
-        // 找到所有 image-wrapper 的對齊信息
-        const wrapperMatches = cleanedContent.match(/<div[^>]*class="[^"]*image-wrapper[^"]*"[^>]*>/gi) || [];
-        console.log('找到的 image-wrapper 數量:', wrapperMatches.length);
-        
-        // 為每個佔位符找到最接近的對齊信息
-        const alignmentMap = {};
-        let placeholderMatch;
-        
-        // 重置正則表達式的lastIndex
-        placeholderRegex.lastIndex = 0;
-        
-        while ((placeholderMatch = placeholderRegex.exec(cleanedContent)) !== null) {
-            const photoId = placeholderMatch[1];
-            const placeholderIndex = placeholderMatch.index;
-            
-            console.log(`分析圖片 ${photoId} 的對齊信息，佔位符位置: ${placeholderIndex}`);
-            
-            // 找到最接近這個佔位符的對齊信息
-            let closestAlignment = '';
-            let closestDistance = Infinity;
-            
-            wrapperMatches.forEach((wrapper, index) => {
-                const wrapperIndex = cleanedContent.indexOf(wrapper, Math.max(0, placeholderIndex - 200));
-                if (wrapperIndex !== -1) {
-                    const distance = Math.abs(wrapperIndex - placeholderIndex);
-                    if (distance < closestDistance) {
-                        closestDistance = distance;
-                        
-                        // 提取對齊信息
-                        if (wrapper.includes('align-left')) {
-                            closestAlignment = 'align-left';
-                        } else if (wrapper.includes('align-center')) {
-                            closestAlignment = 'align-center';
-                        } else if (wrapper.includes('align-right')) {
-                            closestAlignment = 'align-right';
-                        }
-                    }
-                }
-            });
-            
-            alignmentMap[photoId] = closestAlignment;
-            console.log(`圖片 ${photoId} 的最接近對齊信息: ${closestAlignment} (距離: ${closestDistance})`);
+        cleanedContent = cleanedContent.replace(/<div class="image-wrapper">\[IMAGE_PLACEHOLDER_(\d+)\]<\/div>/g, '[IMAGE_PLACEHOLDER_$1]');
+
+        let match;
+        const placeholders = new Set();
+        while ((match = placeholderRegex.exec(cleanedContent)) !== null) {
+            placeholders.add(match[1]);
         }
-        
-        console.log('對齊信息映射:', alignmentMap);
+
+        if (placeholders.size === 0) {
+            return cleanedContent;
+        }
+
+        const photoIds = Array.from(placeholders);
+        const fetchedImages = await fetchImages(photoIds);
         
         // 2. 移除所有 image-wrapper 相關的 HTML 結構
-        console.log('步驟2: 移除所有 image-wrapper 相關結構...');
-        
-        // 移除所有 image-wrapper 開始標籤
         cleanedContent = cleanedContent.replace(/<div[^>]*class="[^"]*image-wrapper[^"]*"[^>]*>/gi, '');
         
         // 移除所有 image-container 開始標籤
@@ -302,25 +289,13 @@ document.addEventListener('DOMContentLoaded', () => {
         cleanedContent = cleanedContent.replace(/<\/div>/g, '');
         
         // 3. 清理多餘的空格和換行
-        console.log('步驟3: 清理多餘的空格和換行...');
         cleanedContent = cleanedContent
             .replace(/\s+/g, ' ')  // 多個空格變為單個空格
             .replace(/\n\s*\n/g, '\n')  // 多個換行變為單個換行
             .trim();
         
-        console.log('清理後內容預覽:', cleanedContent.substring(0, 500));
-        
         // 使用正規表示式尋找 [IMAGE_PLACEHOLDER_${photoId}] 格式的佔位符
         let result = cleanedContent;
-        let match;
-        
-        // 收集所有需要處理的圖片ID
-        const photoIds = [];
-        while ((match = placeholderRegex.exec(cleanedContent)) !== null) {
-            photoIds.push(match[1]);
-        }
-        
-        console.log('找到的圖片ID:', photoIds);
         
         // 為每個圖片ID獲取信息並替換
         for (const photoId of photoIds) {
@@ -329,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const infoResponse = await fetch(`http://localhost:8080/api/reviews/photos/${photoId}/info`);
                 if (infoResponse.ok) {
                     const photoInfo = await infoResponse.json();
-                    console.log(`圖片 ${photoId} 信息:`, photoInfo);
                     
                     // 構建圖片HTML
                     const imageUrl = `http://localhost:8080/api/reviews/photos/${photoId}`;
@@ -341,13 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         imgStyle = `width: ${photoInfo.width}; height: ${photoInfo.height}; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);`;
                     }
                     
-                    // 使用清理後的對齊信息
-                    const alignment = alignmentMap[photoId] || '';
-                    console.log(`圖片 ${photoId} 使用對齊信息: ${alignment}`);
-                    
                     // 構建完整的圖片容器結構（與寫心得頁面一致）
                     const imgHtml = `
-                        <div class="image-wrapper ${alignment}">
+                        <div class="image-wrapper">
                             <div class="image-container" style="position: relative; display: inline-block; margin: 0; max-width: 100%; border-radius: 8px; overflow: hidden;">
                                 <img src="${imageUrl}" alt="心得圖片" style="${imgStyle}" draggable="false">
                             </div>
@@ -357,8 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 替換佔位符
                     const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
                     result = result.replace(placeholder, imgHtml);
-                    
-                    console.log(`成功替換圖片 ${photoId} 佔位符，大小: ${photoInfo.width} x ${photoInfo.height}, 對齊: ${alignment}`);
                 } else {
                     console.warn(`無法獲取圖片 ${photoId} 信息:`, infoResponse.status);
                     // 如果無法獲取信息，使用預設樣式
@@ -388,10 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 result = result.replace(placeholder, defaultImgHtml);
             }
         }
-        
-        console.log('=== 圖片佔位符處理完成 ===');
-        console.log('處理後內容長度:', result.length);
-        console.log('處理後內容預覽:', result.substring(0, 500));
         
         return result;
     }

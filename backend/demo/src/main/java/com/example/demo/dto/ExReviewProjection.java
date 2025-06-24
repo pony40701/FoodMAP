@@ -6,7 +6,8 @@ public interface ExReviewProjection {
     Long getReviewId();
     byte[] getImage();
     String getAuthorName();
-    String getAuthorAvatar();
+    byte[] getAuthorAvatar();
+    Long getAuthorId();
     Double getAuthorRating();
     String getReviewTitle();
     String getRestaurantName();

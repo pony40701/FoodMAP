@@ -53,13 +53,19 @@ public class ExReviewService {
             imageBase64 = Base64.getEncoder().encodeToString(projection.getImage());
         }
 
+        String authorAvatarBase64 = null;
+        if (projection.getAuthorAvatar() != null) {
+            authorAvatarBase64 = Base64.getEncoder().encodeToString(projection.getAuthorAvatar());
+        }
+
         String updatedContentJson = rewriteImageUrls(projection.getContentJson());
 
         return new ExReviewDTO(
             projection.getReviewId(),
+            projection.getAuthorId(),
             imageBase64,
             projection.getAuthorName(),
-            projection.getAuthorAvatar(),
+            authorAvatarBase64,
             projection.getAuthorRating(),
             projection.getReviewTitle(),
             projection.getRestaurantName(),

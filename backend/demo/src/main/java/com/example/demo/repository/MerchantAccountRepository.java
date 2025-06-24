@@ -1,7 +1,6 @@
 package com.example.demo.repository;
 //boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan boyan
 import com.example.demo.entity.MerchantAccount;
-import com.example.demo.dto.MerchantRestaurantDTO;
 import com.example.demo.dto.MerchantRestaurantDTO.MerchantRestaurantProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
