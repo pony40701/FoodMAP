@@ -111,6 +111,13 @@
     gap: 20px;
 }
 
+/* 登入和用戶區塊樣式 */
+.login-section,
+.user-section {
+    display: flex;
+    align-items: center;
+}
+
 /* 登入按鈕樣式 */
 .btn-login {
     background: #ff6b1a;
@@ -125,23 +132,6 @@
 }
 
 .btn-login:hover {
-    background: #e55a15;
-}
-
-/* 登出按鈕樣式 */
-.btn-logout {
-    background: #ff6b1a;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
-}
-
-.btn-logout:hover {
     background: #e55a15;
 }
 
@@ -222,6 +212,10 @@
 }
 
 /* 用戶頭像樣式 */
+.user-section {
+    position: relative;
+}
+
 .user-avatar {
     width: 48px;
     height: 48px;
@@ -242,10 +236,13 @@
 .avatar-img {
     width: 100%;
     height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 50%;
 }
 
+/* 頭像下拉選單樣式 */
 .avatar-dropdown {
     position: absolute;
     top: calc(100% + 5px);
@@ -265,27 +262,32 @@
     padding: 8px 0;
 }
 
+.avatar-dropdown.active,
 .user-avatar:hover .avatar-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-.user-section {
-    position: relative;
-}
-
+/* 下拉選單分隔線 */
 .dropdown-divider {
     height: 1px;
     background-color: rgba(255, 107, 26, 0.1);
     margin: 8px 0;
 }
 
+/* 登出選項樣式 */
 .logout-item {
     color: #ff4757 !important;
 }
 
+.logout-item i {
+    color: inherit;
+}
+
 .logout-item:hover {
+    background: rgba(255, 71, 87, 0.1) !important;
+    color: #ff6b81 !important;
     background: rgba(255, 71, 87, 0.1) !important;
     color: #ff6b81 !important;
 }
@@ -314,7 +316,6 @@
         z-index: 998;
         border-radius: 0 0 8px 8px;
         
-        /* New animation-based hiding */
         max-height: 0;
         overflow: hidden;
         padding-top: 0;
@@ -323,7 +324,7 @@
     }
 
     .navbar-right.active {
-        max-height: 100vh; /* A large enough value to show all content */
+        max-height: 100vh;
         padding: 10px 0;
     }
 
@@ -348,7 +349,7 @@
         border: none;
         border-radius: 0;
         width: 100%;
-        display: none; /* Hide by default */
+        display: none;
         background: #f9f9f9;
         opacity: 1;
         visibility: visible;
@@ -480,12 +481,13 @@
         bottom: 0;
         left: 0;
         right: 0;
-        width: 100%;
         border-radius: 12px 12px 0 0;
         transform: translateY(100%);
+        transition: transform 0.3s ease-in-out;
     }
 
-    .user-avatar:hover .avatar-dropdown {
+    .user-avatar:hover .avatar-dropdown,
+    .avatar-dropdown.active {
         transform: translateY(0);
     }
 
@@ -500,6 +502,17 @@
 }
 
 @media (max-width: 480px) {
+    .logo-text {
+        font-size: 28px;
+    }
+    .navbar-right {
+        gap: 8px;
+    }
+    .btn-login {
+        padding: 6px 12px;
+        font-size: 15px;
+    }
+
     .avatar-dropdown .dropdown-item {
         padding: 14px;
         font-size: 16px;
