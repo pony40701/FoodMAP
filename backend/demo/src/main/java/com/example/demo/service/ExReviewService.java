@@ -76,6 +76,7 @@ public class ExReviewService {
             projection.getAuthorId(),
             imageBase64,
             projection.getAuthorName(),
+            projection.getAuthorUsername(),
             authorAvatarBase64,
             projection.getAuthorRating(),
             projection.getReviewTitle(),
