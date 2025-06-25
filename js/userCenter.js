@@ -1548,93 +1548,182 @@ function initFilters() {
 
 // 載入使用者資料
 async function loadUserData() {
-    // 從 localStorage 獲取用戶 token 和 ID
-    const authToken = localStorage.getItem('authToken');
-    const userId = localStorage.getItem('userId');
-
-    if (!authToken || !userId) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
     try {
-        // 從後端 API 獲取用戶資料
-        ('開始從 API 獲取用戶資料');
-        const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-        });
-
-                if (!response.ok) {
-            throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`);
-                }
-
-        const userData = await response.json();
-        ('API 回應的完整用戶資料:', userData);
+        // 首先檢查多個可能的用戶 ID 來源
+        let userId = null;
+        let userData = {};
         
-        // 檢查頭像資料
-        if (userData.avatar_url) {
-            ('頭像資料長度:', userData.avatar_url.length);
-            ('頭像資料前綴:', userData.avatar_url.substring(0, 50) + '...');
-        } else {
-            ('用戶資料中沒有頭像');
+        // 方法1: 從 userData localStorage 獲取
+        const storedUserData = localStorage.getItem('userData');
+        if (storedUserData) {
+            try {
+                userData = JSON.parse(storedUserData);
+                userId = userData.id;
+                console.log('從 userData localStorage 找到用戶 ID:', userId);
+            } catch (e) {
+                console.warn('解析 userData 失敗:', e);
+            }
         }
-                
-                // 更新 localStorage 中的用戶資料
-        localStorage.setItem('user', JSON.stringify(userData));
-                
-        // 更新顯示
-                updateUserDisplay(userData);
-                updateProfileForm(userData);
+        
+        // 方法2: 從 userId localStorage 獲取
+        if (!userId) {
+            userId = localStorage.getItem('userId');
+            console.log('從 userId localStorage 找到用戶 ID:', userId);
+        }
+        
+        // 方法3: 檢查是否已登入
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        if (!userId && isLoggedIn !== 'true') {
+            console.warn('用戶未登入，重定向到首頁');
+            window.location.href = 'index.html';
+            return null;
+        }
+        
+        if (!userId) {
+            console.error('找不到用戶 ID，可用的 localStorage 項目:');
+            console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
+            console.log('authToken:', localStorage.getItem('authToken'));
+            console.log('userData:', localStorage.getItem('userData'));
+            console.log('userId:', localStorage.getItem('userId'));
+            
+            // 嘗試使用預設的測試用戶 ID
+            userId = '1'; // 假設測試用戶 ID 為 1
+            console.log('使用預設測試用戶 ID:', userId);
+        }
+
+        console.log('載入用戶資料，用戶 ID:', userId);
+        
+        const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const freshUserData = await response.json();
+        console.log('獲取到的用戶資料:', freshUserData);
+        
+        // 更新 localStorage
+        localStorage.setItem('userData', JSON.stringify(freshUserData));
+        localStorage.setItem('userId', freshUserData.id.toString());
+        
+        // 更新頁面顯示
+        updateUserDisplay(freshUserData);
+        updateProfileForm(freshUserData);
+        
+        return freshUserData;
         
     } catch (error) {
-                console.error('獲取用戶資料失敗:', error);
-        showToast('獲取用戶資料失敗，請重新登入');
-        // 清除本地存儲並重定向到登入頁面
-        localStorage.clear();
-        window.location.href = 'index.html';
+        console.error('載入用戶資料失敗:', error);
+        showToast('載入用戶資料失敗：' + error.message);
+        
+        // 如果是 API 錯誤，可能是後端沒有啟動
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            showToast('無法連接到服務器，請確認後端服務是否啟動');
+        }
+        
+        return null;
     }
 }
 
-// 更新使用者顯示資訊
+// 更新用戶顯示
 function updateUserDisplay(userData) {
-    if (!userData) return;
-
-    // Handle potentially nested user object for name and email
-    const user = userData.user || userData;
-
-    // Update name and email
-    const userNameEl = document.querySelector('.sidebar .user-name');
-    const userEmailEl = document.querySelector('.sidebar .user-email');
+    console.log('更新用戶顯示，資料:', userData);
+    
+    const userNameEl = document.querySelector('.user-name');
+    const userEmailEl = document.querySelector('.user-email');
+    
     if (userNameEl) {
-        userNameEl.textContent = user.username || user.fullName || user.name || '使用者';
+        userNameEl.textContent = userData.fullName || userData.username || '未設定';
     }
+    
     if (userEmailEl) {
-        userEmailEl.textContent = user.email || '';
+        userEmailEl.textContent = userData.email || '';
     }
 
-    // Construct avatar URL from userId
-    const userId = localStorage.getItem('userId');
+    // Update avatar
+    const userId = localStorage.getItem('userId') || userData.id;
     const sidebarAvatarImg = document.querySelector('.sidebar .user-avatar .avatar-img');
     const navbarAvatarImg = document.querySelector('.navbar .user-avatar .avatar-img');
     
-    if (userId) {
-        const avatarUrl = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
+    console.log('準備更新頭像，找到的元素:', {
+        sidebarAvatarImg: !!sidebarAvatarImg,
+        navbarAvatarImg: !!navbarAvatarImg
+    });
+    
+    // 首先檢查用戶資料中是否有 base64 編碼的頭像
+    if (userData.avatar_url && userData.avatar_url.startsWith('data:image')) {
+        console.log('使用 base64 編碼的頭像');
+        // 使用 base64 編碼的頭像
         if (sidebarAvatarImg) {
-            sidebarAvatarImg.src = avatarUrl;
-            sidebarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
+            sidebarAvatarImg.src = userData.avatar_url;
+            console.log('更新側邊欄頭像為 base64');
         }
         if (navbarAvatarImg) {
-            navbarAvatarImg.src = avatarUrl;
-            navbarAvatarImg.onerror = function() { this.onerror = null; this.src = 'images/default-avatar.png'; };
+            navbarAvatarImg.src = userData.avatar_url;
+            console.log('更新導航欄頭像為 base64');
         }
+        
+        // 更新所有其他可能的頭像元素
+        const allAvatarImgs = document.querySelectorAll('.avatar-img, img[alt="會員頭像"]');
+        allAvatarImgs.forEach((img, index) => {
+            if (img) {
+                img.src = userData.avatar_url;
+                console.log(`更新頭像元素 ${index + 1} 為 base64`);
+            }
+        });
+        
+    } else if (userId) {
+        console.log('從 API 端點載入頭像');
+        // 從 API 端點載入頭像
+        const avatarUrl = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
+        console.log('頭像 URL:', avatarUrl);
+        
+        if (sidebarAvatarImg) {
+            sidebarAvatarImg.src = avatarUrl;
+            sidebarAvatarImg.onerror = function() {
+                console.log('側邊欄頭像載入失敗，使用預設頭像');
+                this.src = 'images/TEST.jpg';
+            };
+            sidebarAvatarImg.onload = function() {
+                console.log('側邊欄頭像載入成功');
+            };
+        }
+        
+        if (navbarAvatarImg) {
+            navbarAvatarImg.src = avatarUrl;
+            navbarAvatarImg.onerror = function() {
+                console.log('導航欄頭像載入失敗，使用預設頭像');
+                this.src = 'images/TEST.jpg';
+            };
+            navbarAvatarImg.onload = function() {
+                console.log('導航欄頭像載入成功');
+            };
+        }
+        
+        // 更新所有其他可能的頭像元素
+        const allAvatarImgs = document.querySelectorAll('.avatar-img, img[alt="會員頭像"]');
+        allAvatarImgs.forEach((img, index) => {
+            if (img && img !== sidebarAvatarImg && img !== navbarAvatarImg) {
+                img.src = avatarUrl;
+                img.onerror = function() {
+                    console.log(`頭像元素 ${index + 1} 載入失敗，使用預設頭像`);
+                    this.src = 'images/TEST.jpg';
+                };
+                img.onload = function() {
+                    console.log(`頭像元素 ${index + 1} 載入成功`);
+                };
+            }
+        });
     } else {
-        // Fallback if no userId is found
-        if (sidebarAvatarImg) sidebarAvatarImg.src = 'images/default-avatar.png';
-        if (navbarAvatarImg) navbarAvatarImg.src = 'images/default-avatar.png';
+        console.log('沒有用戶 ID，使用預設頭像');
+        // 使用預設頭像
+        const defaultAvatar = 'images/TEST.jpg';
+        if (sidebarAvatarImg) {
+            sidebarAvatarImg.src = defaultAvatar;
+        }
+        if (navbarAvatarImg) {
+            navbarAvatarImg.src = defaultAvatar;
+        }
     }
 }
 
@@ -2705,4 +2794,25 @@ async function initializeUserCenter() {
 
 // 在 DOMContentLoaded 時初始化
 document.addEventListener('DOMContentLoaded', initializeUserCenter);
+
+// 確保關鍵函數全域可用
+window.loadUserData = loadUserData;
+window.updateUserDisplay = updateUserDisplay;
+
+// Debug 函數
+window.debugUserCenter = function() {
+    console.log('=== UserCenter Debug ===');
+    console.log('localStorage userData:', localStorage.getItem('userData'));
+    console.log('localStorage userId:', localStorage.getItem('userId'));
+    console.log('API_BASE_URL:', window.API_BASE_URL);
+    
+    const avatarImgs = document.querySelectorAll('.avatar-img, img[alt="會員頭像"]');
+    console.log('找到的頭像元素:', avatarImgs.length);
+    avatarImgs.forEach((img, index) => {
+        console.log(`頭像 ${index + 1}:`, {
+            src: img.src,
+            element: img
+        });
+    });
+};
 
