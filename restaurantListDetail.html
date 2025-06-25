@@ -424,35 +424,13 @@
 
         // 登入彈窗功能
         document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
+            // 讓 login.js 統一處理會員登入功能
+            // 只保留商家登入的特殊處理
             
-            // 會員登入
-            const loginModal = document.getElementById('loginModal');
-            const loginBtns = document.querySelectorAll('.btn-login');
-            const loginClose = loginModal.querySelector('.close');
             // 商家登入
             const restaurantLoginModal = document.getElementById('restaurantLoginModal');
             const merchantLoginLink = document.getElementById('merchant-login-link');
             const restaurantLoginClose = restaurantLoginModal.querySelector('.close');
-
-            // 開啟會員登入
-            loginBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    loginModal.style.display = 'block';
-                });
-            });
-            // 關閉會員登入
-            loginClose.addEventListener('click', function() {
-                loginModal.style.display = 'none';
-            });
-            window.addEventListener('click', function(event) {
-                if (event.target === loginModal) {
-                    loginModal.style.display = 'none';
-                }
-                if (event.target === restaurantLoginModal) {
-                    restaurantLoginModal.style.display = 'none';
-                }
-            });
 
             // 開啟商家登入
             if(merchantLoginLink) {
@@ -467,38 +445,12 @@
                 restaurantLoginModal.style.display = 'none';
             });
 
-            // 會員登入表單送出
-            const userLoginForm = document.getElementById('loginForm');
-            if (userLoginForm) {
-                userLoginForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const email = userLoginForm.querySelector('#email').value;
-                    const password = userLoginForm.querySelector('#password').value;
-                    try {
-                        const response = await fetch(`${window.API_BASE_URL}/auth/login`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                            body: JSON.stringify({ email, password })
-                        });
-                        const data = await response.json();
-                        if (response.ok) {
-                            localStorage.setItem('user', JSON.stringify(data));
-                            localStorage.setItem('isLoggedIn', 'true');
-                            localStorage.setItem('userId', data.id);
-                            loginModal.style.display = 'none';
-                            alert('登入成功！');
-                            checkLoginStatus(); // 重新檢查登入狀態並更新UI
-                            if (window.favoriteSystem && typeof window.favoriteSystem.initialize === 'function') {
-                                window.favoriteSystem.initialize();
-                            }
-                        } else {
-                            alert(data.error || data.message || '登入失敗');
-                        }
-                    } catch (error) {
-                        alert('登入失敗，請稍後再試');
-                    }
-                });
-            }
+            // 點擊背景關閉商家登入彈窗
+            window.addEventListener('click', function(event) {
+                if (event.target === restaurantLoginModal) {
+                    restaurantLoginModal.style.display = 'none';
+                }
+            });
 
             // 商家登入表單送出
             const restaurantLoginForm = document.getElementById('restaurantLoginForm');
@@ -531,8 +483,6 @@
                 });
             }
         });
-
-
     </script>
   </body>
 </html>
