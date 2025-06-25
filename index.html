@@ -1092,6 +1092,7 @@
         .carousel-container {
             position: relative;
             width: 100%; /* 設定寬度為100% */
+            height: 550px; /* 設定固定高度 */
             overflow: hidden;
             margin: 0 auto; /* 移除max-width，並確保置中 */
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -1103,16 +1104,19 @@
             display: flex;
             transition: transform 0.5s ease-in-out;
             width: 100%; /* 設定寬度為100% */
+            height: 100%; /* 確保高度100% */
         }
 
         .carousel-slide {
             min-width: 100%;
+            height: 100%; /* 確保高度100% */
             box-sizing: border-box;
         }
 
         .carousel-slide img {
             width: 100%; /* 確保圖片寬度100% */
-            height: auto; /* 高度自動以保持比例 */
+            height: 100%; /* 確保圖片高度100% */
+            object-fit: cover; /* 保持圖片比例並填滿容器 */
             display: block;
         }
     </style>
