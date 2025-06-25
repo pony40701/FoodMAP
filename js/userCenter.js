@@ -534,8 +534,17 @@ function renderFavoriteReviews(reviews) {
 
     const html = reviews.map(review => {
         const imageUrl = review.image ? `data:image/jpeg;base64,${review.image}` : '/images/no-image.jpg';
-        const authorAvatar = review.authorAvatar || '/images/default-avatar.png';
+        const authorAvatar = review.authorAvatar
+            ? `data:image/jpeg;base64,${review.authorAvatar}`
+            : '/images/default-avatar.png';
         const excerpt = extractExcerpt(review.contentJson, 50) || '點擊查看更多...';
+
+        // 標籤渲染，優先抓 review_tag 或 reviewTags
+        let tagList = review.review_tag || review.reviewTags || review.tags;
+        let tagsHtml = '';
+        if (Array.isArray(tagList) && tagList.length > 0) {
+            tagsHtml = `<div class="review-tags">${tagList.map(tag => `<span class="review-tag">${tag}</span>`).join('')}</div>`;
+        }
 
         return `
             <article class="food-card" data-id="${review.reviewId}" data-date="${review.reviewDate}" data-views="${review.viewCount}" data-category="${review.cuisineType}" onclick="viewReviewDetail(${review.reviewId})">
@@ -549,7 +558,7 @@ function renderFavoriteReviews(reviews) {
                     <div class="user-info">
                         <img src="${authorAvatar}" alt="用戶頭像" class="avatar">
                         <div class="user-details">
-                            <span class="username">${review.authorName}</span>
+                            <span class="username">${review.authorUsername}</span>
                             <div class="rating">${generateStars(review.authorRating)}</div>
                         </div>
                     </div>
@@ -560,11 +569,11 @@ function renderFavoriteReviews(reviews) {
                             <span>${review.restaurantName}</span>
                         </div>
                     </div>
+                    ${tagsHtml}
                     <p class="excerpt">${excerpt}</p>
                     <div class="meta">
                         <div class="meta-left">
                             <span class="date">${new Date(review.reviewDate).toISOString().split('T')[0]}</span>
-                            <span class="category">${review.cuisineType}</span>
                         </div>
                         <span class="views">${review.viewCount} 次瀏覽</span>
                     </div>
