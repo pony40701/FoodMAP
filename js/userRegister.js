@@ -109,23 +109,72 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 處理登入表單提交
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
-        // 這裡添加登入邏輯
-        ('登入嘗試:', { email, password });
-        
-        // 模擬登入成功
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userEmail', email);
-        
-        // 關閉彈跳視窗
-        loginModal.style.display = 'none';
-        
-        // 跳轉到首頁
-        window.location.href = 'index.html';
+        try {
+            // 顯示載入狀態
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = '登入中...';
+
+            // 呼叫後端登入 API
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // 儲存認證資訊
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userId', data.id);
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // 儲存用戶資料
+                const userData = {
+                    id: data.id,
+                    email: data.email,
+                    username: data.username,
+                    fullName: data.fullName,
+                    image_url: data.image_url,
+                    avatar_url: data.avatar_url,
+                    phone: data.phone,
+                    address: data.address
+                };
+                localStorage.setItem('user', JSON.stringify(userData));
+                
+                // 關閉彈跳視窗
+                loginModal.style.display = 'none';
+                
+                // 顯示成功訊息
+                if (window.showToast) {
+                    window.showToast('登入成功！');
+                }
+                
+                // 延遲一下再跳轉，讓用戶看到成功訊息
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                throw new Error(data.message || '登入失敗');
+            }
+        } catch (error) {
+            console.error('登入失敗:', error);
+            alert(error.message || '登入失敗，請稍後再試');
+            
+            // 恢復按鈕狀態
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.textContent = '登入';
+        }
     });
 
     // 處理註冊表單提交

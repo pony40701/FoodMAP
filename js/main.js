@@ -78,6 +78,13 @@ function initCarousel() {
 // ===========================================
 window.addEventListener('DOMContentLoaded', async () => {
     try {
+        // 檢查並更新登入狀態
+        if (window.login && typeof window.login.checkLoginStatus === 'function') {
+            await window.login.checkLoginStatus();
+        } else if (typeof checkLoginStatus === 'function') {
+            await checkLoginStatus();
+        }
+        
         // 初始化收藏系統
         if (window.favoriteSystem) {
             await window.favoriteSystem.initialize();
