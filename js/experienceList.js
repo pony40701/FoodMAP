@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return {
                     id: dto.reviewId,
-                    user: { id: dto.authorId, name: dto.authorName || '匿名使用者', avatar: avatarUrl },
+                    user: { id: dto.authorId, username: dto.authorUsername || '匿名使用者', avatar: avatarUrl },
                     rating: dto.authorRating,
                     title: dto.reviewTitle,
                     restaurant: dto.restaurantName,
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="user-info">
                         <img src="${article.user.avatar}" alt="用戶頭像" class="avatar" onerror="this.onerror=null;this.src='/images/default-avatar.png';">
                         <div class="user-details">
-                            <span class="username">${article.user.name}</span>
+                            <span class="username">${article.user.username}</span>
                             <div class="rating">${createStarRating(article.rating)}</div>
                         </div>
                     </div>

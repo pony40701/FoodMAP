@@ -21,4 +21,5 @@ public interface ExReviewProjection {
     Integer getServiceScore();
     Integer getTasteScore();
     Integer getPriceScore();
+    String getAuthorUsername();
 } 

@@ -22,17 +22,19 @@ public class ExReviewDTO {
     private Integer tasteScore;
     private Integer priceScore;
     private java.util.List<String> tags;
+    private String authorUsername;
 
     // Constructors
     public ExReviewDTO() {}
 
-    public ExReviewDTO(Long reviewId, Long authorId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
+    public ExReviewDTO(Long reviewId, Long authorId, String imageBase64, String authorName, String authorUsername, String authorAvatar, Double authorRating, String reviewTitle,
                        String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited, String restaurantPlaceId,
                        Integer environmentScore, Integer serviceScore, Integer tasteScore, Integer priceScore, java.util.List<String> tags) {
         this.reviewId = reviewId;
         this.authorId = authorId;
         this.imageBase64 = imageBase64;
         this.authorName = authorName;
+        this.authorUsername = authorUsername;
         this.authorAvatar = authorAvatar;
         this.authorRating = authorRating;
         this.reviewTitle = reviewTitle;
@@ -201,5 +203,13 @@ public class ExReviewDTO {
 
     public void setTags(java.util.List<String> tags) {
         this.tags = tags;
+    }
+
+    public String getAuthorUsername() {
+        return authorUsername;
+    }
+
+    public void setAuthorUsername(String authorUsername) {
+        this.authorUsername = authorUsername;
     }
 } 
