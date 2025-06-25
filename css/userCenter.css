@@ -224,7 +224,7 @@
 
 /* 用戶名稱 */
 .user-name {
-    margin-top: 0;
+    margin-top: 1.5rem;
     font-size: 1.15rem;
     font-weight: 600;
     color: #333;
@@ -2156,7 +2156,7 @@ select:focus {
 
 /* 頭像操作區域樣式 */
 .avatar-actions {
-    margin: 1rem 0;
+    margin: 1.5rem 0 2rem 0;
     text-align: center;
 }
 
