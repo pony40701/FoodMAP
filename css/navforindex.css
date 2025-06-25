@@ -195,12 +195,13 @@ body {
     text-decoration: none;
     font-size: 20px;
     font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 4px 8px; /* 調整為與其他按鈕一致的內邊距 */
+    border-radius: 30px; /* 添加圓角 */
     transition: all 0.3s ease;
     cursor: pointer;
     border: 2px solid transparent;
     font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    background: rgba(255, 255, 255, 0.1); /* 添加半透明背景 */
 }
 
 .nav-link:hover {

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>輪播圖測試</title>
+    <link rel="stylesheet" href="css/food-categories.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-info">
+            <h2>輪播圖測試頁面</h2>
+            <p>這個頁面用來測試輪播圖功能是否正常工作。</p>
+            <p>請檢查瀏覽器控制台是否有調試信息。</p>
+        </div>
+        
+        <!-- 輪播圖區域-->
+        <div class="carousel-container">
+            <!-- Slogan 覆蓋區域-->
+            <div class="carousel-slogan">
+                <p>發現美食 分享感動</p>
+            </div>
+
+            <div class="carousel-wrapper">
+                <div class="carousel-slide">
+                    <img src="images/carousel1.jpg" alt="美食圖片1">
+                </div>
+                <div class="carousel-slide">
+                    <img src="images/carousel2.jpg" alt="美食圖片2">
+                </div>
+                <div class="carousel-slide">
+                    <img src="images/carousel3.jpg" alt="美食圖片3">
+                </div>
+            </div>
+            <!-- 輪播圖控制按鈕-->
+            <button class="carousel-button prev">&#10094;</button>
+            <button class="carousel-button next">&#10095;</button>
+            <!-- 輪播圖指示點 -->
+            <div class="carousel-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 輪播功能
+        let currentSlide = 0;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            if (slides.length === 0) return;
+            
+            currentSlide = (n + slides.length) % slides.length;
+            const carouselWrapper = document.querySelector('.carousel-wrapper');
+            
+            console.log('切換到slide:', {
+                requestedSlide: n,
+                currentSlide: currentSlide,
+                totalSlides: slides.length,
+                carouselWrapper: !!carouselWrapper
+            });
+            
+            if (carouselWrapper) {
+                // 計算偏移量：每個slide佔100%寬度
+                const offset = currentSlide * 100;
+                carouselWrapper.style.transform = `translateX(-${offset}%)`;
+                console.log('設定偏移量:', offset + '%');
+            }
+            
+            // 更新指示點狀態
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function initCarousel() {
+            console.log('初始化輪播圖...');
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.dot');
+            const prevButton = document.querySelector('.carousel-button.prev');
+            const nextButton = document.querySelector('.carousel-button.next');
+
+            console.log('找到輪播圖元素:', {
+                slides: slides.length,
+                dots: dots.length,
+                prevButton: !!prevButton,
+                nextButton: !!nextButton
+            });
+
+            if (slides.length === 0) {
+                console.warn('沒有找到輪播圖slide元素');
+                return;
+            }
+            
+            // 自動輪播
+            setInterval(() => showSlide(currentSlide + 1), 6000);
+            
+            // 指示點點擊
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => showSlide(index));
+            });
+
+            // 加上前後按鈕的事件監聽器
+            if (prevButton && nextButton) {
+                prevButton.addEventListener('click', () => {
+                    showSlide(currentSlide - 1);
+                });
+                nextButton.addEventListener('click', () => {
+                    showSlide(currentSlide + 1);
+                });
+            }
+
+            // 初始化顯示第一張
+            showSlide(0);
+            console.log('輪播圖初始化完成');
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('頁面載入完成，開始初始化輪播圖...');
+            initCarousel();
+        });
+    </script>
+</body>
+</html> 

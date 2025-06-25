@@ -66,7 +66,7 @@ public class GoogleRestaurantController {
             
             // 嘗試不同的查詢方式
             List<Map<String, Object>> restaurants = null;
-            
+                
             
             // 方法 2：使用簡單查詢
             try {

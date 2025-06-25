@@ -21,13 +21,14 @@ public class ExReviewDTO {
     private Integer serviceScore;
     private Integer tasteScore;
     private Integer priceScore;
+    private java.util.List<String> tags;
 
     // Constructors
     public ExReviewDTO() {}
 
     public ExReviewDTO(Long reviewId, Long authorId, String imageBase64, String authorName, String authorAvatar, Double authorRating, String reviewTitle,
                        String restaurantName, String contentJson, Date reviewDate, String cuisineType, Integer viewCount, boolean isFavorited, String restaurantPlaceId,
-                       Integer environmentScore, Integer serviceScore, Integer tasteScore, Integer priceScore) {
+                       Integer environmentScore, Integer serviceScore, Integer tasteScore, Integer priceScore, java.util.List<String> tags) {
         this.reviewId = reviewId;
         this.authorId = authorId;
         this.imageBase64 = imageBase64;
@@ -46,6 +47,7 @@ public class ExReviewDTO {
         this.serviceScore = serviceScore;
         this.tasteScore = tasteScore;
         this.priceScore = priceScore;
+        this.tags = tags;
     }
 
     // Getters and Setters
@@ -191,5 +193,13 @@ public class ExReviewDTO {
 
     public void setPriceScore(Integer priceScore) {
         this.priceScore = priceScore;
+    }
+
+    public java.util.List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(java.util.List<String> tags) {
+        this.tags = tags;
     }
 } 

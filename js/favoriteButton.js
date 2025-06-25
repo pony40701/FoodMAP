@@ -277,6 +277,13 @@ class FavoriteButton {
                     this.showToast('無法加入收藏，請稍後再試');
                 }
             } else {
+                // 移除收藏前彈窗確認（美化）
+                if (typeof showConfirmationModal === 'function') {
+                    const confirmed = await showConfirmationModal('您確定要移除這家收藏店家嗎？', '移除收藏');
+                    if (!confirmed) return;
+                } else {
+                    if (!window.confirm('您確定要移除這家收藏店家嗎？')) return;
+                }
                 // 移除收藏
                 success = await window.favoriteSystem.removeStore(placeId);
                 

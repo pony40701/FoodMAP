@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const data = await response.json();
             
-            if (data.length < limit || (allArticles.length + data.length) >= TOTAL_ARTICLES_LIMIT) {
+            if (data.length < limit) {
                 hasMore = false;
             }
 
@@ -79,16 +79,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     category: dto.cuisineType,
                     views: dto.viewCount,
                     favorited: dto.favorited,
-                    restaurantPlaceId: dto.restaurantPlaceId
+                    restaurantPlaceId: dto.restaurantPlaceId,
+                    tags: dto.tags || []
                 };
             });
 
             if (append) {
-                allArticles.push(...newArticles);
-                appendArticleCards(newArticles);
+                const uniqueNewArticles = newArticles.filter(newArt => 
+                    !allArticles.some(existingArt => existingArt.id === newArt.id)
+                );
+                allArticles.push(...uniqueNewArticles);
+                appendArticleCards(uniqueNewArticles);
             } else {
+                // 對於初始載入或篩選後的載入，allArticles 已由 applyFilters 清空，直接賦值即可
                 allArticles = newArticles;
                 renderArticles(allArticles);
+                if (data.length < limit) {
+                    hasMore = false;
+                }
             }
 
         } catch (error) {
@@ -150,6 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
             : '<div class="user-info-link-disabled">';
         const userLinkEnd = article.user.id ? '</a>' : '</div>';
 
+        // 標籤區塊
+        let tagsHtml = '';
+        if (article.tags && article.tags.length > 0) {
+            tagsHtml = `<span class="review-tags">${article.tags.map(tag => `<span class="review-tag">${tag}</span>`).join(' ')}</span>`;
+        }
+
         card.innerHTML = `
             <div class="food-image">
                 <img src="${article.imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
@@ -176,11 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <p class="excerpt">${article.excerpt || '點擊查看更多...'}</p>
                 <div class="meta">
-                    <div class="meta-left">
+                    ${tagsHtml}
+                    <div class="meta-bottom" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
                         <span class="date">${article.date}</span>
-                        <span class="category">${article.category}</span>
+                        <span class="views">${article.views} 次瀏覽</span>
                     </div>
-                    <span class="views">${article.views} 次瀏覽</span>
                 </div>
             </div>
         `;
