@@ -108,6 +108,122 @@ class RestaurantDetail {
     }
 
     this.renderGoogleReviews();
+    
+    // 加入頁面保護機制，防止重新整理時資料丟失
+    this.setupPageProtection();
+    
+    // 在餐廳資料載入完成後載入推薦餐廳
+    this.loadRecommendedRestaurants();
+  }
+  
+  // 載入推薦餐廳
+  async loadRecommendedRestaurants() {
+    console.log('=== RestaurantDetail.loadRecommendedRestaurants 開始執行 ===');
+    
+    const recommendedCardsContainer = document.querySelector('.recommended-restaurants .menu-grid');
+    
+    if (!recommendedCardsContainer) {
+      console.error('找不到推薦餐廳容器 (.recommended-restaurants .menu-grid)');
+      return;
+    }
+    
+    // 顯示載入中
+    recommendedCardsContainer.innerHTML = '<p>正在載入推薦餐廳...</p>';
+    
+    // 使用已載入的餐廳資料
+    if (!this.restaurantData || this.restaurantData.name === '示例餐廳') {
+      console.error('沒有有效的餐廳資料來載入推薦餐廳');
+      recommendedCardsContainer.innerHTML = `
+        <p style="text-align: center; color: #666; padding: 20px;">
+          無法載入餐廳資訊，請重新進入頁面。
+        </p>
+      `;
+      return;
+    }
+    
+    console.log('使用餐廳資料載入推薦:', this.restaurantData.name);
+    
+    try {
+      // 呼叫 API 獲取推薦餐廳
+      const recommendedRestaurants = await fetchRecommendedRestaurants(this.restaurantData);
+      console.log('API 回傳的推薦餐廳:', recommendedRestaurants);
+      
+      if (recommendedRestaurants && recommendedRestaurants.length > 0) {
+        console.log('開始生成推薦餐廳HTML...');
+        
+        // Generate and insert the HTML for the recommended cards
+        let recommendedHtml = '';
+        recommendedRestaurants.forEach((restaurant, index) => {
+          console.log(`生成第 ${index + 1} 個餐廳卡片:`, restaurant.name);
+          recommendedHtml += createRecommendedRestaurantCard(restaurant);
+        });
+        
+        console.log('將HTML插入容器中...');
+        recommendedCardsContainer.innerHTML = recommendedHtml;
+
+        // Add click listeners to the newly created cards
+        const newRecommendedCards = recommendedCardsContainer.querySelectorAll('.restaurant-card');
+        console.log('找到', newRecommendedCards.length, '個餐廳卡片，準備添加點擊事件...');
+        
+        newRecommendedCards.forEach((card, index) => {
+          card.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (recommendedRestaurants[index]) {
+              navigateToRecommendedRestaurant(recommendedRestaurants[index]);
+            }
+          });
+        });
+
+        // Update scroll button states after cards are loaded
+        setupMenuScroll('.recommended-restaurants');
+        console.log('推薦餐廳載入完成！');
+        
+      } else {
+        console.log('沒有推薦餐廳資料');
+        recommendedCardsContainer.innerHTML = '<p>目前沒有找到相似的推薦餐廳。</p>';
+      }
+      
+    } catch (error) {
+      console.warn('載入推薦餐廳失敗:', error);
+      recommendedCardsContainer.innerHTML = `
+        <p style="text-align: center; color: #666; padding: 20px;">
+          目前無法載入推薦餐廳，請稍後再試。
+        </p>
+      `;
+    }
+  }
+  
+  // 設置頁面保護機制
+  setupPageProtection() {
+    // 每次資料更新時都保存到 sessionStorage
+    const saveCurrentData = () => {
+      if (this.restaurantData && this.restaurantData.name && this.restaurantData.name !== '示例餐廳') {
+        sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
+        console.log('餐廳資料已保存到 sessionStorage:', this.restaurantData.name);
+      }
+    };
+    
+    // 監聽頁面離開事件
+    window.addEventListener('beforeunload', (event) => {
+      saveCurrentData();
+    });
+    
+    // 監聽頁面隱藏事件（用戶切換分頁或最小化視窗）
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        saveCurrentData();
+      }
+    });
+    
+    // 監聽 popstate 事件（用戶按上一頁/下一頁）
+    window.addEventListener('popstate', () => {
+      saveCurrentData();
+    });
+    
+    // 立即保存當前資料
+    saveCurrentData();
+    
+    console.log('頁面保護機制已設置');
   }
 
   // 預設餐廳資料
@@ -175,50 +291,75 @@ class RestaurantDetail {
 
   // 從 URL 獲取餐廳資料
   async getRestaurantDataFromUrl() {
-    // 檢查是否有從 menuDetail.html 返回的資料
-    const returnData = sessionStorage.getItem('restaurantDetailReturnData');
-    if (returnData) {
+    console.log('=== 開始載入餐廳資料 ===');
+    
+    // 1. 優先檢查 sessionStorage 中的餐廳資料（防止重新整理時丟失）
+    const sessionRestaurantData = sessionStorage.getItem('currentRestaurantData');
+    if (sessionRestaurantData) {
       try {
-        this.restaurantData = JSON.parse(returnData);
-        
-        // 清除 sessionStorage 中的資料
-        sessionStorage.removeItem('restaurantDetailReturnData');
+        console.log('從 sessionStorage 載入餐廳資料');
+        this.restaurantData = JSON.parse(sessionRestaurantData);
+        console.log('sessionStorage 資料載入成功:', this.restaurantData.name);
         return;
       } catch (error) {
-        // Silently handle error
+        console.warn('sessionStorage 資料解析失敗:', error);
+        sessionStorage.removeItem('currentRestaurantData');
       }
     }
     
-    // 檢查備用數據（防止用戶按上一頁時數據丟失）
+    // 2. 檢查是否有從 menuDetail.html 返回的資料
+    const returnData = sessionStorage.getItem('restaurantDetailReturnData');
+    if (returnData) {
+      try {
+        console.log('從 menuDetail 返回資料載入');
+        this.restaurantData = JSON.parse(returnData);
+        
+        // 保存到 sessionStorage 備份
+        sessionStorage.setItem('currentRestaurantData', returnData);
+        // 清除原始資料
+        sessionStorage.removeItem('restaurantDetailReturnData');
+        return;
+      } catch (error) {
+        console.warn('menuDetail 返回資料解析失敗:', error);
+      }
+    }
+    
+    // 3. 檢查備用數據（防止用戶按上一頁時數據丟失）
     const backupData = sessionStorage.getItem('menuDetailBackupData');
     if (backupData && document.referrer.includes('menuDetail.html')) {
       try {
+        console.log('從備用資料載入');
         this.restaurantData = JSON.parse(backupData);
         
+        // 保存到 sessionStorage 備份
+        sessionStorage.setItem('currentRestaurantData', backupData);
         // 清除備用數據
         sessionStorage.removeItem('menuDetailBackupData');
         return;
       } catch (error) {
-        // Silently handle error
+        console.warn('備用資料解析失敗:', error);
       }
     }
     
-    // 檢查是否有從其他頁面返回的狀態
+    // 4. 檢查是否有從其他頁面返回的狀態
     const savedPageState = sessionStorage.getItem('restaurantDetailPageState');
     if (savedPageState && document.referrer.includes('menuDetail.html')) {
       try {
+        console.log('從頁面狀態載入');
         const pageState = JSON.parse(savedPageState);
         this.restaurantData = pageState.restaurantData;
         
+        // 保存到 sessionStorage 備份
+        sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
         // 清除 sessionStorage 中的狀態
         sessionStorage.removeItem('restaurantDetailPageState');
         return;
       } catch (error) {
-        // 如果恢復失敗，繼續執行正常的資料載入流程
+        console.warn('頁面狀態資料解析失敗:', error);
       }
     }
     
-    // 優先從 URL 參數讀取餐廳 ID 或資料
+    // 5. 優先從 URL 參數讀取餐廳 ID 或資料
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = urlParams.get('restaurantId');
     const restaurantData = urlParams.get('data');
@@ -226,20 +367,26 @@ class RestaurantDetail {
     // 如果有餐廳 ID，從 API 獲取資料
     if (restaurantId) {
       try {
+        console.log('從 API 載入餐廳資料，ID:', restaurantId);
         const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}`);
         if (response.ok) {
           const apiData = await response.json();
           this.restaurantData = this.transformApiData(apiData);
+          
+          // 保存到 sessionStorage 備份
+          sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
+          console.log('API 資料載入成功:', this.restaurantData.name);
           return;
         }
       } catch (error) {
-        // Silently handle API errors
+        console.warn('API 載入失敗:', error);
       }
     }
     
-    // 如果有 data 參數，解析 URL 中的資料
+    // 6. 如果有 data 參數，解析 URL 中的資料
     if (restaurantData) {
       try {
+        console.log('從 URL 參數載入餐廳資料');
         this.restaurantData = JSON.parse(decodeURIComponent(restaurantData));
         
         // 確保 ratingCount 存在
@@ -260,16 +407,20 @@ class RestaurantDetail {
           };
         }
         
+        // 保存到 sessionStorage 備份
+        sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
+        console.log('URL 參數資料載入成功:', this.restaurantData.name);
         return;
       } catch (error) {
-        // Silently handle URL parsing errors
+        console.warn('URL 參數解析失敗:', error);
       }
     }
     
-    // 次要：從 localStorage 讀取餐廳資料（相容性考慮）
+    // 7. 從 localStorage 讀取餐廳資料（相容性考慮）
     const storedRestaurantData = localStorage.getItem('selectedRestaurant');
     if (storedRestaurantData) {
       try {
+        console.log('從 localStorage 載入餐廳資料');
         this.restaurantData = JSON.parse(storedRestaurantData);
         
         // 確保 ratingCount 存在
@@ -290,14 +441,22 @@ class RestaurantDetail {
           };
         }
         
+        // 保存到 sessionStorage 備份
+        sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
+        console.log('localStorage 資料載入成功:', this.restaurantData.name);
         return;
       } catch (error) {
+        console.warn('localStorage 資料解析失敗:', error);
         localStorage.removeItem('selectedRestaurant');
       }
     }
     
-    // 如果沒有任何資料，使用預設資料
+    // 8. 如果沒有任何資料，使用預設資料
+    console.warn('沒有找到任何餐廳資料，使用預設資料');
     this.restaurantData = this.getDefaultRestaurantData();
+    
+    // 即使是預設資料也要保存，避免重複載入
+    sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
   }
 
   // 轉換 API 資料格式為前端所需格式
@@ -817,8 +976,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 初始化登入模態框
   initLoginModals();
   
-  // 檢查並更新登入狀態
-  checkAndUpdateLoginStatus();
+  // 檢查並更新登入狀態 - 由 login.js 統一處理
+  // checkLoginStatus(); // 註解掉，讓 login.js 自動處理
 
   // Initialize menu scroll for popular dishes section
   // Note: The popular dishes section in HTML does not have a specific container class like .popular-dishes around the menu-grid and buttons.
@@ -832,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize menu scroll for recommended restaurants section
   setupMenuScroll('.recommended-restaurants');
 
-  // Dynamically load and display recommended restaurants
+  // 動態載入並顯示推薦餐廳
   const loadRecommendedRestaurants = async () => {
     console.log('=== loadRecommendedRestaurants 函數開始執行 ===');
     
@@ -844,16 +1003,58 @@ document.addEventListener('DOMContentLoaded', () => {
       recommendedCardsContainer.innerHTML = '<p>正在載入推薦餐廳...</p>';
       console.log('已設定載入中訊息');
       
-      // 直接從 localStorage 讀取當前餐廳資料，不依賴 this
+      // 使用與主要餐廳資料相同的讀取策略
       let currentRestaurant = null;
+      
       try {
-        const storedData = localStorage.getItem('selectedRestaurant');
-        if (storedData) {
-          currentRestaurant = JSON.parse(storedData);
-          console.log('從 localStorage 讀取的餐廳資料:', currentRestaurant);
+        // 1. 優先檢查 sessionStorage 中的餐廳資料（防止重新整理時丟失）
+        const sessionRestaurantData = sessionStorage.getItem('currentRestaurantData');
+        if (sessionRestaurantData) {
+          try {
+            currentRestaurant = JSON.parse(sessionRestaurantData);
+            console.log('從 sessionStorage 載入推薦用餐廳資料:', currentRestaurant.name);
+          } catch (error) {
+            console.warn('sessionStorage 資料解析失敗:', error);
+          }
         }
+        
+        // 2. 如果沒有，檢查是否有從 menuDetail.html 返回的資料
+        if (!currentRestaurant) {
+          const returnData = sessionStorage.getItem('restaurantDetailReturnData');
+          if (returnData) {
+            try {
+              currentRestaurant = JSON.parse(returnData);
+              console.log('從 menuDetail 返回資料載入推薦用餐廳資料:', currentRestaurant.name);
+            } catch (error) {
+              console.warn('menuDetail 返回資料解析失敗:', error);
+            }
+          }
+        }
+        
+        // 3. 檢查備用數據
+        if (!currentRestaurant) {
+          const backupData = sessionStorage.getItem('menuDetailBackupData');
+          if (backupData) {
+            try {
+              currentRestaurant = JSON.parse(backupData);
+              console.log('從備用資料載入推薦用餐廳資料:', currentRestaurant.name);
+            } catch (error) {
+              console.warn('備用資料解析失敗:', error);
+            }
+          }
+        }
+        
+        // 4. 最後才從 localStorage 讀取（相容性考慮）
+        if (!currentRestaurant) {
+          const storedData = localStorage.getItem('selectedRestaurant');
+          if (storedData) {
+            currentRestaurant = JSON.parse(storedData);
+            console.log('從 localStorage 載入推薦用餐廳資料:', currentRestaurant.name);
+          }
+        }
+        
       } catch (error) {
-        console.error('讀取 localStorage 失敗:', error);
+        console.error('讀取餐廳資料失敗:', error);
       }
       
       console.log('當前餐廳資料:', currentRestaurant);
@@ -917,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         }
       } else {
-        console.error('無法取得當前餐廳資訊 (localStorage 中沒有資料)');
+        console.error('無法取得當前餐廳資訊，嘗試所有資料來源都失敗');
         // 當無法取得餐廳資訊時，提供fallback內容
         recommendedCardsContainer.innerHTML = `
           <p style="text-align: center; color: #666; padding: 20px;">
@@ -1471,18 +1672,9 @@ async function handleWriteReview() {
 
 // 初始化登入模態框
 function initLoginModals() {
-  // 登入按鈕點擊事件 - 重新導向到登入頁面
-  const loginBtn = document.querySelector('.btn-login');
-  if (loginBtn) {
-    loginBtn.addEventListener('click', function(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      window.location.href = 'userRegister.html';
-    });
-  }
-
-  // 商家登入相關功能已移除
-  console.log('登入模態框功能已簡化 - 重新導向到登入頁面');
+  // 移除強制跳轉邏輯，讓 login.js 統一處理登入功能
+  // 這樣登入按鈕就會使用彈窗而不是跳轉頁面
+  console.log('登入模態框功能由 login.js 統一處理');
 }
 
 // 路線規劃功能
@@ -1580,7 +1772,7 @@ function initDirectionsModal() {
 }
 
 // 檢查並更新登入狀態
-function checkAndUpdateLoginStatus() {
+function checkLoginStatus() {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
   const loginSection = document.getElementById('loginSection');
   const userSection = document.getElementById('userSection');
@@ -1611,7 +1803,7 @@ function checkAndUpdateLoginStatus() {
   }
 }
 
-// 登出功能
+// 登出功能 - 因為 login.js 可能沒有 logout 函數，這裡保留一個
 function logout() {
   // 清除登入相關的 localStorage 資料
   localStorage.removeItem('isLoggedIn');

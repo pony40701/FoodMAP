@@ -108,7 +108,14 @@ function updateMapMarkers(restaurants) {
                         }
                     }
                     
+                    console.log('地圖標記點擊，保存餐廳資料:', restaurantToSave.name);
+                    
+                    // 保存到 localStorage（向下相容）
                     localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
+                    
+                    // 保存到 sessionStorage（主要用於重新整理保護）
+                    sessionStorage.setItem('currentRestaurantData', JSON.stringify(restaurantToSave));
+                    
                     window.location.href = 'restaurantListDetail.html';
                 });
             }
@@ -1035,15 +1042,40 @@ function navigateToDetail(restaurantData) {
   try {
     restaurant = JSON.parse(decodeURIComponent(restaurantData));
   } catch (error) {
+    console.error('解析餐廳資料失敗:', error);
     return;
   }
+  
+  console.log('正在跳轉到餐廳詳情頁面:', restaurant.name);
+  
+  // 保存餐廳資料到 localStorage（向下相容）
+  const restaurantToSave = { ...restaurant };
+  
+  // 確保 googleReviews 欄位存在
+  if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
+    if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
+      restaurantToSave.googleReviews = restaurant.google_reviews;
+    } else {
+      restaurantToSave.googleReviews = [];
+    }
+  }
+  
+  // 保存到 localStorage（向下相容）
+  localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
+  
+  // 保存到 sessionStorage（主要用於重新整理保護）
+  sessionStorage.setItem('currentRestaurantData', JSON.stringify(restaurantToSave));
+  
+  console.log('餐廳資料已保存到 localStorage 和 sessionStorage');
   
   // 使用餐廳 ID 跳轉，優先使用 placeId，否則使用 id
   const restaurantId = restaurant.placeId || restaurant.id;
   if (restaurantId) {
+    console.log('使用餐廳 ID 跳轉:', restaurantId);
     window.location.href = `restaurantListDetail.html?restaurantId=${encodeURIComponent(restaurantId)}`;
   } else {
     // 如果沒有 ID，回退到原來的方式
+    console.log('使用 data 參數跳轉');
     window.location.href = `restaurantListDetail.html?data=${restaurantData}`;
   }
 }
