@@ -725,6 +725,77 @@ function renderFilteredCards(pageData, totalCount) {
     const reviewCount = restaurant.reviewCount || 0;
     const photoUrl = baseUrl + '/restaurant-images/' + (restaurant.placeId || restaurant.place_id) + '/raw';
     
+    // 營業時間處理
+    let businessHoursText = '暫無營業時間資料';
+    let isOpen = false;
+
+    // 判斷現在是否營業的函數
+    function isOpenNow(businessHoursText) {
+        if (!businessHoursText) return false;
+        // 處理多個時段
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        // 支援全形/半形符號
+        const normalized = businessHoursText.replace(/：/g, ':').replace(/[－–—~]/g, '-');
+        const periods = normalized.split(',').map(p => p.trim());
+        for (const period of periods) {
+            const match = period.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+            if (match) {
+                const [_, start, end] = match;
+                const [startH, startM] = start.split(':').map(Number);
+                const [endH, endM] = end.split(':').map(Number);
+                const startMin = startH * 60 + startM;
+                let endMin = endH * 60 + endM;
+                // 跨日
+                if (endMin < startMin) endMin += 24 * 60;
+                if (
+                    (nowMinutes >= startMin && nowMinutes <= endMin) ||
+                    (endMin > 24 * 60 && nowMinutes <= endMin - 24 * 60)
+                ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // robust openingHours 處理
+    if (restaurant.openingHours) {
+        let openingHoursArr = restaurant.openingHours;
+        if (typeof openingHoursArr === 'string' && openingHoursArr.startsWith('[')) {
+            try {
+                openingHoursArr = JSON.parse(openingHoursArr);
+            } catch (e) {
+                openingHoursArr = null;
+            }
+        }
+        if (Array.isArray(openingHoursArr) && openingHoursArr.length === 7) {
+            const today = new Date().getDay();
+            const index = today === 0 ? 6 : today - 1;
+            const todayText = openingHoursArr[index] || '暫無營業時間資料';
+            // 只取第一個「：」或「:」之後的所有內容
+            const timePart = todayText.split(/：|:/).slice(1).join(':').trim();
+            businessHoursText = timePart ? timePart : todayText;
+            isOpen = isOpenNow(businessHoursText);
+        } else if (typeof openingHoursArr === 'string' && openingHoursArr.length > 0) {
+            businessHoursText = openingHoursArr;
+        }
+    } else if (restaurant.opening_hours) {
+        isOpen = restaurant.opening_hours.open_now || false;
+        if (restaurant.opening_hours.weekday_text && Array.isArray(restaurant.opening_hours.weekday_text)) {
+            const today = new Date().getDay();
+            const index = today === 0 ? 6 : today - 1;
+            if (restaurant.opening_hours.weekday_text[index]) {
+                const todayText = restaurant.opening_hours.weekday_text[index];
+                const timeMatch = todayText.match(/:\s*(.+)$/);
+                businessHoursText = timeMatch ? timeMatch[1].trim() : '暫無營業時間資料';
+                isOpen = isOpenNow(businessHoursText);
+            }
+        } else if (restaurant.businessHours && Array.isArray(restaurant.businessHours)) {
+            businessHoursText = restaurant.businessHours[0] || '暫無營業時間資料';
+        }
+    }
+    
     return `
       <div class="restaurant-card yelp-style" style="position: relative; display: flex; gap: 16px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); align-items: center; cursor: pointer;" 
         onclick="navigateToDetail('${encodeURIComponent(JSON.stringify(restaurant))}')">
@@ -743,6 +814,11 @@ function renderFilteredCards(pageData, totalCount) {
           </div>
           <div class="yelp-row yelp-address-row" style="display: flex; gap: 12px; align-items: center;">
             <div style="color: #666; font-size: 13px;">${restaurant.address || ''}</div>
+          </div>
+          <div class="yelp-row yelp-hours-row" style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+            <span class="status-dot ${isOpen ? 'open' : 'closed'}" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; ${isOpen ? 'background-color: #28a745;' : 'background-color: #dc3545;'}"></span>
+            <span class="status-text ${isOpen ? 'open' : 'closed'}" style="font-size: 13px; font-weight: 500; ${isOpen ? 'color: #28a745;' : 'color: #dc3545;'}">${isOpen ? '營業中' : '休息中'}</span>
+            <span class="status-hours" style="font-size: 13px; color: #666;"><i class="fas fa-clock" style="margin-right: 4px;"></i>${businessHoursText}</span>
           </div>
           <div class="yelp-row yelp-description-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #eee;">
             <p style="font-size: 13px; color: #333; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${restaurant.description || ''}</p>
@@ -1215,6 +1291,11 @@ function renderRestaurants(restaurants) {
                 </div>
                 <div class="yelp-row yelp-address-row" style="display: flex; gap: 12px; align-items: center;">
                     <div style="color: #666; font-size: 13px;">${restaurant.address || ''}</div>
+                </div>
+                <div class="yelp-row yelp-hours-row" style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                    <span class="status-dot ${isOpen ? 'open' : 'closed'}" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; ${isOpen ? 'background-color: #28a745;' : 'background-color: #dc3545;'}"></span>
+                    <span class="status-text ${isOpen ? 'open' : 'closed'}" style="font-size: 13px; font-weight: 500; ${isOpen ? 'color: #28a745;' : 'color: #dc3545;'}">${isOpen ? '營業中' : '休息中'}</span>
+                    <span class="status-hours" style="font-size: 13px; color: #666;"><i class="fas fa-clock" style="margin-right: 4px;"></i>${businessHoursText}</span>
                 </div>
                 <div class="yelp-row yelp-description-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #eee;">
                     <p style="font-size: 13px; color: #333; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${restaurant.description || ''}</p>
