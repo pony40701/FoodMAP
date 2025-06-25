@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Handle author link
-        const authorName = review.authorName || '匿名使用者';
+        const authorName = review.authorUsername || '匿名使用者';
         const authorLinkStart = review.authorId
             ? `<a href="userCenter.html?userId=${review.authorId}" class="author-link">`
             : '<div class="author-link-disabled">';
