@@ -35,8 +35,18 @@ window.showLoginModal = function() {
         loginForm.onsubmit = async function(e) {
             e.preventDefault();
             
-            const email = loginForm.querySelector('#email').value;
-            const password = loginForm.querySelector('#password').value;
+            // 同時嘗試兩種可能的ID，以支援不同頁面的登入表單
+            const emailInput = loginForm.querySelector('#email') || loginForm.querySelector('#loginEmail');
+            const passwordInput = loginForm.querySelector('#password') || loginForm.querySelector('#loginPassword');
+            
+            if (!emailInput || !passwordInput) {
+                console.error('找不到登入表單的輸入欄位');
+                window.showToast('系統錯誤，請稍後再試');
+                return;
+            }
+            
+            const email = emailInput.value;
+            const password = passwordInput.value;
             
             try {
                 const response = await fetch(`${window.API_BASE_URL}/auth/login`, {

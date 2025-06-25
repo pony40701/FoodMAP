@@ -163,13 +163,14 @@ window.showLoginModal = function() {
 };
 
 // 更新登入狀態
-function updateLoginStatus(isLoggedIn) {
+async function updateLoginStatus(isLoggedIn) {
     
     const loginSection = document.getElementById('loginSection');
     const userSection = document.getElementById('userSection');
     
     if (isLoggedIn) {
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const userData = JSON.parse(localStorage.getItem('user') || localStorage.getItem('userData') || '{}');
+        const userId = userData.id || localStorage.getItem('userId');
         
         // 隱藏登入按鈕，顯示用戶區域
         if (loginSection) loginSection.style.display = 'none';
@@ -182,14 +183,20 @@ function updateLoginStatus(isLoggedIn) {
                 userNameElement.textContent = userData.username || userData.fullName || userData.email;
             }
             
-            // 更新用戶頭像 - 檢查 image_url 和 avatar_url
+            // 更新用戶頭像 - 從API重新載入最新頭像
             const userAvatarImg = document.querySelector('.avatar-img');
-            if (userAvatarImg) {
-                const avatarUrl = userData.image_url || userData.avatar_url;
-                
-                if (avatarUrl) {
-                    userAvatarImg.src = avatarUrl;
-                    userAvatarImg.alt = userData.username || '會員頭像';
+            if (userAvatarImg && userId) {
+                try {
+                    // 嘗試從API載入最新的用戶資料和頭像
+                    await loadUserAvatarFromAPI(userId, userAvatarImg);
+                } catch (error) {
+                    console.warn('載入用戶頭像失敗，使用本地資料:', error);
+                    // 回退到本地存儲的頭像
+                    const avatarUrl = userData.image_url || userData.avatar_url;
+                    if (avatarUrl) {
+                        userAvatarImg.src = avatarUrl;
+                        userAvatarImg.alt = userData.username || '會員頭像';
+                    }
                 }
             }
         }
@@ -207,6 +214,70 @@ function updateLoginStatus(isLoggedIn) {
                 window.favoriteButton.initializeAllButtons();
             }
         }, 100);
+    }
+}
+
+// 從API載入用戶頭像的函數
+async function loadUserAvatarFromAPI(userId, avatarImgElement) {
+    const apiBaseUrl = window.API_BASE_URL || 'http://localhost:8080/api';
+    
+    try {
+        console.log('正在從API載入用戶頭像，用戶ID:', userId);
+        
+        // 先嘗試載入用戶資料
+        const userResponse = await fetch(`${apiBaseUrl}/users/${userId}`);
+        if (userResponse.ok) {
+            const userData = await userResponse.json();
+            console.log('用戶資料載入成功:', userData);
+            
+            // 更新localStorage中的用戶資料
+            localStorage.setItem('userData', JSON.stringify(userData));
+            localStorage.setItem('user', JSON.stringify(userData));
+            
+            // 如果有頭像數據，直接使用
+            if (userData.avatar_url) {
+                avatarImgElement.src = userData.avatar_url;
+                avatarImgElement.alt = userData.username || '會員頭像';
+                console.log('頭像已更新:', userData.avatar_url.substring(0, 50) + '...');
+                return;
+            }
+        }
+        
+        // 如果用戶資料中沒有頭像，嘗試直接從頭像API載入
+        const avatarUrl = `${apiBaseUrl}/users/${userId}/avatar?t=${new Date().getTime()}`;
+        console.log('嘗試載入頭像 URL:', avatarUrl);
+        
+        const avatarResponse = await fetch(avatarUrl);
+        if (avatarResponse.ok) {
+            const blob = await avatarResponse.blob();
+            if (blob.size > 0) {
+                const objectUrl = URL.createObjectURL(blob);
+                avatarImgElement.src = objectUrl;
+                avatarImgElement.alt = '會員頭像';
+                console.log('頭像載入成功，大小:', (blob.size / 1024).toFixed(2) + 'KB');
+                
+                // 清理舊的object URL
+                avatarImgElement.onload = () => {
+                    if (avatarImgElement.previousObjectUrl) {
+                        URL.revokeObjectURL(avatarImgElement.previousObjectUrl);
+                    }
+                    avatarImgElement.previousObjectUrl = objectUrl;
+                };
+                
+                return;
+            }
+        }
+        
+        // 如果都失敗了，使用預設頭像
+        console.log('使用預設頭像');
+        avatarImgElement.src = 'images/TEST.jpg';
+        avatarImgElement.alt = '預設頭像';
+        
+    } catch (error) {
+        console.error('載入用戶頭像時發生錯誤:', error);
+        // 使用預設頭像
+        avatarImgElement.src = 'images/TEST.jpg';
+        avatarImgElement.alt = '預設頭像';
     }
 }
 
@@ -243,12 +314,12 @@ function showMessage(message, type = 'info') {
 }
 
 // 檢查是否已登入
-function checkLoginStatus() {
+async function checkLoginStatus() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem('user') || localStorage.getItem('userData');
     
     if (isLoggedIn && user) {
-        updateLoginStatus(true);
+        await updateLoginStatus(true);
         
         // 確保收藏按鈕狀態更新
         setTimeout(async () => {
@@ -267,7 +338,7 @@ function checkLoginStatus() {
             window.location.href = 'index.html';
         }
     } else {
-        updateLoginStatus(false);
+        await updateLoginStatus(false);
     }
 }
 
@@ -538,4 +609,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }, 1500); // 延遲一點時間，確保DOM已完全載入
+});
+
+// 監聽頭像更新事件
+window.addEventListener('avatarUpdated', async (event) => {
+    console.log('收到頭像更新事件:', event.detail);
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+        await updateLoginStatus(true);
+    }
+});
+
+// 監聽localStorage變化（跨頁面通信）
+window.addEventListener('storage', async (event) => {
+    if (event.key === 'avatarUpdateTimestamp') {
+        console.log('檢測到頭像更新，重新載入用戶狀態');
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (isLoggedIn) {
+            await updateLoginStatus(true);
+        }
+    }
+});
+
+// 頁面獲得焦點時檢查頭像更新
+window.addEventListener('focus', async () => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+        // 檢查是否有頭像更新
+        const lastUpdate = localStorage.getItem('avatarUpdateTimestamp');
+        const lastCheck = localStorage.getItem('lastAvatarCheck');
+        
+        if (lastUpdate && lastUpdate !== lastCheck) {
+            console.log('檢測到頭像更新，重新載入');
+            await updateLoginStatus(true);
+            localStorage.setItem('lastAvatarCheck', lastUpdate);
+        }
+    }
 });

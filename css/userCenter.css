@@ -213,7 +213,13 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    overflow: visible;
+    border-radius: 50%;  /* 確保圖片本身也是圓形 */
+    transition: transform 0.3s ease;
+}
+
+/* 頭像懸停效果 */
+.user-avatar:hover .avatar-img {
+    transform: scale(1.1);
 }
 
 /* 用戶名稱 */
@@ -2146,4 +2152,77 @@ select:focus {
         min-width: 20px;
         padding: 2px 6px;
     }
-} */ 
+} */
+
+/* 頭像操作區域樣式 */
+.avatar-actions {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.btn-change-avatar {
+    background: linear-gradient(135deg, #ff6b1a 0%, #ff8c42 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(255, 107, 26, 0.3);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-change-avatar:hover {
+    background: linear-gradient(135deg, #e55a15 0%, #ff7a35 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 26, 0.4);
+}
+
+.btn-change-avatar:active {
+    transform: translateY(0);
+}
+
+.btn-change-avatar i {
+    font-size: 16px;
+}
+
+/* 頭像預覽效果 */
+.avatar-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-avatar:hover .avatar-preview-overlay {
+    display: flex;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .btn-change-avatar {
+        padding: 8px 16px;
+        font-size: 12px;
+        min-width: 120px;
+    }
+    
+    .btn-change-avatar i {
+        font-size: 14px;
+    }
+} 
