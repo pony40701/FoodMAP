@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 獲取所有需要的元素
     const registerForm = document.getElementById('registerForm');
+    const verificationForm = document.getElementById('verificationForm');
     const loginForm = document.getElementById('loginForm');
     const loginModal = document.getElementById('loginModal');
     const closeBtn = document.querySelector('.close');
@@ -11,9 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarInput = document.getElementById('avatar');
     const avatarPreview = document.getElementById('avatarPreview');
     const removeAvatarBtn = document.getElementById('removeAvatar');
+    const resendCodeBtn = document.getElementById('resendCodeBtn');
+    const resendTimer = document.getElementById('resendTimer');
 
     // API 基礎 URL
     const API_BASE_URL = 'http://localhost:8080/api';
+
+    // 全域變數宣告
+    let registrationData = {};
 
     // 大頭貼上傳處理
     avatarInput.addEventListener('change', function(e) {
@@ -93,17 +99,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 顯示錯誤訊息
+    // showError 函式提前宣告
     function showError(input, message) {
         const formGroup = input.closest('.form-group, .terms-checkbox');
         if (formGroup) {
-            const errorMessage = formGroup.querySelector('.error-message');
+            let errorMessage = formGroup.querySelector('.error-message');
             if (!errorMessage) {
-                const newErrorMessage = document.createElement('div');
-                newErrorMessage.className = 'error-message';
-                formGroup.appendChild(newErrorMessage);
+                errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                formGroup.appendChild(errorMessage);
             }
-            formGroup.querySelector('.error-message').textContent = message;
+            errorMessage.textContent = message;
             formGroup.classList.add('error');
         }
     }
@@ -115,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('loginPassword').value;
 
         // 這裡添加登入邏輯
-        ('登入嘗試:', { email, password });
+        console.log('登入嘗試:', { email, password });
         
         // 模擬登入成功
         localStorage.setItem('isLoggedIn', 'true');
@@ -188,16 +194,86 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isValid) {
-            // 更新確認資料頁面的內容
-            document.getElementById('confirmEmail').textContent = email;
-            document.getElementById('confirmUsername').textContent = username;
-            document.getElementById('confirmName').textContent = name;
-            document.getElementById('confirmPhone').textContent = phone;
-            
-            // 切換到確認資料步驟
-            goToStep(2);
+            // 儲存註冊資料
+            registrationData = {
+                email: email,
+                username: username,
+                password: password,
+                name: name,
+                phone: phone,
+                avatarBase64: avatarPreview.dataset.base64 || null
+            };
+
+            // 發送驗證碼
+            sendVerificationCode(email, username);
         }
     });
+
+    // 處理驗證碼表單提交
+    verificationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const code = document.getElementById('verificationCode').value.trim();
+        
+        if (code.length !== 6) {
+            showError(document.getElementById('verificationCode'), '請輸入 6 位數驗證碼');
+            return;
+        }
+
+        // 驗證驗證碼
+        verifyCode(registrationData.email, code);
+    });
+
+    // 重新發送驗證碼
+    resendCodeBtn.addEventListener('click', function() {
+        if (!this.disabled) {
+            sendVerificationCode(registrationData.email, registrationData.username);
+        }
+    });
+
+    // 發送驗證碼
+    async function sendVerificationCode(email, username) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/send-registration-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, username })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // 顯示驗證碼步驟
+                document.getElementById('verificationEmail').textContent = email;
+                goToStep(2);
+                startResendTimer();
+            } else {
+                alert('發送驗證碼失敗: ' + result.error);
+            }
+        } catch (error) {
+            console.error('發送驗證碼錯誤:', error);
+            alert('發送驗證碼時發生錯誤，請稍後再試');
+        }
+    }
+
+    // 驗證碼倒計時
+    function startResendTimer() {
+        let timeLeft = 60;
+        resendCodeBtn.disabled = true;
+        resendTimer.style.display = 'inline';
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            resendTimer.textContent = `重新發送 (${timeLeft}s)`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                resendCodeBtn.disabled = false;
+                resendTimer.style.display = 'none';
+            }
+        }, 1000);
+    }
 
     // 切換步驟
     function goToStep(stepNumber) {
@@ -214,88 +290,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 返回上一步
-    window.prevStep = function() {
-        goToStep(1);
-    };
-
-    // 提交註冊
-    window.submitRegistration = function() {
-        // 獲取表單數據
-        const email = document.getElementById('email').value.trim();
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const name = document.getElementById('name').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        
-        // 獲取圖片的 base64 數據
-        const avatarBase64 = avatarPreview.dataset.base64 || null;
-        
-        // 準備註冊資料
-        const registerData = {
-            email: email,
-            username: username,
-            password: password,
-            name: name,
-            phone_number: phone,
-            avatar_url: avatarBase64  // 使用完整的 base64 字串
-        };
-        
-        // 顯示載入中狀態
-        const submitButton = document.querySelector('.btn-submit');
-        submitButton.disabled = true;
-        submitButton.textContent = '註冊中...';
-        
-        // 發送註冊請求
-        fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(registerData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            ('註冊響應:', data);
-            
-            if (data.id) {
-                // 註冊成功
-                ('註冊成功');
-                
-                // 儲存用戶資料
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userId', data.id);
-                localStorage.setItem('currentUser', JSON.stringify({
-                    id: data.id,
-                    email: data.email,
-                    name: data.name,
-                    username: data.username
-                }));
-                
-                // 切換到完成步驟
-                goToStep(3);
-            } else {
-                // 註冊失敗
-                console.error('註冊失敗:', data.error || '未知錯誤');
-                alert('註冊失敗: ' + (data.error || '未知錯誤'));
-                
-                // 恢復按鈕狀態
-                submitButton.disabled = false;
-                submitButton.textContent = '確認註冊';
-            }
-        })
-        .catch(error => {
-            console.error('註冊錯誤:', error);
-            alert('註冊時發生錯誤，請稍後再試');
-            
-            // 恢復按鈕狀態
-            submitButton.disabled = false;
-            submitButton.textContent = '確認註冊';
-        });
-    };
-
     // 即時驗證輸入
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', function() {
@@ -308,56 +302,130 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
 
-// 完成註冊
-function completeRegistration() {
-    // 切換到成功步驟
-    goToStep(3);
-    
-    // 顯示成功彈跳視窗
-    setTimeout(() => {
-        showSuccessModal();
-    }, 1000);
-}
-
-// 顯示成功彈跳視窗
-function showSuccessModal() {
-    const modal = document.getElementById('successModal');
-    modal.style.display = 'block';
-}
-
-// 跳轉到首頁
-function redirectToHome() {
-    window.location.href = 'index.html';
-}
-
-// 點擊彈跳視窗外部時關閉
-window.onclick = function(event) {
-    const modal = document.getElementById('successModal');
-    if (event.target == modal) {
-        redirectToHome();
+    // ====== 以下 function 也全部放進 DOMContentLoaded 作用域 ======
+    function completeRegistration() {
+        goToStep(4);
+        setTimeout(() => {
+            showSuccessModal();
+        }, 1000);
     }
-}
 
-// 社交媒體登入處理
-function socialLogin(platform) {
-    // 這裡可以根據不同的平台實現不同的登入邏輯
-    switch(platform) {
-        case 'google':
-            // 實現 Google 登入
-            ('使用 Google 登入');
-            // TODO: 實現 Google OAuth 登入
-            break;
-        case 'facebook':
-            // 實現 Facebook 登入
-            ('使用 Facebook 登入');
-            // TODO: 實現 Facebook OAuth 登入
-            break;
-        case 'line':
-            // 實現 Line 登入
-            ('使用 Line 登入');
-            // TODO: 實現 Line OAuth 登入
-            break;
+    function showSuccessModal() {
+        const modal = document.getElementById('successModal');
+        modal.style.display = 'block';
     }
-} 
+
+    function redirectToHome() {
+        window.location.href = 'index.html';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('successModal');
+        if (event.target == modal) {
+            redirectToHome();
+        }
+    }
+
+    function socialLogin(platform) {
+        switch(platform) {
+            case 'google':
+                console.log('使用 Google 登入');
+                break;
+            case 'facebook':
+                console.log('使用 Facebook 登入');
+                break;
+            case 'line':
+                console.log('使用 Line 登入');
+                break;
+        }
+    }
+
+    function fillConfirmData() {
+        document.getElementById('confirmEmail').textContent = registrationData.email || '';
+        document.getElementById('confirmUsername').textContent = registrationData.username || '';
+        document.getElementById('confirmName').textContent = registrationData.name || '';
+        document.getElementById('confirmPhone').textContent = registrationData.phone || '';
+    }
+
+    async function verifyCode(email, code) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/verify-registration-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, code })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                fillConfirmData(); // 驗證成功時填入資料
+                goToStep(3);
+            } else {
+                showError(document.getElementById('verificationCode'), result.error);
+            }
+        } catch (error) {
+            console.error('驗證碼驗證錯誤:', error);
+            showError(document.getElementById('verificationCode'), '驗證時發生錯誤，請稍後再試');
+        }
+    }
+
+    // 讓外部可呼叫
+    window.prevStep = function() {
+        const currentStep = Array.from(stepContents).findIndex(content => content.style.display === 'block');
+        if (currentStep > 0) {
+            goToStep(currentStep);
+        }
+    };
+    window.submitRegistration = function() {
+        // 準備註冊資料
+        const registerData = {
+            email: registrationData.email,
+            username: registrationData.username,
+            password: registrationData.password,
+            name: registrationData.name,
+            phone_number: registrationData.phone,
+            avatar_url: registrationData.avatarBase64
+        };
+        const submitButton = document.querySelector('.btn-submit');
+        submitButton.disabled = true;
+        submitButton.textContent = '註冊中...';
+        fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(registerData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('註冊響應:', data);
+            if (data.id) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userEmail', registrationData.email);
+                localStorage.setItem('userId', data.id);
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: data.id,
+                    email: data.email,
+                    name: data.name,
+                    username: data.username
+                }));
+                goToStep(4);
+            } else {
+                console.error('註冊失敗:', data.error || '未知錯誤');
+                alert('註冊失敗: ' + (data.error || '未知錯誤'));
+                submitButton.disabled = false;
+                submitButton.textContent = '確認註冊';
+            }
+        })
+        .catch(error => {
+            console.error('註冊錯誤:', error);
+            alert('註冊時發生錯誤，請稍後再試');
+            submitButton.disabled = false;
+            submitButton.textContent = '確認註冊';
+        });
+    };
+}); 

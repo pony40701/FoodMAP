@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.VerificationService;
+import com.example.demo.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,12 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VerificationService verificationService;
+
+    @Autowired
+    private EmailService emailService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -143,12 +151,16 @@ public class AuthController {
             // 儲存使用者
             user = userRepository.save(user);
 
+            // 發送註冊成功歡迎信
+            emailService.sendWelcomeEmail(email, username);
+
             // 創建回應
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
             response.put("username", user.getUsername());
             response.put("name", user.getFullName());
+            response.put("message", "註冊成功");
             
             // 處理頭像資料
             byte[] avatarData = user.getAvatarUrl();
@@ -156,13 +168,159 @@ public class AuthController {
                 String base64Avatar = java.util.Base64.getEncoder().encodeToString(avatarData);
                 response.put("avatar_url", "data:image/jpeg;base64," + base64Avatar);
             }
-            
-            response.put("message", "註冊成功");
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace(); // 記錄詳細錯誤
             return ResponseEntity.status(500).body(Map.of("error", "註冊失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/send-registration-code")
+    public ResponseEntity<?> sendRegistrationCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String username = request.get("username");
+
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "電子郵件為必填欄位"));
+            }
+
+            email = email.trim().toLowerCase();
+
+            // 檢查郵箱是否已存在
+            if (userRepository.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "此郵箱已被註冊"));
+            }
+
+            // 發送註冊驗證碼
+            boolean success = verificationService.sendRegistrationCode(email, username != null ? username : "用戶");
+            
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "註冊驗證碼已發送"));
+            } else {
+                return ResponseEntity.status(500).body(Map.of("error", "驗證碼發送失敗"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "發送驗證碼失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-registration-code")
+    public ResponseEntity<?> verifyRegistrationCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+
+            if (email == null || code == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "電子郵件和驗證碼為必填欄位"));
+            }
+
+            email = email.trim().toLowerCase();
+
+            // 驗證驗證碼
+            boolean isValid = verificationService.verifyCode(email, code, "REGISTRATION");
+            
+            if (isValid) {
+                return ResponseEntity.ok(Map.of("message", "驗證碼驗證成功"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "驗證碼無效或已過期"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "驗證失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/send-password-reset-code")
+    public ResponseEntity<?> sendPasswordResetCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "電子郵件為必填欄位"));
+            }
+
+            email = email.trim().toLowerCase();
+
+            // 檢查郵箱是否存在
+            if (!userRepository.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "此郵箱未註冊"));
+            }
+
+            // 發送密碼重設驗證碼
+            boolean success = verificationService.sendPasswordResetCode(email);
+            
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "密碼重設驗證碼已發送"));
+            } else {
+                return ResponseEntity.status(500).body(Map.of("error", "驗證碼發送失敗"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "發送驗證碼失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-password-reset-code")
+    public ResponseEntity<?> verifyPasswordResetCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+
+            if (email == null || code == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "電子郵件和驗證碼為必填欄位"));
+            }
+
+            email = email.trim().toLowerCase();
+
+            // 驗證驗證碼
+            boolean isValid = verificationService.verifyCode(email, code, "PASSWORD_RESET");
+            
+            if (isValid) {
+                return ResponseEntity.ok(Map.of("message", "驗證碼驗證成功"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "驗證碼無效或已過期"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "驗證失敗：" + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+            String newPassword = request.get("newPassword");
+
+            if (email == null || code == null || newPassword == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "電子郵件、驗證碼和新密碼為必填欄位"));
+            }
+
+            email = email.trim().toLowerCase();
+
+            // 驗證驗證碼
+            boolean isValid = verificationService.verifyCode(email, code, "PASSWORD_RESET");
+            
+            if (!isValid) {
+                return ResponseEntity.badRequest().body(Map.of("error", "驗證碼無效或已過期"));
+            }
+
+            // 查找使用者
+            Optional<User> userOptional = userRepository.findByEmail(email);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "使用者不存在"));
+            }
+
+            User user = userOptional.get();
+            
+            // 更新密碼
+            String encryptedPassword = passwordEncoder.encode(newPassword);
+            user.setPasswordHash(encryptedPassword);
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("message", "密碼重設成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "密碼重設失敗：" + e.getMessage()));
         }
     }
 
