@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const steps = document.querySelectorAll('.step');
     const stepContents = document.querySelectorAll('.step-content');
 
+    // API 基礎 URL
+    const API_BASE_URL = 'http://localhost:8080/api';
+
     // 密碼切換功能
     togglePasswordButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -89,14 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // 模擬發送驗證碼
-        startResendTimer();
-        goToStep(2);
+        // 發送密碼重設驗證碼
+        sendPasswordResetCode(email);
     });
 
     // 重設密碼表單
     resetPasswordForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        const email = emailInput.value.trim();
         const verificationCode = verificationCodeInput.value.trim();
         const newPassword = newPasswordInput.value;
         const confirmPassword = confirmPasswordInput.value;
@@ -118,17 +121,77 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isValid) {
-            // 模擬密碼重設成功
-            goToStep(3);
+            // 重設密碼
+            resetPassword(email, verificationCode, newPassword);
         }
     });
 
     // 重新發送驗證碼
     resendCodeButton.addEventListener('click', function() {
         if (!this.disabled) {
-            startResendTimer();
+            const email = emailInput.value.trim();
+            if (validateEmail(email)) {
+                sendPasswordResetCode(email);
+            } else {
+                showError(emailInput, '請輸入有效的電子郵件地址');
+            }
         }
     });
+
+    // 發送密碼重設驗證碼
+    async function sendPasswordResetCode(email) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/send-password-reset-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // 發送成功，切換到重設密碼步驟
+                startResendTimer();
+                goToStep(2);
+            } else {
+                showError(emailInput, result.error);
+            }
+        } catch (error) {
+            console.error('發送驗證碼錯誤:', error);
+            showError(emailInput, '發送驗證碼時發生錯誤，請稍後再試');
+        }
+    }
+
+    // 重設密碼
+    async function resetPassword(email, code, newPassword) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    code, 
+                    newPassword 
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // 重設成功，切換到完成步驟
+                goToStep(3);
+            } else {
+                showError(verificationCodeInput, result.error);
+            }
+        } catch (error) {
+            console.error('重設密碼錯誤:', error);
+            showError(verificationCodeInput, '重設密碼時發生錯誤，請稍後再試');
+        }
+    }
 
     // 即時驗證輸入
     emailInput.addEventListener('input', function() {
@@ -153,27 +216,14 @@ document.addEventListener('DOMContentLoaded', function() {
     goToStep(1);
 });
 
-document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    
-    // 這裡可以添加實際的郵件發送邏輯
-    // 目前僅模擬發送成功
-    showSuccessModal();
-});
-
-function showSuccessModal() {
-    const modal = document.getElementById('successModal');
-    modal.style.display = 'block';
-}
-
+// 關閉成功彈跳視窗
 function closeModal() {
     const modal = document.getElementById('successModal');
     modal.style.display = 'none';
     
     // 清空表單
-    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('verifyEmailForm').reset();
+    document.getElementById('resetPasswordForm').reset();
 }
 
 // 點擊彈跳視窗外部時關閉

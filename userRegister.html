@@ -50,10 +50,14 @@
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <div class="step-label">確認資料</div>
+                    <div class="step-label">驗證碼</div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
+                    <div class="step-label">確認資料</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
                     <div class="step-label">完成</div>
                 </div>
             </div>
@@ -138,8 +142,34 @@
                 </form>
             </div>
 
-            <!-- 確認資料步驟 -->
+            <!-- 驗證碼步驟 -->
             <div class="step-content" id="step2" style="display: none;">
+                <div class="verification-section">
+                    <h2>驗證您的電子郵件</h2>
+                    <p>我們已發送驗證碼到您的電子郵件：<strong id="verificationEmail"></strong></p>
+                    <p>請輸入 6 位數驗證碼完成註冊</p>
+                    
+                    <form id="verificationForm">
+                        <div class="form-group">
+                            <label for="verificationCode">驗證碼</label>
+                            <input type="text" id="verificationCode" name="verificationCode" 
+                                   placeholder="請輸入 6 位數驗證碼" maxlength="6" required>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="resend-code">
+                            <button type="button" id="resendCodeBtn">重新發送驗證碼</button>
+                            <span id="resendTimer" style="display: none; color: #666; font-size: 14px;"></span>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="btn-back" onclick="prevStep()">返回修改</button>
+                            <button type="submit" class="btn-submit">驗證並繼續</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 確認資料步驟 -->
+            <div class="step-content" id="step3" style="display: none;">
                 <div class="confirmation-data">
                     <h2>請確認您的資料</h2>
                     <div class="data-item">
@@ -166,12 +196,11 @@
             </div>
 
             <!-- 完成步驟 -->
-            <div class="step-content" id="step3" style="display: none;">
+            <div class="step-content" id="step4" style="display: none;">
                 <div class="success-message">
                     <i class="fas fa-check-circle"></i>
                     <h2>註冊成功</h2>
                     <p>恭喜您成功註冊食力派ChowCrew會員</p>
-                    <p>我們已發送驗證信到您的電子郵件</p>
                     <p class="login-reminder">請登入以開始使用您的帳號</p>
                 </div>
                 <div class="button-group">
