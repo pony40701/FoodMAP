@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchGoogleData(page, filter, pageSize) {
         try {
             const timestamp = new Date().getTime();
-            const response = await fetch(`http://localhost:8080/api/lleader/ranking/google?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
+            const response = await fetch(`${window.API_BASE_URL}/lleader/ranking/google?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
@@ -43,13 +43,64 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchCustomData(page, filter, pageSize) {
         try {
             const timestamp = new Date().getTime();
-            const response = await fetch(`http://localhost:8080/api/rleader/ranking/restaurants?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
+            const response = await fetch(`${window.API_BASE_URL}/rleader/ranking/restaurants?page=${page}&size=${pageSize}&filter=${filter}&timestamp=${timestamp}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         } catch (error) {
             customRestaurantList.innerHTML += '<p>無法載入食力派回饋資料。</p>';
             return null; // 返回 null
         }
+    }
+
+    function createRestaurantItemElement(restaurant, rank, type) {
+        const restaurantItem = document.createElement('div');
+        restaurantItem.className = 'restaurant-item';
+    
+        const isGoogle = type === 'google';
+        
+        const id = isGoogle ? restaurant.placeId : restaurant.restaurantId;
+        const rating = isGoogle ? restaurant.rating : restaurant.averageRating;
+        const imageUrl = isGoogle 
+            ? (restaurant.photoUrl || '../images/default-restaurant.jpg') 
+            : '../images/restaurant-default.jpg';
+    
+        restaurantItem.innerHTML = `
+            <div class="rank rank-${rank}">${rank}</div>
+            <div class="restaurant-image">
+                <img src="${imageUrl}" alt="${restaurant.name}" loading="lazy">
+            </div>
+            <div class="restaurant-info">
+                <h3 class="restaurant-name">${restaurant.name}</h3>
+                <div class="basic-info">
+                    <div class="rating">
+                        <span class="stars">★</span>
+                        <strong>${rating ? rating.toFixed(1) : 'N/A'}</strong>
+                        <span>(${restaurant.reviewCount || 0} 則評論)</span>
+                    </div>
+                </div>
+                <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
+                <div class="actions">
+                     <button class="favorite-btn" data-place-id="${id}"><i class="far fa-heart"></i> 收藏</button>
+                     <button class="details-btn" data-id="${id}">查看詳情</button>
+                </div>
+            </div>
+        `;
+    
+        if (!isGoogle) {
+            const imgElement = restaurantItem.querySelector('img');
+            imgElement.dataset.restaurantId = restaurant.restaurantId;
+        }
+    
+        const detailsBtn = restaurantItem.querySelector('.details-btn');
+        if (detailsBtn) {
+            detailsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const restaurantId = detailsBtn.dataset.id;
+                window.location.href = `restaurantListDetail.html?restaurantId=${restaurantId}`;
+            });
+        }
+    
+        return restaurantItem;
     }
 
     function renderGoogleRestaurants(restaurants) {
@@ -64,39 +115,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             }
             const rank = initialCount + index + 1;
-            const restaurantItem = document.createElement('div');
-            restaurantItem.className = 'restaurant-item';
-            restaurantItem.innerHTML = `
-                <div class="rank rank-${rank}">${rank}</div>
-                <div class="restaurant-image">
-                    <img src="${restaurant.photoUrl || '../images/default-restaurant.jpg'}" alt="${restaurant.name}" loading="lazy">
-                </div>
-                <div class="restaurant-info">
-                    <h3 class="restaurant-name">${restaurant.name}</h3>
-                    <div class="basic-info">
-                        <div class="rating">
-                            <span class="stars">★</span>
-                            <strong>${restaurant.rating ? restaurant.rating.toFixed(1) : 'N/A'}</strong>
-                            <span>(${restaurant.reviewCount || 0} 則評論)</span>
-                        </div>
-                    </div>
-                    <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
-                    <div class="actions">
-                         <button class="favorite-btn" data-place-id="${restaurant.placeId}"><i class="far fa-heart"></i> 收藏</button>
-                         <button class="details-btn" data-id="${restaurant.placeId}">查看詳情</button>
-                    </div>
-                </div>
-            `;
+            const restaurantItem = createRestaurantItemElement(restaurant, rank, 'google');
             fragment.appendChild(restaurantItem);
-
-            const detailsBtn = restaurantItem.querySelector('.details-btn');
-            if (detailsBtn) {
-                detailsBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const restaurantId = detailsBtn.dataset.id;
-                    window.location.href = `restaurantListDetail.html?restaurantId=${restaurantId}`;
-                });
-            }
         }
         googleRestaurantList.appendChild(fragment);
         favoriteButtonHandler.initialize();
@@ -113,33 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             }
             const rank = initialCount + index + 1;
-            const restaurantItem = document.createElement('div');
-            restaurantItem.className = 'restaurant-item';
-            
-            // 初始設置為預設圖片
-            const imageUrl = '../images/restaurant-default.jpg';
-
-            restaurantItem.innerHTML = `
-                <div class="rank rank-${rank}">${rank}</div>
-                <div class="restaurant-image">
-                    <img src="${imageUrl}" alt="${restaurant.name}" loading="lazy" data-restaurant-id="${restaurant.restaurantId}">
-                </div>
-                <div class="restaurant-info">
-                    <h3 class="restaurant-name">${restaurant.name}</h3>
-                    <div class="basic-info">
-                        <div class="rating">
-                            <span class="stars">★</span>
-                            <strong>${restaurant.averageRating ? restaurant.averageRating.toFixed(1) : 'N/A'}</strong>
-                            <span>(${restaurant.reviewCount || 0} 則評論)</span>
-                        </div>
-                    </div>
-                    <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
-                    <div class="actions">
-                         <button class="favorite-btn" data-place-id="${restaurant.restaurantId}"><i class="far fa-heart"></i> 收藏</button>
-                         <button class="details-btn" data-id="${restaurant.restaurantId}">查看詳情</button>
-                    </div>
-                </div>
-            `;
+            const restaurantItem = createRestaurantItemElement(restaurant, rank, 'custom');
             fragment.appendChild(restaurantItem);
         }
         customRestaurantList.appendChild(fragment);
@@ -148,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
         restaurants.forEach(restaurant => {
             const imgElement = customRestaurantList.querySelector(`img[data-restaurant-id="${restaurant.restaurantId}"]`);
             if (imgElement) {
-                fetch(`http://localhost:8080/api/rleader/ranking/restaurant/photo/${restaurant.restaurantId}`)
+                fetch(`${window.API_BASE_URL}/rleader/ranking/restaurant/photo/${restaurant.restaurantId}`)
                     .then(response => {
                         if (response.ok) {
                             return response.blob();

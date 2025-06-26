@@ -153,10 +153,6 @@ class FavoriteSystem {
             const userId = this.userId;
             const restaurantId = storeData.place_id || storeData.id;
             if (!userId || !restaurantId) return false;
-            // 先查詢是否已收藏
-            const checkRes = await fetch(`${this.apiBaseUrl}/ranking-favorite/check/${userId}/${restaurantId}`);
-            const checkData = await checkRes.json();
-            if (checkData.isFavorited) return true;
             // 呼叫 ranking-favorite 新API
             const response = await fetch(`${this.apiBaseUrl}/ranking-favorite/add`, {
                 method: 'POST',
@@ -329,14 +325,3 @@ class FavoriteSystem {
 
 // 創建全局單例
 window.favoriteSystem = new FavoriteSystem();
-
-// 在 DOMContentLoaded 事件中初始化收藏系統
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        if (!window.favoriteSystem.initialized) {
-            await window.favoriteSystem.initialize();
-        }
-    } catch (error) {
-        // 收藏系統初始化失敗
-    }
-});

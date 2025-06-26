@@ -2457,12 +2457,33 @@ function initializeFavorites() {
 }
 
 // 頁面載入完成後的主要初始化
-function initializePage() {
+async function initializePage() {
+    if (isInitialized) {
+        console.log('用戶中心已經初始化過，跳過重複初始化');
+        return;
+    }
+    isInitialized = true;
+    console.log('開始初始化用戶中心...');
+    
     // 檢查登入狀態
     if (!checkLoginStatus()) {
         return;
     }
     
+    try {
+        // 初始化收藏系統
+        if (window.favoriteSystem && !window.favoriteSystem.initialized) {
+            await window.favoriteSystem.initialize();
+        }
+        
+        // 初始化收藏按鈕
+        if (window.favoriteButton && !window.favoriteButton.initialized) {
+            await window.favoriteButton.initialize();
+        }
+    } catch (error) {
+        console.error('初始化用戶中心時發生錯誤:', error);
+    }
+
     // 初始化選單
     initMenu();
 
@@ -2766,43 +2787,6 @@ function checkApiConnection() {
         console.error('API連接失敗:', error);
     });
 }
-
-// 確保只初始化一次的標誌
-let isInitialized = false;
-
-// 初始化用戶中心
-async function initializeUserCenter() {
-    if (isInitialized) {
-        ('用戶中心已經初始化過，跳過重複初始化');
-        return;
-    }
-    
-    ('開始初始化用戶中心...');
-    
-    try {
-        // 初始化收藏系統
-        if (window.favoriteSystem && !window.favoriteSystem.initialized) {
-            await window.favoriteSystem.initialize();
-        }
-        
-        // 初始化收藏按鈕
-        if (window.favoriteButton && !window.favoriteButton.initialized) {
-            await window.favoriteButton.initialize();
-        }
-        
-        // 載入收藏列表
-        await loadFavorites();
-        
-        // 設置初始化完成標誌
-        isInitialized = true;
-        ('用戶中心初始化完成');
-    } catch (error) {
-        console.error('初始化用戶中心時發生錯誤:', error);
-    }
-}
-
-// 在 DOMContentLoaded 時初始化
-document.addEventListener('DOMContentLoaded', initializeUserCenter);
 
 // 確保關鍵函數全域可用
 window.loadUserData = loadUserData;
