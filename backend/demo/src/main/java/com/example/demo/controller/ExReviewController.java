@@ -32,6 +32,12 @@ public class ExReviewController {
         return ResponseEntity.ok(reviews);
     }
 
+    @GetMapping("/ex-reviews/favorites")
+    public ResponseEntity<List<ExReviewDTO>> getFavoriteReviews(@RequestParam Long userId) {
+        List<ExReviewDTO> reviews = exReviewService.getFavoriteReviews(userId);
+        return ResponseEntity.ok(reviews);
+    }
+
     @GetMapping("/ex-reviews/{id}")
     public ResponseEntity<ExReviewDTO> getReviewById(
             @PathVariable Long id,

@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.style.cursor = 'pointer';
 
         const userLink = article.user.id
-            ? `<a href="userCenter.html?userId=${article.user.id}" class="user-info-link">`
+            ? `<a href="#" class="user-info-link" onclick="event.preventDefault();">`
             : '<div class="user-info-link-disabled">';
         const userLinkEnd = article.user.id ? '</a>' : '</div>';
 

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.ExReviewDTO;
 import com.example.demo.dto.ExReviewProjection;
-import com.example.demo.entity.ReviewTag;
 import com.example.demo.repository.ExReviewRepository;
 import com.example.demo.repository.ReviewTagRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +44,13 @@ public class ExReviewService {
                 .collect(Collectors.toList());
     }
 
+    public List<ExReviewDTO> getFavoriteReviews(Long userId) {
+        List<ExReviewProjection> projections = exReviewRepository.findFavoritedReviewsByUserId(userId);
+        return projections.stream()
+                .map(p -> convertToDto(p))
+                .collect(Collectors.toList());
+    }
+
     public ExReviewDTO getReviewById(Long id, Long userId) {
         // userId can be null if the user is not logged in.
         // The repository query is designed to handle a null userId.
@@ -65,11 +71,11 @@ public class ExReviewService {
 
         String updatedContentJson = rewriteImageUrls(projection.getContentJson());
 
-        // 查詢 tags
-        List<ReviewTag> tagEntities = reviewTagRepository.findByReviewId(projection.getReviewId().intValue());
-        List<String> tags = tagEntities.stream()
-                .map(rt -> rt.getTag().getName())
-                .collect(Collectors.toList());
+        // 解析從 projection 獲取的 tags 字串
+        List<String> tags = new java.util.ArrayList<>();
+        if (projection.getTags() != null && !projection.getTags().isEmpty()) {
+            tags = java.util.Arrays.asList(projection.getTags().split(","));
+        }
 
         return new ExReviewDTO(
             projection.getReviewId(),
