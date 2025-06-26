@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <p class="address"><i class="fas fa-map-marker-alt"></i> ${restaurant.address || '無地址資訊'}</p>
                 <div class="actions">
-                     <button class="favorite-btn" data-place-id="${id}"><i class="far fa-heart"></i> 收藏</button>
+                     <button class="favorite-btn" data-place-id="${id}" aria-label="收藏/取消收藏"><i class="far fa-heart"></i> 收藏</button>
                      <button class="details-btn" data-id="${id}">查看詳情</button>
                 </div>
             </div>
@@ -89,6 +89,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isGoogle) {
             const imgElement = restaurantItem.querySelector('img');
             imgElement.dataset.restaurantId = restaurant.restaurantId;
+        }
+    
+        // 收藏按鈕前端互動
+        const favBtn = restaurantItem.querySelector('.favorite-btn');
+        if (favBtn) {
+            favBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                favBtn.classList.toggle('favorited');
+                const icon = favBtn.querySelector('i');
+                if (favBtn.classList.contains('favorited')) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
+            });
         }
     
         const detailsBtn = restaurantItem.querySelector('.details-btn');
@@ -250,5 +267,18 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('收藏系統初始化完成');
             favoriteButtonHandler.initialize(); // 確保初始載入時按鈕狀態正確
         });
+    }
+
+    // hash 過濾自動切換
+    if (window.location.hash === '#popular' || window.location.hash === '#new') {
+        let filter = 'weekly';
+        if (window.location.hash === '#new') filter = 'new';
+        const targetBtn = Array.from(filterButtons).find(btn => btn.dataset.filter === filter);
+        if (targetBtn) {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            targetBtn.classList.add('active');
+            activeFilter = filter;
+            resetAndLoad();
+        }
     }
 });
