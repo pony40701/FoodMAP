@@ -24,6 +24,8 @@ class FavoriteSystem {
             return this.initPromise;
         }
         
+        ('初始化收藏系統');
+        
         // 創建初始化Promise
         this.initPromise = new Promise(async (resolve, reject) => {
             try {
@@ -150,16 +152,28 @@ class FavoriteSystem {
     async addStore(storeData) {
         try {
             if (!this.initialized) await this.initialize();
-            const userId = this.userId;
-            const restaurantId = storeData.place_id || storeData.id;
-            if (!userId || !restaurantId) return false;
-            // 呼叫 ranking-favorite 新API
-            const response = await fetch(`${this.apiBaseUrl}/ranking-favorite/add`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ userId, restaurantId })
+
+            if (!storeData.place_id && storeData.id) storeData.place_id = storeData.id;
+            else if (!storeData.id && storeData.place_id) storeData.id = storeData.place_id;
+            else if (!storeData.id && !storeData.place_id) {
+                return false;
+            }
+
+            const isFavorited = await this.isStoreFavorited(storeData.place_id);
+            if (isFavorited) return true;
+
+            if (!this.userId) {
+                return false;
+            }
+
+            const response = await fetch(`${base}/users/${this.userId}/favorites/restaurants/${storeData.place_id}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
             });
-            if (!response.ok) throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
+
+            if (!response.ok) {
+                throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
+            }
+
             await this.loadFavorites();
             this.triggerFavoritesChangedEvent();
             return true;
@@ -171,21 +185,43 @@ class FavoriteSystem {
     // 移除店家收藏
     async removeStore(storeId) {
         try {
-            if (!this.initialized) return false;
-            const userId = this.userId;
-            if (!userId || !storeId) return false;
-            // 呼叫 ranking-favorite 新API
-            const response = await fetch(`${this.apiBaseUrl}/ranking-favorite/remove/${userId}/${storeId}`, {
-                method: 'DELETE', headers: { 'Accept': 'application/json' }
-            });
-            if (!response.ok) throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
-            const result = await response.json();
-            if (result.success) {
-                this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
-                this.triggerFavoritesChangedEvent();
-                return true;
+            if (!this.initialized) {
+                return false;
             }
-            return false;
+            if (!storeId) {
+                return false;
+            }
+            if (this.useApi && this.userId > 0) {
+                try {
+                    const response = await fetch(`${base}/users/${this.userId}/favorites/restaurants/${storeId}`, {
+                        method: 'DELETE', headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
+                        this.triggerFavoritesChangedEvent();
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    // 如果API移除收藏失敗，回退到本地存儲
+                }
+            }
+
+            const initialLength = this.stores.length;
+            this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
+            if (initialLength === this.stores.length) {
+                return false;
+            }
+
+            localStorage.setItem('favoriteStores', JSON.stringify(this.stores));
+            this.triggerFavoritesChangedEvent();
+            return true;
         } catch (error) {
             return false;
         }
@@ -193,18 +229,25 @@ class FavoriteSystem {
 
     // 檢查餐廳是否已被收藏
     async isStoreFavorited(storeId) {
-        if (!this.initialized) await this.initialize();
-        const userId = this.userId;
-        if (!userId || !storeId) return false;
-        // 呼叫 ranking-favorite 新API
-        try {
-            const response = await fetch(`${this.apiBaseUrl}/ranking-favorite/check/${userId}/${storeId}`);
-            if (!response.ok) return false;
-            const data = await response.json();
-            return !!data.isFavorited;
-        } catch (error) {
+        if (!this.initialized) {
+            await this.initialize();
+        }
+        
+        // 檢查用戶是否登入
+        if (!localStorage.getItem('isLoggedIn') || !localStorage.getItem('userId')) {
             return false;
         }
+        
+        if (!storeId) {
+            return false;
+        }
+        
+        // 在內部存儲數組中檢查餐廳是否已被收藏
+        const found = this.stores.some(store => {
+            return store.id === storeId || store.place_id === storeId;
+        });
+        
+        return found;
     }
 
     // 觸發收藏變更事件
@@ -325,3 +368,14 @@ class FavoriteSystem {
 
 // 創建全局單例
 window.favoriteSystem = new FavoriteSystem();
+
+// 在 DOMContentLoaded 事件中初始化收藏系統
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        if (!window.favoriteSystem.initialized) {
+            await window.favoriteSystem.initialize();
+        }
+    } catch (error) {
+        // 收藏系統初始化失敗
+    }
+});

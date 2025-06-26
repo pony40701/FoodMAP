@@ -301,7 +301,7 @@ async function loadFavorites(type = 'stores') {
 
         try {
             // 從 API 獲取收藏心得列表
-            const response = await fetch(`${API_BASE_URL}/users/${userId}/favorites/reviews`);
+            const response = await fetch(`${API_BASE_URL}/ex-reviews/favorites?userId=${userId}`);
 
             if (!response.ok) {
                 throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
@@ -533,30 +533,27 @@ function renderFavoriteReviews(reviews) {
     }
 
     const html = reviews.map(review => {
-        const imageUrl = review.image ? `data:image/jpeg;base64,${review.image}` : '/images/no-image.jpg';
+        // 處理心得圖片
+        const imageUrl = review.imageBase64
+          ? `data:image/jpeg;base64,${review.imageBase64}`
+          : '/images/no-image.jpg';
+        // 處理作者頭像
         const authorAvatar = review.authorAvatar
-            ? `data:image/jpeg;base64,${review.authorAvatar}`
-            : '/images/default-avatar.png';
+          ? `data:image/png;base64,${review.authorAvatar}`
+          : '/images/default-avatar.png';
         const excerpt = extractExcerpt(review.contentJson, 50) || '點擊查看更多...';
-
-        // 標籤渲染，優先抓 review_tag 或 reviewTags
-        let tagList = review.review_tag || review.reviewTags || review.tags;
-        let tagsHtml = '';
-        if (Array.isArray(tagList) && tagList.length > 0) {
-            tagsHtml = `<div class="review-tags">${tagList.map(tag => `<span class="review-tag">${tag}</span>`).join('')}</div>`;
-        }
 
         return `
             <article class="food-card" data-id="${review.reviewId}" data-date="${review.reviewDate}" data-views="${review.viewCount}" data-category="${review.cuisineType}" onclick="viewReviewDetail(${review.reviewId})">
                 <div class="food-image">
-                    <img src="${imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
+                    <img class="review-image" src="${imageUrl}" alt="美食照片" onerror="this.onerror=null;this.src='/images/no-image.jpg';">
                     <button class="favorite-btn" title="取消收藏" onclick="event.stopPropagation(); removeFavoriteReview(${review.reviewId})">
                         <i class="fas fa-heart"></i>
                     </button>
                 </div>
                 <div class="food-content">
                     <div class="user-info">
-                        <img src="${authorAvatar}" alt="用戶頭像" class="avatar">
+                        <img src="${authorAvatar}" alt="用戶頭像" class="avatar" onerror="this.onerror=null;this.src='/images/default-avatar.png';">
                         <div class="user-details">
                             <span class="username">${review.authorUsername}</span>
                             <div class="rating">${generateStars(review.authorRating)}</div>
@@ -569,8 +566,10 @@ function renderFavoriteReviews(reviews) {
                             <span>${review.restaurantName}</span>
                         </div>
                     </div>
-                    ${tagsHtml}
                     <p class="excerpt">${excerpt}</p>
+                    <div class="review-tags" style="margin-bottom: 8px;">
+                        ${review.tags && Array.isArray(review.tags) ? review.tags.slice(0, 3).map(tag => `<span class="review-tag">${tag}</span>`).join('') : ''}
+                    </div>
                     <div class="meta">
                         <div class="meta-left">
                             <span class="date">${new Date(review.reviewDate).toISOString().split('T')[0]}</span>
@@ -1943,7 +1942,7 @@ function loadReviews(ratingFilter = 'all') {
     reviewsList.innerHTML = '<div class="loading">載入評論中...</div>';
     
     // 從 API 獲取評論資料
-    fetch(`${API_BASE_URL}/reviews/user/${userId}?rating=${ratingFilter}`, {
+    fetch(`${API_BASE_URL}/reviews/user/${userId}/published`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -2457,33 +2456,12 @@ function initializeFavorites() {
 }
 
 // 頁面載入完成後的主要初始化
-async function initializePage() {
-    if (isInitialized) {
-        console.log('用戶中心已經初始化過，跳過重複初始化');
-        return;
-    }
-    isInitialized = true;
-    console.log('開始初始化用戶中心...');
-    
+function initializePage() {
     // 檢查登入狀態
     if (!checkLoginStatus()) {
         return;
     }
     
-    try {
-        // 初始化收藏系統
-        if (window.favoriteSystem && !window.favoriteSystem.initialized) {
-            await window.favoriteSystem.initialize();
-        }
-        
-        // 初始化收藏按鈕
-        if (window.favoriteButton && !window.favoriteButton.initialized) {
-            await window.favoriteButton.initialize();
-        }
-    } catch (error) {
-        console.error('初始化用戶中心時發生錯誤:', error);
-    }
-
     // 初始化選單
     initMenu();
 
@@ -2787,6 +2765,43 @@ function checkApiConnection() {
         console.error('API連接失敗:', error);
     });
 }
+
+// 確保只初始化一次的標誌
+let isInitialized = false;
+
+// 初始化用戶中心
+async function initializeUserCenter() {
+    if (isInitialized) {
+        ('用戶中心已經初始化過，跳過重複初始化');
+        return;
+    }
+    
+    ('開始初始化用戶中心...');
+    
+    try {
+        // 初始化收藏系統
+        if (window.favoriteSystem && !window.favoriteSystem.initialized) {
+            await window.favoriteSystem.initialize();
+        }
+        
+        // 初始化收藏按鈕
+        if (window.favoriteButton && !window.favoriteButton.initialized) {
+            await window.favoriteButton.initialize();
+        }
+        
+        // 載入收藏列表
+        await loadFavorites();
+        
+        // 設置初始化完成標誌
+        isInitialized = true;
+        ('用戶中心初始化完成');
+    } catch (error) {
+        console.error('初始化用戶中心時發生錯誤:', error);
+    }
+}
+
+// 在 DOMContentLoaded 時初始化
+document.addEventListener('DOMContentLoaded', initializeUserCenter);
 
 // 確保關鍵函數全域可用
 window.loadUserData = loadUserData;

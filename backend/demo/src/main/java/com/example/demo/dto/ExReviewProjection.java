@@ -22,4 +22,5 @@ public interface ExReviewProjection {
     Integer getTasteScore();
     Integer getPriceScore();
     String getAuthorUsername();
+    String getTags();
 } 

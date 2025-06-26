@@ -398,6 +398,17 @@ body {
     flex: 1;
 }
 
+.user-info-link {
+    text-decoration: none !important;
+    border-bottom: none !important;
+    color: inherit !important;
+}
+
+.username, .author-name {
+    text-decoration: none !important;
+    border-bottom: none !important;
+}
+
 .username {
     display: block;
     font-weight: bold;

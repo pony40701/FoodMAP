@@ -131,10 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             </div>
-             <a href="restaurantDetail.html?placeId=${review.restaurantPlaceId}" class="restaurant-link">
-                <i class="fas fa-store"></i>
-                <span>${review.restaurantName}</span>
-            </a>
+            <div class="restaurant-info-row" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <a href="restaurantDetail.html?placeId=${review.restaurantPlaceId}" class="restaurant-link" style="font-size: 1.1em;">
+                    <i class="fas fa-store"></i>
+                    <span>${review.restaurantName}</span>
+                </a>
+            </div>
             ${scoresHtml}
             <div class="overall-score-container">
                 <div class="score-item">
@@ -143,6 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-star"></i> ${review.authorRating ? review.authorRating.toFixed(1) : 'N/A'}
                     </span>
                 </div>
+            </div>
+            <div class="review-tags-inline" style="margin: 12px 0 0 0;">
+              ${
+                review.tags && review.tags.length > 0
+                  ? review.tags.map(tag => `<span class=\"review-tag\">${tag}</span>`).join('')
+                  : ''
+              }
             </div>
             ${coverImageHtml}
             <div class="experience-content">

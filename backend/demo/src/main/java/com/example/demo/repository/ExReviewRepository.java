@@ -42,7 +42,8 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
             rest.cuisine_type AS cuisineType,
             rs.total_views AS viewCount,
             rest.place_id as restaurantPlaceId,
-            CASE WHEN uf.user_id IS NOT NULL THEN 1 ELSE 0 END AS isFavorited
+            CASE WHEN uf.user_id IS NOT NULL THEN 1 ELSE 0 END AS isFavorited,
+            (SELECT GROUP_CONCAT(t.name) FROM tags t JOIN review_tags rt ON t.id = rt.tag_id WHERE rt.review_id = r.id) as tags
         FROM reviews r
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
         LEFT JOIN review_ratings rr ON rr.review_id = r.id
@@ -96,7 +97,8 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
             rest.cuisine_type AS cuisineType,
             rs.total_views AS viewCount,
             rest.place_id as restaurantPlaceId,
-            1 AS isFavorited
+            1 AS isFavorited,
+            (SELECT GROUP_CONCAT(t.name) FROM tags t JOIN review_tags rt ON t.id = rt.tag_id WHERE rt.review_id = r.id) as tags
         FROM reviews r
         JOIN user_favorites uf ON r.id = uf.target_id AND uf.target_type = 'review'
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
@@ -137,7 +139,8 @@ public interface ExReviewRepository extends JpaRepository<Review, Long> {
             rest.cuisine_type AS cuisineType,
             rs.total_views AS viewCount,
             rest.place_id as restaurantPlaceId,
-            CASE WHEN uf.user_id IS NOT NULL THEN 1 ELSE 0 END AS isFavorited
+            CASE WHEN uf.user_id IS NOT NULL THEN 1 ELSE 0 END AS isFavorited,
+            (SELECT GROUP_CONCAT(t.name) FROM tags t JOIN review_tags rt ON t.id = rt.tag_id WHERE rt.review_id = r.id) as tags
         FROM reviews r
         LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
         LEFT JOIN review_ratings rr ON rr.review_id = r.id
