@@ -6,10 +6,13 @@ class InfiniteScroll {
         this.allRestaurants = []; // 所有餐廳數據
         this.loading = false; // 是否正在載入
         this.hasMore = true; // 是否還有更多數據
+        this.enabled = true; // 是否啟用無限滾動
         
         // 綁定滾動事件
         this.bindScrollEvent();
-    }    // 設置餐廳數據
+    }
+
+    // 設置餐廳數據
     setRestaurants(restaurants) {
         // 收藏功能已被移除，只按照評分排序
         this.allRestaurants = restaurants.sort((a, b) => {
@@ -41,7 +44,7 @@ class InfiniteScroll {
     // 綁定滾動事件
     bindScrollEvent() {
         window.addEventListener('scroll', () => {
-            if (this.loading || !this.hasMore) return;
+            if (this.loading || !this.hasMore || !this.enabled) return;
 
             const {scrollTop, scrollHeight, clientHeight} = document.documentElement;
             
@@ -52,6 +55,16 @@ class InfiniteScroll {
                 this.displayCurrentPage();
             }
         });
+    }
+
+    // 啟用無限滾動
+    enable() {
+        this.enabled = true;
+    }
+
+    // 禁用無限滾動
+    disable() {
+        this.enabled = false;
     }
 
     // 重置狀態

@@ -43,6 +43,12 @@ class RestaurantCategory {
         container.querySelectorAll('.food-type-item').forEach(item => {
             item.addEventListener('click', () => {
                 const type = item.dataset.name;
+                
+                // 禁用無限滾動
+                if (window.infiniteScroll) {
+                    window.infiniteScroll.disable();
+                }
+                
                 if (type === '全部餐廳') {
                     // 顯示全部餐廳
                     if (window.mapInit && typeof window.mapInit.displayAllRestaurants === 'function') {

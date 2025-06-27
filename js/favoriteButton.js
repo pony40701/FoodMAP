@@ -296,7 +296,7 @@ class FavoriteButton {
                 }
             }
         } catch (error) {
-            this.showToast('操作失敗，請重新整理頁面');
+            this.showToast('請先登入會員');
         }
     }
 
