@@ -92,23 +92,31 @@
             </div>
             <div id="userSection" class="user-section" style="display: none;">
                 <div class="user-avatar">
+                    <span class="avatar-notification-badge" id="avatar-notification-badge" style="display: none;"><i
+                            class="fas fa-exclamation"></i></span>
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
-                        <a href="userCenter.html" class="dropdown-item">
+                        <a href="usercenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
                         </a>
-                        <a href="userCenter.html#favorites" class="dropdown-item">
+                        <a href="usercenter.html#notifications" class="dropdown-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-exclamation" id="notification-exclamation" style="display: none;">
+                                    <i class="fas fa-exclamation"></i>
+                                </span>
+                                <span class="notification-badge" id="notification-count" style="display: none;">0</span>
+                            </div>
+                            <span>通知中心</span>
+                        </a>
+                        <a href="usercenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
                             <span>我的收藏</span>
                         </a>
-                        <a href="userCenter.html#reviews" class="dropdown-item">
+                        <a href="usercenter.html#reviews" class="dropdown-item">
                             <i class="fas fa-star"></i>
                             <span>我的評論</span>
-                        </a>
-                        <a href="userCenter.html#orders" class="dropdown-item">
-                            <i class="fas fa-history"></i>
-                            <span>瀏覽紀錄</span>
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item logout-item" onclick="logout()">
@@ -281,6 +289,9 @@
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     <script src="js/config.js"></script>
+    <script src="js/notificationService.js"></script>
+    <script src="js/favoriteSystem.js"></script>
+    <script src="js/favoriteButton.js"></script>
     <script src="js/restaurant-modal.js"></script>
     <script src="JS/restaurantList.js"></script>
     <script src="js/login.js"></script>
@@ -308,6 +319,27 @@
       }
 
       document.addEventListener('DOMContentLoaded', function() {
+        // 檢查登入狀態
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (isLoggedIn === 'true' && user) {
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            if (loginSection) loginSection.style.display = 'none';
+            if (userSection) userSection.style.display = 'flex';
+
+            const userAvatarImg = document.querySelector('#userSection .avatar-img');
+            if (userAvatarImg && (user.image_url || user.avatar_url)) {
+                userAvatarImg.src = user.image_url || user.avatar_url;
+            }
+        }
+
+        // 初始化通知服務
+        if (window.NotificationService && typeof window.NotificationService.initialize === 'function') {
+            window.NotificationService.initialize();
+        }
+        
         if (sessionStorage.getItem('openRestaurantLogin') === 'true') {
           sessionStorage.removeItem('openRestaurantLogin');
           openRestaurantLoginModal();
@@ -356,7 +388,23 @@
         };
       });
 
+      function logout() {
+          // 清除使用者登入資訊
+          localStorage.removeItem('user');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('token');
 
+          // 切換 UI 狀態
+          const loginSection = document.getElementById('loginSection');
+          const userSection = document.getElementById('userSection');
+          if (loginSection) loginSection.style.display = 'flex';
+          if (userSection) userSection.style.display = 'none';
+
+          alert('您已成功登出！');
+          // 重新載入頁面以確保狀態完全更新
+          window.location.reload();
+      }
 
       const hamburger = document.querySelector('.hamburger');
       const navRight = document.querySelector('.navbar-right');
