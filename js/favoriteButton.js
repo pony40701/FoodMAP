@@ -270,7 +270,7 @@ class FavoriteButton {
                 });
 
                 if (success) {
-                    this.showToast('已加入收藏');
+                    this.showToast('已加入收藏', 'success');
                     this.updateButtonUI(button, true);
                     this.updateAllButtonsWithSameId(placeId, true);
                 } else {
