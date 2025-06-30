@@ -1,5 +1,6 @@
 // API 基礎 URL 配置
-// 已在 config.js 中設置，移除重複宣告
+// 確保 API_BASE_URL 存在
+const API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080/api';
 const FAVORITES_API_PATH = '/users';
 const RESTAURANT_API_PATH = '/google-restaurants';
 const PHOTOS_API_PATH = '/google-restaurant-photos';
@@ -1908,7 +1909,7 @@ function loadReviews(ratingFilter = 'all') {
     reviewsList.innerHTML = '<div class="loading">載入評論中...</div>';
     
     // 從 API 獲取評論資料
-    fetch(`${API_BASE_URL}/reviews/user/${userId}/published`, {
+    fetch(`${API_BASE_URL}/google-reviews/user/${userId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -1952,19 +1953,265 @@ function loadReviews(ratingFilter = 'all') {
                     </button>
                 </div>
                 <div class="review-header">
-                    <h4>${review.title}</h4>
-                    <div class="review-rating">${'★'.repeat(review.rating)}</div>
+                    <h4>${review.title || '無標題'}</h4>
+                    <div class="review-rating">${'★'.repeat(review.rating || 0)}</div>
                 </div>
                 <div class="review-details">
-                    <p><strong>店家:</strong> ${review.storeName || review.restaurantName}</p>
-                    <p><strong>評論時間:</strong> ${new Date(review.time || review.createdAt).toLocaleString()}</p>
-                    <p><strong>內容:</strong> ${review.content}</p>
+                    <p><strong>店家:</strong> ${review.restaurant_name || review.storeName || '未知餐廳'}</p>
+                    <p><strong>評論時間:</strong> ${new Date(review.created_at || review.time || review.createdAt).toLocaleString()}</p>
+                    <p><strong>內容:</strong> ${review.content || '無內容'}</p>
                     <div class="review-tags">
-                        ${review.tags ? review.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                        ${review.tags ? (Array.isArray(review.tags) ? review.tags : JSON.parse(review.tags)).map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
                     </div>
                 </div>
             </div>
         `).join('');
+    }
+}
+
+// 編輯評論 - 顯示編輯彈窗
+async function editReview(reviewId) {
+    try {
+        // 獲取認證資訊
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            showToast('請先登入', 'error');
+            return;
+        }
+
+        // 獲取評論詳情
+        const response = await fetch(`${API_BASE_URL}/google-reviews/${reviewId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('無法獲取評論詳情');
+        }
+
+        const reviewData = await response.json();
+        
+        // 顯示編輯彈窗
+        showEditReviewModal(reviewData);
+    } catch (error) {
+        console.error('獲取評論詳情失敗:', error);
+        showToast('無法獲取評論詳情', 'error');
+    }
+}
+
+// 顯示編輯評論彈窗
+function showEditReviewModal(reviewData) {
+    const modal = document.getElementById('editReviewModal');
+    
+    // 填入評論資料
+    document.getElementById('editReviewId').value = reviewData.id;
+    document.getElementById('editReviewRestaurant').value = reviewData.restaurant_name || '';
+    document.getElementById('editReviewTitle').value = reviewData.title || '';
+    document.getElementById('editReviewContent').value = reviewData.text || reviewData.content || '';
+    
+    // 處理標籤
+    let tagsValue = '';
+    if (reviewData.tags) {
+        try {
+            const tags = typeof reviewData.tags === 'string' ? JSON.parse(reviewData.tags) : reviewData.tags;
+            if (Array.isArray(tags)) {
+                tagsValue = tags.join(', ');
+            }
+        } catch (e) {
+            tagsValue = reviewData.tags;
+        }
+    }
+    document.getElementById('editReviewTags').value = tagsValue;
+    
+    // 設定評分
+    const rating = reviewData.rating || 0;
+    document.getElementById('editReviewRatingValue').value = rating;
+    setEditRating(rating);
+    
+    // 顯示彈窗
+    modal.style.display = 'block';
+    
+    // 點擊彈窗外部關閉
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            closeEditReviewModal();
+        }
+    };
+}
+
+// 關閉編輯評論彈窗
+function closeEditReviewModal() {
+    const modal = document.getElementById('editReviewModal');
+    modal.style.display = 'none';
+    
+    // 重置表單
+    document.getElementById('editReviewForm').reset();
+    
+    // 重置星星顯示
+    const stars = document.querySelectorAll('#editStarRating .star');
+    stars.forEach(star => {
+        star.classList.remove('active');
+        star.textContent = '☆';
+    });
+}
+
+// 設定編輯評論的評分
+function setEditRating(rating) {
+    document.getElementById('editReviewRatingValue').value = rating;
+    updateEditStarDisplay(rating);
+}
+
+// 更新編輯評論的星星顯示
+function updateEditStarDisplay(rating) {
+    const stars = document.querySelectorAll('#editStarRating .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.textContent = '★';
+        } else {
+            star.classList.remove('active');
+            star.textContent = '☆';
+        }
+    });
+}
+
+// 提交編輯的評論
+async function submitEditReview(event) {
+    event.preventDefault();
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        // 獲取認證資訊
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            showToast('請先登入', 'error');
+            return;
+        }
+        
+        // 顯示載入狀態
+        submitBtn.disabled = true;
+        submitBtn.textContent = '儲存中...';
+        
+        // 收集表單資料
+        const reviewId = document.getElementById('editReviewId').value;
+        const rating = document.getElementById('editReviewRatingValue').value;
+        const title = document.getElementById('editReviewTitle').value.trim();
+        const content = document.getElementById('editReviewContent').value.trim();
+        const tagsInput = document.getElementById('editReviewTags').value.trim();
+        
+        // 驗證必填欄位
+        if (!rating || rating < 1 || rating > 5) {
+            showToast('請選擇評分（1-5星）', 'error');
+            return;
+        }
+        
+        if (!title) {
+            showToast('請輸入評論標題', 'error');
+            return;
+        }
+        
+        if (!content) {
+            showToast('請輸入評論內容', 'error');
+            return;
+        }
+        
+        // 處理標籤
+        let tags = [];
+        if (tagsInput) {
+            tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        }
+        
+        // 準備請求資料
+        const reviewData = {
+            rating: parseInt(rating),
+            title: title,
+            content: content,
+            tags: tags
+        };
+        
+        console.log('編輯評論資料:', reviewData);
+        
+        // 發送到後端
+        const response = await fetch(`${API_BASE_URL}/google-reviews/${reviewId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reviewData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || '更新失敗');
+        }
+        
+        const result = await response.json();
+        
+        // 成功
+        showToast('評論已成功更新！', 'success');
+        closeEditReviewModal();
+        
+        // 重新載入評論列表
+        loadReviews();
+        
+        // 更新數據分析
+        loadAnalyticsData();
+        
+    } catch (error) {
+        console.error('編輯評論失敗:', error);
+        showToast(error.message || '更新失敗，請稍後再試', 'error');
+    } finally {
+        // 恢復按鈕狀態
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// 刪除評論
+async function deleteReview(reviewId) {
+    try {
+        // 獲取認證資訊
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            showToast('請先登入', 'error');
+            return;
+        }
+
+        // 顯示確認對話框
+        const confirmed = await showConfirmationModal('確定要刪除這則評論嗎？此操作無法復原。', '刪除評論');
+        if (!confirmed) return;
+
+        // 發送刪除請求 - 使用正確的端點
+        const response = await fetch(`${API_BASE_URL}/google-reviews/${reviewId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || '刪除評論失敗');
+        }
+
+        // 刪除成功
+        showToast('評論已成功刪除', 'success');
+        
+        // 重新載入評論列表
+        loadReviews();
+        
+        // 更新數據分析
+        loadAnalyticsData();
+    } catch (error) {
+        console.error('刪除評論失敗:', error);
+        showToast(error.message || '刪除評論時發生錯誤', 'error');
     }
 }
 
@@ -2278,7 +2525,7 @@ function loadAnalyticsData(timeRange = 'month') {
     // 準備分析數據
     const analyticsData = {
         reviews: {
-            totalReviews: 8,
+            totalReviews: 3,
             averageRating: 4.5,
             totalLikes: 3
         },
@@ -2783,4 +3030,297 @@ window.debugUserCenter = function() {
         });
     });
 };
+
+// 新增評論相關功能
+let selectedRating = 0;
+let selectedRestaurantId = null;
+
+// 顯示新增評論彈窗
+function showAddReviewModal() {
+    const modal = document.getElementById('addReviewModal');
+    if (modal) {
+        modal.style.display = 'block';
+        // 重置表單
+        document.getElementById('addReviewForm').reset();
+        selectedRating = 0;
+        selectedRestaurantId = null;
+        updateStarDisplay();
+    }
+}
+
+// 關閉新增評論彈窗
+function closeAddReviewModal() {
+    const modal = document.getElementById('addReviewModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 設定評分
+function setRating(rating) {
+    selectedRating = rating;
+    document.getElementById('reviewRatingValue').value = rating;
+    updateStarDisplay();
+}
+
+// 更新星星顯示
+function updateStarDisplay() {
+    const stars = document.querySelectorAll('.star-rating .star');
+    stars.forEach((star, index) => {
+        if (index < selectedRating) {
+            star.textContent = '★';
+            star.classList.add('active');
+        } else {
+            star.textContent = '☆';
+            star.classList.remove('active');
+        }
+    });
+}
+
+// 搜尋餐廳（使用 Google Maps API）
+async function searchRestaurants(query) {
+    if (!query || query.length < 2) {
+        document.getElementById('restaurantSuggestions').style.display = 'none';
+        return;
+    }
+
+    const suggestionsDiv = document.getElementById('restaurantSuggestions');
+    
+    try {
+        // 顯示載入中狀態
+        suggestionsDiv.innerHTML = '<div style="padding: 10px; color: #999;"><i class="fas fa-spinner fa-spin"></i> 搜尋中...</div>';
+        suggestionsDiv.style.display = 'block';
+        
+        // 使用專門的搜索端點，更高效
+        const response = await fetch(`${API_BASE_URL}/google-restaurants/search?query=${encodeURIComponent(query)}&limit=10`);
+        
+        if (!response.ok) {
+            console.error('搜索 API 回應錯誤:', response.status, response.statusText);
+            const errorText = await response.text();
+            console.error('錯誤詳情:', errorText);
+            throw new Error(`搜索失敗 (${response.status}): ${response.statusText}`);
+        }
+
+        const searchResults = await response.json();
+        console.log('搜索結果:', searchResults.length, '筆');
+        
+        // 如果搜索結果為空數組，直接顯示無結果
+        if (Array.isArray(searchResults) && searchResults.length === 0) {
+            console.log('搜索無結果，顯示手動輸入選項');
+            displayRestaurantSuggestions([]); // 會顯示手動輸入選項
+            return;
+        }
+        
+        // 如果是錯誤對象（包含 error 屬性），拋出錯誤
+        if (searchResults.error) {
+            throw new Error(searchResults.error);
+        }
+        
+        displayRestaurantSuggestions(searchResults);
+        
+    } catch (error) {
+        console.error('搜尋餐廳失敗:', error);
+        
+        // 如果 API 失敗，提供手動輸入選項
+        suggestionsDiv.innerHTML = `
+            <div style="padding: 10px;">
+                <div style="color: #e74c3c; margin-bottom: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    搜尋失敗: ${error.message}
+                </div>
+                <div style="color: #999; margin-bottom: 10px;">您可以手動輸入餐廳資訊：</div>
+                <div class="restaurant-suggestion-item" onclick="useManualInput('${query.replace(/'/g, "\\'")}')">
+                    <div style="font-weight: 600;">
+                        <i class="fas fa-plus-circle" style="color: #ff6b1a;"></i> 
+                        使用 "${query}" 作為餐廳名稱
+                    </div>
+                    <div style="font-size: 12px; color: #666;">手動輸入餐廳資訊</div>
+                </div>
+            </div>
+        `;
+        suggestionsDiv.style.display = 'block';
+    }
+}
+
+// 使用手動輸入的餐廳名稱
+function useManualInput(restaurantName) {
+    // 使用餐廳名稱作為臨時 ID
+    const tempId = 'manual_' + Date.now();
+    
+    document.getElementById('reviewRestaurant').value = restaurantName;
+    document.getElementById('reviewRestaurantId').value = tempId;
+    selectedRestaurantId = tempId;
+    document.getElementById('restaurantSuggestions').style.display = 'none';
+    
+    // 提示用戶這是手動輸入
+    showToast('將使用手動輸入的餐廳名稱', 'info');
+}
+
+// 顯示餐廳建議
+function displayRestaurantSuggestions(restaurants) {
+    const suggestionsDiv = document.getElementById('restaurantSuggestions');
+    
+    if (restaurants.length === 0) {
+        suggestionsDiv.innerHTML = `
+            <div style="padding: 10px;">
+                <div style="color: #999;">找不到相關餐廳</div>
+                <div class="restaurant-suggestion-item" onclick="useManualInput(document.getElementById('reviewRestaurant').value)">
+                    <div style="font-weight: 600;">
+                        <i class="fas fa-plus-circle" style="color: #ff6b1a;"></i> 
+                        手動輸入餐廳名稱
+                    </div>
+                </div>
+            </div>
+        `;
+        suggestionsDiv.style.display = 'block';
+        return;
+    }
+
+    suggestionsDiv.innerHTML = restaurants.map(restaurant => {
+        // 使用 place_id 或 id 作為餐廳識別碼
+        const restaurantId = restaurant.place_id || restaurant.id || '';
+        const restaurantName = (restaurant.name || '').replace(/'/g, "\\'");
+        const restaurantAddress = restaurant.formatted_address || restaurant.vicinity || '';
+        
+        return `
+            <div class="restaurant-suggestion-item" onclick="selectRestaurant('${restaurantId}', '${restaurantName}')">
+                <div style="font-weight: 600;">${restaurant.name}</div>
+                <div style="font-size: 12px; color: #666;">${restaurantAddress}</div>
+            </div>
+        `;
+    }).join('');
+    
+    suggestionsDiv.style.display = 'block';
+}
+
+// 選擇餐廳
+function selectRestaurant(placeId, name) {
+    document.getElementById('reviewRestaurant').value = name;
+    document.getElementById('reviewRestaurantId').value = placeId;
+    selectedRestaurantId = placeId;
+    document.getElementById('restaurantSuggestions').style.display = 'none';
+}
+
+// 顯示餐廳搜尋
+function showRestaurantSearch() {
+    const query = document.getElementById('reviewRestaurant').value;
+    if (query) {
+        searchRestaurants(query);
+    }
+}
+
+// 提交新評論
+async function submitNewReview(event) {
+    event.preventDefault();
+    
+    // 獲取表單數據
+    const formData = new FormData(event.target);
+    const userId = localStorage.getItem('userId');
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!userId || !authToken) {
+        showToast('請先登入', 'error');
+        return;
+    }
+    
+    if (!selectedRestaurantId) {
+        showToast('請選擇餐廳', 'error');
+        return;
+    }
+    
+    if (!selectedRating) {
+        showToast('請選擇評分', 'error');
+        return;
+    }
+    
+    // 檢查是否為手動輸入的餐廳
+    const isManualInput = selectedRestaurantId.startsWith('manual_');
+    
+    // 準備評論數據
+    const reviewData = {
+        user_id: parseInt(userId),
+        place_id: isManualInput ? null : selectedRestaurantId, // 手動輸入的餐廳沒有 place_id
+        restaurant_name: formData.get('restaurant'),
+        rating: selectedRating,
+        title: formData.get('title'),
+        content: formData.get('content'),
+        tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+        is_manual_entry: isManualInput, // 標記是否為手動輸入
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    };
+    
+    // 顯示載入狀態
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '發布中...';
+    
+    try {
+        // 發送到後端
+        const response = await fetch(`${API_BASE_URL}/google-reviews`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reviewData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || '發布失敗');
+        }
+        
+        const result = await response.json();
+        
+        // 成功
+        showToast('評論發布成功！', 'success');
+        closeAddReviewModal();
+        
+        // 重新載入評論列表
+        loadReviews();
+        
+        // 更新數據分析
+        loadAnalyticsData();
+        
+    } catch (error) {
+        console.error('發布評論失敗:', error);
+        showToast(error.message || '發布失敗，請稍後再試', 'error');
+    } finally {
+        // 恢復按鈕狀態
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// 將函數設為全域可用
+window.showAddReviewModal = showAddReviewModal;
+window.closeAddReviewModal = closeAddReviewModal;
+window.setRating = setRating;
+window.searchRestaurants = searchRestaurants;
+window.selectRestaurant = selectRestaurant;
+window.showRestaurantSearch = showRestaurantSearch;
+window.submitNewReview = submitNewReview;
+window.useManualInput = useManualInput;
+
+// 點擊彈窗外部關閉
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('addReviewModal');
+    if (event.target === modal) {
+        closeAddReviewModal();
+    }
+    
+    // 點擊餐廳建議框外部時隱藏建議
+    const suggestionsDiv = document.getElementById('restaurantSuggestions');
+    const restaurantInput = document.getElementById('reviewRestaurant');
+    const searchBtn = event.target.closest('button[onclick*="showRestaurantSearch"]');
+    
+    if (suggestionsDiv && 
+        !suggestionsDiv.contains(event.target) && 
+        event.target !== restaurantInput &&
+        !searchBtn) {
+        suggestionsDiv.style.display = 'none';
+    }
+});
 
