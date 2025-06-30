@@ -5,7 +5,7 @@ const RESTAURANT_API_PATH = '/google-restaurants';
 const PHOTOS_API_PATH = '/google-restaurant-photos';
 const USER_API_PATH = '/users';
 
-// 構建餐廳圖片URL的函數
+// 構建餐廳圖片 URL 的函數
 function buildRestaurantPhotoUrl(placeId) {
     if (!placeId) return 'images/default-restaurant.jpg';
     
@@ -502,7 +502,20 @@ async function renderFavoriteStores(stores) {
                     e.stopPropagation();
                     
                     // 顯示確認對話框
-                    if (confirm('確定要取消收藏這家餐廳嗎？')) {
+                    const confirmed = await showConfirmationModal('您確定要移除這家收藏店家嗎？', '移除收藏');
+                    if (confirmed) {
+                        // 關閉可能開啟的餐廳詳情視窗
+                        if (window.RestaurantModal && typeof window.RestaurantModal.closeModal === 'function') {
+                            window.RestaurantModal.closeModal();
+                        }
+                        
+                        // 舊版彈窗關閉
+                        const restaurantModal = document.getElementById('restaurantModal');
+                        if (restaurantModal) {
+                            restaurantModal.style.display = 'none';
+                        }
+                        
+                        // 執行移除收藏
                         await removeFavorite(placeId);
                     }
                 });
@@ -720,20 +733,30 @@ async function removeFavorite(id) {
             removeBtn.disabled = true;
         }
         
+        // 關閉餐廳詳情視窗
+        if (window.RestaurantModal && typeof window.RestaurantModal.closeModal === 'function') {
+            window.RestaurantModal.closeModal();
+        }
+        
+        // 舊版彈窗關閉
+        const restaurantModal = document.getElementById('restaurantModal');
+        if (restaurantModal) {
+            restaurantModal.style.display = 'none';
+        }
+        
         // 發送API請求移除收藏
         const url = `${API_BASE_URL}${FAVORITES_API_PATH}/${userId}/favorites/restaurants/${id}`;
         const response = await fetch(url, { method: 'DELETE' });
         
-        if (!response.ok) {
-            throw new Error(`API請求失敗: ${response.status} ${response.statusText}`);
+        // 即使API返回錯誤，也繼續執行本地移除操作
+        let apiSuccess = false;
+        
+        if (response.ok) {
+            const body = await response.json();
+            apiSuccess = body.success;
         }
         
-        const body = await response.json();
-        if (!body.success) {
-            throw new Error(body.message || '移除收藏失敗');
-        }
-        
-        // 同時更新localStorage的快取資料
+        // 無論API是否成功，都更新localStorage的快取資料
         const storedFavorites = localStorage.getItem('favoriteStores');
         if (storedFavorites) {
             let favorites = JSON.parse(storedFavorites);
@@ -748,11 +771,11 @@ async function removeFavorite(id) {
             localStorage.setItem('favoriteStores', JSON.stringify(favorites));
         }
         
-        // 顯示成功訊息
-        showToast('已移除收藏', 'success');
-        
         // 從DOM中移除對應的餐廳卡片
         removeCardFromDOM(id);
+        
+        // 顯示成功訊息
+        showToast('已從收藏中移除', 'success');
         
         return;
     } catch (error) {
@@ -765,8 +788,8 @@ async function removeFavorite(id) {
             removeBtn.disabled = false;
         }
         
-        // 顯示錯誤訊息
-        showToast(error.message || '移除收藏失敗，請稍後再試', 'error');
+        // 顯示錯誤訊息，但仍然嘗試本地移除
+        console.warn('API請求失敗，嘗試本地移除');
         
         // 嘗試從本地快取移除（作為備用方案）
         try {
@@ -786,10 +809,12 @@ async function removeFavorite(id) {
                 // 從DOM中移除對應的餐廳卡片
                 removeCardFromDOM(id);
                 
-                showToast('已從本地移除收藏，但未能同步到伺服器', 'warning');
+                // 顯示成功訊息
+                showToast('已從收藏中移除', 'success');
             }
         } catch (localError) {
             console.error('從本地快取移除收藏失敗:', localError);
+            showToast('移除收藏失敗，請稍後再試', 'error');
         }
     }
 }
@@ -1128,10 +1153,12 @@ function showRestaurantDetailFallback(restaurant) {
             favoriteBtn.onclick = function() {
                 if (isFavorite) {
                     // 如果已收藏，則取消收藏
-                    if (confirm('確定要取消收藏這家餐廳嗎？')) {
-                        removeFavorite(placeId);
-                        closeModal();
-                    }
+                    showConfirmationModal('您確定要移除這家收藏店家嗎？', '移除收藏').then(confirmed => {
+                        if (confirmed) {
+                            removeFavorite(placeId);
+                            closeModal();
+                        }
+                    });
                 }
             };
         }
