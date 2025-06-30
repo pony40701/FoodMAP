@@ -250,7 +250,9 @@
 
       <!-- 評論區塊 -->
       <section id="reviews" class="content-section">
-        <h2>我的評論</h2>
+        <div class="section-header" style="margin-bottom: 20px;">
+          <h2 style="margin: 0;">我的評論</h2>
+        </div>
         <div class="filter-bar">
           <select id="reviewRating">
             <option value="all">全部評分</option>
@@ -537,6 +539,297 @@
       </div>
     </div>
   </div>
+
+  <!-- 新增評論彈窗 -->
+  <div id="addReviewModal" class="modal">
+    <div class="modal-content" style="max-width: 600px; margin: 5% auto;">
+      <div class="modal-header">
+        <h2>新增評論</h2>
+        <span class="close" onclick="closeAddReviewModal()">&times;</span>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <form id="addReviewForm" onsubmit="submitNewReview(event)">
+          <!-- 選擇餐廳 -->
+          <div class="form-group">
+            <label for="reviewRestaurant">餐廳名稱 <span style="color: red;">*</span></label>
+            <div style="position: relative;">
+              <input type="text" id="reviewRestaurant" name="restaurant" required 
+                     placeholder="請輸入餐廳名稱..." 
+                     style="width: 100%; padding-right: 40px;"
+                     oninput="searchRestaurants(this.value)">
+              <button type="button" onclick="showRestaurantSearch()" 
+                      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                             background: #ff6b1a; color: white; border: none; padding: 5px 10px; 
+                             border-radius: 4px; cursor: pointer;">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            <div id="restaurantSuggestions" style="position: absolute; background: white; border: 1px solid #ddd; 
+                 max-height: 200px; overflow-y: auto; display: none; width: 100%; z-index: 1000; 
+                 box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
+            <input type="hidden" id="reviewRestaurantId" name="restaurantId">
+          </div>
+          
+          <!-- 評分 -->
+          <div class="form-group">
+            <label>評分 <span style="color: red;">*</span></label>
+            <div class="star-rating" style="font-size: 24px;">
+              <span class="star" data-rating="1" onclick="setRating(1)">☆</span>
+              <span class="star" data-rating="2" onclick="setRating(2)">☆</span>
+              <span class="star" data-rating="3" onclick="setRating(3)">☆</span>
+              <span class="star" data-rating="4" onclick="setRating(4)">☆</span>
+              <span class="star" data-rating="5" onclick="setRating(5)">☆</span>
+            </div>
+            <input type="hidden" id="reviewRatingValue" name="rating" required>
+          </div>
+          
+          <!-- 評論標題 -->
+          <div class="form-group">
+            <label for="reviewTitle">評論標題 <span style="color: red;">*</span></label>
+            <input type="text" id="reviewTitle" name="title" required 
+                   placeholder="例如：美味的牛肉麵" maxlength="50">
+          </div>
+          
+          <!-- 評論內容 -->
+          <div class="form-group">
+            <label for="reviewContent">評論內容 <span style="color: red;">*</span></label>
+            <textarea id="reviewContent" name="content" required 
+                      placeholder="分享您的用餐體驗..." 
+                      rows="5" style="width: 100%; resize: vertical;"></textarea>
+          </div>
+          
+          <!-- 標籤 -->
+          <div class="form-group">
+            <label for="reviewTags">標籤（用逗號分隔）</label>
+            <input type="text" id="reviewTags" name="tags" 
+                   placeholder="例如：牛肉麵, 湯頭濃郁, 服務好">
+          </div>
+          
+          <!-- 提交按鈕 -->
+          <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button type="button" onclick="closeAddReviewModal()" 
+                    style="padding: 10px 20px; background: #ccc; color: white; 
+                           border: none; border-radius: 6px; cursor: pointer;">
+              取消
+            </button>
+            <button type="submit" class="btn-primary" 
+                    style="padding: 10px 20px;">
+              發布評論
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編輯評論彈窗 -->
+  <div id="editReviewModal" class="modal">
+    <div class="modal-content" style="max-width: 600px; margin: 5% auto;">
+      <div class="modal-header">
+        <h2>編輯評論</h2>
+        <span class="close" onclick="closeEditReviewModal()">&times;</span>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <form id="editReviewForm" onsubmit="submitEditReview(event)">
+          <!-- 隱藏評論ID -->
+          <input type="hidden" id="editReviewId" name="reviewId">
+          
+          <!-- 餐廳名稱（唯讀） -->
+          <div class="form-group">
+            <label for="editReviewRestaurant">餐廳名稱</label>
+            <input type="text" id="editReviewRestaurant" name="restaurant" readonly 
+                   style="background-color: #f5f5f5; color: #666;">
+          </div>
+          
+          <!-- 評分 -->
+          <div class="form-group">
+            <label>評分 <span style="color: red;">*</span></label>
+            <div class="star-rating" id="editStarRating" style="font-size: 24px;">
+              <span class="star" data-rating="1" onclick="setEditRating(1)">☆</span>
+              <span class="star" data-rating="2" onclick="setEditRating(2)">☆</span>
+              <span class="star" data-rating="3" onclick="setEditRating(3)">☆</span>
+              <span class="star" data-rating="4" onclick="setEditRating(4)">☆</span>
+              <span class="star" data-rating="5" onclick="setEditRating(5)">☆</span>
+            </div>
+            <input type="hidden" id="editReviewRatingValue" name="rating" required>
+          </div>
+          
+          <!-- 評論標題 -->
+          <div class="form-group">
+            <label for="editReviewTitle">評論標題 <span style="color: red;">*</span></label>
+            <input type="text" id="editReviewTitle" name="title" required 
+                   placeholder="例如：美味的牛肉麵" maxlength="50">
+          </div>
+          
+          <!-- 評論內容 -->
+          <div class="form-group">
+            <label for="editReviewContent">評論內容 <span style="color: red;">*</span></label>
+            <textarea id="editReviewContent" name="content" required 
+                      placeholder="分享您的用餐體驗..." 
+                      rows="5" style="width: 100%; resize: vertical;"></textarea>
+          </div>
+          
+          <!-- 標籤 -->
+          <div class="form-group">
+            <label for="editReviewTags">標籤（用逗號分隔）</label>
+            <input type="text" id="editReviewTags" name="tags" 
+                   placeholder="例如：牛肉麵, 湯頭濃郁, 服務好">
+          </div>
+          
+          <!-- 提交按鈕 -->
+          <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button type="button" onclick="closeEditReviewModal()" 
+                    style="padding: 10px 20px; background: #ccc; color: white; 
+                           border: none; border-radius: 6px; cursor: pointer;">
+              取消
+            </button>
+            <button type="submit" class="btn-primary" 
+                    style="padding: 10px 20px;">
+              儲存修改
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增評論彈窗的樣式 -->
+  <style>
+    .star-rating {
+      display: inline-flex;
+      gap: 5px;
+      cursor: pointer;
+    }
+    
+    .star-rating .star {
+      color: #ddd;
+      transition: color 0.2s;
+    }
+    
+    .star-rating .star.active {
+      color: #ffd700;
+    }
+    
+    .star-rating .star:hover,
+    .star-rating .star.hover {
+      color: #ffd700;
+    }
+    
+    #addReviewModal .form-group {
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    #addReviewModal label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    #addReviewModal input[type="text"],
+    #addReviewModal textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    #addReviewModal input[type="text"]:focus,
+    #addReviewModal textarea:focus {
+      outline: none;
+      border-color: #ff6b1a;
+      box-shadow: 0 0 0 2px rgba(255, 107, 26, 0.1);
+    }
+    
+    .restaurant-suggestion-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .restaurant-suggestion-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .restaurant-suggestion-item:last-child {
+      border-bottom: none;
+    }
+    
+    /* 評論項目樣式 */
+    .review-item {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      position: relative;
+      transition: box-shadow 0.3s ease;
+    }
+    
+    .review-item:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .review-actions {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .review-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: #666;
+      transition: color 0.2s;
+    }
+    
+    .review-actions button:hover {
+      color: #ff6b1a;
+    }
+    
+    .review-actions button.btn-danger:hover {
+      color: #e74c3c;
+    }
+    
+    .review-header h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 18px;
+    }
+    
+    .review-rating {
+      color: #ffd700;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    
+    .review-details p {
+      margin: 8px 0;
+      color: #555;
+      line-height: 1.6;
+    }
+    
+    .review-tags {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .review-tags .tag {
+      background: #f0f0f0;
+      color: #666;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+  </style>
 
   <script>
     const finalCheck = new Set();
