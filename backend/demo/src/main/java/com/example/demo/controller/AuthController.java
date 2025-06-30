@@ -4,6 +4,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.VerificationService;
 import com.example.demo.service.EmailService;
+import com.example.demo.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,9 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private JwtService jwtService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -54,8 +58,12 @@ public class AuthController {
                 return ResponseEntity.status(401).body(Map.of("error", "密碼錯誤"));
             }
 
+            // 生成 JWT Token
+            String token = jwtService.generateToken(user);
+
             // 創建回應
             Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
             response.put("id", user.getId());
             response.put("email", user.getEmail());
             response.put("username", user.getUsername());

@@ -50,11 +50,9 @@ class RestaurantCategory {
                 }
                 
                 if (type === '全部餐廳') {
-                    // 顯示全部餐廳
-                    if (window.mapInit && typeof window.mapInit.displayAllRestaurants === 'function') {
-                        window.mapInit.displayAllRestaurants();
-                    } else if (window.displayRestaurants && window.mapInit && window.mapInit.allRestaurants) {
-                        window.displayRestaurants(window.mapInit.allRestaurants);
+                    // 顯示全部餐廳，確保排序與收藏狀態
+                    if (window.displayRestaurants && window.mapInit && window.mapInit.allRestaurants) {
+                        window.displayRestaurants(window.mapInit.allRestaurants, true);
                     }
                     if (window.updateResultsTitle) {
                         window.updateResultsTitle(`全部餐廳 (${window.mapInit && window.mapInit.allRestaurants ? window.mapInit.allRestaurants.length : 0} 間)`);

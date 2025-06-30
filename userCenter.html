@@ -34,6 +34,28 @@
       width: 100%;
       height: 300px;
     }
+
+    .danger-btn {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .danger-btn:hover {
+      background-color: #c0392b;
+    }
+    .danger-btn i {
+      font-size: 1.2em;
+    }
   </style>
   <!-- 添加登入相關功能 -->
   <script src="js/config.js"></script>
@@ -324,6 +346,7 @@
           </div>
           <button type="submit" class="btn-primary">儲存變更</button>
         </form>
+        <button id="deleteAccountBtn" class="danger-btn"><i class="fas fa-exclamation-triangle"></i> 註銷帳號</button>
       </section>
     </div>
   </div>
@@ -589,5 +612,47 @@
     });
   </script>
   <script src="js/avatarCrop.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const deleteBtn = document.getElementById('deleteAccountBtn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async function() {
+          if (confirm('確定要註銷帳號嗎？此操作無法復原！')) {
+            const userId = localStorage.getItem('userId');
+            const token = localStorage.getItem('authToken');
+            
+            if (!userId || !token) {
+              alert('登入狀態異常，請重新登入');
+              localStorage.clear();
+              window.location.href = 'index.html';
+              return;
+            }
+            
+            try {
+              const res = await fetch(`${window.API_BASE_URL}/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (res.ok) {
+                alert('帳號已成功註銷！');
+                localStorage.clear();
+                window.location.href = 'index.html';
+              } else {
+                const data = await res.json();
+                alert('註銷失敗：' + (data.error || '未知錯誤'));
+              }
+            } catch (err) {
+              console.error('註銷帳號時發生錯誤:', err);
+              alert('註銷失敗，請稍後再試');
+            }
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html> 

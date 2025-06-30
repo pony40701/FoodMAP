@@ -89,11 +89,23 @@
 
             <div id="userSection" class="user-section" style="display: none;">
                 <div class="user-avatar">
+                    <span class="avatar-notification-badge" id="avatar-notification-badge" style="display: none;"><i
+                            class="fas fa-exclamation"></i></span>
                     <img src="images/TEST.jpg" alt="會員頭像" class="avatar-img">
                     <div class="avatar-dropdown">
                         <a href="usercenter.html" class="dropdown-item">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>會員中心</span>
+                        </a>
+                        <a href="usercenter.html#notifications" class="dropdown-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-exclamation" id="notification-exclamation" style="display: none;">
+                                    <i class="fas fa-exclamation"></i>
+                                </span>
+                                <span class="notification-badge" id="notification-count" style="display: none;">0</span>
+                            </div>
+                            <span>通知中心</span>
                         </a>
                         <a href="usercenter.html#favorites" class="dropdown-item">
                             <i class="fas fa-heart"></i>
@@ -102,10 +114,6 @@
                         <a href="usercenter.html#reviews" class="dropdown-item">
                             <i class="fas fa-star"></i>
                             <span>我的評論</span>
-                        </a>
-                        <a href="usercenter.html#orders" class="dropdown-item">
-                            <i class="fas fa-history"></i>
-                            <span>瀏覽紀錄</span>
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item logout-item" onclick="logout()">
@@ -402,6 +410,7 @@
     <script src="js/config.js"></script>
     <script src="js/favoriteSystem.js"></script>
     <script src="js/favoriteButton.js"></script>
+    <script src="js/notificationService.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/restaurantListDetail.js"></script>
     <script src="js/config.js"></script>
@@ -420,6 +429,27 @@
 
         // 登入彈窗功能
         document.addEventListener('DOMContentLoaded', function() {
+            // 新增：頁面載入時檢查登入狀態
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (isLoggedIn === 'true' && user) {
+                const loginSection = document.getElementById('loginSection');
+                const userSection = document.getElementById('userSection');
+                if (loginSection) loginSection.style.display = 'none';
+                if (userSection) userSection.style.display = 'flex';
+
+                const userAvatarImg = document.querySelector('#userSection .avatar-img');
+                if (userAvatarImg && (user.image_url || user.avatar_url)) {
+                    userAvatarImg.src = user.image_url || user.avatar_url;
+                }
+
+                // 初始化通知服務
+                if (window.NotificationService && typeof window.NotificationService.initialize === 'function') {
+                    window.NotificationService.initialize();
+                }
+            }
+
             // 讓 login.js 統一處理會員登入功能
             // 只保留商家登入的特殊處理
             
@@ -479,6 +509,31 @@
                 });
             }
         });
+
+        function logout() {
+            // 清除使用者登入資訊
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId'); // 如果有儲存 userId
+            localStorage.removeItem('token'); // 如果有儲存 token
+
+            // 切換 UI 狀態
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            if (loginSection) loginSection.style.display = 'flex';
+            if (userSection) userSection.style.display = 'none';
+
+            alert('您已成功登出！');
+            // 可以選擇重新載入頁面以確保狀態完全更新
+            window.location.reload();
+        }
+
+        function openRestaurantLoginModal() {
+            const restaurantLoginModal = document.getElementById('restaurantLoginModal');
+            if (restaurantLoginModal) {
+                restaurantLoginModal.style.display = 'block';
+            }
+        }
     </script>
   </body>
 </html>

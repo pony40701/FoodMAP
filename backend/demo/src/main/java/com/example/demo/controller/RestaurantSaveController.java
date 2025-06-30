@@ -22,7 +22,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/restaurant-save")
 @CrossOrigin(
-    origins = {"http://127.0.0.1:5500", "http://localhost:5500"},
+    origins = {"http://localhost:5500", "http://127.0.0.1:5500"},
     allowedHeaders = "*",
     methods = {org.springframework.web.bind.annotation.RequestMethod.GET, 
                org.springframework.web.bind.annotation.RequestMethod.POST, 
