@@ -3059,8 +3059,8 @@ async function createPublishedPostElement(post) {
             ` : ''}
         </div>
         <div class="post-stats">
-            <span><i class="fas fa-eye"></i> 0</span>
-            <span><i class="fas fa-heart"></i> 0</span>
+            <span><i class="fas fa-eye"></i> ${post.totalViews}</span>
+            <span><i class="fas fa-heart"></i> ${post.totalFavorites}</span>
         </div>
         <div class="post-actions">
             <button onclick="editPublishedPost(${post.id})" class="btn-edit">

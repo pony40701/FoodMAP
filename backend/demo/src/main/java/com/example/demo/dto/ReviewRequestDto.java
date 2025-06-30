@@ -20,6 +20,8 @@ public class ReviewRequestDto {
     private Map<String, PhotoData> existingImageInfo; // 新增：已存在圖片的信息
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer totalViews; // 新增：觀看數
+    private Integer totalFavorites; // 新增：收藏數
 
     @Data
     public static class ReviewRatingsDto {
