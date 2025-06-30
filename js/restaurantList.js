@@ -116,7 +116,17 @@ function updateMapMarkers(restaurants) {
                     // 保存到 sessionStorage（主要用於重新整理保護）
                     sessionStorage.setItem('currentRestaurantData', JSON.stringify(restaurantToSave));
                     
-                    window.location.href = 'restaurantListDetail.html';
+                    // 使用餐廳 ID 跳轉，確保觸發快取清除邏輯
+                    const restaurantId = restaurantToSave.placeId || restaurantToSave.id;
+                    if (restaurantId) {
+                        console.log('地圖標記跳轉，使用餐廳 ID:', restaurantId);
+                        window.location.href = `restaurantListDetail.html?restaurantId=${encodeURIComponent(restaurantId)}`;
+                    } else {
+                        // 如果沒有 ID，使用 data 參數
+                        console.log('地圖標記跳轉，使用 data 參數');
+                        const encodedData = encodeURIComponent(JSON.stringify(restaurantToSave));
+                        window.location.href = `restaurantListDetail.html?data=${encodedData}`;
+                    }
                 });
             }
         });
@@ -1048,6 +1058,13 @@ function navigateToDetail(restaurantData) {
   
   console.log('正在跳轉到餐廳詳情頁面:', restaurant.name);
   
+  // *** 重要修復：清除所有舊的 sessionStorage 資料 ***
+  sessionStorage.removeItem('currentRestaurantData');
+  sessionStorage.removeItem('restaurantDetailReturnData');
+  sessionStorage.removeItem('menuDetailBackupData');
+  sessionStorage.removeItem('restaurantDetailPageState');
+  console.log('已清除所有舊的 sessionStorage 資料');
+  
   // 保存餐廳資料到 localStorage（向下相容）
   const restaurantToSave = { ...restaurant };
   
@@ -1063,7 +1080,7 @@ function navigateToDetail(restaurantData) {
   // 保存到 localStorage（向下相容）
   localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
   
-  // 保存到 sessionStorage（主要用於重新整理保護）
+  // 保存新的餐廳資料到 sessionStorage（重新整理保護）
   sessionStorage.setItem('currentRestaurantData', JSON.stringify(restaurantToSave));
   
   console.log('餐廳資料已保存到 localStorage 和 sessionStorage');
@@ -1335,24 +1352,10 @@ function renderRestaurants(restaurants) {
             </div>
         `;
 
-        // 添加點擊事件處理
+        // 添加點擊事件處理 - 使用統一的 navigateToDetail 函數
         card.addEventListener('click', () => {
-            // 確保 googleReviews 欄位正確帶入 localStorage
-            const restaurantToSave = { ...restaurant };
-            
-            // 處理 googleReviews 欄位
-            if (typeof restaurant.googleReviews === 'undefined' || restaurant.googleReviews === null) {
-                if (typeof restaurant.google_reviews !== 'undefined' && restaurant.google_reviews !== null) {
-                    restaurantToSave.googleReviews = restaurant.google_reviews;
-                } else {
-                    restaurantToSave.googleReviews = []; // 確保不是 null，而是空陣列
-                }
-            }
-            
-            // 直接存完整物件
-            localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
-            // 導頁到餐廳詳情頁面
-            window.location.href = 'restaurantListDetail.html';
+            // 使用統一的跳轉邏輯，確保帶上 restaurantId 參數
+            navigateToDetail(encodeURIComponent(JSON.stringify(restaurant)));
         });
 
         container.appendChild(card);

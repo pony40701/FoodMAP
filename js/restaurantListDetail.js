@@ -293,113 +293,21 @@ class RestaurantDetail {
   async getRestaurantDataFromUrl() {
     console.log('=== 開始載入餐廳資料 ===');
     
-    // 先檢查 URL 參數，確保資料同步
+    // 獲取 URL 參數
     const urlParams = new URLSearchParams(window.location.search);
     const currentUrlRestaurantId = urlParams.get('restaurantId');
     const currentUrlRestaurantData = urlParams.get('data');
     
-    // 檢查 sessionStorage 中的餐廳 ID 是否與當前 URL 不同
-    const sessionRestaurantData = sessionStorage.getItem('currentRestaurantData');
-    if (sessionRestaurantData && (currentUrlRestaurantId || currentUrlRestaurantData)) {
-      try {
-        const sessionData = JSON.parse(sessionRestaurantData);
-        const sessionRestaurantId = sessionData.placeId || sessionData.id;
-        
-        // 比較 URL 中的餐廳 ID 與 sessionStorage 中的 ID
-        let urlRestaurantId = currentUrlRestaurantId;
-        if (!urlRestaurantId && currentUrlRestaurantData) {
-          try {
-            const urlData = JSON.parse(decodeURIComponent(currentUrlRestaurantData));
-            urlRestaurantId = urlData.placeId || urlData.id;
-          } catch (e) {
-            console.warn('URL 資料解析失敗:', e);
-          }
-        }
-        
-        // 如果 ID 不同，清除 sessionStorage 以載入新資料
-        if (urlRestaurantId && sessionRestaurantId && urlRestaurantId !== sessionRestaurantId) {
-          console.log('偵測到不同餐廳 ID，清除快取資料');
-          console.log('URL 餐廳 ID:', urlRestaurantId);
-          console.log('快取餐廳 ID:', sessionRestaurantId);
-          sessionStorage.removeItem('currentRestaurantData');
-          sessionStorage.removeItem('restaurantDetailReturnData');
-          sessionStorage.removeItem('menuDetailBackupData');
-          sessionStorage.removeItem('restaurantDetailPageState');
-        }
-      } catch (error) {
-        console.warn('比較餐廳 ID 時發生錯誤:', error);
-        // 如果解析失敗，清除可能損壞的 sessionStorage
-        sessionStorage.removeItem('currentRestaurantData');
-      }
+    // *** 重要修復：如果 URL 有參數，直接清除所有 sessionStorage 快取 ***
+    if (currentUrlRestaurantId || currentUrlRestaurantData) {
+      console.log('URL 包含餐廳參數，清除所有快取以確保載入新資料');
+      sessionStorage.removeItem('currentRestaurantData');
+      sessionStorage.removeItem('restaurantDetailReturnData');
+      sessionStorage.removeItem('menuDetailBackupData');
+      sessionStorage.removeItem('restaurantDetailPageState');
     }
     
-    // 1. 檢查 sessionStorage 中的餐廳資料（在確認 ID 一致後）
-    const updatedSessionData = sessionStorage.getItem('currentRestaurantData');
-    if (updatedSessionData) {
-      try {
-        console.log('從 sessionStorage 載入餐廳資料');
-        this.restaurantData = JSON.parse(updatedSessionData);
-        console.log('sessionStorage 資料載入成功:', this.restaurantData.name);
-        return;
-      } catch (error) {
-        console.warn('sessionStorage 資料解析失敗:', error);
-        sessionStorage.removeItem('currentRestaurantData');
-      }
-    }
-    
-    // 2. 檢查是否有從 menuDetail.html 返回的資料
-    const returnData = sessionStorage.getItem('restaurantDetailReturnData');
-    if (returnData) {
-      try {
-        console.log('從 menuDetail 返回資料載入');
-        this.restaurantData = JSON.parse(returnData);
-        
-        // 保存到 sessionStorage 備份
-        sessionStorage.setItem('currentRestaurantData', returnData);
-        // 清除原始資料
-        sessionStorage.removeItem('restaurantDetailReturnData');
-        return;
-      } catch (error) {
-        console.warn('menuDetail 返回資料解析失敗:', error);
-      }
-    }
-    
-    // 3. 檢查備用數據（防止用戶按上一頁時數據丟失）
-    const backupData = sessionStorage.getItem('menuDetailBackupData');
-    if (backupData && document.referrer.includes('menuDetail.html')) {
-      try {
-        console.log('從備用資料載入');
-        this.restaurantData = JSON.parse(backupData);
-        
-        // 保存到 sessionStorage 備份
-        sessionStorage.setItem('currentRestaurantData', backupData);
-        // 清除備用數據
-        sessionStorage.removeItem('menuDetailBackupData');
-        return;
-      } catch (error) {
-        console.warn('備用資料解析失敗:', error);
-      }
-    }
-    
-    // 4. 檢查是否有從其他頁面返回的狀態
-    const savedPageState = sessionStorage.getItem('restaurantDetailPageState');
-    if (savedPageState && document.referrer.includes('menuDetail.html')) {
-      try {
-        console.log('從頁面狀態載入');
-        const pageState = JSON.parse(savedPageState);
-        this.restaurantData = pageState.restaurantData;
-        
-        // 保存到 sessionStorage 備份
-        sessionStorage.setItem('currentRestaurantData', JSON.stringify(this.restaurantData));
-        // 清除 sessionStorage 中的狀態
-        sessionStorage.removeItem('restaurantDetailPageState');
-        return;
-      } catch (error) {
-        console.warn('頁面狀態資料解析失敗:', error);
-      }
-    }
-    
-    // 5. 從 URL 參數讀取餐廳 ID 或資料
+    // 1. *** 優先處理 URL 參數（最高優先級）***
     const restaurantId = currentUrlRestaurantId;
     const restaurantData = currentUrlRestaurantData;
     
@@ -422,7 +330,7 @@ class RestaurantDetail {
       }
     }
     
-    // 6. 如果有 data 參數，解析 URL 中的資料
+    // 2. 如果有 data 參數，解析 URL 中的資料
     if (restaurantData) {
       try {
         console.log('從 URL 參數載入餐廳資料');
@@ -455,7 +363,23 @@ class RestaurantDetail {
       }
     }
     
-    // 7. 從 localStorage 讀取餐廳資料（相容性考慮）
+    // 3. 沒有 URL 參數時，檢查 sessionStorage（用於頁面重新整理的情況）
+    if (!restaurantId && !restaurantData) {
+      const sessionRestaurantData = sessionStorage.getItem('currentRestaurantData');
+      if (sessionRestaurantData) {
+        try {
+          console.log('從 sessionStorage 載入餐廳資料（無 URL 參數）');
+          this.restaurantData = JSON.parse(sessionRestaurantData);
+          console.log('sessionStorage 資料載入成功:', this.restaurantData.name);
+          return;
+        } catch (error) {
+          console.warn('sessionStorage 資料解析失敗:', error);
+          sessionStorage.removeItem('currentRestaurantData');
+        }
+      }
+    }
+    
+    // 4. 從 localStorage 讀取餐廳資料（向下相容性考慮）
     const storedRestaurantData = localStorage.getItem('selectedRestaurant');
     if (storedRestaurantData) {
       try {
@@ -490,7 +414,7 @@ class RestaurantDetail {
       }
     }
     
-    // 8. 如果沒有任何資料，使用預設資料
+    // 5. 如果沒有任何資料，使用預設資料
     console.warn('沒有找到任何餐廳資料，使用預設資料');
     this.restaurantData = this.getDefaultRestaurantData();
     
