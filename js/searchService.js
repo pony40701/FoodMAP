@@ -19,8 +19,6 @@ class SearchService {
             
             // 獲取用戶當前位置
             await this.getCurrentLocation();
-            
-            console.log('搜尋服務初始化完成');
         } catch (error) {
             console.error('搜尋服務初始化失敗:', error);
         }
@@ -36,11 +34,9 @@ class SearchService {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
                         };
-                        console.log('獲取到用戶位置:', this.currentLocation);
                         resolve(this.currentLocation);
                     },
                     (error) => {
-                        console.log('無法獲取用戶位置，使用預設位置');
                         // 使用台北市中心作為預設位置
                         this.currentLocation = { lat: 25.0330, lng: 121.5654 };
                         resolve(this.currentLocation);
@@ -52,7 +48,6 @@ class SearchService {
                     }
                 );
             } else {
-                console.log('瀏覽器不支援地理位置');
                 this.currentLocation = { lat: 25.0330, lng: 121.5654 };
                 resolve(this.currentLocation);
             }
@@ -62,8 +57,6 @@ class SearchService {
     // 主要搜尋方法
     async search(foodKeyword = '', locationKeyword = '') {
         try {
-            console.log('開始搜尋:', { foodKeyword, locationKeyword });
-            
             let results = [...this.allRestaurants];
             
             // 如果沒有搜尋條件，返回所有餐廳
@@ -264,7 +257,6 @@ class SearchService {
                     break;
                 }
             } catch (error) {
-                console.error(`搜索关键词 "${keyword}" 时发生错误:`, error);
                 // 继续尝试其他关键词
             }
         }
@@ -311,7 +303,6 @@ class SearchService {
                 }
             });
         } catch (error) {
-            console.error('获取地点详情时发生错误:', error);
             return null;
         }
     }
@@ -322,7 +313,7 @@ class SearchService {
             try {
                 photo = place.photos[0].getUrl({maxWidth: 400});
             } catch (e) {
-                console.error('获取图片时发生错误:', e);
+                // 忽略获取图片时的错误
             }
         }
 

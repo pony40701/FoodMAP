@@ -128,7 +128,6 @@ function initializePagination() {
 // 更新評論列表
 function updateCommentsList(page) {
     // 這裡可以添加 AJAX 請求來獲取新的評論數據
-    (`Loading page ${page}...`);
 }
 
 // 處理回覆提交
@@ -142,16 +141,14 @@ function handleReplySubmit(form) {
     }
 
     // 這裡可以添加 AJAX 請求來提交回覆
-    (`Submitting reply for comment ${commentId}: ${textarea.value}`);
 
-    // 模擬提交成功
     const replyContent = document.createElement('div');
     replyContent.className = 'reply-content';
     replyContent.innerHTML = `
         <div class="reply-item">
             <div class="reply-header">
                 <div class="restaurant-info">
-                    <img src="/IMAGE/TEST.jpg" alt="餐廳頭像" class="restaurant-avatar">
+                    <img src="images/default-restaurant.jpg" alt="餐廳頭像" class="restaurant-avatar">
                     <span class="restaurant-name">餐廳名稱</span>
                 </div>
                 <span class="reply-date">剛剛</span>
@@ -207,8 +204,6 @@ function generateRatingStars(rating) {
 
 function submitReply(button) {
     // Logic to submit reply
-    console.log('Reply submitted');
-    hideReplyForm(button);
 }
 
 function merchantLogout() {

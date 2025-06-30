@@ -148,8 +148,6 @@ class FavoriteUI {
             else if (store.photos.url) {
                 imageUrl = store.photos.url;
             }
-            
-            (`店家卡片圖片: ${imageUrl} (店家ID: ${store.id})`);
         }
         
         const rating = store.rating || 0;
@@ -326,7 +324,7 @@ class FavoriteUI {
             return;
         }
         
-        (`顯示店家詳情:`, store);
+        ('顯示店家詳情:', store);
         
         // 直接調用我們的方法，避免被userCenter.js覆蓋
         this.showRestaurantDetail(store);
@@ -384,7 +382,7 @@ class FavoriteUI {
             }
         }
         
-        (`餐廳圖片URL: ${imageUrl}`);
+        ('餐廳圖片URL:', imageUrl);
         
         // 處理評分與評論數
         const rating = restaurant.rating || 0;

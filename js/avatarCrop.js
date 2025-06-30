@@ -18,7 +18,7 @@ class AvatarCropModal {
     init() {
         this.createModal();
         this.bindEvents();
-        console.log('AvatarCropModal 初始化完成');
+        
     }
 
     createModal() {
@@ -154,14 +154,14 @@ class AvatarCropModal {
     show() {
         this.modal.classList.add('show');
         this.reset();
-        console.log('頭像裁切彈窗已顯示');
+        
     }
 
     // 隱藏彈窗
     close() {
         this.modal.classList.remove('show');
         this.reset();
-        console.log('頭像裁切彈窗已關閉');
+        
     }
 
     // 重置狀態
@@ -193,7 +193,7 @@ class AvatarCropModal {
 
     // 處理文件
     handleFile(file) {
-        console.log('處理文件:', file.name, file.size, file.type);
+        
 
         // 驗證文件
         if (!this.validateFile(file)) {
@@ -397,7 +397,7 @@ class AvatarCropModal {
     // 重新載入用戶資料
     async reloadUserData(userId) {
         try {
-            console.log('重新載入用戶資料，用戶ID:', userId);
+           
             const response = await fetch(`${this.apiBaseUrl}/users/${userId}`);
             
             if (response.ok) {
@@ -407,7 +407,7 @@ class AvatarCropModal {
                 localStorage.setItem('userData', JSON.stringify(userData));
                 localStorage.setItem('user', JSON.stringify(userData));
                 
-                console.log('用戶資料重新載入成功:', userData);
+                
                 return userData;
             } else {
                 console.warn('重新載入用戶資料失敗:', response.status);
@@ -466,7 +466,6 @@ class AvatarCropModal {
         // 開發環境預設
         if (!userId && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             userId = '38';
-            console.warn('使用預設測試用戶 ID:', userId);
         }
         
         return userId;

@@ -1137,13 +1137,15 @@
                         <label for="email"
                             style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
                         <input type="email" id="email" name="email" required
-                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+                            autocomplete="username">
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label for="password"
                             style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
                         <input type="password" id="password" name="password" required
-                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+                            autocomplete="current-password">
                     </div>
                     <button type="submit"
                         style="width: 100%; background: #ff6b1a; color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;">登入</button>
@@ -1188,13 +1190,15 @@
                         <label for="restaurant-email"
                             style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">電子郵件</label>
                         <input type="email" id="restaurant-email" name="email" required
-                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+                            autocomplete="username">
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label for="restaurant-password"
                             style="display: block; font-size: 14px; margin-bottom: 3px; color: #333;">密碼</label>
                         <input type="password" id="restaurant-password" name="password" required
-                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+                            autocomplete="current-password">
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <input type="checkbox" id="restaurant-remember" name="remember"
@@ -1589,50 +1593,7 @@
                 console.error('頁面初始化失敗:', error);
             });
             
-            // 開發測試功能：在控制台提供重置通知狀態的方法
-            window.resetNotifications = function() {
-                if (window.NotificationService) {
-                    window.NotificationService.resetNotificationStatus();
-                    console.log('✅ 通知狀態已重置');
-                } else {
-                    console.log('❌ NotificationService 未載入');
-                }
-            };
             
-            // 開發測試功能：手動觸發通知檢查
-            window.checkNotifications = function() {
-                if (window.NotificationService) {
-                    window.NotificationService.checkUnreadNotifications();
-                    console.log('✅ 已觸發通知檢查');
-                } else {
-                    console.log('❌ NotificationService 未載入');
-                }
-            };
-            
-            // 開發測試功能：顯示當前通知狀態
-            window.showNotificationStatus = function() {
-                console.log('=== 通知狀態 ===');
-                console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
-                console.log('userId:', localStorage.getItem('userId'));
-                console.log('notificationReadStatus:', localStorage.getItem('notificationReadStatus'));
-                console.log('hasUnreadNotifications:', localStorage.getItem('hasUnreadNotifications'));
-                console.log('NotificationService initialized:', window.NotificationService?.initialized);
-            };
-            
-            // 開發測試功能：手動標記通知ID 3為已讀
-            window.markNotification3AsRead = function() {
-                if (window.NotificationService) {
-                    window.NotificationService.markAsRead('3').then(success => {
-                        if (success) {
-                            console.log('✅ 通知ID 3已標記為已讀');
-                        } else {
-                            console.log('❌ 標記失敗');
-                        }
-                    });
-                } else {
-                    console.log('❌ NotificationService 未載入');
-                }
-            };
             
             // 監聽頁面獲得焦點事件（當用戶切換回此頁面時）
             window.addEventListener('focus', function() {

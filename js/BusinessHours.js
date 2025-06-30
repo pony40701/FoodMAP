@@ -4,22 +4,6 @@
 class BusinessHours {
     constructor() {
         this.DEBUG = true; // 是否輸出調試信息
-        this.forcedDay = null; // 強制設置的星期幾 (0-6)
-    }
-
-    /**
-     * 強制設置當前是星期幾，用於測試
-     * @param {number} day - 星期幾 (0-6，0=星期日)
-     * 
-     */
-    forceDay(day) {
-        if (day >= 0 && day <= 6) {
-            this.forcedDay = day;
-           
-        } else {
-            this.forcedDay = null;
-            
-        }
     }
 
     /**
@@ -27,10 +11,6 @@ class BusinessHours {
      * @returns {number} - 星期幾 (0-6，0=星期日)
      */
     getCurrentDay() {
-        // 如果有強制設置的日期，則使用強制值
-        if (this.forcedDay !== null) {
-            return this.forcedDay;
-        }
         return new Date().getDay();
     }
 

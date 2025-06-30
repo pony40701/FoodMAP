@@ -97,11 +97,6 @@ class FavoriteSystem {
         }
     }
 
-    // 添加測試數據（僅用於開發測試）- 已移除測試數據
-    addTestData() {
-        // 測試數據已被移除
-    }
-
     // 檢查登入狀態
     checkLoginStatus() {
         return localStorage.getItem('isLoggedIn') === 'true';

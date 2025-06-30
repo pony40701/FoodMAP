@@ -29,7 +29,6 @@ class SearchController {
             this.bindEvents();
 
             this.isInitialized = true;
-            console.log('搜尋控制器初始化完成');
         } catch (error) {
             console.error('搜尋控制器初始化失敗:', error);
         }

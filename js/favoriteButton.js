@@ -291,6 +291,9 @@ class FavoriteButton {
                     this.showToast('已從收藏中移除');
                     this.updateButtonUI(button, false);
                     this.updateAllButtonsWithSameId(placeId, false);
+                    if (window.favoriteUI && typeof window.favoriteUI.loadStores === 'function') {
+                        window.favoriteUI.loadStores();
+                    }
                 } else {
                     this.showToast('無法移除收藏，請稍後再試');
                 }
@@ -431,7 +434,6 @@ class FavoriteButton {
           }
       
           const result = await res.json();
-          // 假設後端回 { success: true, data: { id: X, place_id: Y, … } }
           if (result.success) { 
             // 把剛收藏的餐廳加到本地陣列
             this.localFavorites.push({
