@@ -52,23 +52,40 @@ document.addEventListener('DOMContentLoaded', () => {
             : 'images/default-avatar.png';
 
         let contentHtml = '';
+        let firstPhotoId = null;
+
+        // 先檢查內容中是否包含圖片佔位符，找出第一張圖片的ID
         if (review.contentJson) {
-            // The content from the backend is already an HTML string.
-            // No need to parse it as JSON.
-            contentHtml = review.contentJson;
+            const firstImageMatch = review.contentJson.match(/\[IMAGE_PLACEHOLDER_(\d+)\]/);
+            if (firstImageMatch) {
+                firstPhotoId = firstImageMatch[1];
+            }
             
-            // 處理圖片佔位符 [IMAGE_PLACEHOLDER_${photoId}]
-            contentHtml = await processImagePlaceholders(contentHtml);
+            // 處理圖片佔位符
+            contentHtml = await processImagePlaceholders(review.contentJson);
         }
         
         // 檢查是否有封面圖片
         let coverImageHtml = '';
+        
         if (review.imageBase64) {
-            coverImageHtml = `
-                <div class="experience-cover-image">
-                    <img src="data:image/jpeg;base64,${review.imageBase64}" alt="${review.reviewTitle || '心得封面圖片'}">
-                </div>
-            `;
+            // 檢查內容的第一張圖片是否與封面圖相同（通過比較photoId）
+            const reviewPhotoUrl = firstPhotoId ? 
+                `http://localhost:8080/api/reviews/photos/${firstPhotoId}` : null;
+                
+            // 檢查處理後的內容中是否已經包含了與封面相同的圖片
+            const hasDuplicateCover = reviewPhotoUrl && contentHtml.includes(reviewPhotoUrl);
+            
+            // 如果沒有重複的圖片，則顯示封面圖
+            if (!hasDuplicateCover) {
+                coverImageHtml = `
+                    <div class="experience-cover-image">
+                        <img src="data:image/jpeg;base64,${review.imageBase64}" alt="${review.reviewTitle || '心得封面圖片'}">
+                    </div>
+                `;
+            } else {
+                console.log('避免重複顯示封面圖片');
+            }
         }
         
         const breadcrumbHtml = `
@@ -259,114 +276,43 @@ document.addEventListener('DOMContentLoaded', () => {
     async function processImagePlaceholders(content) {
         if (!content) return content;
         
-        // 徹底清理混亂的 HTML 結構
-        let cleanedContent = content;
-        
-        // 定義正則表達式（避免重複宣告）
+        // 使用正則表達式找出所有圖片佔位符
         const placeholderRegex = /\[IMAGE_PLACEHOLDER_(\d+)\]/g;
-        
-        // 1. 移除所有重複的 image-wrapper 結構
-        cleanedContent = cleanedContent.replace(/<div class="image-wrapper">\[IMAGE_PLACEHOLDER_(\d+)\]<\/div>/g, '[IMAGE_PLACEHOLDER_$1]');
-
+        const matches = [];
         let match;
-        const placeholders = new Set();
-        while ((match = placeholderRegex.exec(cleanedContent)) !== null) {
-            placeholders.add(match[1]);
-        }
-
-        if (placeholders.size === 0) {
-            return cleanedContent;
-        }
-
-        const photoIds = Array.from(placeholders);
-        const fetchedImages = await fetchImages(photoIds);
         
-        // 2. 移除所有 image-wrapper 相關的 HTML 結構
-        cleanedContent = cleanedContent.replace(/<div[^>]*class="[^"]*image-wrapper[^"]*"[^>]*>/gi, '');
-        
-        // 移除所有 image-container 開始標籤
-        cleanedContent = cleanedContent.replace(/<div[^>]*class="[^"]*image-container[^"]*"[^>]*>/gi, '');
-        
-        // 移除所有 img 標籤
-        cleanedContent = cleanedContent.replace(/<img[^>]*>/gi, '');
-        
-        // 移除所有 resize-handle 相關標籤
-        cleanedContent = cleanedContent.replace(/<div[^>]*class="[^"]*resize-handle[^"]*"[^>]*>/gi, '');
-        cleanedContent = cleanedContent.replace(/<div[^>]*class="[^"]*resize-info[^"]*"[^>]*>/gi, '');
-        
-        // 移除多餘的結束標籤
-        cleanedContent = cleanedContent.replace(/<\/div>/g, '');
-        
-        // 3. 清理多餘的空格和換行
-        cleanedContent = cleanedContent
-            .replace(/\s+/g, ' ')  // 多個空格變為單個空格
-            .replace(/\n\s*\n/g, '\n')  // 多個換行變為單個換行
-            .trim();
-        
-        // 使用正規表示式尋找 [IMAGE_PLACEHOLDER_${photoId}] 格式的佔位符
-        let result = cleanedContent;
-        
-        // 為每個圖片ID獲取信息並替換
-        for (const photoId of photoIds) {
-            try {
-                // 從後端獲取圖片信息
-                const infoResponse = await fetch(`http://localhost:8080/api/reviews/photos/${photoId}/info`);
-                if (infoResponse.ok) {
-                    const photoInfo = await infoResponse.json();
-                    
-                    // 構建圖片HTML
-                    const imageUrl = `http://localhost:8080/api/reviews/photos/${photoId}`;
-                    let imgStyle = 'max-width: 100%; height: auto; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);';
-                    
-                    // 應用圖片大小
-                    if (photoInfo.width && photoInfo.height && 
-                        photoInfo.width !== '0px' && photoInfo.height !== '0px') {
-                        imgStyle = `width: ${photoInfo.width}; height: ${photoInfo.height}; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);`;
-                    }
-                    
-                    // 構建完整的圖片容器結構（與寫心得頁面一致）
-                    const imgHtml = `
-                        <div class="image-wrapper">
-                            <div class="image-container" style="position: relative; display: inline-block; margin: 0; max-width: 100%; border-radius: 8px; overflow: hidden;">
-                                <img src="${imageUrl}" alt="心得圖片" style="${imgStyle}" draggable="false">
-                            </div>
-                        </div>
-                    `;
-                    
-                    // 替換佔位符
-                    const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
-                    result = result.replace(placeholder, imgHtml);
-                } else {
-                    console.warn(`無法獲取圖片 ${photoId} 信息:`, infoResponse.status);
-                    // 如果無法獲取信息，使用預設樣式
-                    const imageUrl = `http://localhost:8080/api/reviews/photos/${photoId}`;
-                    const defaultImgHtml = `
-                        <div class="image-wrapper">
-                            <div class="image-container" style="position: relative; display: inline-block; margin: 0; max-width: 100%; border-radius: 8px; overflow: hidden;">
-                                <img src="${imageUrl}" alt="心得圖片" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);" draggable="false">
-                            </div>
-                        </div>
-                    `;
-                    const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
-                    result = result.replace(placeholder, defaultImgHtml);
-                }
-            } catch (error) {
-                console.error(`處理圖片 ${photoId} 時發生錯誤:`, error);
-                // 發生錯誤時使用預設樣式
-                const imageUrl = `http://localhost:8080/api/reviews/photos/${photoId}`;
-                const defaultImgHtml = `
-                    <div class="image-wrapper">
-                        <div class="image-container" style="position: relative; display: inline-block; margin: 0; max-width: 100%; border-radius: 8px; overflow: hidden;">
-                            <img src="${imageUrl}" alt="心得圖片" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);" draggable="false">
-                        </div>
-                    </div>
-                `;
-                const placeholder = `[IMAGE_PLACEHOLDER_${photoId}]`;
-                result = result.replace(placeholder, defaultImgHtml);
-            }
+        // 收集所有佔位符及其位置
+        while ((match = placeholderRegex.exec(content)) !== null) {
+            matches.push({
+                placeholder: match[0],
+                photoId: match[1],
+                index: match.index
+            });
         }
         
-        return result;
+        // 如果沒有佔位符，直接返回
+        if (matches.length === 0) {
+            return content;
+        }
+        
+        // 從後往前替換，避免影響索引位置
+        matches.sort((a, b) => b.index - a.index);
+        
+        let processedContent = content;
+        
+        for (const item of matches) {
+            const imageUrl = `http://localhost:8080/api/reviews/photos/${item.photoId}`;
+            
+            // 建立簡單的圖片HTML
+            const imageHtml = `<img src="${imageUrl}" alt="心得圖片" class="review-image" style="display: block; max-width: 100%; height: auto; margin: 1rem auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">`;
+            
+            // 替換佔位符
+            processedContent = processedContent.substring(0, item.index) + 
+                            imageHtml + 
+                            processedContent.substring(item.index + item.placeholder.length);
+        }
+        
+        return processedContent;
     }
 
     fetchAndRenderExperience();
