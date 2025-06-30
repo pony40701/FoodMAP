@@ -293,12 +293,52 @@ class RestaurantDetail {
   async getRestaurantDataFromUrl() {
     console.log('=== 開始載入餐廳資料 ===');
     
-    // 1. 優先檢查 sessionStorage 中的餐廳資料（防止重新整理時丟失）
+    // 先檢查 URL 參數，確保資料同步
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUrlRestaurantId = urlParams.get('restaurantId');
+    const currentUrlRestaurantData = urlParams.get('data');
+    
+    // 檢查 sessionStorage 中的餐廳 ID 是否與當前 URL 不同
     const sessionRestaurantData = sessionStorage.getItem('currentRestaurantData');
-    if (sessionRestaurantData) {
+    if (sessionRestaurantData && (currentUrlRestaurantId || currentUrlRestaurantData)) {
+      try {
+        const sessionData = JSON.parse(sessionRestaurantData);
+        const sessionRestaurantId = sessionData.placeId || sessionData.id;
+        
+        // 比較 URL 中的餐廳 ID 與 sessionStorage 中的 ID
+        let urlRestaurantId = currentUrlRestaurantId;
+        if (!urlRestaurantId && currentUrlRestaurantData) {
+          try {
+            const urlData = JSON.parse(decodeURIComponent(currentUrlRestaurantData));
+            urlRestaurantId = urlData.placeId || urlData.id;
+          } catch (e) {
+            console.warn('URL 資料解析失敗:', e);
+          }
+        }
+        
+        // 如果 ID 不同，清除 sessionStorage 以載入新資料
+        if (urlRestaurantId && sessionRestaurantId && urlRestaurantId !== sessionRestaurantId) {
+          console.log('偵測到不同餐廳 ID，清除快取資料');
+          console.log('URL 餐廳 ID:', urlRestaurantId);
+          console.log('快取餐廳 ID:', sessionRestaurantId);
+          sessionStorage.removeItem('currentRestaurantData');
+          sessionStorage.removeItem('restaurantDetailReturnData');
+          sessionStorage.removeItem('menuDetailBackupData');
+          sessionStorage.removeItem('restaurantDetailPageState');
+        }
+      } catch (error) {
+        console.warn('比較餐廳 ID 時發生錯誤:', error);
+        // 如果解析失敗，清除可能損壞的 sessionStorage
+        sessionStorage.removeItem('currentRestaurantData');
+      }
+    }
+    
+    // 1. 檢查 sessionStorage 中的餐廳資料（在確認 ID 一致後）
+    const updatedSessionData = sessionStorage.getItem('currentRestaurantData');
+    if (updatedSessionData) {
       try {
         console.log('從 sessionStorage 載入餐廳資料');
-        this.restaurantData = JSON.parse(sessionRestaurantData);
+        this.restaurantData = JSON.parse(updatedSessionData);
         console.log('sessionStorage 資料載入成功:', this.restaurantData.name);
         return;
       } catch (error) {
@@ -359,10 +399,9 @@ class RestaurantDetail {
       }
     }
     
-    // 5. 優先從 URL 參數讀取餐廳 ID 或資料
-    const urlParams = new URLSearchParams(window.location.search);
-    const restaurantId = urlParams.get('restaurantId');
-    const restaurantData = urlParams.get('data');
+    // 5. 從 URL 參數讀取餐廳 ID 或資料
+    const restaurantId = currentUrlRestaurantId;
+    const restaurantData = currentUrlRestaurantData;
     
     // 如果有餐廳 ID，從 API 獲取資料
     if (restaurantId) {
@@ -1450,10 +1489,29 @@ function navigateToRecommendedRestaurant(restaurantData) {
   console.log('最終的 googleReviews 內容:', restaurantToSave.googleReviews);
   console.log('=== 儲存完成，準備跳轉 ===');
   
-  // 直接存完整物件 (與餐廳卡片點擊邏輯一致)
+  // 清除之前的 sessionStorage 資料，確保載入新餐廳
+  sessionStorage.removeItem('currentRestaurantData');
+  sessionStorage.removeItem('restaurantDetailReturnData');
+  sessionStorage.removeItem('menuDetailBackupData');
+  sessionStorage.removeItem('restaurantDetailPageState');
+  
+  // 保存餐廳資料到 localStorage（向下相容）
   localStorage.setItem('selectedRestaurant', JSON.stringify(restaurantToSave));
-  // 導頁到餐廳詳情頁面
-  window.location.href = 'restaurantListDetail.html';
+  
+  // 保存餐廳資料到 sessionStorage（主要用於重新整理保護）
+  sessionStorage.setItem('currentRestaurantData', JSON.stringify(restaurantToSave));
+  
+  // 使用餐廳 ID 跳轉，優先使用 placeId，否則使用 id
+  const restaurantId = restaurantData.placeId || restaurantData.id;
+  if (restaurantId) {
+    console.log('使用餐廳 ID 跳轉:', restaurantId);
+    window.location.href = `restaurantListDetail.html?restaurantId=${encodeURIComponent(restaurantId)}`;
+  } else {
+    // 如果沒有 ID，使用 data 參數
+    console.log('使用 data 參數跳轉');
+    const encodedData = encodeURIComponent(JSON.stringify(restaurantToSave));
+    window.location.href = `restaurantListDetail.html?data=${encodedData}`;
+  }
 }
 
 // Function to create HTML for a single recommended restaurant card
