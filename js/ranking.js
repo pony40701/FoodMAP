@@ -91,22 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
             imgElement.dataset.restaurantId = restaurant.restaurantId;
         }
     
-        // 收藏按鈕前端互動
-        const favBtn = restaurantItem.querySelector('.favorite-btn');
-        if (favBtn) {
-            favBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                favBtn.classList.toggle('favorited');
-                const icon = favBtn.querySelector('i');
-                if (favBtn.classList.contains('favorited')) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                } else {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                }
-            });
-        }
+        // 移除本地收藏按鈕事件處理，改為由 favoriteButtonHandler 統一處理
+        // 收藏按鈕將由 FavoriteButton 類在初始化時處理
     
         const detailsBtn = restaurantItem.querySelector('.details-btn');
         if (detailsBtn) {

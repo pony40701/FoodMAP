@@ -922,3 +922,227 @@ body {
     max-width: 1200px;
     margin: 100px auto 40px;
 }
+
+/* 食物類型選擇彈窗 美化樣式 */
+.food-type-modal {
+    max-width: 600px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.food-type-modal .modal-header {
+    background-color: #ff6b1a;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px 10px 0 0;
+}
+
+.food-type-modal .modal-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.food-type-modal .modal-header h3 i {
+    margin-right: 8px;
+}
+
+.food-type-modal .close-modal {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.food-type-modal .close-modal:hover {
+    transform: scale(1.2);
+}
+
+.food-type-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .food-type-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .food-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.food-type-item {
+    transition: all 0.2s;
+}
+
+.food-type-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    height: 100%;
+    background-color: #f8f8f8;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.food-type-label:hover {
+    background-color: #fff3eb;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(255, 107, 26, 0.2);
+}
+
+.food-type-label input {
+    position: absolute;
+    opacity: 0;
+}
+
+.food-type-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    transition: all 0.2s;
+    background-color: white;
+    color: white;
+}
+
+.food-type-checkbox i {
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.food-type-label input:checked ~ .food-type-checkbox {
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
+}
+
+.food-type-label input:checked ~ .food-type-checkbox i {
+    opacity: 1;
+}
+
+.food-type-icon {
+    font-size: 28px;
+    color: #ff6b1a;
+    margin: 8px 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.food-type-label span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+}
+
+.food-type-label.other-label {
+    flex-direction: row;
+    padding-left: 15px;
+    width: auto;
+    display: inline-flex;
+    margin-right: 10px;
+}
+
+.food-type-label.other-label .food-type-checkbox {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin: 0 8px 0 0;
+}
+
+.other-food-type {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.other-input-container {
+    flex: 1;
+    min-width: 180px;
+}
+
+.other-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border 0.3s;
+}
+
+.other-input:focus {
+    outline: none;
+    border-color: #ff6b1a;
+}
+
+.food-type-modal .modal-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.food-type-modal .btn-apply,
+.food-type-modal .btn-clear {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.food-type-modal .btn-apply {
+    background-color: #ff6b1a;
+    color: white;
+    border: none;
+}
+
+.food-type-modal .btn-apply:hover {
+    background-color: #e85f10;
+    transform: translateY(-2px);
+}
+
+.food-type-modal .btn-clear {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.food-type-modal .btn-clear:hover {
+    background-color: #f8f8f8;
+}
+
+.food-type-modal .btn-apply i,
+.food-type-modal .btn-clear i {
+    margin-right: 6px;
+    font-size: 12px;
+}
