@@ -114,26 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 處理登入表單提交
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        // 這裡添加登入邏輯
-        console.log('登入嘗試:', { email, password });
-        
-        // 模擬登入成功
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userEmail', email);
-        
-        // 關閉彈跳視窗
-        loginModal.style.display = 'none';
-        
-        // 跳轉到首頁
-        window.location.href = 'index.html';
-    });
-
     // 處理註冊表單提交
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();

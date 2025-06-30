@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,19 +18,54 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.entity.User;
+import com.example.demo.entity.UserProfile;
+import com.example.demo.entity.UserFavorite;
+import com.example.demo.entity.Review;
+import com.example.demo.entity.VerificationCode;
+import com.example.demo.entity.ReviewStats;
+import com.example.demo.entity.ReviewViewLog;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.UserProfileRepository;
+import com.example.demo.repository.UserFavoriteRepository;
+import com.example.demo.repository.ReviewRepository;
+import com.example.demo.repository.VerificationCodeRepository;
+import com.example.demo.repository.ReviewStatsRepository;
+import com.example.demo.repository.ReviewViewLogRepository;
+import com.example.demo.security.JwtService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowedHeaders = "*")
 public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private UserFavoriteRepository userFavoriteRepository;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private VerificationCodeRepository verificationCodeRepository;
+
+    @Autowired
+    private ReviewStatsRepository reviewStatsRepository;
+
+    @Autowired
+    private ReviewViewLogRepository reviewViewLogRepository;
+
+    @Autowired
+    private JwtService jwtService;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
@@ -76,7 +114,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/avatar")
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowedHeaders = "*")
     public ResponseEntity<byte[]> getUserAvatar(@PathVariable Long id) {
         System.out.println("=== 獲取用戶頭像請求 ===");
         System.out.println("用戶ID: " + id);
@@ -157,7 +195,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/avatar")
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowedHeaders = "*")
     public ResponseEntity<?> uploadAvatar(@PathVariable Long id, @RequestParam("avatar") MultipartFile file) {
         try {
             System.out.println("=== 頭像上傳請求開始 ===");
@@ -244,6 +282,43 @@ public class UserController {
                 "success", false,
                 "error", "頭像上傳失敗：" + e.getMessage()
             ));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 驗證與授權檢查
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(Map.of("error", "缺少有效的授權令牌"));
+            }
+            String token = authHeader.substring(7);
+            String userEmail;
+            try {
+                userEmail = jwtService.extractEmail(token);
+            } catch (Exception e) {
+                return ResponseEntity.status(401).body(Map.of("error", "無效的授權令牌"));
+            }
+
+            Optional<User> userOptional = userRepository.findById(id);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            User user = userOptional.get();
+
+            // 驗證用戶只能刪除自己的帳號
+            if (!user.getEmail().equals(userEmail)) {
+                return ResponseEntity.status(403).body(Map.of("error", "無權限刪除此帳號"));
+            }
+
+            // 只刪除 users 資料表的帳號
+            userRepository.delete(user);
+
+            return ResponseEntity.ok(Map.of("message", "用戶資料刪除成功"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "刪除用戶資料失敗：" + e.getMessage()));
         }
     }
 } 

@@ -283,6 +283,11 @@
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 loginModal.style.display = 'block';
+                
+                // 在顯示登入模態框時初始化登入處理邏輯
+                if (typeof window.showLoginModal === 'function') {
+                    window.showLoginModal();
+                }
             });
         });
     });

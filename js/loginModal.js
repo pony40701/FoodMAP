@@ -58,7 +58,12 @@ window.showLoginModal = function() {
                     body: JSON.stringify({ email, password })
                 });
 
-                const data = await response.json();
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = {};
+                }
 
                 if (response.ok) {
                     // 儲存認證資訊
@@ -89,7 +94,7 @@ window.showLoginModal = function() {
                     const restaurantsContainer = document.getElementById('restaurants-container');
                     if (restaurantsContainer) {
                         restaurantsContainer.innerHTML = '';
-                        ('已清空餐廳容器，準備重新載入資料');
+                        console.log('已清空餐廳容器，準備重新載入資料');
                     }
                     
                     // 更新用戶界面狀態
@@ -110,11 +115,16 @@ window.showLoginModal = function() {
                     
                     // 重新加載餐廳資料
                     if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
-                        ('準備重新加載餐廳數據');
+                        console.log('準備重新加載餐廳數據');
                         window.mapInit.loadRestaurants();
                     }
+
+                    // === 新增：如果在 userRegister.html，跳轉到首頁 ===
+                    if (window.location.pathname.includes('userRegister.html')) {
+                        window.location.href = 'index.html';
+                    }
                 } else {
-                    throw new Error(data.message || '登入失敗');
+                    throw new Error(data.error || data.message || `登入失敗（${response.status}）`);
                 }
             } catch (error) {
                 console.error('登入失敗:', error);
