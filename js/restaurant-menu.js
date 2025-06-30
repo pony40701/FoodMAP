@@ -131,21 +131,16 @@ function displayMenuItems(menuItems) {
 
 // 初始化圖片預覽功能
 function initializeImagePreview() {
-    console.log('Initializing image preview...');
     const imageInput = document.getElementById('item-image');
     if (!imageInput) {
-        console.error('Image input element not found');
         return;
     }
 
     imageInput.addEventListener('change', function(e) {
-        console.log('File input changed');
         const file = e.target.files[0];
         if (file) {
-            console.log('File selected:', file.name);
             const reader = new FileReader();
             reader.onload = function(e) {
-                console.log('File loaded, updating preview');
                 const currentImage = document.getElementById('current-image');
                 if (currentImage) {
                     currentImage.innerHTML = `
@@ -162,7 +157,6 @@ function initializeImagePreview() {
 
 // 顯示新增菜品彈窗
 function showAddMenuItemModal() {
-    console.log('Opening add menu item modal');
     currentMode = 'add';
     currentEditId = null;
     
@@ -199,7 +193,6 @@ function showAddMenuItemModal() {
 
 // 編輯菜品
 async function editMenuItem(id) {
-    console.log('Editing menu item:', id);
     currentMode = 'edit';
     currentEditId = id;
     
@@ -217,7 +210,6 @@ async function editMenuItem(id) {
         }
 
         const item = await response.json();
-        console.log('Fetched item data:', item);
         
         // 填充表單
         document.getElementById('item-name').value = item.itemName;
@@ -234,14 +226,12 @@ async function editMenuItem(id) {
         const currentImage = document.getElementById('current-image');
         if (currentImage) {
             if (item.menuImage) {
-                console.log('Updating preview with existing image');
                 currentImage.innerHTML = `
                     <img src="data:image/jpeg;base64,${item.menuImage}" 
                          alt="${item.itemName}"
                          style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px;">
                 `;
             } else {
-                console.log('Setting default image preview');
                 currentImage.innerHTML = `
                     <img src="images/no-image.jpg" 
                          alt="無圖片"

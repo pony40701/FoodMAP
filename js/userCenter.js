@@ -118,11 +118,9 @@ function getFavoriteStores() {
                 return window.favoriteSystem.getFavoriteStores();
             } else {
                 // 如果方法不存在，直接使用 stores 數組
-                console.warn('favoriteSystem.getFavoriteStores 方法不存在，直接使用 stores 數組');
                 return window.favoriteSystem.stores || [];
             }
         } catch (error) {
-            console.error('從 favoriteSystem 獲取收藏餐廳時出錯:', error);
             return [];
         }
     }
@@ -132,7 +130,6 @@ function getFavoriteStores() {
         const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
         return favorites;
     } catch (e) {
-        console.error('解析localStorage收藏數據時出錯:', e);
         return [];
     }
 }
@@ -146,11 +143,9 @@ function getFavoriteReviews() {
                 return window.favoriteSystem.getFavoriteReviews();
             } else {
                 // 如果方法不存在，直接使用 reviews 數組
-                console.warn('favoriteSystem.getFavoriteReviews 方法不存在，直接使用 reviews 數組');
                 return window.favoriteSystem.reviews || [];
             }
         } catch (error) {
-            console.error('從 favoriteSystem 獲取收藏評論時出錯:', error);
             return [];
         }
     }
@@ -160,7 +155,6 @@ function getFavoriteReviews() {
         const favoriteReviews = JSON.parse(localStorage.getItem('favoriteReviews') || '[]');
         return favoriteReviews;
     } catch (e) {
-        console.error('解析localStorage收藏評論數據時出錯:', e);
         return [];
     }
 }
@@ -933,7 +927,7 @@ function showConfirmationModal(message, title = '確認操作') {
 
         // 創建彈窗的 HTML 結構
         const modalHTML = `
-            <div id="confirmationModal" class="modal" style="display: flex; justify-content: center; align-items: center; z-index: 2000;">
+            <div id="confirmationModal" class="modal" style="display: flex; justify-content: center; align-items: center; z-index: 8000;">
                 <div class="confirm-modal-content">
                     <h3 class="confirm-modal-title">${title}</h3>
                     <p class="confirm-modal-message">${message}</p>
@@ -1567,7 +1561,6 @@ async function loadUserData() {
             try {
                 userData = JSON.parse(storedUserData);
                 userId = userData.id;
-                console.log('從 userData localStorage 找到用戶 ID:', userId);
             } catch (e) {
                 console.warn('解析 userData 失敗:', e);
             }
@@ -1576,7 +1569,6 @@ async function loadUserData() {
         // 方法2: 從 userId localStorage 獲取
         if (!userId) {
             userId = localStorage.getItem('userId');
-            console.log('從 userId localStorage 找到用戶 ID:', userId);
         }
         
         // 方法3: 檢查是否已登入
@@ -1588,18 +1580,10 @@ async function loadUserData() {
         }
         
         if (!userId) {
-            console.error('找不到用戶 ID，可用的 localStorage 項目:');
-            console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
-            console.log('authToken:', localStorage.getItem('authToken'));
-            console.log('userData:', localStorage.getItem('userData'));
-            console.log('userId:', localStorage.getItem('userId'));
-            
-            // 嘗試使用預設的測試用戶 ID
-            userId = '1'; // 假設測試用戶 ID 為 1
-            console.log('使用預設測試用戶 ID:', userId);
+            // 移除測試用戶ID設定
+            return null;
         }
 
-        console.log('載入用戶資料，用戶 ID:', userId);
         
         const response = await fetch(`${API_BASE_URL}/users/${userId}`);
         
@@ -1608,7 +1592,6 @@ async function loadUserData() {
         }
         
         const freshUserData = await response.json();
-        console.log('獲取到的用戶資料:', freshUserData);
         
         // 更新 localStorage
         localStorage.setItem('userData', JSON.stringify(freshUserData));
@@ -1635,7 +1618,6 @@ async function loadUserData() {
 
 // 更新用戶顯示
 function updateUserDisplay(userData) {
-    console.log('更新用戶顯示，資料:', userData);
     
     const userNameEl = document.querySelector('.user-name');
     const userEmailEl = document.querySelector('.user-email');
@@ -1653,22 +1635,16 @@ function updateUserDisplay(userData) {
     const sidebarAvatarImg = document.querySelector('.sidebar .user-avatar .avatar-img');
     const navbarAvatarImg = document.querySelector('.navbar .user-avatar .avatar-img');
     
-    console.log('準備更新頭像，找到的元素:', {
-        sidebarAvatarImg: !!sidebarAvatarImg,
-        navbarAvatarImg: !!navbarAvatarImg
-    });
     
     // 首先檢查用戶資料中是否有 base64 編碼的頭像
     if (userData.avatar_url && userData.avatar_url.startsWith('data:image')) {
-        console.log('使用 base64 編碼的頭像');
+        ('使用 base64 編碼的頭像');
         // 使用 base64 編碼的頭像
         if (sidebarAvatarImg) {
             sidebarAvatarImg.src = userData.avatar_url;
-            console.log('更新側邊欄頭像為 base64');
         }
         if (navbarAvatarImg) {
             navbarAvatarImg.src = userData.avatar_url;
-            console.log('更新導航欄頭像為 base64');
         }
         
         // 更新所有其他可能的頭像元素
@@ -1676,35 +1652,28 @@ function updateUserDisplay(userData) {
         allAvatarImgs.forEach((img, index) => {
             if (img) {
                 img.src = userData.avatar_url;
-                console.log(`更新頭像元素 ${index + 1} 為 base64`);
             }
         });
         
     } else if (userId) {
-        console.log('從 API 端點載入頭像');
         // 從 API 端點載入頭像
         const avatarUrl = `${API_BASE_URL}/users/${userId}/avatar?t=${new Date().getTime()}`;
-        console.log('頭像 URL:', avatarUrl);
         
         if (sidebarAvatarImg) {
             sidebarAvatarImg.src = avatarUrl;
             sidebarAvatarImg.onerror = function() {
-                console.log('側邊欄頭像載入失敗，使用預設頭像');
-                this.src = 'images/TEST.jpg';
+                this.src = 'images/default-avatar.png';
             };
             sidebarAvatarImg.onload = function() {
-                console.log('側邊欄頭像載入成功');
             };
         }
         
         if (navbarAvatarImg) {
             navbarAvatarImg.src = avatarUrl;
             navbarAvatarImg.onerror = function() {
-                console.log('導航欄頭像載入失敗，使用預設頭像');
-                this.src = 'images/TEST.jpg';
+                this.src = 'images/default-avatar.png';
             };
             navbarAvatarImg.onload = function() {
-                console.log('導航欄頭像載入成功');
             };
         }
         
@@ -1714,18 +1683,15 @@ function updateUserDisplay(userData) {
             if (img && img !== sidebarAvatarImg && img !== navbarAvatarImg) {
                 img.src = avatarUrl;
                 img.onerror = function() {
-                    console.log(`頭像元素 ${index + 1} 載入失敗，使用預設頭像`);
-                    this.src = 'images/TEST.jpg';
+                    this.src = 'images/default-avatar.png';
                 };
                 img.onload = function() {
-                    console.log(`頭像元素 ${index + 1} 載入成功`);
                 };
             }
         });
     } else {
-        console.log('沒有用戶 ID，使用預設頭像');
         // 使用預設頭像
-        const defaultAvatar = 'images/TEST.jpg';
+        const defaultAvatar = 'images/default-avatar.png';
         if (sidebarAvatarImg) {
             sidebarAvatarImg.src = defaultAvatar;
         }
@@ -2215,7 +2181,6 @@ function addMarkAllAsReadButton(container) {
                     readNotifications: []
                 };
                 localStorage.setItem('notificationReadStatus', JSON.stringify(readStatus));
-                console.log('手動標記所有通知為已讀');
             } catch (error) {
                 console.error('手動更新通知狀態失敗:', error);
             }
@@ -2809,13 +2774,8 @@ window.updateUserDisplay = updateUserDisplay;
 
 // Debug 函數
 window.debugUserCenter = function() {
-    console.log('=== UserCenter Debug ===');
-    console.log('localStorage userData:', localStorage.getItem('userData'));
-    console.log('localStorage userId:', localStorage.getItem('userId'));
-    console.log('API_BASE_URL:', window.API_BASE_URL);
     
     const avatarImgs = document.querySelectorAll('.avatar-img, img[alt="會員頭像"]');
-    console.log('找到的頭像元素:', avatarImgs.length);
     avatarImgs.forEach((img, index) => {
         console.log(`頭像 ${index + 1}:`, {
             src: img.src,

@@ -11,18 +11,10 @@ function showSlide(n) {
     currentSlide = (n + slides.length) % slides.length;
     const carouselWrapper = document.querySelector('.carousel-wrapper');
     
-    console.log('切換到slide:', {
-        requestedSlide: n,
-        currentSlide: currentSlide,
-        totalSlides: slides.length,
-        carouselWrapper: !!carouselWrapper
-    });
-    
     if (carouselWrapper) {
         // 計算偏移量：每個slide佔100%寬度
         const offset = currentSlide * 100;
         carouselWrapper.style.transform = `translateX(-${offset}%)`;
-        console.log('設定偏移量:', offset + '%');
     }
     
     // 更新指示點狀態
@@ -32,21 +24,12 @@ function showSlide(n) {
 }
 
 function initCarousel() {
-    console.log('初始化輪播圖...');
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.dot');
     const prevButton = document.querySelector('.carousel-button.prev');
     const nextButton = document.querySelector('.carousel-button.next');
 
-    console.log('找到輪播圖元素:', {
-        slides: slides.length,
-        dots: dots.length,
-        prevButton: !!prevButton,
-        nextButton: !!nextButton
-    });
-
     if (slides.length === 0) {
-        console.warn('沒有找到輪播圖slide元素');
         return;
     }
     
@@ -70,7 +53,6 @@ function initCarousel() {
 
     // 初始化顯示第一張
     showSlide(0);
-    console.log('輪播圖初始化完成');
 }
 
 // ===========================================
@@ -479,11 +461,6 @@ function openGoogleMaps(address) {
 // ===========================================
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 設置今天是星期五，用於測試
-        if (window.businessHours) {
-            window.businessHours.forceDay(5); // 5 = 星期五
-        }
-        
         // 初始化收藏系統
         if (!window.favoriteSystem) {
             await window.favoriteSystem.initialize();

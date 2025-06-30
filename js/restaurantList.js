@@ -25,6 +25,12 @@ function shuffleArray(array) {
 function initMap() {
   const taipei101 = { lat: 25.0330, lng: 121.5654 };
   
+  // 修正：如果 map 已存在，先移除
+  if (map) {
+    map.remove();
+    map = null;
+  }
+
   map = L.map('map').setView([taipei101.lat, taipei101.lng], 13);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1105,8 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMap();
     
     // 初始化其他UI元素
-    initSearchButton();
-    initSearchInputs();
+    // initSearchButton(); // 已移除，因為搜尋事件已在檔案內初始化
     initDropdowns();
     initTags();
 });

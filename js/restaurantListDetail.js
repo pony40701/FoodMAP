@@ -1515,11 +1515,9 @@ function navigateToRecommendedRestaurant(restaurantData) {
   // 使用餐廳 ID 跳轉，優先使用 placeId，否則使用 id
   const restaurantId = restaurantData.placeId || restaurantData.id;
   if (restaurantId) {
-    console.log('使用餐廳 ID 跳轉:', restaurantId);
     window.location.href = `restaurantListDetail.html?restaurantId=${encodeURIComponent(restaurantId)}`;
   } else {
     // 如果沒有 ID，使用 data 參數
-    console.log('使用 data 參數跳轉');
     const encodedData = encodeURIComponent(JSON.stringify(restaurantToSave));
     window.location.href = `restaurantListDetail.html?data=${encodedData}`;
   }

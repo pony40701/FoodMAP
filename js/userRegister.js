@@ -310,13 +310,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function socialLogin(platform) {
         switch(platform) {
             case 'google':
-                console.log('使用 Google 登入');
                 break;
             case 'facebook':
-                console.log('使用 Facebook 登入');
                 break;
             case 'line':
-                console.log('使用 Line 登入');
                 break;
         }
     }
@@ -382,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('註冊響應:', data);
             if (data.id) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userEmail', registrationData.email);
@@ -395,14 +391,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }));
                 goToStep(4);
             } else {
-                console.error('註冊失敗:', data.error || '未知錯誤');
                 alert('註冊失敗: ' + (data.error || '未知錯誤'));
                 submitButton.disabled = false;
                 submitButton.textContent = '確認註冊';
             }
         })
         .catch(error => {
-            console.error('註冊錯誤:', error);
             alert('註冊時發生錯誤，請稍後再試');
             submitButton.disabled = false;
             submitButton.textContent = '確認註冊';

@@ -125,17 +125,17 @@ function initLogin() {
                     }
                     
                     // 初始化通知服務
-                    if (window.NotificationService && typeof window.NotificationService.initialize === 'function') {
+                    if (window.NotificationService) {
                         window.NotificationService.initialize();
                     }
                     
                     // 顯示成功訊息
                     window.showToast('登入成功！');
                     
-                    // 登入成功後重新整理頁面以更新收藏狀態
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // 重新加載餐廳數據
+                    if (window.mapInit && typeof window.mapInit.loadRestaurants === 'function') {
+                        window.mapInit.loadRestaurants();
+                    }
                 } else {
                     throw new Error(data.message || '登入失敗');
                 }
@@ -270,13 +270,13 @@ async function loadUserAvatarFromAPI(userId, avatarImgElement) {
         
         // 如果都失敗了，使用預設頭像
         console.log('使用預設頭像');
-        avatarImgElement.src = 'images/TEST.jpg';
+        avatarImgElement.src = 'images/default-avatar.png';
         avatarImgElement.alt = '預設頭像';
         
     } catch (error) {
         console.error('載入用戶頭像時發生錯誤:', error);
         // 使用預設頭像
-        avatarImgElement.src = 'images/TEST.jpg';
+        avatarImgElement.src = 'images/default-avatar.png';
         avatarImgElement.alt = '預設頭像';
     }
 }
@@ -413,11 +413,11 @@ function fixLoginModalStyles() {
     if (!loginModal) return;
     
     const modalContent = loginModal.querySelector('.modal-content');
-    const modalHeader = loginModal.querySelector('.modal-header');
-    const modalTitle = modalHeader.querySelector('h2');
+    const modalHeader = loginModal.querySelector('.modal-header') || loginModal.querySelector('div[style*="text-align: center"]');
+    const modalTitle = modalHeader ? modalHeader.querySelector('h2') : null;
     const modalBody = loginModal.querySelector('.modal-body');
-    const closeButton = modalHeader.querySelector('.close');
-    const form = loginModal.querySelector('.login-form');
+    const closeButton = modalHeader ? modalHeader.querySelector('.close') : null;
+    const form = loginModal.querySelector('.login-form') || loginModal.querySelector('form#loginForm');
     
     // 修復模態框內容
     if (modalContent) {
@@ -577,24 +577,7 @@ window.login = {
     initLogin: initLogin,
     checkLoginStatus: checkLoginStatus,
     handleLoginSuccess: handleLoginSuccess,
-    logout: window.logout,
-    
-    // 測試通知徽章功能
-    testNotificationBadge: function() {
-        
-        // 設置調試模式
-        localStorage.setItem('debugMode', 'true');
-        localStorage.setItem('debugShowNotification', 'true');
-        
-        // 如果通知服務已初始化，則立即顯示測試通知
-        if (window.NotificationService && window.NotificationService.initialized) {
-            window.NotificationService.showTestNotification();
-        } else {
-            if (window.NotificationService) {
-                window.NotificationService.initialize();
-            }
-        }
-    }
+    logout: window.logout
 };
 
 // 頁面載入完成後，如果已登入且有未讀通知標記，則顯示通知徽章
