@@ -719,6 +719,20 @@ public class ReviewService {
                     .map(tag -> tag.getTag().getName())
                     .collect(Collectors.toList()));
 
+            // 設置觀看數和收藏數
+            ReviewStats stats = reviewStatsRepository.findById(review.getId())
+                    .orElseGet(() -> {
+                        // 如果沒有統計資料，建立一個新的
+                        ReviewStats newStats = new ReviewStats();
+                        newStats.setReview(review);
+                        newStats.setTotalViews(0);
+                        newStats.setTotalFavorites(0);
+                        return reviewStatsRepository.save(newStats);
+                    });
+            
+            dto.setTotalViews(stats.getTotalViews());
+            dto.setTotalFavorites(stats.getTotalFavorites());
+
             return dto;
         }).collect(Collectors.toList());
     }
