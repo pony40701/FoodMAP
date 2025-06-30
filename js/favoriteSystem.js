@@ -166,15 +166,36 @@ class FavoriteSystem {
                 return false;
             }
 
-            const response = await fetch(`${base}/users/${this.userId}/favorites/restaurants/${storeData.place_id}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-            });
+            try {
+                const response = await fetch(`${base}/users/${this.userId}/favorites/restaurants/${storeData.place_id}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                });
 
-            if (!response.ok) {
-                throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
+                if (!response.ok) {
+                    console.warn(`API 加入收藏失敗: ${response.status}`);
+                    // 不拋出錯誤，繼續到本地處理
+                } else {
+                    // API 成功，重新載入收藏列表
+                    await this.loadFavorites();
+                    this.triggerFavoritesChangedEvent();
+                    return true;
+                }
+            } catch (error) {
+                console.warn('API 加入收藏時發生錯誤:', error);
+                // 繼續到本地處理
             }
 
-            await this.loadFavorites();
+            // 本地添加邏輯（API 失敗時的後備方案）
+            const storeToAdd = {
+                id: storeData.place_id,
+                place_id: storeData.place_id,
+                name: storeData.name || '未知餐廳',
+                photos: storeData.photos || null,
+                favoriteTime: new Date().toISOString()
+            };
+
+            this.stores.push(storeToAdd);
+            localStorage.setItem('favoriteStores', JSON.stringify(this.stores));
             this.triggerFavoritesChangedEvent();
             return true;
         } catch (error) {
@@ -198,29 +219,32 @@ class FavoriteSystem {
                     });
 
                     if (!response.ok) {
-                        throw new Error(`API 呼叫失敗: ${response.status} - ${await response.text()}`);
+                        console.warn(`API 移除收藏失敗: ${response.status}`);
+                        // 不拋出錯誤，直接繼續到本地處理
+                    } else {
+                        const result = await response.json();
+                        if (result.success) {
+                            // API 成功，更新本地數據
+                            this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
+                            this.triggerFavoritesChangedEvent();
+                            return true;
+                        }
                     }
-
-                    const result = await response.json();
-                    if (result.success) {
-                        this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
-                        this.triggerFavoritesChangedEvent();
-                        return true;
-                    }
-                    return false;
                 } catch (error) {
-                    // 如果API移除收藏失敗，回退到本地存儲
+                    console.warn('API 移除收藏時發生錯誤:', error);
+                    // 繼續到本地處理
                 }
             }
 
+            // 本地移除邏輯（無論 API 是否成功都會執行）
             const initialLength = this.stores.length;
             this.stores = this.stores.filter(store => store.id !== storeId && store.place_id !== storeId);
-            if (initialLength === this.stores.length) {
-                return false;
-            }
-
+            
+            // 更新本地存儲
             localStorage.setItem('favoriteStores', JSON.stringify(this.stores));
             this.triggerFavoritesChangedEvent();
+            
+            // 即使本地沒有找到，也返回 true（因為目標是移除，不存在就算成功）
             return true;
         } catch (error) {
             return false;

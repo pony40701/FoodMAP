@@ -96,6 +96,9 @@ class RestaurantDetail {
     this.updatePageInfo();
     new RestaurantCarousel(this.restaurantData);
 
+    // *** 重要修復：設置操作按鈕功能（包括收藏按鈕） ***
+    this.setupActionButtons();
+
     // Leaflet 地圖初始化，只顯示單一餐廳 marker
     const lat = this.restaurantData.latitude;
     const lng = this.restaurantData.longitude;
@@ -554,15 +557,24 @@ class RestaurantDetail {
 
   // 設置操作按鈕功能
   setupActionButtons() {
+    console.log('=== setupActionButtons 開始執行 ===');
+    console.log('當前餐廳資料:', this.restaurantData);
+    
     // 收藏按鈕
     const saveBtn = document.querySelector('.action-btn.save');
     if (saveBtn) {
       // 設置餐廳ID到按鈕的data屬性
       if (this.restaurantData) {
         const placeId = this.restaurantData.place_id || this.restaurantData.placeId || this.restaurantData.id;
+        console.log('提取到的 placeId:', placeId);
         if (placeId) {
           saveBtn.setAttribute('data-place-id', placeId);
+          console.log('收藏按鈕 data-place-id 已設置為:', placeId);
+        } else {
+          console.warn('無法從餐廳資料中取得有效的 placeId');
         }
+      } else {
+        console.warn('餐廳資料為空，無法設置收藏按鈕 ID');
       }
       
       // 初始化收藏狀態
@@ -583,8 +595,76 @@ class RestaurantDetail {
         try {
           // 獲取餐廳資料
           const placeId = saveBtn.getAttribute('data-place-id');
+          console.log('收藏按鈕點擊，檢查 data-place-id:', placeId);
+          console.log('當前餐廳資料:', this.restaurantData);
+          
           if (!placeId) {
-            showToast('無法獲取餐廳資訊');
+            console.error('收藏按鈕的 data-place-id 屬性為空');
+            
+            // 嘗試從當前餐廳資料中獲取 ID（防止無限遞歸）
+            if (!saveBtn.hasAttribute('data-fallback-attempted')) {
+              const fallbackId = this.restaurantData?.place_id || this.restaurantData?.placeId || this.restaurantData?.id;
+              if (fallbackId) {
+                console.log('嘗試使用後備 ID:', fallbackId);
+                saveBtn.setAttribute('data-place-id', fallbackId);
+                saveBtn.setAttribute('data-fallback-attempted', 'true');
+                
+                // 直接繼續處理收藏邏輯，不遞歸調用
+                const actualPlaceId = fallbackId;
+                
+                // 初始化收藏系統
+                if (!window.favoriteSystem) {
+                  window.favoriteSystem = new FavoriteSystem();
+                }
+                await window.favoriteSystem.initialize();
+                
+                // 重新執行收藏邏輯
+                console.log('後備邏輯：檢查收藏狀態，actualPlaceId:', actualPlaceId);
+                const isCurrentlyFavorited = await window.favoriteSystem.isStoreFavorited(actualPlaceId);
+                console.log('後備邏輯：當前收藏狀態:', isCurrentlyFavorited);
+                const icon = saveBtn.querySelector('i');
+                
+                if (isCurrentlyFavorited) {
+                  // 移除收藏
+                  console.log('後備邏輯：執行移除收藏操作...');
+                  const success = await window.favoriteSystem.removeStore(actualPlaceId);
+                  console.log('後備邏輯：移除收藏結果:', success);
+                  if (success) {
+                    saveBtn.classList.remove('active');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    saveBtn.style.color = '';
+                    showToast('已從收藏中移除');
+                  } else {
+                    showToast('無法從收藏中移除，請稍後再試');
+                  }
+                } else {
+                  // 添加收藏
+                  console.log('後備邏輯：執行加入收藏操作...');
+                  const restaurantData = {
+                    place_id: actualPlaceId,
+                    name: this.restaurantData.name || '未知餐廳',
+                    photos: this.restaurantData.photos || null
+                  };
+                  console.log('後備邏輯：準備加入的餐廳資料:', restaurantData);
+                  
+                  const success = await window.favoriteSystem.addStore(restaurantData);
+                  console.log('後備邏輯：加入收藏結果:', success);
+                  if (success) {
+                    saveBtn.classList.add('active');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    saveBtn.style.color = '#ff6b1a';
+                    showToast('已加入收藏');
+                  } else {
+                    showToast('無法加入收藏，請稍後再試');
+                  }
+                }
+                return;
+              }
+            }
+            
+            showToast('無法獲取餐廳資訊，請重新整理頁面後再試');
             return;
           }
           
@@ -595,30 +675,37 @@ class RestaurantDetail {
           await window.favoriteSystem.initialize();
           
           // 檢查當前收藏狀態
+          console.log('檢查收藏狀態，placeId:', placeId);
           const isCurrentlyFavorited = await window.favoriteSystem.isStoreFavorited(placeId);
+          console.log('當前收藏狀態:', isCurrentlyFavorited);
           const icon = saveBtn.querySelector('i');
           
           if (isCurrentlyFavorited) {
             // 移除收藏
+            console.log('執行移除收藏操作...');
             const success = await window.favoriteSystem.removeStore(placeId);
+            console.log('移除收藏結果:', success);
             if (success) {
               saveBtn.classList.remove('active');
               icon.classList.remove('fas');
               icon.classList.add('far');
               saveBtn.style.color = '';
-              showToast('已移除收藏');
+              showToast('已從收藏中移除');
             } else {
-              showToast('移除收藏失敗，請稍後再試');
+              showToast('無法從收藏中移除，請稍後再試');
             }
           } else {
             // 添加收藏
+            console.log('執行加入收藏操作...');
             const restaurantData = {
               place_id: placeId,
               name: this.restaurantData.name || '未知餐廳',
               photos: this.restaurantData.photos || null
             };
+            console.log('準備加入的餐廳資料:', restaurantData);
             
             const success = await window.favoriteSystem.addStore(restaurantData);
+            console.log('加入收藏結果:', success);
             if (success) {
               saveBtn.classList.add('active');
               icon.classList.remove('far');
@@ -626,12 +713,12 @@ class RestaurantDetail {
               saveBtn.style.color = '#ff6b1a';
               showToast('已加入收藏');
             } else {
-              showToast('加入收藏失敗，請稍後再試');
+              showToast('無法加入收藏，請稍後再試');
             }
           }
         } catch (error) {
           console.error('收藏操作失敗:', error);
-          showToast('收藏操作失敗，請稍後再試');
+          showToast('收藏功能暫時無法使用，請稍後再試');
         }
       });
     }
