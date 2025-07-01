@@ -3623,14 +3623,14 @@ async function editPublishedPost(postId) {
         // 填充表單
         document.getElementById('postTitleEdit').value = post.title;
         document.getElementById('tagsEdit').value = post.tags.join(', ');
-        const restaurantName = document.getElementById('restaurantName');
-        const restaurantLocation = document.getElementById('restaurantLocation');
+        const restaurantNameEdit = document.getElementById('restaurantNameEdit');
+        const restaurantLocationEdit = document.getElementById('restaurantLocationEdit');
         const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
-        if (restaurantName) {
-            restaurantName.value = restaurantInfo.name || `餐廳ID: ${post.restaurantId}`;
+        if (restaurantNameEdit) {
+            restaurantNameEdit.value = restaurantInfo.name || `餐廳ID: ${post.restaurantId}`;
         }
-        if (restaurantLocation) {
-            restaurantLocation.value = restaurantInfo.address || `餐廳ID: ${post.restaurantId}`;
+        if (restaurantLocationEdit) {
+            restaurantLocationEdit.value = restaurantInfo.address || `餐廳ID: ${post.restaurantId}`;
         }
         
         // 先清空編輯器內容
