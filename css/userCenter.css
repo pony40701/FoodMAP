@@ -2226,3 +2226,239 @@ select:focus {
         font-size: 14px;
     }
 } 
+
+
+/* 已發布文章中的評分樣式 */
+.post-ratings {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.post-ratings .rating-label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.post-ratings .stars-small {
+    display: flex;
+    gap: 3px;
+}
+
+.post-ratings .stars-small i {
+    font-size: 1.1rem;
+    color: #ddd;
+}
+
+.post-ratings .stars-small i.active {
+    color: #ffd700;
+}
+
+.post-ratings .rating-value {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-left: 8px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .post-ratings {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .post-ratings .stars-small i {
+        font-size: 1rem;
+    }
+    
+    .post-ratings .rating-value {
+        font-size: 1rem;
+    }
+}
+.post-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.post-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.2rem;
+}
+
+.post-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.post-content {
+    margin-bottom: 15px;
+}
+
+.post-ratings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rating-item-small {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stars-small {
+    display: flex;
+    gap: 2px;
+}
+
+.stars-small i {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.stars-small i.active {
+    color: #ffd700;
+}
+
+.post-preview {
+    color: var(--text-color);
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.post-stats {
+    display: flex;
+    gap: 20px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.post-stats span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.post-stats i {
+    color: var(--primary-color);
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .post-ratings {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .post-ratings {
+        grid-template-columns: 1fr;
+    }
+    
+    .post-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .post-stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+.restaurant-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.restaurant-info {
+    color: #666;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 15px;
+}
+
+.restaurant-info i {
+    color: var(--primary-color);
+}
+
+.rating-label {
+    min-width: 100px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.rating-value {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.stars-small {
+    display: flex;
+    gap: 2px;
+}
+
+.stars-small i {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.stars-small i.active {
+    color: #ffd700;
+}
+
+.tag {
+    background: rgba(255, 107, 26, 0.1);
+    color: var(--primary-color);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}

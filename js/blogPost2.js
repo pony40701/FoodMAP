@@ -90,6 +90,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (document.getElementById('drafts-section').classList.contains('active')) {
         await loadDrafts();
     }
+    
+    // 檢查URL參數中是否有editPostId，如果有則自動進入編輯模式
+    const urlParams = new URLSearchParams(window.location.search);
+    const editPostId = urlParams.get('editPostId');
+    if (editPostId) {
+        // 延遲一下確保所有初始化完成
+        setTimeout(async () => {
+            await editPublishedPost(parseInt(editPostId));
+        }, 500);
+    }
 });
 
 // 初始化導覽列(側邊非上方)
