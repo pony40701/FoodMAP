@@ -2967,7 +2967,8 @@ function switchSection(sectionId) {
                 break;
             case 'reviews':
                 // 如果切換到評論區塊，載入評論數據
-                loadReviews('all');
+                // loadReviews('all');
+                loadPublishedPosts();
                 break;
             case 'profile':
                 // 如果切換到個人資料，載入用戶數據
@@ -3350,4 +3351,238 @@ document.addEventListener('click', function(event) {
         suggestionsDiv.style.display = 'none';
     }
 });
+
+
+
+//review相關
+function loadUserDataForReview() {
+    // 從 localStorage 獲取 login.js 儲存的用戶數據
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn || !userData) {
+        // 不顯示登入模態框，因為頁面載入時已經處理了登入檢查
+        return;
+    }
+    
+    // 設置全域用戶ID
+    return userData.id;
+}
+
+async function loadPublishedPosts() {
+    const publishedList = document.getElementById('reviewsList');
+    if (!publishedList) return;
+
+    publishedList.innerHTML = '<div class="loading">載入中...</div>';
+    const currentUserId = loadUserDataForReview();
+    try {
+        const response = await fetch(`http://localhost:8080/api/reviews/user/${currentUserId}/published`); // 暫時使用固定用戶ID
+        if (!response.ok) throw new Error('載入已發布文章失敗');
+        const publishedPosts = await response.json();
+        
+        // 清空現有內容
+        publishedList.innerHTML = '';
+        
+        if (publishedPosts.length === 0) {
+            publishedList.innerHTML = '<div class="no-posts">目前沒有已發布的文章</div>';
+            return;
+        }
+
+        // 按發布時間排序（新的在前）
+        publishedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // 顯示文章列表
+        for (const post of publishedPosts) {
+            try {
+                const postElement = await createPublishedPostElement(post);
+                if (postElement && postElement instanceof Node) {
+                    publishedList.appendChild(postElement);
+                }
+            } catch (error) {
+                // 創建一個簡單的錯誤顯示元素
+                const errorElement = document.createElement('div');
+                errorElement.className = 'post-card error';
+                errorElement.innerHTML = `
+                    <div class="post-header">
+                        <h3>載入失敗</h3>
+                        <span class="post-date">文章ID: ${post.id}</span>
+                    </div>
+                    <div class="post-content">
+                        <p class="error-message">載入文章時發生錯誤，請稍後再試</p>
+                    </div>
+                `;
+                publishedList.appendChild(errorElement);
+            }
+        }
+    } catch (error) {
+        publishedList.innerHTML = '<div class="error">載入已發布文章失敗，請稍後再試</div>';
+    }
+}
+
+async function createPublishedPostElement(post) {
+    const div = document.createElement('div');
+    div.className = 'post-card';
+    div.setAttribute('data-post-id', post.id); // 添加文章ID屬性
+    
+    // 計算總評分
+    const ratings = post.ratings;
+    const totalRating = ratings ? 
+        (ratings.environment_score + ratings.service_score + ratings.taste_score + ratings.price_score) : 0;
+    const averageRating = ratings ? (totalRating / 4).toFixed(1) : '0.0';
+    
+    // 格式化日期
+    const publishDate = new Date(post.createdAt).toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // 限制內容顯示長度
+    const contentPreview = truncateText(stripHtml(post.content_json), 80);
+
+    // 根據餐廳ID獲取餐廳資訊，添加錯誤處理
+    let restaurantInfo;
+    try {
+        restaurantInfo = await getRestaurantInfoById(post.restaurantId);
+    } catch (error) {
+        restaurantInfo = {
+            name: `餐廳ID: ${post.restaurantId}`,
+            address: "地址資訊未提供"
+        };
+    }
+
+    div.innerHTML = `
+        <div class="post-header">
+            <h3>${escapeHtml(post.title)}</h3>
+            <span class="post-date">發布於：${publishDate}</span>
+        </div>
+        <div class="post-content">
+            <p class="restaurant-info">
+                <i class="fas fa-utensils"></i> 餐廳名稱: ${restaurantInfo.name}
+            </p>
+            <p class="restaurant-address">
+                <i class="fas fa-map-marker-alt"></i> 地址: ${restaurantInfo.address}
+            </p>
+            <div class="post-ratings">
+                <span class="rating-label">總評分</span>
+                <div class="stars-small">
+                    ${Array.from({length: 5}, (_, i) => `
+                        <i class="fas fa-star ${i < averageRating ? 'active' : ''}"></i>
+                    `).join('')}
+                </div>
+                <span class="rating-value">${averageRating}</span>
+            </div>
+            <p class="post-preview">${contentPreview}</p>
+            ${post.tags && post.tags.length > 0 ? `
+                <div class="post-tags">
+                    ${post.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                </div>
+            ` : ''}
+        </div>
+        <div class="post-stats">
+            <span><i class="fas fa-eye"></i> ${post.totalViews}</span>
+            <span><i class="fas fa-heart"></i> ${post.totalFavorites}</span>
+        </div>
+        <div class="post-actions">
+            <button onclick="window.location.href='blogPost.html?editPostId=${post.id}'" class="btn-edit">
+                <i class="fas fa-edit"></i> 編輯
+            </button>
+            <button onclick="deletePublishedPost(${post.id})" class="btn-delete">
+                <i class="fas fa-trash-alt"></i> 刪除
+            </button>
+        </div>
+    `;
+    
+    return div;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    
+    // 移除HTML標籤
+    const plainText = stripHtml(text);
+    
+    if (plainText.length <= maxLength) return plainText;
+    
+    // 在適當的位置截斷（避免截斷在單字中間）
+    let truncated = plainText.substring(0, maxLength);
+    
+    // 嘗試在句號、逗號或空格處截斷
+    const lastPeriod = truncated.lastIndexOf('。');
+    const lastComma = truncated.lastIndexOf('，');
+    const lastSpace = truncated.lastIndexOf(' ');
+    
+    let cutPoint = Math.max(lastPeriod, lastComma, lastSpace);
+    
+    if (cutPoint > maxLength * 0.7) { // 如果找到的截斷點在70%之後，使用它
+        truncated = truncated.substring(0, cutPoint + 1);
+    }
+    
+    return truncated + '...';
+}
+
+async function getRestaurantInfoById(restaurantId) {
+    try {
+        // 使用新的 API 查詢餐廳資料 (restaurants 表)
+        const response = await fetch(`http://localhost:8080/api/restaurant-save/${restaurantId}`);
+        
+        if (response.ok) {
+            const restaurant = await response.json();
+            return {
+                name: restaurant.name || `餐廳ID: ${restaurantId}`,
+                address: restaurant.address || "地址資訊未提供"
+            };
+        } else if (response.status === 404) {
+            // 如果餐廳不存在，返回預設值
+            return { 
+                name: `餐廳ID: ${restaurantId}`, 
+                address: "餐廳資訊不存在" 
+            };
+        } else {
+            throw new Error(`API錯誤: ${response.status}`);
+        }
+        
+    } catch (error) {
+        
+       
+        // 最終備用方案
+        return { 
+            name: `餐廳ID: ${restaurantId}`, 
+            address: "地址資訊未提供" 
+        };
+    }
+}
+
+// 刪除已發布文章
+async function deletePublishedPost(postId) {
+    if (!confirm('確定要刪除這個文章嗎？')) return;
+    
+    try {
+        const response = await fetch(`http://localhost:8080/api/reviews/published/${postId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error('刪除文章失敗');
+        
+        alert('文章已刪除');
+        loadPublishedPosts(); // 重新載入已發布文章列表
+    } catch (error) {
+        console.error('刪除文章時發生錯誤：', error);
+        alert('刪除文章失敗：' + error.message);
+    }
+}
 
