@@ -198,88 +198,179 @@
 
     <!-- 食物類型選擇彈窗 -->
     <div id="foodTypeModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content food-type-modal">
             <div class="modal-header">
-                <h3>選擇食物類型</h3>
+                <h3><i class="fas fa-utensils"></i> 選擇食物類型</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="food-type-options">
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="taiwanese">
-                        <span class="checkmark"></span>
-                        台式
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="japanese">
-                        <span class="checkmark"></span>
-                        日式
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="korean">
-                        <span class="checkmark"></span>
-                        韓式
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="southeast-asian">
-                        <span class="checkmark"></span>
-                        東南亞
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="middle-eastern">
-                        <span class="checkmark"></span>
-                        中東
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="italian">
-                        <span class="checkmark"></span>
-                        義式
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="bbq">
-                        <span class="checkmark"></span>
-                        燒肉
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="hotpot">
-                        <span class="checkmark"></span>
-                        火鍋
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="burger">
-                        <span class="checkmark"></span>
-                        漢堡
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="steak">
-                        <span class="checkmark"></span>
-                        牛排
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="dessert">
-                        <span class="checkmark"></span>
-                        甜點
-                    </label>
-                    <label class="checkbox-container">
-                        <input type="checkbox" value="vegetarian">
-                        <span class="checkmark"></span>
-                        素食
-                    </label>
-                    <div class="other-food-type">
-                        <label class="checkbox-container">
-                            <input type="checkbox" value="other" id="otherFoodType">
-                            <span class="checkmark"></span>
-                            其他
+                <div class="food-type-grid">
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="taiwanese">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-drumstick-bite"></i>
+                            </div>
+                            <span>台式</span>
                         </label>
-                        <div class="other-input-container">
-                            <input type="text" id="otherFoodTypeInput" class="other-input" placeholder="請輸入其他類型">
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="japanese">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-fish"></i>
+                            </div>
+                            <span>日式</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="korean">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-pepper-hot"></i>
+                            </div>
+                            <span>韓式</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="southeast-asian">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <span>東南亞</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="middle-eastern">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-bread-slice"></i>
+                            </div>
+                            <span>中東</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="italian">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-pizza-slice"></i>
+                            </div>
+                            <span>義式</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="bbq">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <span>燒肉</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="hotpot">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-hotdog"></i>
+                            </div>
+                            <span>火鍋</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="burger">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-hamburger"></i>
+                            </div>
+                            <span>漢堡</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="steak">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-bacon"></i>
+                            </div>
+                            <span>牛排</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="dessert">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-ice-cream"></i>
+                            </div>
+                            <span>甜點</span>
+                        </label>
+                    </div>
+                    <div class="food-type-item">
+                        <label class="food-type-label">
+                            <input type="checkbox" value="vegetarian">
+                            <div class="food-type-checkbox">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="food-type-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <span>素食</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="other-food-type">
+                    <label class="food-type-label other-label">
+                        <input type="checkbox" value="other" id="otherFoodType">
+                        <div class="food-type-checkbox">
+                            <i class="fas fa-check"></i>
                         </div>
+                        <span>其他</span>
+                    </label>
+                    <div class="other-input-container">
+                        <input type="text" id="otherFoodTypeInput" class="other-input" placeholder="請輸入其他類型">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-apply">套用</button>
-                <button class="btn-clear">清除</button>
+                <button class="btn-clear">
+                    <i class="fas fa-times"></i> 清除
+                </button>
+                <button class="btn-apply">
+                    <i class="fas fa-check"></i> 套用
+                </button>
             </div>
         </div>
     </div>

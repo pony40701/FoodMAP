@@ -420,7 +420,7 @@ class AvatarCropModal {
 
     // 觸發全域頭像更新事件
     triggerGlobalAvatarUpdate(userId) {
-        console.log('觸發全域頭像更新事件');
+        
         
         // 發送自定義事件
         const event = new CustomEvent('avatarUpdated', {
@@ -430,7 +430,7 @@ class AvatarCropModal {
         
         // 如果有login.js的updateLoginStatus函數，直接調用
         if (typeof updateLoginStatus === 'function') {
-            console.log('調用 updateLoginStatus 更新頭像');
+            
             updateLoginStatus(true);
         }
         
@@ -541,8 +541,6 @@ class AvatarCropModal {
             };
         }
 
-        console.log('上傳到:', `${this.apiBaseUrl}/users/${userId}/avatar`);
-
         const response = await fetch(`${this.apiBaseUrl}/users/${userId}/avatar`, requestOptions);
         
         if (!response.ok) {
@@ -559,7 +557,6 @@ class AvatarCropModal {
         avatarElements.forEach((img) => {
             if (img) {
                 img.src = avatarUrl;
-                console.log('頭像已更新:', avatarUrl);
             }
         });
 
@@ -580,7 +577,6 @@ class AvatarCropModal {
         } else {
             alert(message);
         }
-        console.log('Toast:', message);
     }
 }
 
@@ -591,7 +587,6 @@ let avatarCropModal = null;
 function initAvatarCropModal() {
     if (!avatarCropModal) {
         avatarCropModal = new AvatarCropModal();
-        console.log('AvatarCropModal 已初始化');
     }
 }
 

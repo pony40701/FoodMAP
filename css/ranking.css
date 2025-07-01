@@ -289,22 +289,15 @@ body {
 .restaurant-item .favorite-btn {
     padding: 8px 12px;
     border: 1px solid #ddd;
-    border-radius: 20px;
-    background-color: #fff;
-    color: #333;
+    border-radius: 5px;
+    background-color: white;
+    color: #666;
     cursor: pointer;
     font-size: 0.9em;
     transition: all 0.2s ease;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 5px;
-}
-
-.restaurant-item .details-btn:hover,
-.restaurant-item .favorite-btn:hover {
-    background-color: #ff6b1a;
-    color: #fff;
-    border-color: #ff6b1a;
 }
 
 .restaurant-item .favorite-btn .fa-heart {
@@ -312,14 +305,25 @@ body {
     transition: color 0.2s ease;
 }
 
-.restaurant-item .favorite-btn:hover .fa-heart,
-.restaurant-item .favorite-btn.favorited .fa-heart {
+.restaurant-item .favorite-btn:hover {
+    background-color: #ff6b1a;
+    color: #fff;
+    border-color: #ff6b1a;
+}
+
+.restaurant-item .favorite-btn:hover .fa-heart {
     color: #fff;
 }
 
-.restaurant-item .favorite-btn.favorited {
-    background-color: #ff6b1a;
-    color: #fff;
+.restaurant-item .favorite-btn.active {
+    background-color: white;
+    color: #666;
+    border-color: #ddd;
+}
+
+/* 激活狀態下的愛心圖標 */
+.restaurant-item .favorite-btn.active .fa-heart {
+    color: #ff6b1a;  /* 保持橙色 */
 }
 
 .load-more {

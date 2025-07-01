@@ -482,13 +482,13 @@ const RestaurantModal = (function() {
         
         const restaurantId = currentRestaurant.place_id || currentRestaurant.id;
         if (!restaurantId) {
-            alert('無法識別餐廳，請稍後再試');
+            showToast('無法識別餐廳，請稍後再試', 'error');
             return;
         }
         
         // 檢查是否已登入
         if (localStorage.getItem('isLoggedIn') !== 'true') {
-            alert('請先登入會員');
+            showToast('請先登入會員', 'warning');
             return;
         }
         
@@ -497,10 +497,35 @@ const RestaurantModal = (function() {
             window.favoriteButton.toggleStoreFavorite(restaurantId, elements.favoriteBtn).then(async () => {
                 // 使用異步方式獲取最新收藏狀態
                 const isFavorited = await window.favoriteSystem.isStoreFavorited(restaurantId);
-                
                 // 更新按鈕文字和樣式
                 elements.favoriteBtn.innerHTML = `<i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i> ${isFavorited ? '已收藏' : '收藏'}`;
                 elements.favoriteBtn.classList.toggle('active', isFavorited);
+                // 新增：如果已經不是收藏狀態，代表剛剛是「取消收藏」，自動關閉彈窗
+                if (!isFavorited) {
+                    if (typeof window.removeFavorite === 'function') {
+                        window.removeFavorite(restaurantId);
+                    } else if (typeof removeFavorite === 'function') {
+                        removeFavorite(restaurantId);
+                    } else {
+                        // fallback: 直接移除收藏
+                        window.favoriteSystem.removeStore(restaurantId).then(success => {
+                            if (success) {
+                                elements.favoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
+                                elements.favoriteBtn.classList.remove('active');
+                                showToast('已從收藏中移除', 'success');
+                                closeModal();
+                                // 加入移除卡片功能
+                                if (typeof window.removeCardFromDOM === 'function') {
+                                    window.removeCardFromDOM(restaurantId);
+                                } else if (typeof removeCardFromDOM === 'function') {
+                                    removeCardFromDOM(restaurantId);
+                                }
+                            } else {
+                                showToast('取消收藏失敗，請稍後再試', 'error');
+                            }
+                        });
+                    }
+                }
             });
         } else {
             // 備用方案：直接使用收藏系統
@@ -511,9 +536,16 @@ const RestaurantModal = (function() {
                             if (success) {
                                 elements.favoriteBtn.innerHTML = '<i class="far fa-heart"></i> 收藏';
                                 elements.favoriteBtn.classList.remove('active');
-                                alert('已取消收藏');
+                                showToast('已從收藏中移除', 'success');
+                                closeModal();
+                                // 加入移除卡片功能
+                                if (typeof window.removeCardFromDOM === 'function') {
+                                    window.removeCardFromDOM(restaurantId);
+                                } else if (typeof removeCardFromDOM === 'function') {
+                                    removeCardFromDOM(restaurantId);
+                                }
                             } else {
-                                alert('取消收藏失敗，請稍後再試');
+                                showToast('取消收藏失敗，請稍後再試', 'error');
                             }
                         });
                     } else {
@@ -533,15 +565,15 @@ const RestaurantModal = (function() {
                             if (success) {
                                 elements.favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
                                 elements.favoriteBtn.classList.add('active');
-                                alert('已加入收藏');
+                                showToast('已加入收藏', 'success');
                             } else {
-                                alert('加入收藏失敗，請稍後再試');
+                                showToast('加入收藏失敗，請稍後再試', 'error');
                             }
                         });
                     }
                 });
             } else {
-                alert('收藏系統未初始化，請重新整理頁面');
+                showToast('收藏系統未初始化，請重新整理頁面', 'error');
             }
         }
     }
@@ -552,7 +584,7 @@ const RestaurantModal = (function() {
         
         const address = currentRestaurant.address || '';
         if (!address) {
-            alert('無法獲取餐廳地址');
+            showToast('無法獲取餐廳地址', 'error');
             return;
         }
         
@@ -572,15 +604,15 @@ const RestaurantModal = (function() {
     }
     
     // 顯示提示訊息
-    function showToast(message) {
+    function showToast(message, type) {
         // 如果已經定義了全局 showToast 函數，則使用它
         if (window.showToast && typeof window.showToast === 'function') {
-            window.showToast(message);
+            window.showToast(message, type);
             return;
         }
         
         const toast = document.createElement('div');
-        toast.className = 'toast';
+        toast.className = `toast toast-${type || 'info'}`;
         toast.textContent = message;
         document.body.appendChild(toast);
         toast.offsetHeight;

@@ -1,20 +1,23 @@
 package com.example.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/google-restaurants")
@@ -186,6 +189,81 @@ public class GoogleRestaurantController {
             // 返回錯誤訊息而不是空響應
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
+
+    // 搜索餐廳 - 新增端點
+    @GetMapping("/search")
+    public ResponseEntity<?> searchRestaurants(@RequestParam String query, @RequestParam(defaultValue = "10") int limit) {
+        try {
+            System.out.println("搜索餐廳 - 關鍵字: " + query + ", 限制: " + limit);
+            
+            if (query == null || query.trim().length() < 2) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "搜索關鍵字至少需要2個字符");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            // 先檢查表結構，使用安全的欄位名稱
+            String sql = "SELECT id, place_id, name, address, vicinity, rating, user_ratings_total, " +
+                        "price_level, business_status FROM google_restaurants " +
+                        "WHERE name LIKE ? " +
+                        "ORDER BY " +
+                        "  CASE WHEN name LIKE ? THEN 1 ELSE 2 END, " +  // 名稱開頭匹配的優先
+                        "  rating DESC, user_ratings_total DESC " +
+                        "LIMIT ?";
+            
+            String searchPattern = "%" + query.trim() + "%";
+            String startPattern = query.trim() + "%";
+            
+            System.out.println("執行搜索 SQL: " + sql);
+            System.out.println("搜索參數: " + searchPattern + ", " + startPattern + ", " + limit);
+            
+            List<Map<String, Object>> results;
+            
+            try {
+                results = jdbcTemplate.queryForList(sql, searchPattern, startPattern, limit);
+            } catch (Exception sqlException) {
+                System.err.println("SQL 執行失敗，嘗試簡化查詢: " + sqlException.getMessage());
+                
+                // 如果上面的查詢失敗，使用更簡單的查詢
+                String simpleSql = "SELECT id, name FROM google_restaurants WHERE name LIKE ? LIMIT ?";
+                System.out.println("使用簡化查詢: " + simpleSql);
+                results = jdbcTemplate.queryForList(simpleSql, searchPattern, limit);
+            }
+            
+            System.out.println("搜索成功 - 關鍵字: " + query + ", 找到: " + results.size() + " 筆結果");
+            
+            // 如果沒有結果，記錄這個情況
+            if (results.isEmpty()) {
+                System.out.println("搜索無結果，可能原因：");
+                System.out.println("1. 資料庫中沒有匹配的餐廳名稱");
+                System.out.println("2. 搜索關鍵字過於具體");
+                
+                // 嘗試更寬鬆的搜索
+                String looseSql = "SELECT COUNT(*) FROM google_restaurants WHERE name IS NOT NULL AND name != ''";
+                int totalCount = jdbcTemplate.queryForObject(looseSql, Integer.class);
+                System.out.println("資料庫中總共有 " + totalCount + " 筆有名稱的餐廳資料");
+                
+                if (totalCount > 0) {
+                    // 顯示前幾筆餐廳名稱供參考
+                    String sampleSql = "SELECT name FROM google_restaurants WHERE name IS NOT NULL AND name != '' LIMIT 5";
+                    List<Map<String, Object>> samples = jdbcTemplate.queryForList(sampleSql);
+                    System.out.println("餐廳名稱範例：");
+                    for (Map<String, Object> sample : samples) {
+                        System.out.println("  - " + sample.get("name"));
+                    }
+                }
+            }
+            
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            System.err.println("搜索餐廳時發生錯誤: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "搜索失敗: " + e.getMessage());
             return ResponseEntity.status(500).body(error);
         }
     }
