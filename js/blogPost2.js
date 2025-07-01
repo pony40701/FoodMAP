@@ -236,6 +236,12 @@ async function showSection(sectionId) {
             // 重新初始化統計圖表和排行榜
             await initStatsChart();
             break;
+        case 'edit':
+            // 重新初始化調色盤，確保在編輯頁面正常工作
+            setTimeout(() => {
+                initColorPicker();
+            }, 100);
+            break;
     }
 }
 
@@ -3268,8 +3274,12 @@ window.toggleColorPalette = function(event) {
     event.preventDefault();
     event.stopPropagation();
     
-    const palette = document.querySelector('.color-palette');
-    if (!palette) return;
+    // 找到當前點擊的調色盤
+    const currentColorButton = event.target.closest('.current-color');
+    if (!currentColorButton) return;
+    
+    const palette = currentColorButton.nextElementSibling;
+    if (!palette || !palette.classList.contains('color-palette')) return;
     
     isColorPaletteVisible = !isColorPaletteVisible;
     palette.style.display = isColorPaletteVisible ? 'block' : 'none';
@@ -3283,13 +3293,21 @@ window.toggleColorPalette = function(event) {
 
 // 處理點擊調色板外部
 function handleClickOutside(event) {
-    const colorPicker = document.querySelector('.color-picker');
-    const palette = document.querySelector('.color-palette');
+    // 檢查所有調色盤
+    const colorPickers = document.querySelectorAll('.color-picker');
+    const palettes = document.querySelectorAll('.color-palette');
     
-    // 如果點擊的是調色盤內的元素或顏色選擇器按鈕，不關閉調色盤
-    if ((colorPicker && colorPicker.contains(event.target)) || 
-        (palette && palette.contains(event.target))) {
-        return;
+    // 如果點擊的是任何調色盤內的元素或顏色選擇器按鈕，不關閉調色盤
+    for (let i = 0; i < colorPickers.length; i++) {
+        if (colorPickers[i].contains(event.target)) {
+            return;
+        }
+    }
+    
+    for (let i = 0; i < palettes.length; i++) {
+        if (palettes[i].contains(event.target)) {
+            return;
+        }
     }
     
     closeColorPalette();
@@ -3298,17 +3316,33 @@ function handleClickOutside(event) {
 // 關閉調色板
 function closeColorPalette() {
     isColorPaletteVisible = false;
-    const palette = document.querySelector('.color-palette');
-    if (palette) {
+    const palettes = document.querySelectorAll('.color-palette');
+    palettes.forEach(palette => {
         palette.style.display = 'none';
-    }
+    });
     document.removeEventListener('click', handleClickOutside);
 }
 
 // 初始化顏色選擇器
 function initColorPicker() {
+    // 根據目前 active 的區塊選擇正確的 selector
+    let section = document.querySelector('.content-section.active');
+    let colorInputId = 'customColor';
+    let colorPreviewSelector = '.color-preview';
+    let confirmBtnSelector = '.confirm-color-btn';
+    if (section && section.id === 'edit-section') {
+        colorInputId = 'customColorEdit';
+        colorPreviewSelector = '#edit-section .color-preview';
+        confirmBtnSelector = '#edit-section .confirm-color-btn';
+    } else {
+        colorInputId = 'customColor';
+        colorPreviewSelector = '#write-section .color-preview, .color-preview';
+        confirmBtnSelector = '#write-section .confirm-color-btn, .confirm-color-btn';
+    }
+
     // 為每個顏色選項添加點擊事件
-    document.querySelectorAll('.color-option').forEach(option => {
+    section.querySelectorAll('.color-option').forEach(option => {
+        option.onclick = null;
         option.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -3318,19 +3352,20 @@ function initColorPicker() {
             }
         };
     });
-    
+
     // 為顏色選擇器按鈕添加點擊事件
-    const currentColorButton = document.querySelector('.current-color');
-    if (currentColorButton) {
-        currentColorButton.onclick = function(e) {
+    section.querySelectorAll('.current-color').forEach(button => {
+        button.onclick = null;
+        button.onclick = function(e) {
             toggleColorPalette(e);
         };
-    }
+    });
 
     // 自訂顏色輸入處理
-    const customColorInput = document.getElementById('customColor');
+    const customColorInput = section.querySelector(`#${colorInputId}`);
     if (customColorInput) {
-        // 監聽 input 事件（即時預覽）
+        customColorInput.oninput = null;
+        customColorInput.onclick = null;
         customColorInput.oninput = function(e) {
             e.stopPropagation();
             const color = e.target.value;
@@ -3338,33 +3373,31 @@ function initColorPicker() {
                 handleColorChange(color, true);
             }
         };
-
-        // 監聽 click 事件（保持調色盤開啟）
         customColorInput.onclick = function(e) {
             e.stopPropagation();
         };
     }
 
     // 防止調色盤內的點擊事件冒泡
-    const colorPalette = document.querySelector('.color-palette');
-    if (colorPalette) {
+    section.querySelectorAll('.color-palette').forEach(colorPalette => {
+        colorPalette.onclick = null;
         colorPalette.onclick = function(e) {
             e.stopPropagation();
         };
-    }
+    });
 
     // 添加確認按鈕點擊事件
-    const confirmColorBtn = document.querySelector('.confirm-color-btn');
-    if (confirmColorBtn) {
+    section.querySelectorAll('.confirm-color-btn').forEach(confirmColorBtn => {
+        confirmColorBtn.onclick = null;
         confirmColorBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            const customColorInput = document.getElementById('customColor');
+            const customColorInput = section.querySelector(`#${colorInputId}`);
             if (customColorInput) {
                 handleColorChange(customColorInput.value, false);
             }
         };
-    }
+    });
 
     // 初始化時設置預設顏色
     updateColorPreview(currentColor);
@@ -3372,13 +3405,23 @@ function initColorPicker() {
 
 // 更新顏色預覽
 function updateColorPreview(color) {
-    const colorPreview = document.querySelector('.color-preview');
-    const customColorInput = document.getElementById('customColor');
-    
-    if (colorPreview) {
-        colorPreview.style.backgroundColor = color;
+    // 根據目前 active 的區塊選擇正確的 selector
+    let section = document.querySelector('.content-section.active');
+    let colorInputId = 'customColor';
+    let colorPreviewSelector = '.color-preview';
+    if (section && section.id === 'edit-section') {
+        colorInputId = 'customColorEdit';
+        colorPreviewSelector = '#edit-section .color-preview';
+    } else {
+        colorInputId = 'customColor';
+        colorPreviewSelector = '#write-section .color-preview, .color-preview';
     }
-    
+    // 更新顏色預覽
+    section.querySelectorAll(colorPreviewSelector).forEach(colorPreview => {
+        colorPreview.style.backgroundColor = color;
+    });
+    // 更新自訂顏色輸入框
+    const customColorInput = section.querySelector(`#${colorInputId}`);
     if (customColorInput) {
         customColorInput.value = color;
     }
@@ -3387,25 +3430,18 @@ function updateColorPreview(color) {
 // 處理顏色變更
 function handleColorChange(color, isPreview) {
     if (!color) return;
-    
-    
     // 更新預覽
     updateColorPreview(color);
-
     // 如果是預覽模式，不執行後續操作
     if (isPreview) {
         return;
     }
-
     // 更新全域顏色變數
     currentColor = color;
-
     // 應用顏色到文字
     applyColorToText(color);
-
     // 更新工具列狀態
     debouncedUpdateToolbarState();
-
     // 關閉調色板
     closeColorPalette();
 }
@@ -3623,14 +3659,14 @@ async function editPublishedPost(postId) {
         // 填充表單
         document.getElementById('postTitleEdit').value = post.title;
         document.getElementById('tagsEdit').value = post.tags.join(', ');
-        const restaurantName = document.getElementById('restaurantName');
-        const restaurantLocation = document.getElementById('restaurantLocation');
+        const restaurantNameEdit = document.getElementById('restaurantNameEdit');
+        const restaurantLocationEdit = document.getElementById('restaurantLocationEdit');
         const restaurantInfo = await getRestaurantInfoById(post.restaurantId);
-        if (restaurantName) {
-            restaurantName.value = restaurantInfo.name || `餐廳ID: ${post.restaurantId}`;
+        if (restaurantNameEdit) {
+            restaurantNameEdit.value = restaurantInfo.name || `餐廳ID: ${post.restaurantId}`;
         }
-        if (restaurantLocation) {
-            restaurantLocation.value = restaurantInfo.address || `餐廳ID: ${post.restaurantId}`;
+        if (restaurantLocationEdit) {
+            restaurantLocationEdit.value = restaurantInfo.address || `餐廳ID: ${post.restaurantId}`;
         }
         
         // 先清空編輯器內容
