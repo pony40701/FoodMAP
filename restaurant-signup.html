@@ -145,131 +145,214 @@
 				<p>加入食力派ChowCrew，開啟您的美食事業</p>
 			</div>
 
+			<!-- 步驟指示器 -->
+			<div class="step-indicator">
+				<div class="step active">
+					<div class="step-number">1</div>
+					<div class="step-label">基本資料</div>
+				</div>
+				<div class="step">
+					<div class="step-number">2</div>
+					<div class="step-label">驗證碼</div>
+				</div>
+				<div class="step">
+					<div class="step-number">3</div>
+					<div class="step-label">餐廳資訊</div>
+				</div>
+				<div class="step">
+					<div class="step-number">4</div>
+					<div class="step-label">完成</div>
+				</div>
+			</div>
+
 			<form class="signup-form" id="restaurant-signup-form" enctype="multipart/form-data" method="POST">
-				<!-- 基本資料區塊 -->
-				<div class="form-section">
-					<h2>基本資料</h2>
-					<div class="form-group avatar-upload">
-						<label>餐廳頭像</label>
-						<div class="avatar-container">
-							<div class="avatar-preview">
-								<div class="avatar-placeholder">
-									<i class="fas fa-camera"></i>
-									<span>點擊上傳頭像</span>
-								</div>
-							</div>
-							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
-						</div>
-						<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
-					</div>
-
-					<div class="form-group">
-						<label for="restaurant-name">餐廳名稱</label>
-						<div class="input-with-icon">
-							<i class="fas fa-store"></i>
-							<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
-								required>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="email">電子郵件</label>
-						<div class="input-with-icon">
-							<i class="fas fa-envelope"></i>
-							<input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="phone">聯絡電話</label>
-						<div class="input-with-icon">
-							<i class="fas fa-phone"></i>
-							<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
-						</div>
-					</div>
-				</div>
-
-				<!-- 密碼設定區塊 -->
-				<div class="form-section">
-					<h2>密碼設定</h2>
-					<div class="form-group">
-						<label for="password">密碼</label>
-						<div class="input-with-icon">
-							<i class="fas fa-lock"></i>
-							<input type="password" id="password" name="password" placeholder="請輸入密碼" required>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="confirm-password">確認密碼</label>
-						<div class="input-with-icon">
-							<i class="fas fa-lock"></i>
-							<input type="password" id="confirm-password" name="confirm-password" placeholder="請再次輸入密碼"
-								required>
-						</div>
-					</div>
-				</div>
-
-				<!-- 餐廳資訊區塊 -->
-				<div class="form-section">
-					<h2>餐廳資訊</h2>
-					<div class="form-group">
-						<label for="address">餐廳地址</label>
-						<div class="input-with-icon">
-							<i class="fas fa-map-marker-alt"></i>
-							<input type="text" id="address" name="address" placeholder="請輸入餐廳地址" required>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="cuisine-type">料理類型</label>
-						<div class="input-with-icon">
-							<i class="fas fa-utensils"></i>
-							<input type="text" id="cuisineType" name="cuisineType" placeholder="請輸入料理類型" required />
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="business-hours">營業時間</label>
-						<div class="input-with-icon">
-							<i class="fas fa-clock"></i>
-							<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00"
-								required>
-						</div>
-					</div>
-				</div>
-
-				<!-- 餐廳照片區塊 -->
-				<div class="form-section">
-					<h2>餐廳照片</h2>
-					<div class="form-group">
-						<label>上傳餐廳照片</label>
-						<div class="photo-upload-area">
-							<div class="photo-grid">
-								<!-- 預設照片上傳按鈕 -->
-								<div class="photo-item add-photo">
-									<input type="file" id="photo-upload" name="photos" accept="image/*" multiple
-										class="photo-input">
-									<div class="add-photo-content">
-										<i class="fas fa-plus"></i>
-										<span>新增照片</span>
+				<!-- 步驟1: 基本資料 -->
+				<div class="step-content" id="step1">
+					<!-- 基本資料區塊 -->
+					<div class="form-section">
+						<h2>基本資料</h2>
+						<div class="form-group avatar-upload">
+							<label>餐廳頭像</label>
+							<div class="avatar-container">
+								<div class="avatar-preview">
+									<div class="avatar-placeholder">
+										<i class="fas fa-camera"></i>
+										<span>點擊上傳頭像</span>
 									</div>
 								</div>
+								<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
 							</div>
-							<p class="photo-hint">建議上傳清晰的照片，每張照片大小不超過 2MB</p>
+							<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
+							<div class="error-message"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="restaurant-name">餐廳名稱</label>
+							<div class="input-with-icon">
+								<i class="fas fa-store"></i>
+								<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
+									required>
+							</div>
+							<div class="error-message"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="email">電子郵件</label>
+							<div class="input-with-icon">
+								<i class="fas fa-envelope"></i>
+								<input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
+							</div>
+							<div class="error-message" style="display: none;"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="phone">聯絡電話</label>
+							<div class="input-with-icon">
+								<i class="fas fa-phone"></i>
+								<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
+							</div>
+							<div class="error-message"></div>
+						</div>
+					</div>
+
+					<!-- 密碼設定區塊 -->
+					<div class="form-section">
+						<h2>密碼設定</h2>
+						<div class="form-group">
+							<label for="password">密碼</label>
+							<div class="input-with-icon">
+								<i class="fas fa-lock"></i>
+								<input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+								<i class="fas fa-eye password-toggle"></i>
+							</div>
+							<div class="error-message"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="confirm-password">確認密碼</label>
+							<div class="input-with-icon">
+								<i class="fas fa-lock"></i>
+								<input type="password" id="confirm-password" name="confirm-password" placeholder="請再次輸入密碼"
+									required>
+								<i class="fas fa-eye password-toggle"></i>
+							</div>
+							<div class="error-message"></div>
+						</div>
+					</div>
+
+					<!-- 同意條款 -->
+					<div class="form-group terms-group">
+						<label class="checkbox-label">
+							<input type="checkbox" id="terms" name="terms" required>
+							<span>我已閱讀並同意<a href="#">服務條款</a>和<a href="#">隱私政策</a></span>
+						</label>
+						<div class="error-message"></div>
+					</div>
+
+					<button type="button" id="step1NextBtn" class="btn-submit">下一步</button>
+				</div>
+
+				<!-- 步驟2: 驗證碼 -->
+				<div class="step-content" id="step2" style="display: none;">
+					<div class="verification-section">
+						<h2>驗證您的電子郵件</h2>
+						<p>我們已發送驗證碼到您的電子郵件：<strong id="verificationEmail"></strong></p>
+						<p>請輸入 6 位數驗證碼完成驗證</p>
+						
+						<div class="form-group">
+							<label for="verificationCode">驗證碼</label>
+							<div class="input-with-icon">
+								<i class="fas fa-key"></i>
+								<input type="text" id="verificationCode" name="verificationCode" 
+									   placeholder="請輸入 6 位數驗證碼" maxlength="6" required>
+							</div>
+							<div class="error-message"></div>
+						</div>
+						<div class="resend-code">
+							<button type="button" id="resendCodeBtn">重新發送驗證碼</button>
+							<span id="resendTimer" style="display: none; color: #666; font-size: 14px;"></span>
+						</div>
+						<div class="button-group">
+							<button type="button" class="btn-back" onclick="prevStep()">返回修改</button>
+							<button type="button" id="step2NextBtn" class="btn-submit">驗證並繼續</button>
 						</div>
 					</div>
 				</div>
 
-				<!-- 同意條款 -->
-				<div class="form-group terms-group">
-					<label class="checkbox-label">
-						<input type="checkbox" id="terms" name="terms" required>
-						<span>我已閱讀並同意<a href="#">服務條款</a>和<a href="#">隱私政策</a></span>
-					</label>
+				<!-- 步驟3: 餐廳資訊 -->
+				<div class="step-content" id="step3" style="display: none;">
+					<!-- 餐廳資訊區塊 -->
+					<div class="form-section">
+						<h2>餐廳資訊</h2>
+						<div class="form-group">
+							<label for="address">餐廳地址</label>
+							<div class="input-with-icon">
+								<i class="fas fa-map-marker-alt"></i>
+								<input type="text" id="address" name="address" placeholder="請輸入餐廳地址" required>
+							</div>
+							<div class="error-message"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="cuisine-type">料理類型</label>
+							<div class="input-with-icon">
+								<i class="fas fa-utensils"></i>
+								<input type="text" id="cuisineType" name="cuisineType" placeholder="請輸入料理類型" required />
+							</div>
+							<div class="error-message"></div>
+						</div>
+
+						<div class="form-group">
+							<label for="business-hours">營業時間</label>
+							<div class="input-with-icon">
+								<i class="fas fa-clock"></i>
+								<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00" required>
+							</div>
+							<div class="error-message"></div>
+						</div>
+					</div>
+
+					<!-- 餐廳照片區塊 -->
+					<div class="form-section">
+						<h2>餐廳照片</h2>
+						<div class="form-group">
+							<label>上傳餐廳照片</label>
+							<div class="photo-upload-area">
+								<div class="photo-grid">
+									<!-- 預設照片上傳按鈕 -->
+									<div class="photo-item add-photo">
+										<input type="file" id="photo-upload" name="photos" accept="image/*" multiple class="photo-input">
+										<div class="add-photo-content">
+											<i class="fas fa-plus"></i>
+											<span>新增照片</span>
+										</div>
+									</div>
+								</div>
+								<p class="photo-hint">建議上傳清晰的照片，每張照片大小不超過 2MB</p>
+							</div>
+							<div class="error-message"></div>
+						</div>
+					</div>
+
+					<div class="button-group">
+						<button type="button" class="btn-back" onclick="prevStep()">返回修改</button>
+						<button type="button" id="step3NextBtn" class="btn-submit">完成註冊</button>
+					</div>
 				</div>
 
-				<button type="submit" class="signup-button">註冊</button>
+				<!-- 步驟4: 完成註冊 -->
+				<div class="step-content" id="step4" style="display: none;">
+					<div class="success-message">
+						<i class="fas fa-check-circle"></i>
+						<h2>註冊成功</h2>
+						<p>恭喜您成功註冊食力派ChowCrew商家會員</p>
+						<p class="login-reminder">請登入以開始管理您的餐廳</p>
+					</div>
+					<div class="button-group">
+						<button type="button" class="btn-submit" onclick="window.location.href='index.html'">前往首頁</button>
+						<button type="button" class="btn-secondary" onclick="openRestaurantLoginModal()">立即登入</button>
+					</div>
+				</div>
 
 				<div class="login-link">
 					已有帳號？<a href="#" onclick="redirectToHomePage()">立即登入</a>
@@ -336,152 +419,6 @@
 
 		document.addEventListener('DOMContentLoaded', function () {
 			('DOM 已載入完成');
-
-			// 電子信箱檢查功能
-			const emailInput = document.getElementById('email');
-			let emailCheckTimeout;
-
-			emailInput.addEventListener('input', function() {
-				clearTimeout(emailCheckTimeout);
-				const email = this.value;
-				
-				// 清除之前的提示訊息
-				const existingMessage = document.querySelector('.email-message');
-				if (existingMessage) {
-					existingMessage.remove();
-				}
-
-				// 檢查是否為有效的電子信箱格式
-				if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-					return;
-				}
-
-				// 設定延遲檢查，避免使用者輸入時頻繁發送請求
-				emailCheckTimeout = setTimeout(async () => {
-					try {
-						const response = await fetch(`http://localhost:8080/api/merchants/check-email?email=${encodeURIComponent(email)}`);
-						const exists = await response.json();
-
-						const messageDiv = document.createElement('div');
-						messageDiv.className = 'email-message';
-						messageDiv.style.marginTop = '5px';
-						messageDiv.style.fontSize = '14px';
-						
-						if (exists) {
-							messageDiv.style.color = '#dc3545';
-							messageDiv.textContent = '此電子信箱已被註冊';
-							emailInput.setCustomValidity('此電子信箱已被註冊');
-						} else {
-							messageDiv.style.color = '#28a745';
-							messageDiv.textContent = '此電子信箱可以使用';
-							emailInput.setCustomValidity('');
-						}
-						
-						// 將提示訊息插入到電子信箱輸入框後面
-						emailInput.parentNode.parentNode.appendChild(messageDiv);
-					} catch (error) {
-						console.error('檢查電子信箱時發生錯誤:', error);
-					}
-				}, 500); // 500毫秒後執行檢查
-			});
-
-			// 頭像上傳功能
-			const avatarInput = document.getElementById('avatar-upload');
-			const avatarPreview = document.querySelector('.avatar-preview');
-
-			if (avatarPreview && avatarInput) {
-				avatarPreview.addEventListener('click', function (e) {
-					e.preventDefault();
-					e.stopPropagation();
-					avatarInput.click();
-				});
-
-				avatarInput.addEventListener('change', function (e) {
-					const file = e.target.files[0];
-					if (file) {
-						if (file.size > 2 * 1024 * 1024) {
-							alert('檔案大小不能超過 2MB');
-							return;
-						}
-
-						if (!file.type.startsWith('image/')) {
-							alert('請上傳圖片檔案');
-							return;
-						}
-
-						const reader = new FileReader();
-						reader.onload = function (e) {
-							const oldImage = avatarPreview.querySelector('img');
-							if (oldImage) {
-								oldImage.remove();
-							}
-
-							const img = document.createElement('img');
-							img.src = e.target.result;
-							avatarPreview.appendChild(img);
-							avatarPreview.classList.add('has-image');
-						};
-						reader.readAsDataURL(file);
-					}
-				});
-			}
-
-			// 餐廳照片上傳功能
-			const photoUpload = document.getElementById('photo-upload');
-			const photoGrid = document.querySelector('.photo-grid');
-			const addPhotoButton = document.querySelector('.add-photo');
-
-			if (addPhotoButton) {
-				addPhotoButton.addEventListener('click', function () {
-					photoUpload.click();
-				});
-			}
-
-			if (photoUpload) {
-				photoUpload.addEventListener('change', function (e) {
-					const files = e.target.files;
-					for (let file of files) {
-						if (file.type.startsWith('image/')) {
-							if (file.size > 2 * 1024 * 1024) {
-								alert('檔案大小不能超過 2MB');
-								continue;
-							}
-
-							const reader = new FileReader();
-							reader.onload = function (e) {
-								const photoItem = document.createElement('div');
-								photoItem.className = 'photo-item photo-preview';
-								photoItem.innerHTML = `
-                                    <img src="${e.target.result}" alt="餐廳照片">
-                                    <button class="delete-photo">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                `;
-								photoGrid.insertBefore(photoItem, photoGrid.firstElementChild);
-							};
-							reader.readAsDataURL(file);
-						}
-					}
-					this.value = ''; // 清空 input 值，這樣可以重複選擇相同的檔案
-				});
-			}
-
-			// 處理照片刪除
-			photoGrid.addEventListener('click', function (e) {
-				if (e.target.closest('.delete-photo')) {
-					const photoItem = e.target.closest('.photo-item');
-					if (photoItem) {
-						// 找到要刪除的照片在陣列中的索引
-						const index = Array.from(photoItem.parentNode.children).indexOf(photoItem);
-						// 從 selectedPhotos 陣列中移除該照片
-						if (index > -1) {
-							selectedPhotos.splice(index - 1, 1); // -1 是因為還有一個 add-photo 按鈕
-							console.log("刪除後剩餘照片數量：", selectedPhotos.length);
-						}
-						photoItem.remove();
-					}
-				}
-			});
 		});
 
 		// 重導向到首頁並開啟商家登入彈窗
@@ -492,72 +429,8 @@
 			window.location.href = 'index.html';
 		}
 		
-// ⬅️ 新增這個全域變數，專門記住用戶選的照片
+// ⬅️ 全域變數，專門記住用戶選的照片
 let selectedPhotos = [];
-
-document.getElementById("photo-upload").addEventListener("change", function(e) {
-  // 將新選擇的照片添加到現有的照片列表中
-  const newPhotos = Array.from(e.target.files);
-  selectedPhotos = selectedPhotos.concat(newPhotos);
-  console.log("目前總共選了幾張照片：", selectedPhotos.length);
-  console.log("新增的照片：", newPhotos.map(p => p.name).join(", "));
-});
-
-// 表單送出
-document.getElementById("restaurant-signup-form").addEventListener("submit", async function (e) {
-  e.preventDefault(); // 阻止表單預設送出
-
-  const formData = new FormData();
-
-  // 取得單檔：頭像
-  const avatarFile = document.getElementById("avatar-upload").files[0];
-  if (avatarFile) {
-    formData.append("avatar", avatarFile);
-  }
-
-  // ✅ 用 selectedPhotos，不要再用 getElementById 抓一次了！
-  console.log("送出時的照片數量:", selectedPhotos.length);
-  for (let i = 0; i < selectedPhotos.length; i++) {
-    formData.append("photos", selectedPhotos[i]);
-    console.log("加入照片：", selectedPhotos[i].name);
-  }
-
-  // 抓其他欄位
-  const jsonData = {
-    name: document.getElementById("restaurant-name").value,
-    email: document.getElementById("email").value,
-    phoneNumber: document.getElementById("phone").value,
-    password: document.getElementById("password").value,
-    confirmPassword: document.getElementById("confirm-password").value,
-    address: document.getElementById("address").value,
-    cuisineType: document.getElementById("cuisineType").value,
-    businessHours: document.getElementById("business-hours").value
-  };
-
-  formData.append("data", new Blob([JSON.stringify(jsonData)], { type: "application/json" }));
-
-  try {
-    const response = await fetch("http://localhost:8080/api/merchants/register", {
-      method: "POST",
-      body: formData
-    });
-
-    if (response.ok) {
-      const result = await response.text();
-      alert("註冊成功！伺服器回應：" + result);
-      // 清空照片列表
-      selectedPhotos = [];
-      // 註冊成功後跳轉至首頁
-      window.location.href = 'index.html';
-    } else {
-      const errorText = await response.text();
-      alert("發生錯誤：" + response.status + "\n" + errorText);
-    }
-  } catch (error) {
-    console.error("傳送失敗", error);
-    alert("傳送失敗：" + error.message);
-  }
-});
 
 		// 頁面載入時檢查登入狀態
 		document.addEventListener('DOMContentLoaded', function() {
@@ -619,6 +492,7 @@ document.getElementById("restaurant-signup-form").addEventListener("submit", asy
 	<script src="js/toast.js"></script>
 	<script src="js/notificationService.js"></script>
 	<script src="js/login.js"></script>
+	<script src="js/restaurant-signup.js"></script>
 	<script>
 		const hamburger = document.querySelector('.hamburger');
 		const navRight = document.querySelector('.navbar-right');

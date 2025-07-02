@@ -93,17 +93,19 @@ body {
     font-weight: 600;
 }
 
+/* 輸入框和圖標樣式 */
 .input-with-icon {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.input-with-icon i {
+.input-with-icon i:not(.password-toggle) {
     position: absolute;
     left: 15px;
     color: #ff6b1a;
     font-size: 18px;
+    z-index: 1;
 }
 
 .input-with-icon input,
@@ -122,6 +124,27 @@ body {
     border-color: #ff6b1a;
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.1);
+}
+
+/* 密碼顯示/隱藏按鈕樣式 */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    color: #999;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.3s ease;
+    z-index: 2;
+}
+
+.password-toggle:hover {
+    color: #ff6b1a;
+}
+
+/* 當密碼輸入框有密碼顯示按鈕時，調整右側內邊距 */
+.input-with-icon input[type="password"],
+.input-with-icon input[type="text"].password-visible {
+    padding-right: 45px;
 }
 
 /* ========== 同意條款樣式 ========== */
@@ -201,22 +224,47 @@ body {
 
 /* ========== 錯誤訊息樣式 ========== */
 .error-message {
-    color: #ff6b6b;
-    font-size: 14px;
+    color: #d9534f;
+    font-size: 12px;
     margin-top: 5px;
-    padding-left: 5px;
-    border-left: 3px solid #ff6b6b;
+    min-height: 0;
+    padding-left: 0;
+    border-left: none;
+    line-height: 1;
+}
+
+.form-group.error input {
+    border-color: #d9534f;
 }
 
 /* ========== 成功訊息樣式 ========== */
 .success-message {
-    background: rgba(76, 175, 80, 0.1);
-    color: #4caf50;
-    padding: 12px;
-    border-radius: 8px;
     text-align: center;
-    margin-top: 20px;
-    border: 1px solid rgba(76, 175, 80, 0.2);
+    padding: 40px 20px;
+    background: transparent;
+    border: none;
+    margin-top: 0;
+}
+
+.success-message i {
+    font-size: 60px;
+    color: #4CAF50;
+    margin-bottom: 20px;
+}
+
+.success-message h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.success-message p {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.login-reminder {
+    font-weight: bold;
+    color: #ff6b1a;
 }
 
 /* ========== 響應式設計 ========== */
@@ -362,6 +410,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 }
 
 /* 照片上傳區域樣式 */
@@ -461,4 +510,249 @@ body {
 
 .delete-photo i {
     font-size: 12px;
+}
+
+/* 步驟指示器樣式 */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px 0;
+    position: relative;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 25%;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background-color: #ff6b1a;
+    border-color: #ff6b1a;
+    color: white;
+}
+
+.step-label {
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-label {
+    color: #ff6b1a;
+    font-weight: bold;
+}
+
+/* 步驟內容樣式 */
+.step-content {
+    display: none;
+    margin-bottom: 30px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 顯示當前步驟 */
+.step-content:first-child {
+    display: block;
+}
+
+/* 按鈕組樣式 - 統一所有步驟的按鈕樣式 */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    gap: 15px;
+    width: 100%;
+}
+
+/* 所有按鈕的基本樣式 */
+.btn-back,
+.btn-submit,
+.btn-secondary,
+#step1NextBtn,
+#step2NextBtn,
+#step3NextBtn {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    height: 48px;
+    line-height: 24px;
+    box-sizing: border-box;
+}
+
+/* 按鈕組中的按鈕樣式 */
+.button-group .btn-back,
+.button-group .btn-submit,
+.button-group .btn-secondary {
+    flex: 1;
+}
+
+/* 返回按鈕樣式 */
+.btn-back {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.btn-back:hover {
+    background-color: #e0e0e0;
+}
+
+/* 提交按鈕樣式 */
+.btn-submit,
+#step1NextBtn,
+#step2NextBtn,
+#step3NextBtn {
+    background-color: #ff6b1a;
+    color: white;
+}
+
+.btn-submit:hover,
+#step1NextBtn:hover,
+#step2NextBtn:hover,
+#step3NextBtn:hover {
+    background-color: #e55e0f;
+}
+
+/* 次要按鈕樣式 */
+.btn-secondary {
+    background-color: #666;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
+}
+
+/* 單一按鈕樣式 */
+#step1NextBtn {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* 驗證碼頁面的按鈕組樣式 */
+.verification-section .button-group {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 驗證碼區域樣式 */
+.verification-section {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin: 20px 0;
+    border: 1px solid #eee;
+}
+
+.verification-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.verification-section p {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.verification-section strong {
+    color: #ff6b1a;
+    font-weight: bold;
+}
+
+.verification-section .form-group {
+    max-width: 300px;
+    margin: 0 auto 20px;
+}
+
+.resend-code {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#resendCodeBtn {
+    background: none;
+    border: none;
+    color: #ff6b1a;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+#resendCodeBtn:disabled {
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+#resendTimer {
+    color: #666;
+    font-size: 14px;
+}
+
+/* 電子郵件檢查訊息樣式 */
+.email-message {
+    margin-top: 5px;
+    font-size: 14px;
+    padding: 0;
+    display: block;
+    clear: both;
+    line-height: 1;
+    min-height: 0;
+}
+
+/* 確保電子郵件訊息顏色正確 */
+.email-message[style*="color: #28a745"],
+.email-message[style*="color: rgb(40, 167, 69)"] {
+    color: #28a745 !important;
+}
+
+.email-message[style*="color: #dc3545"],
+.email-message[style*="color: rgb(220, 53, 69)"] {
+    color: #dc3545 !important;
 } 

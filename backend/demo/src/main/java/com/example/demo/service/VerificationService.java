@@ -110,6 +110,44 @@ public class VerificationService {
     }
 
     /**
+     * 發送商家註冊驗證碼
+     */
+    public boolean sendMerchantRegistrationCode(String email, String merchantName) {
+        try {
+            // 生成驗證碼
+            String code = generateVerificationCode();
+            
+            // 儲存驗證碼
+            VerificationCode verificationCode = new VerificationCode(email, code, "MERCHANT_REGISTRATION");
+            verificationCodeRepository.save(verificationCode);
+            
+            // 發送郵件
+            String subject = "FoodMAP 商家註冊驗證碼";
+            String content = createMerchantRegistrationEmailContent(merchantName, code);
+            
+            var emailRequest = new com.example.demo.dto.EmailRequest();
+            emailRequest.setTo(email);
+            emailRequest.setSubject(subject);
+            emailRequest.setContent(content);
+            emailRequest.setHtml(true);
+            
+            var response = emailService.sendEmail(emailRequest);
+            
+            if (response.isSuccess()) {
+                log.info("商家註冊驗證碼發送成功，郵箱: {}", email);
+                return true;
+            } else {
+                log.error("商家註冊驗證碼發送失敗，郵箱: {}, 錯誤: {}", email, response.getMessage());
+                return false;
+            }
+            
+        } catch (Exception e) {
+            log.error("發送商家註冊驗證碼時發生錯誤，郵箱: {}", email, e);
+            return false;
+        }
+    }
+
+    /**
      * 驗證驗證碼
      */
     public boolean verifyCode(String email, String code, String type) {
@@ -191,5 +229,34 @@ public class VerificationService {
             </body>
             </html>
             """.formatted(code);
+    }
+
+    /**
+     * 建立商家註冊郵件內容
+     */
+    private String createMerchantRegistrationEmailContent(String merchantName, String code) {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>FoodMAP 商家註冊驗證碼</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #e74c3c;">FoodMAP 商家註冊驗證碼</h1>
+                    <p>親愛的 <strong>%s</strong>，</p>
+                    <p>感謝您註冊 FoodMAP 商家平台！請使用以下驗證碼完成註冊：</p>
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+                        <h2 style="color: #e74c3c; font-size: 32px; letter-spacing: 5px; margin: 0;">%s</h2>
+                    </div>
+                    <p><strong>驗證碼將在 10 分鐘後失效</strong></p>
+                    <p>如果您沒有註冊 FoodMAP 商家帳戶，請忽略此郵件。</p>
+                    <p>期待與您合作！</p>
+                    <p>FoodMAP 團隊</p>
+                </div>
+            </body>
+            </html>
+            """.formatted(merchantName, code);
     }
 } 
