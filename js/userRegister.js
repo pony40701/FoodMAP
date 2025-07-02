@@ -14,12 +14,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeAvatarBtn = document.getElementById('removeAvatar');
     const resendCodeBtn = document.getElementById('resendCodeBtn');
     const resendTimer = document.getElementById('resendTimer');
+    
+    // 獲取使用者名稱和電子郵件輸入框
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
 
     // API 基礎 URL
     const API_BASE_URL = 'http://localhost:8080/api';
 
     // 全域變數宣告
     let registrationData = {};
+    // 新增檢查狀態變數
+    let isUsernameValid = false;
+    let isEmailValid = false;
+    // 新增防抖計時器變數
+    let usernameDebounceTimer;
+    let emailDebounceTimer;
 
     // 大頭貼上傳處理
     avatarInput.addEventListener('change', function(e) {
@@ -96,10 +106,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (errorMessage) {
                 errorMessage.textContent = '';
             }
+            // 同時清除成功訊息和valid類別
+            const successMessage = formGroup.querySelector('.success-message');
+            if (successMessage) {
+                successMessage.textContent = '';
+            }
+            input.classList.remove('valid');
         }
     }
 
-    // showError 函式提前宣告
+    // 顯示錯誤訊息
     function showError(input, message) {
         const formGroup = input.closest('.form-group, .terms-checkbox');
         if (formGroup) {
@@ -111,8 +127,142 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             errorMessage.textContent = message;
             formGroup.classList.add('error');
+            input.classList.remove('valid');
+            
+            // 移除任何成功訊息
+            const successMessage = formGroup.querySelector('.success-message');
+            if (successMessage) {
+                successMessage.textContent = '';
+            }
         }
     }
+
+    // 顯示成功訊息
+    function showSuccess(input, message) {
+        const formGroup = input.closest('.form-group');
+        if (formGroup) {
+            const successMessage = formGroup.querySelector('.success-message');
+            if (successMessage) {
+                successMessage.textContent = message;
+                formGroup.classList.remove('error');
+                input.classList.add('valid');
+            }
+        }
+    }
+
+    // 檢查使用者名稱是否已被使用
+    async function checkUsernameAvailability(username) {
+        if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+            return; // 不符合基本格式要求，不進行檢查
+        }
+        
+        try {
+            // 模擬 API 請求 - 在實際環境中應替換為真實 API 呼叫
+            // const response = await fetch(`${API_BASE_URL}/auth/check-username?username=${encodeURIComponent(username)}`, {
+            //     method: 'GET',
+            //     headers: {
+            //         'Accept': 'application/json'
+            //     }
+            // });
+            
+            // const result = await response.json();
+            
+            // 模擬檢查邏輯 - 特定使用者名稱視為已被使用
+            const takenUsernames = ['admin', 'test', 'user', 'pony', 'system', 'root'];
+            const isAvailable = !takenUsernames.includes(username.toLowerCase());
+            
+            // 模擬 API 響應
+            const result = { available: isAvailable };
+            
+            if (result.available) {
+                showSuccess(usernameInput, '此使用者名稱可以使用');
+                isUsernameValid = true;
+            } else {
+                showError(usernameInput, '此使用者名稱已被使用');
+                isUsernameValid = false;
+            }
+        } catch (error) {
+            console.error('檢查使用者名稱時發生網路錯誤:', error);
+        }
+    }
+
+    // 檢查電子郵件是否已被註冊
+    async function checkEmailAvailability(email) {
+        if (!validateEmail(email)) {
+            return; // 不符合電子郵件格式，不進行檢查
+        }
+        
+        try {
+            // 模擬 API 請求 - 在實際環境中應替換為真實 API 呼叫
+            // const response = await fetch(`${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`, {
+            //     method: 'GET',
+            //     headers: {
+            //         'Accept': 'application/json'
+            //     }
+            // });
+            
+            // const result = await response.json();
+            
+            // 模擬檢查邏輯 - 特定電子郵件視為已被註冊
+            const takenEmails = ['admin@example.com', 'test@example.com', 'user@example.com', 'pony40701@gmail.com', 'info@example.com'];
+            const isAvailable = !takenEmails.includes(email.toLowerCase());
+            
+            // 模擬 API 響應
+            const result = { available: isAvailable };
+            
+            if (result.available) {
+                showSuccess(emailInput, '此電子郵件可以使用');
+                isEmailValid = true;
+            } else {
+                showError(emailInput, '此電子郵件已被註冊');
+                isEmailValid = false;
+            }
+        } catch (error) {
+            console.error('檢查電子郵件時發生網路錯誤:', error);
+        }
+    }
+
+    // 使用者名稱輸入事件處理
+    usernameInput.addEventListener('input', function() {
+        clearError(this);
+        const username = this.value.trim();
+        
+        // 清除之前的計時器
+        clearTimeout(usernameDebounceTimer);
+        
+        // 設置新的計時器，延遲500毫秒執行
+        usernameDebounceTimer = setTimeout(() => {
+            if (username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username)) {
+                checkUsernameAvailability(username);
+            } else if (username.length > 0) {
+                if (username.length < 3) {
+                    showError(this, '使用者名稱至少需要 3 個字元');
+                } else {
+                    showError(this, '使用者名稱只能包含英文字母、數字和底線');
+                }
+                isUsernameValid = false;
+            }
+        }, 500);
+    });
+
+    // 電子郵件輸入事件處理
+    emailInput.addEventListener('input', function() {
+        clearError(this);
+        const email = this.value.trim();
+        
+        // 清除之前的計時器
+        clearTimeout(emailDebounceTimer);
+        
+        // 設置新的計時器，延遲500毫秒執行
+        emailDebounceTimer = setTimeout(() => {
+            if (validateEmail(email)) {
+                checkEmailAvailability(email);
+            } else if (email.length > 0) {
+                showError(this, '請輸入有效的電子郵件地址');
+                isEmailValid = false;
+            }
+        }, 500);
+    });
 
     // 處理註冊表單提交
     registerForm.addEventListener('submit', function(e) {
@@ -120,8 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
 
         // 獲取表單數據
-        const email = document.getElementById('email').value.trim();
-        const username = document.getElementById('username').value.trim();
+        const email = emailInput.value.trim();
+        const username = usernameInput.value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const name = document.getElementById('name').value.trim();
@@ -130,16 +280,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 驗證電子郵件
         if (!validateEmail(email)) {
-            showError(document.getElementById('email'), '請輸入有效的電子郵件地址');
+            showError(emailInput, '請輸入有效的電子郵件地址');
+            isValid = false;
+        } else if (!isEmailValid) {
+            showError(emailInput, '此電子郵件無法使用或已被註冊');
             isValid = false;
         }
 
         // 驗證使用者名稱
         if (username.length < 3) {
-            showError(document.getElementById('username'), '使用者名稱至少需要 3 個字元');
+            showError(usernameInput, '使用者名稱至少需要 3 個字元');
             isValid = false;
         } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            showError(document.getElementById('username'), '使用者名稱只能包含英文字母、數字和底線');
+            showError(usernameInput, '使用者名稱只能包含英文字母、數字和底線');
+            isValid = false;
+        } else if (!isUsernameValid) {
+            showError(usernameInput, '此使用者名稱無法使用或已被使用');
             isValid = false;
         }
 

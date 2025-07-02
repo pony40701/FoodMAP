@@ -168,72 +168,72 @@
 			<form class="signup-form" id="restaurant-signup-form" enctype="multipart/form-data" method="POST">
 				<!-- 步驟1: 基本資料 -->
 				<div class="step-content" id="step1">
-					<!-- 基本資料區塊 -->
-					<div class="form-section">
-						<h2>基本資料</h2>
-						<div class="form-group avatar-upload">
-							<label>餐廳頭像</label>
-							<div class="avatar-container">
-								<div class="avatar-preview">
-									<div class="avatar-placeholder">
-										<i class="fas fa-camera"></i>
-										<span>點擊上傳頭像</span>
-									</div>
+				<!-- 基本資料區塊 -->
+				<div class="form-section">
+					<h2>基本資料</h2>
+					<div class="form-group avatar-upload">
+						<label>餐廳頭像</label>
+						<div class="avatar-container">
+							<div class="avatar-preview">
+								<div class="avatar-placeholder">
+									<i class="fas fa-camera"></i>
+									<span>點擊上傳頭像</span>
 								</div>
-								<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
 							</div>
-							<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
+							<input type="file" id="avatar-upload" name="avatar" accept="image/*" class="avatar-input" required>
+						</div>
+						<p class="avatar-hint">建議上傳正方形圖片，大小不超過 2MB</p>
 							<div class="error-message"></div>
-						</div>
-
-						<div class="form-group">
-							<label for="restaurant-name">餐廳名稱</label>
-							<div class="input-with-icon">
-								<i class="fas fa-store"></i>
-								<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
-									required>
-							</div>
-							<div class="error-message"></div>
-						</div>
-
-						<div class="form-group">
-							<label for="email">電子郵件</label>
-							<div class="input-with-icon">
-								<i class="fas fa-envelope"></i>
-								<input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
-							</div>
-							<div class="error-message" style="display: none;"></div>
-						</div>
-
-						<div class="form-group">
-							<label for="phone">聯絡電話</label>
-							<div class="input-with-icon">
-								<i class="fas fa-phone"></i>
-								<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
-							</div>
-							<div class="error-message"></div>
-						</div>
 					</div>
 
-					<!-- 密碼設定區塊 -->
-					<div class="form-section">
-						<h2>密碼設定</h2>
-						<div class="form-group">
-							<label for="password">密碼</label>
-							<div class="input-with-icon">
-								<i class="fas fa-lock"></i>
-								<input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+					<div class="form-group">
+						<label for="restaurant-name">餐廳名稱</label>
+						<div class="input-with-icon">
+							<i class="fas fa-store"></i>
+							<input type="text" id="restaurant-name" name="name" placeholder="請輸入餐廳名稱"
+								required>
+						</div>
+							<div class="error-message"></div>
+					</div>
+
+					<div class="form-group">
+						<label for="email">電子郵件</label>
+						<div class="input-with-icon">
+							<i class="fas fa-envelope"></i>
+							<input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
+						</div>
+							<div class="error-message" style="display: none;"></div>
+					</div>
+
+					<div class="form-group">
+						<label for="phone">聯絡電話</label>
+						<div class="input-with-icon">
+							<i class="fas fa-phone"></i>
+							<input type="tel" id="phone" name="phoneNumber" placeholder="請輸入聯絡電話" required>
+						</div>
+							<div class="error-message"></div>
+					</div>
+				</div>
+
+				<!-- 密碼設定區塊 -->
+				<div class="form-section">
+					<h2>密碼設定</h2>
+					<div class="form-group">
+						<label for="password">密碼</label>
+						<div class="input-with-icon">
+							<i class="fas fa-lock"></i>
+							<input type="password" id="password" name="password" placeholder="請輸入密碼" required>
 								<i class="fas fa-eye password-toggle"></i>
 							</div>
 							<div class="error-message"></div>
-						</div>
+					</div>
 
-						<div class="form-group">
-							<label for="confirm-password">確認密碼</label>
-							<div class="input-with-icon">
-								<i class="fas fa-lock"></i>
-								<input type="password" id="confirm-password" name="confirm-password" placeholder="請再次輸入密碼"
-									required>
+					<div class="form-group">
+						<label for="confirm-password">確認密碼</label>
+						<div class="input-with-icon">
+							<i class="fas fa-lock"></i>
+							<input type="password" id="confirm-password" name="confirm-password" placeholder="請再次輸入密碼"
+								required>
 								<i class="fas fa-eye password-toggle"></i>
 							</div>
 							<div class="error-message"></div>
@@ -281,55 +281,55 @@
 
 				<!-- 步驟3: 餐廳資訊 -->
 				<div class="step-content" id="step3" style="display: none;">
-					<!-- 餐廳資訊區塊 -->
-					<div class="form-section">
-						<h2>餐廳資訊</h2>
-						<div class="form-group">
-							<label for="address">餐廳地址</label>
-							<div class="input-with-icon">
-								<i class="fas fa-map-marker-alt"></i>
-								<input type="text" id="address" name="address" placeholder="請輸入餐廳地址" required>
-							</div>
-							<div class="error-message"></div>
+				<!-- 餐廳資訊區塊 -->
+				<div class="form-section">
+					<h2>餐廳資訊</h2>
+					<div class="form-group">
+						<label for="address">餐廳地址</label>
+						<div class="input-with-icon">
+							<i class="fas fa-map-marker-alt"></i>
+							<input type="text" id="address" name="address" placeholder="請輸入餐廳地址" required>
 						</div>
-
-						<div class="form-group">
-							<label for="cuisine-type">料理類型</label>
-							<div class="input-with-icon">
-								<i class="fas fa-utensils"></i>
-								<input type="text" id="cuisineType" name="cuisineType" placeholder="請輸入料理類型" required />
-							</div>
 							<div class="error-message"></div>
-						</div>
-
-						<div class="form-group">
-							<label for="business-hours">營業時間</label>
-							<div class="input-with-icon">
-								<i class="fas fa-clock"></i>
-								<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00" required>
-							</div>
-							<div class="error-message"></div>
-						</div>
 					</div>
 
-					<!-- 餐廳照片區塊 -->
-					<div class="form-section">
-						<h2>餐廳照片</h2>
-						<div class="form-group">
-							<label>上傳餐廳照片</label>
-							<div class="photo-upload-area">
-								<div class="photo-grid">
-									<!-- 預設照片上傳按鈕 -->
-									<div class="photo-item add-photo">
+					<div class="form-group">
+						<label for="cuisine-type">料理類型</label>
+						<div class="input-with-icon">
+							<i class="fas fa-utensils"></i>
+							<input type="text" id="cuisineType" name="cuisineType" placeholder="請輸入料理類型" required />
+						</div>
+							<div class="error-message"></div>
+					</div>
+
+					<div class="form-group">
+						<label for="business-hours">營業時間</label>
+						<div class="input-with-icon">
+							<i class="fas fa-clock"></i>
+								<input type="text" id="business-hours" name="businessHours" placeholder="例：11:00-21:00" required>
+						</div>
+							<div class="error-message"></div>
+					</div>
+				</div>
+
+				<!-- 餐廳照片區塊 -->
+				<div class="form-section">
+					<h2>餐廳照片</h2>
+					<div class="form-group">
+						<label>上傳餐廳照片</label>
+						<div class="photo-upload-area">
+							<div class="photo-grid">
+								<!-- 預設照片上傳按鈕 -->
+								<div class="photo-item add-photo">
 										<input type="file" id="photo-upload" name="photos" accept="image/*" multiple class="photo-input">
-										<div class="add-photo-content">
-											<i class="fas fa-plus"></i>
-											<span>新增照片</span>
-										</div>
+									<div class="add-photo-content">
+										<i class="fas fa-plus"></i>
+										<span>新增照片</span>
 									</div>
 								</div>
-								<p class="photo-hint">建議上傳清晰的照片，每張照片大小不超過 2MB</p>
 							</div>
+							<p class="photo-hint">建議上傳清晰的照片，每張照片大小不超過 2MB</p>
+						</div>
 							<div class="error-message"></div>
 						</div>
 					</div>

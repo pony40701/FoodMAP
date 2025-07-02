@@ -169,17 +169,27 @@ body {
 /* 錯誤訊息 */
 .error-message {
     color: var(--error);
-    font-size: 0.75rem;
+    font-size: 0.95rem;
     margin-top: 0.25rem;
-    display: none;
+    display: block;
+    text-align: left;
 }
 
 .form-group.error input {
     border-color: var(--error);
 }
 
-.form-group.error .error-message {
+/* 成功訊息 - 用於表單驗證 */
+.form-group .success-message {
+    color: var(--success);
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
     display: block;
+    text-align: left;
+}
+
+.form-group input.valid {
+    border-color: var(--success);
 }
 
 /* 密碼輸入框容器 */
@@ -544,29 +554,29 @@ body {
 }
 
 /* 成功訊息 */
-.success-message {
+#step4 .success-message {
     text-align: center;
-    padding: 2rem 0;
+    padding: 0.5rem 0;
 }
 
-.success-message i {
+#step4 .success-message i {
     font-size: 3rem;
     color: var(--success);
     margin-bottom: 1rem;
 }
 
-.success-message h2 {
+#step4 .success-message h2 {
     color: var(--text);
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
 }
 
-.success-message p {
+#step4 .success-message p {
     color: var(--text-light);
     margin-bottom: 0.5rem;
 }
 
-.success-message .login-reminder {
+#step4 .success-message .login-reminder {
     color: var(--primary);
     font-weight: 500;
     margin-top: 1rem;
